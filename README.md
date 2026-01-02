@@ -22,7 +22,7 @@ coins are revealed.
 # How to play
 
   - Install [Archipelago](https://github.com/ArchipelagoMW/Archipelago/releases/latest)
-  - Install dracomino.apworld
+  - Install [dracomino.apworld](https://github.com/DragonWolfLeo/DracominoAPWorld/releases)
   - Use Archipelago to generate your options/yaml
   - Use Archipelago to generate a multiworld
   - Host the resulting zip file either with Archipelago or [the website](https://archipelago.gg/uploads)
