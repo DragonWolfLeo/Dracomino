@@ -1,0 +1,38 @@
+[gd_resource type="TileSet" load_steps=3 format=3 uid="uid://ci8crt0j6nrbr"]
+
+[ext_resource type="Texture2D" uid="uid://dlmb3thc1447s" path="res://assets/art/dracomino_board.png" id="1_18j5m"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_v832b"]
+texture = ExtResource("1_18j5m")
+0:0/next_alternative_id = 2
+0:0/0 = 0
+1:0/next_alternative_id = 2
+1:0/0 = 0
+2:0/0 = 0
+0:1/next_alternative_id = 2
+0:1/0 = 0
+1:1/0 = 0
+1:1/0/z_index = -1
+0:2/next_alternative_id = 2
+0:2/0 = 0
+1:2/0 = 0
+1:2/0/z_index = -1
+0:3/next_alternative_id = 2
+0:3/0 = 0
+0:4/next_alternative_id = 2
+0:4/0 = 0
+4:0/0 = 0
+5:0/0 = 0
+5:1/0 = 0
+5:2/0 = 0
+5:3/0 = 0
+5:4/0 = 0
+0:5/0 = 0
+1:5/0 = 0
+2:5/0 = 0
+3:5/0 = 0
+4:5/0 = 0
+5:5/0 = 0
+
+[resource]
+sources/0 = SubResource("TileSetAtlasSource_v832b")

@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3 uid="uid://176sbvua7a5x"]
+
+[ext_resource type="Script" uid="uid://x3tlljumiv30" path="res://object/piece.gd" id="1_k13et"]
+[ext_resource type="TileSet" uid="uid://bik73l7fn0v3b" path="res://resource/tileset/dracomino_piece.tres" id="1_ls4uy"]
+
+[node name="Piece" type="TileMapLayer"]
+tile_set = ExtResource("1_ls4uy")
+script = ExtResource("1_k13et")
+
+[node name="fall_down_timer" type="Timer" parent="."]
+autostart = true
+
+[node name="horizontal_timer" type="Timer" parent="."]
+wait_time = 0.2
+autostart = true
+
+[node name="vertical_timer" type="Timer" parent="."]
+wait_time = 0.2
+autostart = true
+
+[connection signal="timeout" from="fall_down_timer" to="." method="_fall_down_timer_timeout"]
+[connection signal="timeout" from="horizontal_timer" to="." method="_on_horizontal_timer_timeout"]
+[connection signal="timeout" from="vertical_timer" to="." method="_on_vertical_timer_timeout"]

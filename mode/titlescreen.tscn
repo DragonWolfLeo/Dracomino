@@ -1,0 +1,346 @@
+[gd_scene load_steps=10 format=3 uid="uid://cm37gcyopdca4"]
+
+[ext_resource type="Script" uid="uid://bugig0un80q2l" path="res://mode/titlescreen.gd" id="1_ps0hi"]
+[ext_resource type="FontFile" uid="uid://bvagmk5c52yo4" path="res://resource/font/Cousine-Regular.ttf" id="5_b165o"]
+[ext_resource type="PackedScene" uid="uid://bd7cwebw664h8" path="res://ui/MenuContainer.tscn" id="6_22bav"]
+[ext_resource type="PackedScene" uid="uid://bmqa5kpuntaut" path="res://ui/Preferences.tscn" id="7_l66rp"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pfup4"]
+content_margin_left = 20.0
+content_margin_top = 8.0
+content_margin_right = 20.0
+content_margin_bottom = 8.0
+bg_color = Color(0.384314, 0.6, 0.839216, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.180392, 0.270588, 0.419608, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+shadow_color = Color(0, 0, 0, 0.376471)
+shadow_size = 2
+shadow_offset = Vector2(2, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ikb7m"]
+content_margin_left = 20.0
+content_margin_top = 8.0
+content_margin_right = 20.0
+content_margin_bottom = 8.0
+bg_color = Color(0.12549, 0.505882, 0.729412, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.180392, 0.270588, 0.419608, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+shadow_color = Color(0, 0, 0, 0.376471)
+shadow_size = 2
+shadow_offset = Vector2(2, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2xfe4"]
+content_margin_left = 20.0
+content_margin_top = 8.0
+content_margin_right = 20.0
+content_margin_bottom = 8.0
+bg_color = Color(0.266667, 0.552941, 0.784314, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.180392, 0.270588, 0.419608, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+shadow_color = Color(0, 0, 0, 0.376471)
+shadow_size = 2
+shadow_offset = Vector2(2, 3)
+
+[sub_resource type="Theme" id="Theme_uk7ab"]
+Button/colors/font_outline_color = Color(0.0745098, 0.160784, 0.317647, 1)
+Button/constants/outline_size = 4
+Button/font_sizes/font_size = 22
+Button/fonts/font = ExtResource("5_b165o")
+Button/styles/hover = SubResource("StyleBoxFlat_pfup4")
+Button/styles/normal = SubResource("StyleBoxFlat_ikb7m")
+Button/styles/pressed = SubResource("StyleBoxFlat_2xfe4")
+
+[sub_resource type="LabelSettings" id="LabelSettings_ywq08"]
+outline_size = 4
+outline_color = Color(0.129412, 0.12549, 0.219608, 1)
+
+[node name="TitleScreen" type="CanvasLayer"]
+layer = 0
+script = ExtResource("1_ps0hi")
+
+[node name="MainControl" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 1
+
+[node name="TitleCutscene2" type="TextureRect" parent="MainControl"]
+texture_filter = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Control" type="Control" parent="MainControl/TitleCutscene2"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -40.0
+offset_top = -39.9999
+offset_bottom = 6.10352e-05
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="MainScreen" type="Control" parent="MainControl"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+metadata/_edit_lock_ = true
+
+[node name="Title" type="TextureRect" parent="MainControl/MainScreen"]
+texture_filter = 2
+layout_mode = 1
+offset_left = -9.0
+offset_top = 22.0
+offset_right = 422.0
+offset_bottom = 211.0
+expand_mode = 1
+stretch_mode = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainControl/MainScreen"]
+texture_filter = 2
+layout_mode = 1
+offset_left = 118.0
+offset_top = 215.0
+offset_right = 312.0
+offset_bottom = 418.0
+mouse_filter = 2
+theme = SubResource("Theme_uk7ab")
+theme_override_constants/separation = 4
+metadata/_edit_group_ = true
+
+[node name="Button_Continue" type="Button" parent="MainControl/MainScreen/VBoxContainer"]
+layout_mode = 2
+text = "Continue"
+
+[node name="Button_New" type="Button" parent="MainControl/MainScreen/VBoxContainer"]
+layout_mode = 2
+text = "New Game"
+
+[node name="Button_Prefs" type="Button" parent="MainControl/MainScreen/VBoxContainer"]
+layout_mode = 2
+text = "Preferences"
+
+[node name="Button_Exit" type="Button" parent="MainControl/MainScreen/VBoxContainer"]
+layout_mode = 2
+text = "Exit"
+
+[node name="Label" type="Label" parent="MainControl/MainScreen"]
+texture_filter = 2
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 21.0
+offset_top = -40.0
+offset_right = 517.0
+offset_bottom = -16.0
+grow_vertical = 0
+text = "{versionNum} {patchInfo}"
+label_settings = SubResource("LabelSettings_ywq08")
+
+[node name="Button_ChangeLog" type="Button" parent="MainControl/MainScreen/Label"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -63.0
+offset_right = 101.0
+offset_bottom = -32.0
+grow_vertical = 0
+text = "Change Log"
+
+[node name="MenuLayout" type="Control" parent="MainControl"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+metadata/_edit_lock_ = true
+
+[node name="ChangeLogContainer" parent="MainControl/MenuLayout" instance=ExtResource("6_22bav")]
+visible = false
+layout_mode = 1
+anchor_top = 0.15
+anchor_bottom = 0.738889
+offset_top = 0.0
+offset_bottom = 0.0
+
+[node name="Button_X" parent="MainControl/MenuLayout/ChangeLogContainer" index="0"]
+focus_mode = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainControl/MenuLayout/ChangeLogContainer"]
+layout_mode = 2
+
+[node name="Spacer" type="Control" parent="MainControl/MenuLayout/ChangeLogContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+
+[node name="Panel" type="PanelContainer" parent="MainControl/MenuLayout/ChangeLogContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="ChangeLogScrollContainer" type="ScrollContainer" parent="MainControl/MenuLayout/ChangeLogContainer/VBoxContainer/Panel"]
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 2
+
+[node name="ChangeLog" type="Label" parent="MainControl/MenuLayout/ChangeLogContainer/VBoxContainer/Panel/ChangeLogScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+text = "Change log text"
+autowrap_mode = 2
+
+[node name="FileSelectContainer" parent="MainControl/MenuLayout" instance=ExtResource("6_22bav")]
+visible = false
+layout_mode = 1
+anchor_top = 0.15
+anchor_bottom = 0.738889
+offset_top = 0.0
+offset_bottom = 0.0
+
+[node name="Button_X" parent="MainControl/MenuLayout/FileSelectContainer" index="0"]
+focus_mode = 0
+
+[node name="Spacer" type="Control" parent="MainControl/MenuLayout/FileSelectContainer"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainControl/MenuLayout/FileSelectContainer/Spacer"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -184.0
+offset_top = -107.0
+offset_right = 185.0
+offset_bottom = 68.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="MainControl/MenuLayout/FileSelectContainer/Spacer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "This will overwrite your previous save!
+Are you sure?"
+horizontal_alignment = 1
+
+[node name="Button_YesStartNew" type="Button" parent="MainControl/MenuLayout/FileSelectContainer/Spacer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Yes"
+
+[node name="Button_BackToTitle" type="Button" parent="MainControl/MenuLayout/FileSelectContainer/Spacer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "No"
+
+[node name="VersionWarningContainer" parent="MainControl/MenuLayout" instance=ExtResource("6_22bav")]
+visible = false
+layout_mode = 1
+anchor_top = 0.15
+anchor_bottom = 0.738889
+offset_top = 0.0
+offset_bottom = 0.0
+
+[node name="Button_X" parent="MainControl/MenuLayout/VersionWarningContainer" index="0"]
+focus_mode = 0
+
+[node name="Spacer" type="Control" parent="MainControl/MenuLayout/VersionWarningContainer"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainControl/MenuLayout/VersionWarningContainer/Spacer"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -184.0
+offset_top = -107.0
+offset_right = 185.0
+offset_bottom = 68.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label_VersionWarning" type="Label" parent="MainControl/MenuLayout/VersionWarningContainer/Spacer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Save file is from newer Version {versionNum}."
+horizontal_alignment = 1
+
+[node name="Button_BackToTitle" type="Button" parent="MainControl/MenuLayout/VersionWarningContainer/Spacer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Return"
+
+[node name="PrefsContainer" parent="MainControl/MenuLayout" instance=ExtResource("6_22bav")]
+visible = false
+layout_mode = 1
+
+[node name="Preferences" parent="MainControl/MenuLayout/PrefsContainer" instance=ExtResource("7_l66rp")]
+layout_mode = 2
+
+[connection signal="gui_input" from="MainControl" to="." method="_on_Control_gui_input"]
+[connection signal="pressed" from="MainControl/MainScreen/VBoxContainer/Button_Continue" to="." method="_on_ButtonContinue_pressed"]
+[connection signal="pressed" from="MainControl/MainScreen/VBoxContainer/Button_New" to="." method="_on_ButtonNew_pressed"]
+[connection signal="pressed" from="MainControl/MainScreen/VBoxContainer/Button_Prefs" to="." method="_on_ButtonPrefs_pressed"]
+[connection signal="pressed" from="MainControl/MainScreen/VBoxContainer/Button_Exit" to="." method="_on_ButtonExit_pressed"]
+[connection signal="pressed" from="MainControl/MainScreen/Label/Button_ChangeLog" to="." method="_on_ButtonChangeLog_pressed"]
+[connection signal="x_pressed" from="MainControl/MenuLayout/ChangeLogContainer" to="." method="_on_x_pressed"]
+[connection signal="gui_input" from="MainControl/MenuLayout/ChangeLogContainer/VBoxContainer/Panel/ChangeLogScrollContainer" to="." method="_on_ScrollContainer_gui_input"]
+[connection signal="x_pressed" from="MainControl/MenuLayout/FileSelectContainer" to="." method="_on_x_pressed"]
+[connection signal="pressed" from="MainControl/MenuLayout/FileSelectContainer/Spacer/VBoxContainer/Button_YesStartNew" to="." method="_on_ButtonYesStartNew_pressed"]
+[connection signal="pressed" from="MainControl/MenuLayout/FileSelectContainer/Spacer/VBoxContainer/Button_BackToTitle" to="." method="_on_x_pressed"]
+[connection signal="x_pressed" from="MainControl/MenuLayout/VersionWarningContainer" to="." method="_on_x_pressed"]
+[connection signal="pressed" from="MainControl/MenuLayout/VersionWarningContainer/Spacer/VBoxContainer/Button_BackToTitle" to="." method="_on_x_pressed"]
+[connection signal="x_pressed" from="MainControl/MenuLayout/PrefsContainer" to="." method="_on_PrefsContainer_x_pressed"]
+
+[editable path="MainControl/MenuLayout/ChangeLogContainer"]
+[editable path="MainControl/MenuLayout/FileSelectContainer"]
+[editable path="MainControl/MenuLayout/VersionWarningContainer"]

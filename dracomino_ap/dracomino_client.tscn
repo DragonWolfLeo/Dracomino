@@ -1,0 +1,66 @@
+[gd_scene load_steps=7 format=3 uid="uid://c7613bp0awts"]
+
+[ext_resource type="Script" uid="uid://ctx0wt81itx32" path="res://godot_ap/ui/console_window_container.gd" id="1_bn7tn"]
+[ext_resource type="Script" uid="uid://coc8hh7uywptt" path="res://dracomino_ap/dracomino_aphelper.gd" id="2_prof0"]
+[ext_resource type="PackedScene" uid="uid://dhya6ucgf72i8" path="res://godot_ap/ui/hints_tab.tscn" id="3_prof0"]
+[ext_resource type="PackedScene" uid="uid://c1pyfyn3ax5u2" path="res://dracomino_ap/dracomino_console_tab.tscn" id="3_vsama"]
+[ext_resource type="PackedScene" uid="uid://dp2yir3r1061y" path="res://godot_ap/ui/settings_tab.tscn" id="4_vsama"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_1wnfu"]
+
+[node name="DracominoClient" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_bn7tn")
+
+[node name="DracominoAPHelper" type="Node" parent="."]
+script = ExtResource("2_prof0")
+
+[node name="Tabs" type="TabContainer" parent="."]
+layout_mode = 2
+current_tab = 0
+tab_focus_mode = 0
+
+[node name="Console" parent="Tabs" instance=ExtResource("3_vsama")]
+layout_mode = 2
+
+[node name="Hints" parent="Tabs" instance=ExtResource("3_prof0")]
+layout_mode = 2
+
+[node name="Settings" parent="Tabs" instance=ExtResource("4_vsama")]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 2
+
+[node name="Theme" parent="Tabs/Settings/Margin/Tabs" index="1"]
+metadata/_tab_index = 1
+
+[node name="DarkTheme" parent="Tabs/Settings/Margin/Tabs/Theme/Row/Col1" index="0"]
+button_group = SubResource("ButtonGroup_1wnfu")
+
+[node name="LightTheme" parent="Tabs/Settings/Margin/Tabs/Theme/Row/Col1" index="1"]
+button_group = SubResource("ButtonGroup_1wnfu")
+
+[node name="Game" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs" index="2"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Tabs/Settings/Margin/Tabs/Game"]
+layout_mode = 2
+
+[node name="Btn_DeathLink" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
+layout_mode = 2
+text = "Death Link"
+
+[node name="Btn_DeathOnRestart" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
+layout_mode = 2
+text = "Death On Restart
+"
+
+[editable path="Tabs/Settings"]

@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://dyaxcur1ermgq"]
+
+[ext_resource type="TileSet" uid="uid://bxsx1f5u561g3" path="res://resource/tileset/ghostpiece.tres" id="1_3bsli"]
+[ext_resource type="Script" uid="uid://db8fbesqfm3hl" path="res://object/ghostpiece.gd" id="2_3bsli"]
+
+[node name="GhostPiece" type="TileMapLayer"]
+tile_set = ExtResource("1_3bsli")
+script = ExtResource("2_3bsli")

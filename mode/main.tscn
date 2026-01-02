@@ -1,0 +1,300 @@
+[gd_scene load_steps=18 format=3 uid="uid://dq05pcnj58yp0"]
+
+[ext_resource type="PackedScene" uid="uid://boraki5ygsa0g" path="res://level/board.tscn" id="1_q3k4m"]
+[ext_resource type="Script" uid="uid://c5jgcsxvnygnn" path="res://mode/main.gd" id="1_svssi"]
+[ext_resource type="Script" uid="uid://daewoikmtskpi" path="res://dracomino_ap/dracomino_handler.gd" id="2_gpyk6"]
+[ext_resource type="Script" uid="uid://dutbiv2hgugwn" path="res://module/piecestorage.gd" id="4_q3k4m"]
+[ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="5_kwn67"]
+[ext_resource type="PackedScene" uid="uid://c7613bp0awts" path="res://dracomino_ap/dracomino_client.tscn" id="5_svssi"]
+[ext_resource type="FontFile" uid="uid://c8dwaeydyfv6j" path="res://resource/font/PressStart2P-Regular.ttf" id="6_svssi"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q3k4m"]
+bg_color = Color(0.0562916, 0.0562916, 0.0562916, 1)
+
+[sub_resource type="Theme" id="Theme_d5o15"]
+default_font = ExtResource("5_kwn67")
+default_font_size = 12
+
+[sub_resource type="LabelSettings" id="LabelSettings_rni7d"]
+font_size = 20
+font_color = Color(1, 1, 0.129412, 1)
+outline_size = 6
+outline_color = Color(0.0646965, 0.0646965, 0.0646965, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_svssi"]
+font_color = Color(1, 1, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_q3k4m"]
+font = ExtResource("6_svssi")
+font_size = 24
+
+[sub_resource type="LabelSettings" id="LabelSettings_gpyk6"]
+font = ExtResource("5_kwn67")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gpyk6"]
+content_margin_left = 4.0
+content_margin_top = 2.0
+content_margin_right = 4.0
+content_margin_bottom = 2.0
+bg_color = Color(0.436422, 0.672116, 0.773563, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.00146531, 0.112594, 0.137529, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+shadow_size = 1
+shadow_offset = Vector2(1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_svssi"]
+content_margin_left = 4.0
+content_margin_top = 2.0
+content_margin_right = 4.0
+content_margin_bottom = 2.0
+bg_color = Color(0.186976, 0.658807, 0.804138, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.00146531, 0.112594, 0.137529, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+shadow_size = 1
+shadow_offset = Vector2(1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gx2q7"]
+content_margin_left = 4.0
+content_margin_top = 2.0
+content_margin_right = 4.0
+content_margin_bottom = 2.0
+bg_color = Color(0.525081, 0.745393, 0.841889, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.00146531, 0.112594, 0.137529, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+shadow_size = 1
+shadow_offset = Vector2(1, 1)
+
+[sub_resource type="Theme" id="Theme_gpyk6"]
+Button/colors/font_color = Color(0, 0, 0, 1)
+Button/colors/font_hover_color = Color(0, 0, 0, 1)
+Button/colors/font_pressed_color = Color(0, 0, 0, 1)
+Button/styles/hover = SubResource("StyleBoxFlat_gpyk6")
+Button/styles/normal = SubResource("StyleBoxFlat_svssi")
+Button/styles/pressed = SubResource("StyleBoxFlat_gx2q7")
+
+[node name="Main" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 2
+script = ExtResource("1_svssi")
+
+[node name="DracominoHandler" type="Node" parent="."]
+script = ExtResource("2_gpyk6")
+
+[node name="HBoxContainer" type="HSplitContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/split_bar_background = SubResource("StyleBoxFlat_q3k4m")
+split_offset = 784
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="LevelContainer" type="PanelContainer" parent="HBoxContainer/HBoxContainer"]
+process_mode = 1
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="HBoxContainer/HBoxContainer/LevelContainer"]
+layout_mode = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer"]
+handle_input_locally = false
+canvas_item_default_texture_filter = 3
+size = Vector2i(531, 540)
+render_target_update_mode = 4
+
+[node name="Board" parent="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport" node_paths=PackedStringArray("previewStorage", "holdStorage") instance=ExtResource("1_q3k4m")]
+previewStorage = NodePath("PreviewStorage")
+holdStorage = NodePath("HoldStorage")
+
+[node name="PreviewStorage" type="Node" parent="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" node_paths=PackedStringArray("targetControl")]
+script = ExtResource("4_q3k4m")
+targetControl = NodePath("../../../../PreviewContainer/ScrollContainer/PreviewBar")
+storageSlots = 5
+slotAbilityName = "Next Piece Slot"
+
+[node name="HoldStorage" type="Node" parent="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" node_paths=PackedStringArray("targetControl")]
+script = ExtResource("4_q3k4m")
+targetControl = NodePath("../../../../HoldContainer/ScrollContainer/HoldBar")
+slotAbilityName = "Hold Slot"
+
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer/HBoxContainer/LevelContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_bottom = 30
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/HBoxContainer/LevelContainer/MarginContainer"]
+layout_mode = 2
+theme = SubResource("Theme_d5o15")
+
+[node name="LinesLabel" type="Label" parent="HBoxContainer/HBoxContainer/LevelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Lines: 0"
+label_settings = SubResource("LabelSettings_rni7d")
+horizontal_alignment = 1
+
+[node name="PiecesLabel" type="Label" parent="HBoxContainer/HBoxContainer/LevelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+theme = SubResource("Theme_d5o15")
+text = "Pieces Left: 0"
+label_settings = SubResource("LabelSettings_rni7d")
+horizontal_alignment = 1
+
+[node name="NotificationLabel" type="Label" parent="HBoxContainer/HBoxContainer/LevelContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+size_flags_vertical = 10
+text = "Notification Text"
+label_settings = SubResource("LabelSettings_svssi")
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="HBoxContainer/HBoxContainer/LevelContainer"]
+layout_mode = 2
+
+[node name="CenterLabel" type="Label" parent="HBoxContainer/HBoxContainer/LevelContainer/CenterContainer"]
+layout_mode = 2
+text = "GAME
+OVER"
+label_settings = SubResource("LabelSettings_q3k4m")
+
+[node name="HoldContainer" type="MarginContainer" parent="HBoxContainer/HBoxContainer/LevelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 16
+
+[node name="ScrollContainer" type="ScrollContainer" parent="HBoxContainer/HBoxContainer/LevelContainer/HoldContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+horizontal_scroll_mode = 0
+
+[node name="HoldBar" type="VBoxContainer" parent="HBoxContainer/HBoxContainer/LevelContainer/HoldContainer/ScrollContainer"]
+layout_mode = 2
+
+[node name="HoldLabel" type="Label" parent="HBoxContainer/HBoxContainer/LevelContainer/HoldContainer/ScrollContainer/HoldBar"]
+layout_mode = 2
+text = "Hold"
+label_settings = SubResource("LabelSettings_gpyk6")
+horizontal_alignment = 1
+
+[node name="PreviewContainer" type="MarginContainer" parent="HBoxContainer/HBoxContainer/LevelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 16
+
+[node name="ScrollContainer" type="ScrollContainer" parent="HBoxContainer/HBoxContainer/LevelContainer/PreviewContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+horizontal_scroll_mode = 0
+
+[node name="PreviewBar" type="VBoxContainer" parent="HBoxContainer/HBoxContainer/LevelContainer/PreviewContainer/ScrollContainer"]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 10
+
+[node name="PreviewLabel" type="Label" parent="HBoxContainer/HBoxContainer/LevelContainer/PreviewContainer/ScrollContainer/PreviewBar"]
+layout_mode = 2
+text = "Next"
+label_settings = SubResource("LabelSettings_gpyk6")
+horizontal_alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="ButtonBar" type="VBoxContainer" parent="HBoxContainer/HBoxContainer/MarginContainer"]
+layout_mode = 2
+theme = SubResource("Theme_gpyk6")
+
+[node name="Btn_AP" type="Button" parent="HBoxContainer/HBoxContainer/MarginContainer/ButtonBar"]
+layout_mode = 2
+size_flags_vertical = 0
+focus_mode = 0
+text = "Archipelago"
+
+[node name="Btn_Changelog" type="Button" parent="HBoxContainer/HBoxContainer/MarginContainer/ButtonBar"]
+layout_mode = 2
+size_flags_vertical = 2
+focus_mode = 0
+text = "Changelog"
+
+[node name="Btn_Restart" type="Button" parent="HBoxContainer/HBoxContainer/MarginContainer/ButtonBar"]
+layout_mode = 2
+size_flags_vertical = 9
+focus_mode = 0
+text = "Restart"
+
+[node name="Btn_Quit" type="Button" parent="HBoxContainer/HBoxContainer/MarginContainer/ButtonBar"]
+layout_mode = 2
+size_flags_vertical = 9
+focus_mode = 0
+text = "Quit"
+
+[node name="DracominoClient" parent="HBoxContainer" instance=ExtResource("5_svssi")]
+process_mode = 3
+layout_mode = 2
+
+[connection signal="activeAbilities_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/PreviewStorage" method="_on_DracominoHandler_active_abilities_updated"]
+[connection signal="activeAbilities_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/HoldStorage" method="_on_DracominoHandler_active_abilities_updated"]
+[connection signal="goal_updated" from="DracominoHandler" to="." method="_on_DracominoState_goal_updated"]
+[connection signal="lineMappings_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_line_mappings_updated"]
+[connection signal="missingLines_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_lines_updated"]
+[connection signal="missingPickupCoordinates_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_pickup_coordinates_updated"]
+[connection signal="notification_signal" from="DracominoHandler" to="." method="_on_DracominoState_notification_signal"]
+[connection signal="piecesLeft_updated" from="DracominoHandler" to="." method="_on_DracominoState_pieces_left_updated"]
+[connection signal="slotContextHash_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_slot_context_hash_updated"]
+[connection signal="resized" from="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer" to="." method="_on_SubViewportContainer_resized"]
+[connection signal="deathlink_earned" from="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_deathlink_earned"]
+[connection signal="game_over_earned" from="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_game_over_earned"]
+[connection signal="game_started" from="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_game_started"]
+[connection signal="game_started" from="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_game_started"]
+[connection signal="item_pickedup" from="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_item_pickedup"]
+[connection signal="linesCleared_updated" from="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_lines_cleared_updated"]
+[connection signal="linesCleared_updated" from="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_lines_cleared_updated"]
+[connection signal="lines_cleared" from="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_lines_cleared"]
+[connection signal="piece_requested" from="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_piece_requested"]
+[connection signal="numStored_changed" from="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/PreviewStorage" to="." method="_on_PreviewStorage_num_stored_changed"]
+[connection signal="pressed" from="HBoxContainer/HBoxContainer/MarginContainer/ButtonBar/Btn_AP" to="HBoxContainer/DracominoClient" method="_on_APButton_pressed"]
+[connection signal="pressed" from="HBoxContainer/HBoxContainer/MarginContainer/ButtonBar/Btn_Changelog" to="." method="_on_BtnChangelog_pressed"]
+[connection signal="pressed" from="HBoxContainer/HBoxContainer/MarginContainer/ButtonBar/Btn_Restart" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" method="_on_Btn_Restart_pressed"]
+[connection signal="pressed" from="HBoxContainer/HBoxContainer/MarginContainer/ButtonBar/Btn_Quit" to="." method="_on_Btn_Quit_pressed"]

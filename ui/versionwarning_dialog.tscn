@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://dpa46vdf5scsd"]
+
+[node name="VersionWarningDialog" type="AcceptDialog"]
+auto_translate_mode = 1
+title = "Warning!"
+size = Vector2i(200, 100)
+visible = true
+dialog_text = "Something went wrong!"

@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://dcenb15o8u5l3"]
+
+[ext_resource type="PackedScene" uid="uid://by2e76emlvtsg" path="res://godot_ap/ui/base_window.tscn" id="1_0wxg5"]
+[ext_resource type="PackedScene" uid="uid://cn7ah7d3ep4de" path="res://godot_ap/ui/common_client.tscn" id="2_nqm1h"]
+
+[node name="Console" instance=ExtResource("1_0wxg5")]
+gui_embed_subwindows = true
+title = "Archipelago Console"
+size = Vector2i(1152, 648)
+min_size = Vector2i(750, 400)
+
+[node name="ConsoleContainer" parent="." index="0" instance=ExtResource("2_nqm1h")]

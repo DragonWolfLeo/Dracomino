@@ -1,0 +1,47 @@
+[gd_resource type="TileSet" load_steps=3 format=3 uid="uid://bik73l7fn0v3b"]
+
+[ext_resource type="Texture2D" uid="uid://bdomhcei8ek7c" path="res://assets/art/dracomino_piece.png" id="4_v76no"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_18j5m"]
+texture = ExtResource("4_v76no")
+0:0/next_alternative_id = 12
+0:0/0 = 0
+0:0/0/z_index = 2
+0:1/next_alternative_id = 12
+0:1/0 = 0
+1:0/0 = 0
+1:0/0/z_index = 2
+2:0/0 = 0
+2:0/0/z_index = 2
+3:0/0 = 0
+3:0/0/z_index = 2
+4:0/0 = 0
+4:0/0/z_index = 2
+5:0/0 = 0
+5:0/0/z_index = 2
+6:0/0 = 0
+6:0/0/z_index = 2
+7:0/0 = 0
+7:0/0/z_index = 2
+8:0/0 = 0
+8:0/0/z_index = 2
+9:0/0 = 0
+9:0/0/z_index = 2
+10:0/0 = 0
+10:0/0/z_index = 2
+11:0/0 = 0
+11:0/0/z_index = 2
+1:1/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+4:1/0 = 0
+5:1/0 = 0
+6:1/0 = 0
+7:1/0 = 0
+8:1/0 = 0
+9:1/0 = 0
+10:1/0 = 0
+11:1/0 = 0
+
+[resource]
+sources/0 = SubResource("TileSetAtlasSource_18j5m")

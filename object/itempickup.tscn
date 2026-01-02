@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://d0mgyh6oleq0m"]
+
+[ext_resource type="Texture2D" uid="uid://xv8twcset8nu" path="res://assets/art/coin.png" id="1_lcvo8"]
+
+[node name="ItemPickup" type="Sprite2D"]
+z_index = 1
+texture = ExtResource("1_lcvo8")

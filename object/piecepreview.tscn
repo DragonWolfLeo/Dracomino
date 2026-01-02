@@ -1,0 +1,39 @@
+[gd_scene load_steps=3 format=3 uid="uid://3x1kopfle5m1"]
+
+[ext_resource type="Script" uid="uid://cnyh5xgxe42vb" path="res://object/piecepreview.gd" id="1_3udnl"]
+[ext_resource type="TileSet" uid="uid://bik73l7fn0v3b" path="res://resource/tileset/dracomino_piece.tres" id="2_3udnl"]
+
+[node name="PiecePreview" type="Control"]
+custom_minimum_size = Vector2(144, 120)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 48.0
+offset_bottom = 48.0
+mouse_filter = 2
+script = ExtResource("1_3udnl")
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 0
+mouse_filter = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="SubViewportContainer"]
+transparent_bg = true
+handle_input_locally = false
+canvas_item_default_texture_filter = 3
+size = Vector2i(144, 120)
+render_target_update_mode = 4
+
+[node name="TileMapLayer" type="TileMapLayer" parent="SubViewportContainer/SubViewport"]
+position = Vector2(72, 60)
+tile_set = ExtResource("2_3udnl")
+
+[node name="Camera2D" type="Camera2D" parent="SubViewportContainer/SubViewport/TileMapLayer"]
+scale = Vector2(0.333333, 0.333333)
+offset = Vector2(4, 4)

@@ -1,0 +1,75 @@
+[gd_scene load_steps=7 format=3 uid="uid://bd7cwebw664h8"]
+
+[ext_resource type="Script" uid="uid://cn1jb6q5rmr2e" path="res://ui/MenuContainer.gd" id="1_w1uog"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vkbrk"]
+content_margin_left = 12.0
+content_margin_top = 4.0
+content_margin_right = 12.0
+content_margin_bottom = 4.0
+bg_color = Color(0, 0.12549, 0.254902, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sraaj"]
+bg_color = Color(0, 0, 0, 0.501961)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vodlg"]
+bg_color = Color(0.490196, 0.745098, 1, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="Theme" id="Theme_qjtcy"]
+Button/styles/normal = null
+Button/styles/pressed = null
+Panel/styles/panel = SubResource("StyleBoxFlat_vkbrk")
+PanelContainer/styles/panel = SubResource("StyleBoxFlat_vkbrk")
+ProgressBar/styles/background = SubResource("StyleBoxFlat_sraaj")
+ProgressBar/styles/fill = SubResource("StyleBoxFlat_vodlg")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ppav7"]
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
+bg_color = Color(0, 0.2, 0.4, 1)
+border_width_left = 8
+border_width_top = 8
+border_width_right = 8
+border_width_bottom = 8
+border_color = Color(0, 0.12549, 0.254902, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+shadow_size = 1
+shadow_offset = Vector2(2, 2)
+
+[node name="MenuContainer" type="PanelContainer"]
+anchors_preset = -1
+anchor_left = 0.203125
+anchor_top = 0.141667
+anchor_right = 0.796875
+anchor_bottom = 0.747222
+offset_top = 5.99996
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = SubResource("Theme_qjtcy")
+theme_override_styles/panel = SubResource("StyleBoxFlat_ppav7")
+script = ExtResource("1_w1uog")
+metadata/_edit_use_anchors_ = true
+
+[node name="Button_X" type="Button" parent="."]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+mouse_default_cursor_shape = 2
+text = "Close"
+
+[connection signal="pressed" from="Button_X" to="." method="_on_ButtonX_pressed"]

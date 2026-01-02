@@ -1,0 +1,98 @@
+[gd_scene load_steps=2 format=3 uid="uid://bmqa5kpuntaut"]
+
+[ext_resource type="Script" path="res://ui/Preferences.gd" id="1_b78u7"]
+
+[node name="Preferences" type="VBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_b78u7")
+
+[node name="Label" type="Label" parent="."]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Preferences
+"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Control" type="Control" parent="."]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Spacer" type="Control" parent="Control/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.5
+
+[node name="PanelContainer" type="PanelContainer" parent="Control/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+
+[node name="GridContainer" type="GridContainer" parent="Control/HBoxContainer/PanelContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+
+[node name="Label_MasterVol" type="Label" parent="Control/HBoxContainer/PanelContainer/GridContainer"]
+layout_mode = 2
+text = "Master Volume:"
+vertical_alignment = 1
+
+[node name="HSlider_MasterVol" type="HSlider" parent="Control/HBoxContainer/PanelContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+step = 5.0
+value = 100.0
+metadata/_edit_use_anchors_ = true
+
+[node name="Label_MusicVol" type="Label" parent="Control/HBoxContainer/PanelContainer/GridContainer"]
+layout_mode = 2
+text = "Music Volume:"
+vertical_alignment = 1
+
+[node name="HSlider_MusicVol" type="HSlider" parent="Control/HBoxContainer/PanelContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+step = 5.0
+value = 100.0
+metadata/_edit_use_anchors_ = true
+
+[node name="Label_SfxVol" type="Label" parent="Control/HBoxContainer/PanelContainer/GridContainer"]
+layout_mode = 2
+text = "Sound Volume:"
+vertical_alignment = 1
+
+[node name="HSlider_SfxVol" type="HSlider" parent="Control/HBoxContainer/PanelContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+step = 5.0
+value = 100.0
+metadata/_edit_use_anchors_ = true
+
+[node name="Spacer2" type="Control" parent="Control/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.5
+
+[connection signal="value_changed" from="Control/HBoxContainer/PanelContainer/GridContainer/HSlider_MasterVol" to="." method="_on_HSliderMasterVol_value_changed"]
+[connection signal="value_changed" from="Control/HBoxContainer/PanelContainer/GridContainer/HSlider_MusicVol" to="." method="_on_HSliderMusicVol_value_changed"]
+[connection signal="drag_ended" from="Control/HBoxContainer/PanelContainer/GridContainer/HSlider_SfxVol" to="." method="_on_HSliderSfxVol_drag_ended"]
+[connection signal="drag_started" from="Control/HBoxContainer/PanelContainer/GridContainer/HSlider_SfxVol" to="." method="_on_HSliderSfxVol_drag_started"]
+[connection signal="value_changed" from="Control/HBoxContainer/PanelContainer/GridContainer/HSlider_SfxVol" to="." method="_on_HSliderSfxVol_value_changed"]

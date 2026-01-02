@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3 uid="uid://bc50x128nxaa"]
+
+[ext_resource type="FontFile" uid="uid://c8dwaeydyfv6j" path="res://resource/font/PressStart2P-Regular.ttf" id="1_gf4um"]
+
+[node name="LineNumber" type="Node2D"]
+position = Vector2(-32, 0)
+
+[node name="Label" type="Label" parent="."]
+offset_left = -28.0
+offset_top = -19.0
+offset_right = 4.0
+offset_bottom = -8.0
+theme_override_fonts/font = ExtResource("1_gf4um")
+theme_override_font_sizes/font_size = 8
+text = "1000"
+horizontal_alignment = 2
