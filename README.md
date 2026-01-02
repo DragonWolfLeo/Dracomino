@@ -18,3 +18,16 @@ The goal is to clear a number of lines in a single run. You can set this goal in
 
 Your checks are clearing lines and coins scattered throughout your board. As you clear lines, more
 coins are revealed.
+
+# How to play
+
+  - Install [Archipelago](https://github.com/ArchipelagoMW/Archipelago/releases/latest)
+  - Install dracomino.apworld
+  - Use Archipelago to generate your options/yaml
+  - Use Archipelago to generate a multiworld
+  - Host the resulting zip file either with Archipelago or [the website](https://archipelago.gg/uploads)
+
+  - Choose how you'll play Dracomino
+    - [Window and Linux Builds](https://github.com/DragonWolfLeo/Dracomino/releases/latest)
+    - [Web Version](https://dragonwolfleo.github.io/Dracomino/)
+    - From source. You can run the project in [Godot 4.4.x](https://godotengine.org/download/archive/4.4.1-stable/)
