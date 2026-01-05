@@ -44,5 +44,9 @@ This is playable with either keyboard or controller. Abilities and stuff will re
  - **Restart:** Ctrl-R/Joypad Back
  - **Pause:** Enter/Escape/Joypad Start
 
-# Libraries Used
+# Credits
+ - Dragon Wolf Leo
+ - VAdaPEGA
+
+## Libraries Used
   - [GodotAP](https://github.com/EmilyV99/GodotAP)
