@@ -1,6 +1,7 @@
-Version 0.2.1 (beta)
- - Update GodotAP to v0.4.0
- - Fix death links not being received after sending once
+Version 0.2.1
+ - Update GodotAP to v0.4.1
+   - Fix death links not being received after sending once
+   - Fix lag when lot of text is printed in the console
 
 Version 0.2.0
  - Initial release
