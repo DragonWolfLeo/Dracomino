@@ -50,14 +50,14 @@ func applyState() -> void:
 			centerLabel.text = "GAME OVER"
 			centerLabel.show()
 
-func showNotification(notif:String, color:Color) -> void:
+func showNotification(notif:String, color:AP.ComplexColor) -> void:
 	if _timer and _timer.timeout.is_connected(_on_timer_timeout):
 		_timer.timeout.disconnect(_on_timer_timeout)
 		_timer = null
 	if notificationLabel:
 		notificationLabel.show()
 		notificationLabel.text = notif
-		notificationLabel.label_settings.font_color = color
+		notificationLabel.label_settings.font_color = color.calculate(notificationLabel)
 		_timer = get_tree().create_timer(5, false)
 		_timer.timeout.connect(_on_timer_timeout)
 
@@ -131,7 +131,7 @@ func _set_state(value:int) -> void:
 func _on_Btn_Quit_pressed() -> void:
 	get_tree().quit()
 
-func _on_DracominoState_notification_signal(notif:String, color:Color, force:bool = false) -> void:
+func _on_DracominoState_notification_signal(notif:String, color:AP.ComplexColor, force:bool = false) -> void:
 	if _timer and not force:
 		_timer.time_left = min(1.0, _timer.time_left)
 		_queuedNotifications.append({

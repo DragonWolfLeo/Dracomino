@@ -40,7 +40,7 @@ var _canUseDeathContext_NO_ROTATE:bool = false ## For death context
 signal lineMappings_updated(mappings:Dictionary[int, int])
 signal missingLocations_updated(locs:Dictionary[int, bool])
 signal missingLines_updated(locs:Dictionary[int, bool])
-signal notification_signal(notif:String, color:Color, force:bool)
+signal notification_signal(notif:String, color:AP.ComplexColor, force:bool)
 signal missingPickupCoordinates_updated(map:Dictionary[Vector2i, int])
 signal activeAbilities_updated(abilities:Dictionary[String, int])
 signal piecesLeft_updated(total:int)
@@ -277,12 +277,7 @@ func _on_deathlink(source: String, cause: String, json: Dictionary):
 
 func _on_obtained_item(item: NetworkItem):
 	if not isJustConnected:
-		var color = (
-			Color.PURPLE if item.is_prog()
-			else Color.ROYAL_BLUE if item.flags & AP.ItemClassification.USEFUL
-			else Color.TOMATO if  item.flags & AP.ItemClassification.TRAP
-			else Color.SKY_BLUE
-		)
+		var color := AP.ComplexColor.as_special(AP.get_item_class_color(item.flags))
 		if item.is_local():
 			notification_signal.emit("You found your {item}!".format({item=item.get_name()}), color, false)
 		else:
