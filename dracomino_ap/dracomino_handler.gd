@@ -167,8 +167,8 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	randomizeOrientations = conn.slot_data.get("randomize_orientations", false)
 	conn.deathlink.connect(_on_deathlink)
 	conn.obtained_item.connect(_on_obtained_item)
-	conn.on_hint_update.connect(_on_on_hint_update)
-	
+	conn.set_hint_notify(_on_on_hint_update)
+
 	# Check min game version
 	var minGameVersion:String = conn.slot_data.get("min_game_version", "0.1.0")
 	if UserData.versionIsOlderThan(Config.versionNum, minGameVersion):
