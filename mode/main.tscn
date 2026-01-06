@@ -121,6 +121,7 @@ split_offset = 784
 layout_mode = 2
 
 [node name="LevelContainer" type="PanelContainer" parent="HBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
 process_mode = 1
 layout_mode = 2
 size_flags_horizontal = 3
@@ -137,6 +138,7 @@ size = Vector2i(531, 540)
 render_target_update_mode = 4
 
 [node name="Board" parent="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport" node_paths=PackedStringArray("previewStorage", "holdStorage") instance=ExtResource("1_q3k4m")]
+unique_name_in_owner = true
 previewStorage = NodePath("PreviewStorage")
 holdStorage = NodePath("HoldStorage")
 
@@ -161,6 +163,7 @@ layout_mode = 2
 theme = SubResource("Theme_d5o15")
 
 [node name="LinesLabel" type="Label" parent="HBoxContainer/HBoxContainer/LevelContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
 text = "Lines: 0"
@@ -168,6 +171,7 @@ label_settings = SubResource("LabelSettings_rni7d")
 horizontal_alignment = 1
 
 [node name="PiecesLabel" type="Label" parent="HBoxContainer/HBoxContainer/LevelContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
 theme = SubResource("Theme_d5o15")
@@ -176,6 +180,7 @@ label_settings = SubResource("LabelSettings_rni7d")
 horizontal_alignment = 1
 
 [node name="NotificationLabel" type="Label" parent="HBoxContainer/HBoxContainer/LevelContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(20, 0)
 layout_mode = 2
 size_flags_vertical = 10
@@ -188,6 +193,7 @@ autowrap_mode = 2
 layout_mode = 2
 
 [node name="CenterLabel" type="Label" parent="HBoxContainer/HBoxContainer/LevelContainer/CenterContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "GAME
 OVER"
