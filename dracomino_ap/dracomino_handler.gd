@@ -89,7 +89,7 @@ func reset():
 	lineMappings_updated.emit(lineMappings)
 
 func newSeedReset():
-	print("Resetting everything because new seed!")
+	AP.log("Resetting everything because new seed!")
 	victory = false
 	collectedItems.clear()
 	missingLocations.clear()
@@ -129,14 +129,15 @@ func countPieces(from:int = 0) -> int:
 
 func sendLocation(loc_id:int):
 	# Send the location
-	if Archipelago.conn and missingLocations.get(loc_id, false):
-		Archipelago.collect_location(loc_id)
-		print("Sending location: ", CONSTANTS.LOCATIONS[loc_id].prettyName)
-	elif Archipelago.conn:
-		print("Already sent: ", CONSTANTS.LOCATIONS[loc_id].prettyName)
+	if Archipelago.conn:
+		if missingLocations.get(loc_id, false):
+			Archipelago.collect_location(loc_id)
+			AP.log("Sending location: %s" % CONSTANTS.LOCATIONS[loc_id].prettyName)
+		else:
+			AP.log("Already sent: %s" % CONSTANTS.LOCATIONS[loc_id].prettyName)
 	else:
-		print("Will send ", CONSTANTS.LOCATIONS[loc_id].prettyName, " to server when reconnected.")
-	
+		AP.log("Will send %s to server when reconnected." % CONSTANTS.LOCATIONS[loc_id].prettyName)
+
 	missingLocations[loc_id] = false
 	missingLocations_updated.emit(missingLocations)
 	checkedLocations[loc_id] = true
@@ -145,7 +146,7 @@ func sendLine(lineIndex:int):
 	if lineIndex >= allLineLocations.size():
 		return
 
-	print("Send location id for line ", lineIndex)
+	AP.log("Send location id for line %d" % lineIndex)
 	missingLines[lineIndex] = false
 	missingLines_updated.emit(missingLines)
 	sendLocation(allLineLocations[lineIndex])
@@ -237,7 +238,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 				if not checked:
 					missingPickups.append(loc_id)
 		else:
-			printerr("Got invalid location: id: {id}; name: {name}; You may be running an outdated version of the client!"
+			AP.error("Got invalid location: id: {id}; name: {name}; You may be running an outdated version of the client!"
 				.format({id=loc_id, name=conn.locations[loc_id].name})
 			)
 	
@@ -328,12 +329,12 @@ func _on_obtained_item(item: NetworkItem):
 		elif CONSTANTS.ITEMS[item.id].tags.get("shape"):
 			piecesLeft_updated.emit.call_deferred(countPieces(currentIndex))
 	else:
-		print("Obtained invalid item: id: {id}; name: {name}; You may be running an outdated version of the client!"
+		AP.error("Obtained invalid item: id: {id}; name: {name}; You may be running an outdated version of the client!"
 			.format({id=item.id,name=item.get_name()})
 		)
 func _on_on_hint_update(hints: Array[NetworkHint]):
 	if hints.size():
-		print("Got hints! ", hints.map(func(hint:NetworkHint): return hint.as_plain_string()))
+		AP.log("Got hints! %s" % hints.map(func(hint:NetworkHint): return hint.as_plain_string()))
 	if Archipelago.conn:
 		for hint:NetworkHint in hints:
 			if hint.status == NetworkHint.Status.FOUND: continue
@@ -360,7 +361,7 @@ func _on_Board_piece_requested(board:Board) -> void:
 	if nextPiece:
 		board.createPiece(nextPiece.get("name", ""), nextPiece.get("stateItem"))
 	else:
-		print("Outta pieces!")
+		AP.log("Outta pieces!")
 
 func _on_Board_game_started() -> void:
 	reset()
@@ -379,7 +380,7 @@ func _on_Board_lines_cleared(lines:Array) -> void:
 	lineMappings_updated.emit(lineMappings)
 
 func _on_Board_item_pickedup(loc_id) -> void:
-	print("Picked up ", CONSTANTS.LOCATIONS[loc_id].prettyName)
+	AP.log("Picked up %s" % CONSTANTS.LOCATIONS[loc_id].prettyName)
 	sendLocation(loc_id)
 
 func _on_Board_lines_cleared_updated(num:int) -> void:
@@ -432,4 +433,4 @@ func _on_Board_deathlink_earned(deathContext:DracominoUtil.DeathContext) -> void
 		var msg = DracominoUtil.generateDeathlinkMessage(deathContext.category, contextTags, formatValues) 
 		Archipelago.conn.send_deathlink.call_deferred(msg)
 		notification_signal.emit(msg, Color.RED, true)
-		print(msg, deathContext.category, ": ", contextTags)
+		AP.log("%s%s: %s" % [msg, deathContext.category, contextTags])
