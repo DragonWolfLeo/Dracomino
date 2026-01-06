@@ -31,7 +31,6 @@ var slotContextHash:int:
 		slotContextHash_updated.emit(slotContextHash)
 
 var isJustConnected:bool = false
-var _holdSlotLegacyEnabled:bool = false
 var VERSION_WARNING_DIALOG_SCENE:PackedScene = load("res://ui/versionwarning_dialog.tscn")
 
 var LINE_THRESHOLD_FOR_NO_ROTATE_DEATH_CONTEXT:int = 8 ## For death context
@@ -46,6 +45,7 @@ signal activeAbilities_updated(abilities:Dictionary[String, int])
 signal piecesLeft_updated(total:int)
 signal goal_updated(goalnum:int)
 signal slotContextHash_updated(ctx:int)
+signal connected()
 
 class StateItem:
 	var id:int
@@ -171,14 +171,16 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	
 	# Check min game version
 	var minGameVersion:String = conn.slot_data.get("min_game_version", "0.1.0")
+	var warningDialog:AcceptDialog
 	if UserData.versionIsOlderThan(Config.versionNum, minGameVersion):
-		var dialog:AcceptDialog = VERSION_WARNING_DIALOG_SCENE.instantiate()
-		dialog.popup_exclusive_centered(self)
-		dialog.dialog_text = "Game version {version} is too old for this slot data and may not work correctly! Target version is {minGameVersion} or newer!".format({
+		warningDialog = VERSION_WARNING_DIALOG_SCENE.instantiate()
+		warningDialog.dialog_text = "Game version {version} is too old for this slot data and may not work correctly! Target version is {minGameVersion} or newer!".format({
 			version=Config.versionNum,
 			minGameVersion=minGameVersion,
 		})
-		dialog.confirmed.connect(dialog.queue_free)
+		add_child(warningDialog)
+		warningDialog.popup_centered()
+		warningDialog.visibility_changed.connect(warningDialog.queue_free)
 
 	# Create seed hash
 	var _conn_ctx = hash("{seed}_{player_id}_{team_id}".format({
@@ -187,7 +189,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		team_id=conn.team_id
 	}))
 
-	# TODO: Check if this is a brand new seed, player, and team, and do a full reset
+	# Check if this is a brand new seed, player, and team, and do a full reset
 	if slotContextHash and slotContextHash != _conn_ctx: newSeedReset()
 
 	slotContextHash = _conn_ctx
@@ -275,6 +277,12 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		missingLines_updated.emit(missingLines)
 		missingPickupCoordinates_updated.emit(missingPickupCoordinates)
 
+	# Send connected signal to start game
+	if is_instance_valid(warningDialog):
+		warningDialog.tree_exited.connect(connected.emit)
+	else:
+		connected.emit()
+
 func _on_deathlink(source: String, cause: String, json: Dictionary):
 	if not cause: cause = "Died."
 	notification_signal.emit("{source}: {cause}".format({source=source, cause=cause}), Color.RED, true)
@@ -317,9 +325,6 @@ func _on_obtained_item(item: NetworkItem):
 			else:
 				collectedAbilities[item.id] = 1
 			var prettyName = CONSTANTS.ITEMS[item.id].prettyName
-			# TODO: Temp compatibility for Ghost Piece to count as Hold Slot
-			if _holdSlotLegacyEnabled and prettyName == "Ghost Piece":
-				prettyName = "Hold Slot"
 
 			# Check if abilities have changed
 			if activeAbilities.get(prettyName, 0) < collectedAbilities[item.id]:

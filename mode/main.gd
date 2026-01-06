@@ -35,7 +35,6 @@ func _ready() -> void:
 	focus_exited.connect(_on_focus_exited)
 	get_window().focus_entered.connect(_on_window_focus_entered)
 	get_window().focus_exited.connect(_on_window_focus_exited)
-	Archipelago.connected.connect(grab_focus.unbind(2))
 	state = STATE.PAUSED
 
 	_on_SubViewportContainer_resized.call_deferred()
@@ -183,3 +182,6 @@ func _on_PreviewStorage_num_stored_changed(num:int) -> void:
 func _on_BtnChangelog_pressed() -> void:
 	var _changelogWindow:Window = CHANGELOG_WINDOW_SCENE.instantiate() as Window
 	_changelogWindow.popup_exclusive_centered(self)
+
+func _on_DracominoHandler_connected() -> void:
+	grab_focus()

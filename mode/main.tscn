@@ -276,6 +276,7 @@ layout_mode = 2
 
 [connection signal="activeAbilities_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/PreviewStorage" method="_on_DracominoHandler_active_abilities_updated"]
 [connection signal="activeAbilities_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/HoldStorage" method="_on_DracominoHandler_active_abilities_updated"]
+[connection signal="connected" from="DracominoHandler" to="." method="_on_DracominoHandler_connected"]
 [connection signal="goal_updated" from="DracominoHandler" to="." method="_on_DracominoState_goal_updated"]
 [connection signal="lineMappings_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_line_mappings_updated"]
 [connection signal="missingLines_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_lines_updated"]
