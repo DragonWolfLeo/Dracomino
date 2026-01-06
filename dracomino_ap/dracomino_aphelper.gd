@@ -6,7 +6,7 @@ func _ready() -> void:
 	if OS.is_debug_build():
 		Archipelago.cmd_manager.debug_hidden = false
 	AP.log(Archipelago.AP_CLIENT_VERSION)
-	load_connection()
+	Archipelago.creds.updated.connect((Archipelago.config as DracominoConfigManager).update_credentials)
 
 	Archipelago.load_console(get_parent(), false)
 	SignalBus.getSignal("theme_set").connect(_on_theme_set)
@@ -22,23 +22,6 @@ func _ready() -> void:
 		btn_deathOnRestart.toggled.connect(_on_btn_deathOnRestart_toggled)
 		SignalBus.getSignal("deathOnRestart_enabled").connect(btn_deathOnRestart.set_pressed_no_signal.bind(true))
 		SignalBus.getSignal("deathOnRestart_disabled").connect(btn_deathOnRestart.set_pressed_no_signal.bind(false))
-
-static func load_connection():
-	var conn_info_file: FileAccess = FileAccess.open("user://ap/connection.dat", FileAccess.READ)
-	if not conn_info_file: return
-	var ip = conn_info_file.get_line()
-	var port = conn_info_file.get_line()
-	var slot = conn_info_file.get_line()
-	Archipelago.creds.update(ip, port, slot, "")
-	conn_info_file.close()
-static func save_connection(creds: APCredentials):
-	DirAccess.make_dir_recursive_absolute("user://ap/")
-	var conn_info_file: FileAccess = FileAccess.open("user://ap/connection.dat", FileAccess.WRITE)
-	if not conn_info_file: return
-	conn_info_file.store_line(creds.ip)
-	conn_info_file.store_line(creds.port)
-	conn_info_file.store_line(creds.slot)
-	conn_info_file.close()
 
 #===== Events =====
 func _on_theme_set():
