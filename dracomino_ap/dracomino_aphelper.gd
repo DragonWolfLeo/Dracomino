@@ -5,17 +5,8 @@ var btn_deathOnRestart:CheckButton
 func _ready() -> void:
 	if OS.is_debug_build():
 		Archipelago.cmd_manager.debug_hidden = false
-	Archipelago.AP_GAME_NAME = "Dracomino"
-	Archipelago.AP_CLIENT_VERSION = Version.val(0,1,0) # GodotAP CommonClient version
-	Archipelago.AP_HIDE_NONLOCAL_ITEMSENDS = true
 	AP.log(Archipelago.AP_CLIENT_VERSION)
-	Archipelago.set_tags([])
-	Archipelago.AP_ITEM_HANDLING = Archipelago.ItemHandling.ALL
-	Archipelago.creds.updated.connect(save_connection)
 	load_connection()
-
-	if Archipelago.output_console:
-		Archipelago.close_console()
 
 	Archipelago.load_console(get_parent(), false)
 	SignalBus.getSignal("theme_set").connect(_on_theme_set)
