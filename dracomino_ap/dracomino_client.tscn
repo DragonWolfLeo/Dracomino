@@ -63,4 +63,40 @@ layout_mode = 2
 text = "Death On Restart
 "
 
+[node name="MarginContainer" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="GridContainer" type="GridContainer" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 5
+theme_override_constants/v_separation = 5
+columns = 4
+
+[node name="Label" type="Label" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/MarginContainer/GridContainer"]
+layout_mode = 2
+text = "Gravity Speed"
+
+[node name="HSlider_GravityAmt" type="HSlider" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/MarginContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.5
+max_value = 4.0
+step = 0.1
+value = 1.0
+
+[node name="Label_GravityAmt" type="Label" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/MarginContainer/GridContainer"]
+clip_contents = true
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = "1.0"
+
+[node name="Btn_GravityAmt_reset" type="Button" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/MarginContainer/GridContainer"]
+layout_mode = 2
+text = "Reset"
+
 [editable path="Tabs/Settings"]

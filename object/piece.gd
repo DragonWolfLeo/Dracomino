@@ -57,6 +57,10 @@ static var PIECES:Dictionary[StringName, PieceDefinition] = {
 	"Monomino":  PieceDefinition.new([Vector2i.ZERO]).setCanRotate(false),
 }
 
+@onready var horizontalTimer:Timer = $HorizontalTimer
+@onready var softDropTimer:Timer = $SoftDropTimer
+@onready var gravityTimer:Timer = $GravityTimer
+
 var TOTAL_NUMBER_OF_COLORS = 12
 var pieceDefinition:PieceDefinition
 var localCells:Array[Vector2i] =[]
@@ -67,32 +71,41 @@ var prettyName:String = "Piece"
 var context:DracominoHandler.StateItem = null
 var moveLock:bool = false: ## Prevent moving this anymore
 	set(value):
-		$HorizontalTimer.paused = value
+		if horizontalTimer: horizontalTimer.paused = value
 		moveLock = value
 var ghost:GhostPiece
 var GHOSTPIECE_SCENE:PackedScene = load("res://object/ghostpiece.tscn")
+var GRAVITY_WAIT_TIME:float = 1.0
+var HARD_DROP_WAIT_TIME:float = 0.01
+var SOFT_DROP_WAIT_TIME:float = 0.2
+var SOFT_DROP_REPEAT_WAIT_TIME:float = .04
+var HORIZONTAL_WAIT_TIME:float = 0.2
+var HORIZONTAL_REPEAT_WAIT_TIME:float = .075
 
 signal movement_requested(piece:Piece, direction:Vector2i)
 signal new_cells_requested(piece:Piece, cells:Array[Vector2i])
 signal ghost_cells_requested(piece:Piece, ghostPiece:GhostPiece)
 
 #==== Virtuals ======
-func _process(_delta):
+func _ready() -> void:
+	SignalBus.getSignal("setting_changed", "gravity").connect(_on_gravity_setting_changed)
+	_on_gravity_setting_changed()
+
+func _physics_process(delta: float) -> void:
 	var moved := Vector2i.ZERO
 	if not moveLock:
 		if Input.is_action_just_pressed("moveLeft"):
-			moved = Vector2i.LEFT
-			$HorizontalTimer.start()
+			moved += Vector2i.LEFT
+			horizontalTimer.start()
 		if Input.is_action_just_pressed("moveRight"):
-			moved = Vector2i.RIGHT
-			$HorizontalTimer.start()
+			moved += Vector2i.RIGHT
+			horizontalTimer.start()
 		if Input.is_action_just_pressed("moveDown") and DracominoHandler.activeAbilities.get("Soft Drop", 0):
 			moved = Vector2i.DOWN
-			$SoftDropTimer.start()
+			softDropTimer.start()
 	
 	if moved != Vector2i.ZERO:
 		movement_requested.emit(self, moved)
-
 
 #==== Functions ======
 func makeActive():
@@ -187,8 +200,8 @@ func setCells(cells:Array[Vector2i]) -> void:
 func hardDrop():
 	if not moveLock:
 		moveLock = true
-		$GravityTimer.wait_time = 0.01
-		$GravityTimer.start()
+		gravityTimer.wait_time = HARD_DROP_WAIT_TIME
+		gravityTimer.start()
 
 func move(direction:Vector2i):
 	currentPosition += direction
@@ -201,19 +214,19 @@ func _on_HorizontalTimer_timeout():
 	elif Input.is_action_pressed("moveRight"):
 		moved = Vector2i.RIGHT
 	else:
-		$HorizontalTimer.wait_time = .2
+		horizontalTimer.wait_time = HORIZONTAL_WAIT_TIME
 		return
-	$HorizontalTimer.wait_time = .075
-	$HorizontalTimer.start()
+	horizontalTimer.wait_time = HORIZONTAL_REPEAT_WAIT_TIME
+	horizontalTimer.start()
 	movement_requested.emit(self, moved)
 
 func _on_SoftDropTimer_timeout():
 	if Input.is_action_pressed("moveDown") and DracominoHandler.activeAbilities.get("Soft Drop", 0):
 		movement_requested.emit(self, Vector2i.DOWN)
-		$SoftDropTimer.wait_time = .04
-		$SoftDropTimer.start()
+		softDropTimer.wait_time = SOFT_DROP_REPEAT_WAIT_TIME
+		softDropTimer.start()
 	else:
-		$SoftDropTimer.wait_time = .2
+		softDropTimer.wait_time = SOFT_DROP_WAIT_TIME
 
 func _on_GravityTimer_timeout():
 	if moveLock or DracominoHandler.activeAbilities.get("Gravity", 0):
@@ -223,3 +236,9 @@ func _setCurrentPosition(value:Vector2i):
 	currentPosition = value
 	position = currentPosition * tile_set.tile_size
 	updateTiles()
+
+func _on_gravity_setting_changed():
+	if not moveLock:
+		var gravSpeed = Config.getSetting("gravity", 1.0)
+		gravityTimer.wait_time = GRAVITY_WAIT_TIME/gravSpeed
+		gravityTimer.start()
