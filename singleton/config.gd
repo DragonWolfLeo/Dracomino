@@ -1,20 +1,19 @@
 extends Node
 
+signal setting_changed(setting:StringName)
+
 @onready var versionNum:String = getVersionNum()
 var versionCompatible:String = "0.0.0"
 var debugMode := false
 var showHints := true
-var volume:= 80.0
-var volume_music := 100
-var volume_sfx := 100
 @onready var isWeb:bool = OS.get_name() == "Web"
 var SAVEFILEPATH = "user://auto.save"
 var CONFIGPATH = "user://config.json"
+var settings:Dictionary = {}
 
 func _ready():
-	if !OS.is_debug_build():
-		debugMode = false # Auto set debug mode in case I forget
 	loadConfig()
+	SignalBus.registerSignalDistributor(setting_changed, "setting_changed")
 		
 func loadConfig():
 	var path = CONFIGPATH
@@ -26,26 +25,46 @@ func loadConfig():
 func saveConfig():
 	UserData.saveDataToFile(export(), CONFIGPATH)
 
-func exportVersion()->Dictionary:
+var _saveTimer:SceneTreeTimer
+func lazySaveConfig(): ## A lazy, less frequent save function
+	if _saveTimer:
+		# Trying to save again, so queue it
+		if not _saveTimer.timeout.is_connected(saveConfig):
+			_saveTimer.timeout.connect(saveConfig, CONNECT_ONE_SHOT)
+		return
+	# No timer is running so save and start one
+	saveConfig()
+	_saveTimer = get_tree().create_timer(3)
+	_saveTimer.timeout.connect(set.bind("_saveTimer", null), CONNECT_ONE_SHOT)
+
+func exportVersion() -> Dictionary:
 	return {
 		versionNum = versionNum,
 		versionCompatible = versionCompatible,
 	}
-func export()->Dictionary:
-	var ret = {
+
+func export() -> Dictionary:
+	var ret: = {
 		debug = debugMode,
-		volume = volume,
-		volume_music = volume_music,
-		volume_sfx = volume_sfx,
 	}
+	ret.merge(settings)
 	ret.merge(exportVersion())
 	return ret
-	
+
 func import(data:Dictionary):
 	if data.has("debug"): debugMode = data.debug
-	if data.has("volume"): volume = data.volume
-	if data.has("volume_music"): volume_music = data.volume_music
-	if data.has("volume_sfx"): volume_sfx = data.volume_sfx
+	settings.merge(data, true)
+
+func changeSetting(key:StringName, value:Variant, saveAfterwards:bool = true) -> void:
+	var current:Variant = settings.get(value)
+	if current != value:
+		settings[key] = value
+		setting_changed.emit(key)
+		if saveAfterwards:
+			lazySaveConfig()
+
+func getSetting(key:StringName, default:Variant = null) -> Variant:
+	return settings.get(key, default)
 
 func getVersionNum():
 	var changelog:String = load("res://changelog.txt").text
