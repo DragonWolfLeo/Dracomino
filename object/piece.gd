@@ -67,7 +67,7 @@ var prettyName:String = "Piece"
 var context:DracominoHandler.StateItem = null
 var moveLock:bool = false: ## Prevent moving this anymore
 	set(value):
-		$horizontal_timer.paused = value
+		$HorizontalTimer.paused = value
 		moveLock = value
 var ghost:GhostPiece
 var GHOSTPIECE_SCENE:PackedScene = load("res://object/ghostpiece.tscn")
@@ -82,13 +82,13 @@ func _process(_delta):
 	if not moveLock:
 		if Input.is_action_just_pressed("moveLeft"):
 			moved = Vector2i.LEFT
-			$horizontal_timer.start()
+			$HorizontalTimer.start()
 		if Input.is_action_just_pressed("moveRight"):
 			moved = Vector2i.RIGHT
-			$horizontal_timer.start()
+			$HorizontalTimer.start()
 		if Input.is_action_just_pressed("moveDown") and DracominoHandler.activeAbilities.get("Soft Drop", 0):
 			moved = Vector2i.DOWN
-			$vertical_timer.start()
+			$SoftDropTimer.start()
 	
 	if moved != Vector2i.ZERO:
 		movement_requested.emit(self, moved)
@@ -187,35 +187,35 @@ func setCells(cells:Array[Vector2i]) -> void:
 func hardDrop():
 	if not moveLock:
 		moveLock = true
-		$fall_down_timer.wait_time = 0.01
-		$fall_down_timer.start()
+		$GravityTimer.wait_time = 0.01
+		$GravityTimer.start()
 
 func move(direction:Vector2i):
 	currentPosition += direction
 
 # Events
-func _on_horizontal_timer_timeout():
+func _on_HorizontalTimer_timeout():
 	var moved = Vector2i.ZERO
 	if Input.is_action_pressed("moveLeft"):
 		moved = Vector2i.LEFT
 	elif Input.is_action_pressed("moveRight"):
 		moved = Vector2i.RIGHT
 	else:
-		$horizontal_timer.wait_time = .2
+		$HorizontalTimer.wait_time = .2
 		return
-	$horizontal_timer.wait_time = .075
-	$horizontal_timer.start()
+	$HorizontalTimer.wait_time = .075
+	$HorizontalTimer.start()
 	movement_requested.emit(self, moved)
 
-func _on_vertical_timer_timeout():
+func _on_SoftDropTimer_timeout():
 	if Input.is_action_pressed("moveDown") and DracominoHandler.activeAbilities.get("Soft Drop", 0):
 		movement_requested.emit(self, Vector2i.DOWN)
-		$vertical_timer.wait_time = .04
-		$vertical_timer.start()
+		$SoftDropTimer.wait_time = .04
+		$SoftDropTimer.start()
 	else:
-		$vertical_timer.wait_time = .2
+		$SoftDropTimer.wait_time = .2
 
-func _fall_down_timer_timeout():
+func _on_GravityTimer_timeout():
 	if moveLock or DracominoHandler.activeAbilities.get("Gravity", 0):
 		movement_requested.emit(self, Vector2i.DOWN)
 
