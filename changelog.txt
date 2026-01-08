@@ -9,6 +9,7 @@ Fixes
  - Prevent rotating and holding when hard-dropping
  - Invalid locations properly clear when changing slots/seeds
  - Piece movement uses physics tick
+ - Fix screen split resizing itself
 
 Version 0.2.1
  - Update GodotAP to v0.4.1
