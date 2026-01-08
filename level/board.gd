@@ -410,11 +410,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				requestPiece.call_deferred()
 				inputTimer.reset()
 				get_viewport().set_input_as_handled()
-
 	if currentPiece == null: return
-	if (event.is_action("moveRight") 
-	or event.is_action("moveLeft")
-	or event.is_action("moveDown")
+	if (event.is_action_pressed("moveRight") 
+	or event.is_action_pressed("moveLeft")
+	or event.is_action_pressed("moveDown")
 	):
 		pass
 		# # TODO: This doesn't do anything due to piece handling it

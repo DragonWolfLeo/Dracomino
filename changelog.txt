@@ -2,6 +2,8 @@ Version 0.2.2 (beta)
  - Piece movement uses physics tick
  - Add Gravity Speed option
  - Invalid locations properly clear when changing slots/seeds
+ - Prevent rotating when hard-dropping
+ - Fix issues with controls
 
 Version 0.2.1
  - Update GodotAP to v0.4.1
