@@ -183,5 +183,5 @@ func _on_BtnChangelog_pressed() -> void:
 	var _changelogWindow:Window = CHANGELOG_WINDOW_SCENE.instantiate() as Window
 	_changelogWindow.popup_exclusive_centered(self)
 
-func _on_DracominoHandler_connected() -> void:
+func _on_DracominoHandler_started() -> void:
 	grab_focus()

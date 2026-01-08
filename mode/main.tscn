@@ -276,7 +276,6 @@ layout_mode = 2
 
 [connection signal="activeAbilities_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/PreviewStorage" method="_on_DracominoHandler_active_abilities_updated"]
 [connection signal="activeAbilities_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/HoldStorage" method="_on_DracominoHandler_active_abilities_updated"]
-[connection signal="connected" from="DracominoHandler" to="." method="_on_DracominoHandler_connected"]
 [connection signal="goal_updated" from="DracominoHandler" to="." method="_on_DracominoState_goal_updated"]
 [connection signal="lineMappings_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_line_mappings_updated"]
 [connection signal="missingLines_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_lines_updated"]
@@ -284,6 +283,7 @@ layout_mode = 2
 [connection signal="notification_signal" from="DracominoHandler" to="." method="_on_DracominoState_notification_signal"]
 [connection signal="piecesLeft_updated" from="DracominoHandler" to="." method="_on_DracominoState_pieces_left_updated"]
 [connection signal="slotContextHash_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_slot_context_hash_updated"]
+[connection signal="started" from="DracominoHandler" to="." method="_on_DracominoHandler_started"]
 [connection signal="resized" from="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer" to="." method="_on_SubViewportContainer_resized"]
 [connection signal="deathlink_earned" from="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_deathlink_earned"]
 [connection signal="game_over_earned" from="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_game_over_earned"]

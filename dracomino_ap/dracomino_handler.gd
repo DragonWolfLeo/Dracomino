@@ -37,7 +37,7 @@ var LINE_THRESHOLD_FOR_NO_ROTATE_DEATH_CONTEXT:int = 8 ## For death context
 var _canUseDeathContext_NO_ROTATE:bool = false ## For death context
 
 signal lineMappings_updated(mappings:Dictionary[int, int])
-signal missingLocations_updated(locs:Dictionary[int, bool])
+signal missingLocations_updated(locs:Dictionary[int, bool]) # TODO: This isn't actually used for anything?
 signal missingLines_updated(locs:Dictionary[int, bool])
 signal notification_signal(notif:String, color:Color, force:bool)
 signal missingPickupCoordinates_updated(map:Dictionary[Vector2i, int])
@@ -45,7 +45,7 @@ signal activeAbilities_updated(abilities:Dictionary[String, int])
 signal piecesLeft_updated(total:int)
 signal goal_updated(goalnum:int)
 signal slotContextHash_updated(ctx:int)
-signal connected()
+signal started()
 
 class StateItem:
 	var id:int
@@ -101,7 +101,9 @@ func newSeedReset():
 	missingPickups.clear()
 	activeAbilities_updated.emit(activeAbilities)
 	hintedRotateAbilities.clear()
-	SignalBus.getSignal("restartGame").emit()
+	# Reset when everything is loaded
+	await started
+	SignalBus.getSignal("restartGame").emit() 
 
 func getNextPiece() -> Dictionary:
 	var numItems := collectedItems.size()
@@ -277,11 +279,11 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		missingLines_updated.emit(missingLines)
 		missingPickupCoordinates_updated.emit(missingPickupCoordinates)
 
-	# Send connected signal to start game
+	# Send started signal to start game
 	if is_instance_valid(warningDialog):
-		warningDialog.tree_exited.connect(connected.emit)
+		warningDialog.tree_exited.connect(started.emit)
 	else:
-		connected.emit()
+		started.emit()
 
 func _on_deathlink(source: String, cause: String, json: Dictionary):
 	if not cause: cause = "Died."
