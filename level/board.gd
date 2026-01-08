@@ -486,7 +486,7 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 		# Re-number the labels
 		var line:int = lineMappings.get(i, 0)
 		lineNumberLabels[i].text = str(line + 1)
-		lineNumberLabels[i].visible = _missinglines.get(line, false)
+		lineNumberLabels[i].modulate.a = 1.0 if _missinglines.get(line, false) else 0.2 # Make transparent if collected
 
 		# Organize the pickups
 		for j:int in range(BOUNDS.size.x):
