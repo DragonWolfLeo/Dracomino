@@ -9,14 +9,19 @@ var showHints := true
 @onready var isWeb:bool = OS.get_name() == "Web"
 var SAVEFILEPATH = "user://auto.save"
 var CONFIGPATH = "user://config.json"
-var settings:Dictionary = {
-	# Set defaults
+const DEFAULT_SETTINGS:Dictionary[StringName, Variant] = {
 	# Audio
 	volume = 80.0,
 	volume_music = 100.0,
 	volume_sfx = 100.0,
 	# Game
-	gravity = 1.2,
+	gravity = 1.0,
+}
+var settings:Dictionary[StringName, Variant] = DEFAULT_SETTINGS.duplicate()
+var VERSION_UPGRADES:Dictionary[String, Callable] = {
+	"0.2.2.1": func(data:Dictionary):
+		if data.get("gravity") is float: # Try to preserve current gravity settings
+			data["gravity"] = snapped(data["gravity"]*0.8, 0.1) as float
 }
 
 func _ready():
@@ -27,7 +32,8 @@ func loadConfig():
 	var path = CONFIGPATH
 	if !FileAccess.file_exists(path): return
 	
-	var data = UserData.loadDataFromFile(path)
+	var data:Dictionary = UserData.loadDataFromFile(path)
+	UserData.upgradeDataToCurrentVersion(data, VERSION_UPGRADES)
 	import(data)
 	
 func saveConfig():
@@ -56,7 +62,7 @@ func export() -> Dictionary:
 		debug = debugMode,
 	}
 	ret.merge(settings)
-	ret.merge(exportVersion())
+	ret.merge(exportVersion(), true)
 	return ret
 
 func import(data:Dictionary):
@@ -64,15 +70,18 @@ func import(data:Dictionary):
 	settings.merge(data, true)
 
 func changeSetting(key:StringName, value:Variant, saveAfterwards:bool = true) -> void:
-	var current:Variant = settings.get(value)
+	var current:Variant = settings.get(key)
 	if current != value:
 		settings[key] = value
 		setting_changed.emit(key)
 		if saveAfterwards:
 			lazySaveConfig()
 
-func getSetting(key:StringName, default:Variant = null) -> Variant:
-	return settings.get(key, default)
+func getSetting(key:StringName, fallback:Variant = null) -> Variant:
+	return settings.get(key, DEFAULT_SETTINGS.get(key, fallback))
+
+func getDefaultSetting(key:StringName, fallback:Variant = null) -> Variant:
+	return DEFAULT_SETTINGS.get(key, fallback)
 
 func getVersionNum():
 	var changelog:String = load("res://changelog.txt").text

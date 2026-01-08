@@ -46,7 +46,7 @@ func _ready() -> void:
 		slider_gravityAmt.value = Config.getSetting("gravity", 1.0)
 		btn_gravityAmt_reset = get_parent().find_child("Btn_GravityAmt_reset")
 		if btn_gravityAmt_reset:
-			btn_gravityAmt_reset.pressed.connect(slider_gravityAmt.set.bind("value", 1.0))
+			btn_gravityAmt_reset.pressed.connect(slider_gravityAmt.set.bind("value", Config.getDefaultSetting("gravity", 1.0)))
 
 static func load_connection():
 	var conn_info_file: FileAccess = FileAccess.open("user://ap/connection.dat", FileAccess.READ)

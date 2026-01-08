@@ -20,7 +20,7 @@ func loadDataFromFile(path)->Dictionary:
 		return {error=ERR_PARSE_ERROR}
 	return json.get_data()
 
-var VERSION_UPGRADES = {}
+var VERSION_UPGRADES:Dictionary[String, Callable] = {}
 
 func _convertFloatsToInt(data:={}):
 	for k:String in data:
@@ -29,14 +29,14 @@ func _convertFloatsToInt(data:={}):
 		elif data[k] is Dictionary:
 			_convertFloatsToInt(data[k])
 	
-func upgradeDataToCurrentVersion(data:Dictionary):
+func upgradeDataToCurrentVersion(data:Dictionary, versionUpgrades:Dictionary[String, Callable] = VERSION_UPGRADES):
 	_convertFloatsToInt(data.get("stateFlags", {}))
 	if !data.has("versionNum"): return
 	var datahash = data.hash()
 	
 	var upgrades = []
-	for versionNum in VERSION_UPGRADES:
-		upgrades.append({versionNum = versionNum, fn = VERSION_UPGRADES[versionNum]})
+	for versionNum in versionUpgrades:
+		upgrades.append({versionNum = versionNum, fn = versionUpgrades[versionNum]})
 		
 	upgrades.sort_custom(func(a,b): return versionIsOlderThan(a.versionNum,b.versionNum))	
 	
