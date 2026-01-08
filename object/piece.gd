@@ -4,7 +4,6 @@ class_name Piece extends TileMapLayer
 
 class PieceDefinition:
 	var tiles:Array[Vector2i]
-	var color:Color
 	var id:int
 	var canRotate:bool = true
 	var offset:Vector2i
@@ -61,7 +60,14 @@ static var PIECES:Dictionary[StringName, PieceDefinition] = {
 @onready var softDropTimer:Timer = $SoftDropTimer
 @onready var gravityTimer:Timer = $GravityTimer
 
-var TOTAL_NUMBER_OF_COLORS = 12
+@onready var GRAVITY_WAIT_TIME:float = gravityTimer.wait_time
+var HARD_DROP_WAIT_TIME:float = 0.01
+@onready var SOFT_DROP_WAIT_TIME:float = softDropTimer.wait_time
+var SOFT_DROP_REPEAT_WAIT_TIME:float = .04
+@onready var HORIZONTAL_WAIT_TIME:float = horizontalTimer.wait_time
+var HORIZONTAL_REPEAT_WAIT_TIME:float = .075
+
+static var TOTAL_NUMBER_OF_COLORS = 12
 var pieceDefinition:PieceDefinition
 var localCells:Array[Vector2i] =[]
 var currentPosition:Vector2i: set = _setCurrentPosition
@@ -74,13 +80,8 @@ var moveLock:bool = false: ## Prevent moving this anymore
 		if horizontalTimer: horizontalTimer.paused = value
 		moveLock = value
 var ghost:GhostPiece
-var GHOSTPIECE_SCENE:PackedScene = load("res://object/ghostpiece.tscn")
-var GRAVITY_WAIT_TIME:float = 1.0
-var HARD_DROP_WAIT_TIME:float = 0.01
-var SOFT_DROP_WAIT_TIME:float = 0.2
-var SOFT_DROP_REPEAT_WAIT_TIME:float = .04
-var HORIZONTAL_WAIT_TIME:float = 0.2
-var HORIZONTAL_REPEAT_WAIT_TIME:float = .075
+
+static var GHOSTPIECE_SCENE:PackedScene = load("res://object/ghostpiece.tscn")
 
 signal movement_requested(piece:Piece, direction:Vector2i)
 signal new_cells_requested(piece:Piece, cells:Array[Vector2i])
@@ -200,6 +201,7 @@ func setCells(cells:Array[Vector2i]) -> void:
 func hardDrop():
 	if not moveLock:
 		moveLock = true
+		canRotate = false
 		gravityTimer.wait_time = HARD_DROP_WAIT_TIME
 		gravityTimer.start()
 
