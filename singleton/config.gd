@@ -16,7 +16,7 @@ var settings:Dictionary = {
 	volume_music = 100.0,
 	volume_sfx = 100.0,
 	# Game
-	gravity = 1.5,
+	gravity = 1.2,
 }
 
 func _ready():
