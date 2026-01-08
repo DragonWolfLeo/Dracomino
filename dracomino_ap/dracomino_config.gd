@@ -1,7 +1,7 @@
 class_name DracominoConfigManager extends APConfigManager
 
 const DRACOMINO_CONFIG_VERSION := 1
-var ip: String = "" :
+var ip: String = "archipelago.gg" :
 	set(val):
 		if val != ip:
 			ip = val
