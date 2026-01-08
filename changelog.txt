@@ -1,6 +1,7 @@
 Version 0.2.2 (beta)
  - Piece movement uses physics tick
  - Add Gravity Speed option
+ - Make default gravity faster
  - Invalid locations properly clear when changing slots/seeds
  - Prevent rotating when hard-dropping
  - Fix issues with controls

@@ -9,7 +9,15 @@ var showHints := true
 @onready var isWeb:bool = OS.get_name() == "Web"
 var SAVEFILEPATH = "user://auto.save"
 var CONFIGPATH = "user://config.json"
-var settings:Dictionary = {}
+var settings:Dictionary = {
+	# Set defaults
+	# Audio
+	volume = 80.0,
+	volume_music = 100.0,
+	volume_sfx = 100.0,
+	# Game
+	gravity = 1.5,
+}
 
 func _ready():
 	loadConfig()
