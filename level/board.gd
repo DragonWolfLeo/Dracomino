@@ -194,6 +194,9 @@ func spawnPiece(piece:Piece):
 		piece_spawned.emit(currentPiece)
 
 func hold():
+	if currentPiece and currentPiece.moveLock:
+		# Don't hold if hard dropping
+		return
 	if holdStorage and not holdOnCooldown:
 		# TODO: Swap sound
 		holdOnCooldown = true

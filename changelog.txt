@@ -1,12 +1,14 @@
-Version 0.2.2 (beta)
- - Piece movement uses physics tick
+Version 0.2.2
+Changes
  - Add Gravity Speed option
  - Make default gravity faster
- - Invalid locations properly clear when changing slots/seeds
- - Prevent rotating when hard-dropping
- - Fix issues with controls
  - Make checked line numbers dark instead of invisible
  - Make input afk timer shorter (for death link message context)
+Fixes
+ - Fix issues with controls
+ - Prevent rotating and holding when hard-dropping
+ - Invalid locations properly clear when changing slots/seeds
+ - Piece movement uses physics tick
 
 Version 0.2.1
  - Update GodotAP to v0.4.1
