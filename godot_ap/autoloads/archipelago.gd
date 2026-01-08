@@ -274,7 +274,7 @@ var _wss := true # If current connection attempt is using secure sockets. Altern
 
 ## Returns the URL currently being targetted for connection
 func get_url() -> String:
-	return "%s://%s:%s" % ["wss" if _wss else "ws",creds.ip,creds.port]
+	return "%s://%s:%s" % ["wss" if _wss and creds.ip.to_lower() != "localhost" else "ws",creds.ip,creds.port]
 
 ## Reconnect to Archipelago with the same information as before
 func ap_reconnect() -> void:
