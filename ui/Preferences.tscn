@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bmqa5kpuntaut"]
 
-[ext_resource type="Script" path="res://ui/Preferences.gd" id="1_b78u7"]
+[ext_resource type="Script" uid="uid://crrqg8b7b3aip" path="res://ui/Preferences.gd" id="1_b78u7"]
 
 [node name="Preferences" type="VBoxContainer"]
 anchors_preset = 15

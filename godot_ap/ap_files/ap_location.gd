@@ -8,7 +8,6 @@ static func make(locid: int) -> APLocation:
 	var ret := APLocation.new()
 	ret.id = locid
 	ret.name = Archipelago.conn.get_gamedata_for_player().get_loc_name(locid)
-	ret.refresh()
 	return ret
 static func nil() -> APLocation:
 	var ret := APLocation.new()

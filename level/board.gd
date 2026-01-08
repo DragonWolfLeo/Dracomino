@@ -76,6 +76,7 @@ var pieceTimer:ActivityTimer ## For death context
 #===== Virtuals ======
 func _ready():
 	inputTimer = ActivityTimer.new(); add_child(inputTimer)
+	inputTimer.afk_threshold = 10.0
 	pieceTimer = ActivityTimer.new(); add_child(pieceTimer)
 	game_started.emit()
 	
@@ -193,6 +194,9 @@ func spawnPiece(piece:Piece):
 		piece_spawned.emit(currentPiece)
 
 func hold():
+	if currentPiece and currentPiece.moveLock:
+		# Don't hold if hard dropping
+		return
 	if holdStorage and not holdOnCooldown:
 		# TODO: Swap sound
 		holdOnCooldown = true
@@ -410,11 +414,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				requestPiece.call_deferred()
 				inputTimer.reset()
 				get_viewport().set_input_as_handled()
-
 	if currentPiece == null: return
-	if (event.is_action("moveRight") 
-	or event.is_action("moveLeft")
-	or event.is_action("moveDown")
+	if (event.is_action_pressed("moveRight") 
+	or event.is_action_pressed("moveLeft")
+	or event.is_action_pressed("moveDown")
 	):
 		pass
 		# # TODO: This doesn't do anything due to piece handling it
@@ -487,7 +490,7 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 		# Re-number the labels
 		var line:int = lineMappings.get(i, 0)
 		lineNumberLabels[i].text = str(line + 1)
-		lineNumberLabels[i].visible = _missinglines.get(line, false)
+		lineNumberLabels[i].modulate.a = 1.0 if _missinglines.get(line, false) else 0.2 # Make transparent if collected
 
 		# Organize the pickups
 		for j:int in range(BOUNDS.size.x):

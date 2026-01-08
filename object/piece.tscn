@@ -7,17 +7,20 @@
 tile_set = ExtResource("1_ls4uy")
 script = ExtResource("1_k13et")
 
-[node name="fall_down_timer" type="Timer" parent="."]
+[node name="GravityTimer" type="Timer" parent="."]
+process_callback = 0
 autostart = true
 
-[node name="horizontal_timer" type="Timer" parent="."]
+[node name="HorizontalTimer" type="Timer" parent="."]
+process_callback = 0
 wait_time = 0.2
 autostart = true
 
-[node name="vertical_timer" type="Timer" parent="."]
+[node name="SoftDropTimer" type="Timer" parent="."]
+process_callback = 0
 wait_time = 0.2
 autostart = true
 
-[connection signal="timeout" from="fall_down_timer" to="." method="_fall_down_timer_timeout"]
-[connection signal="timeout" from="horizontal_timer" to="." method="_on_horizontal_timer_timeout"]
-[connection signal="timeout" from="vertical_timer" to="." method="_on_vertical_timer_timeout"]
+[connection signal="timeout" from="GravityTimer" to="." method="_on_GravityTimer_timeout"]
+[connection signal="timeout" from="HorizontalTimer" to="." method="_on_HorizontalTimer_timeout"]
+[connection signal="timeout" from="SoftDropTimer" to="." method="_on_SoftDropTimer_timeout"]

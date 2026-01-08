@@ -33,8 +33,7 @@ static func generateDeathlinkMessage(category:String = "TOP", contextTags:Array 
 	for template in CONSTANTS.DEATHLINK_MESSAGE_TEMPLATES.get(category, []):
 		if template is DeathLinkMessageTemplate:
 			if template.contextTags.size():
-				# if contextTags.size() == 0: continue # Prevent empty context from just loading everything
-				var skip:bool = false #contextTags.size() == 0
+				var skip:bool = false
 				for tag in template.contextTags:
 					if not tag in contextTags:
 						skip = true

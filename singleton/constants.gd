@@ -167,7 +167,7 @@ var CONTEXT_TAGS:Dictionary[StringName, Dictionary] = {
 		_addDLMessageTemplate("{player} held the {item} {he_she_they} received from {sender} so they wouldn't be without any pieces. Forever.").addContext("NONLOCAL_ITEM"),
 		_addDLMessageTemplate("{player} gave {his_her_their} {item} a home in {his_her_their} Hold Slot after being lost in {game}.").addContext("NONLOCAL_ITEM"),
 		_addDLMessageTemplate("{player}'s {item} migrated from {sender}'s {location} to {player}'s Hold Slot.").addContext("NONLOCAL_ITEM"),
-		_addDLMessageTemplate("{player} held onto the {item} {sender} gifted them from {game}.").addContext("NONLOCAL_ITEM"),
+		_addDLMessageTemplate("{player} held onto the {item} {sender} gifted {him_her_them} from {game}.").addContext("NONLOCAL_ITEM"),
 		_addDLMessageTemplate("{player} adopted a {item} from {location} of {game}.").addContext("NONLOCAL_ITEM"),
 		# Local item
 		_addDLMessageTemplate("{player} held {his_her_their} last {item} and couldn't do anything else besides restarting.").addContext("LOCAL_ITEM"),

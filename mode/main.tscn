@@ -115,7 +115,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/split_bar_background = SubResource("StyleBoxFlat_q3k4m")
-split_offset = 784
+split_offset = 600
 
 [node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer"]
 layout_mode = 2
@@ -133,7 +133,7 @@ stretch = true
 [node name="SubViewport" type="SubViewport" parent="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer"]
 handle_input_locally = false
 canvas_item_default_texture_filter = 3
-size = Vector2i(531, 540)
+size = Vector2i(496, 540)
 render_target_update_mode = 4
 
 [node name="Board" parent="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport" node_paths=PackedStringArray("previewStorage", "holdStorage") instance=ExtResource("1_q3k4m")]
@@ -272,6 +272,7 @@ text = "Quit"
 
 [node name="DracominoClient" parent="HBoxContainer" instance=ExtResource("5_svssi")]
 process_mode = 3
+custom_minimum_size = Vector2(320, 0)
 layout_mode = 2
 
 [connection signal="activeAbilities_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/PreviewStorage" method="_on_DracominoHandler_active_abilities_updated"]
@@ -283,6 +284,7 @@ layout_mode = 2
 [connection signal="notification_signal" from="DracominoHandler" to="." method="_on_DracominoState_notification_signal"]
 [connection signal="piecesLeft_updated" from="DracominoHandler" to="." method="_on_DracominoState_pieces_left_updated"]
 [connection signal="slotContextHash_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_slot_context_hash_updated"]
+[connection signal="started" from="DracominoHandler" to="." method="_on_DracominoHandler_started"]
 [connection signal="resized" from="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer" to="." method="_on_SubViewportContainer_resized"]
 [connection signal="deathlink_earned" from="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_deathlink_earned"]
 [connection signal="game_over_earned" from="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_game_over_earned"]
