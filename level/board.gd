@@ -76,6 +76,7 @@ var pieceTimer:ActivityTimer ## For death context
 #===== Virtuals ======
 func _ready():
 	inputTimer = ActivityTimer.new(); add_child(inputTimer)
+	inputTimer.afk_threshold = 10.0
 	pieceTimer = ActivityTimer.new(); add_child(pieceTimer)
 	game_started.emit()
 	

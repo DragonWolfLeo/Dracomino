@@ -6,6 +6,7 @@ Version 0.2.2 (beta)
  - Prevent rotating when hard-dropping
  - Fix issues with controls
  - Make checked line numbers dark instead of invisible
+ - Make input afk timer shorter (for death link message context)
 
 Version 0.2.1
  - Update GodotAP to v0.4.1
