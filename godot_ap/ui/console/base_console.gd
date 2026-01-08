@@ -132,7 +132,7 @@ static func make_location(id: int, data: DataCache) -> ConsoleLabel:
 	return make_text(data.get_loc_name(id), "", AP.ComplexColor.as_special(AP.SpecialColor.LOCATION))
 static func make_item(id: int, flags: int, data: DataCache) -> ConsoleLabel:
 	var ttip = "Type: %s" % AP.get_item_classification(flags)
-	var color := AP.ComplexColor.as_rich(AP.get_item_class_color(flags))
+	var color := AP.ComplexColor.as_special(AP.get_item_class_color(flags))
 	return make_text(data.get_item_name(id), ttip, color)
 
 static func make_player(id: int) -> ConsoleLabel:

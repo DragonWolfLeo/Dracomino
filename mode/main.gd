@@ -1,13 +1,13 @@
 extends Control
 
-var centerLabel:Label
-var levelContainer:Control
-var notificationLabel:Label
-var linesLabel:Label
-var piecesLabel:Label
+@onready var centerLabel:Label = %CenterLabel
+@onready var levelContainer:Control = %LevelContainer
+@onready var notificationLabel:Label = %NotificationLabel
+@onready var linesLabel:Label = %LinesLabel
+@onready var piecesLabel:Label = %PiecesLabel
+@onready var level:Board = %Board
 var _timer:SceneTreeTimer
 var _queuedNotifications:Array[Dictionary]
-var level:Board
 var _goal:int=0
 var _line:int=0
 var _piecesStoredInPreview:int=0
@@ -23,12 +23,6 @@ var CHANGELOG_WINDOW_SCENE:PackedScene = load("res://ui/changelog_window.tscn")
 
 #==== Virtuals ====
 func _ready() -> void:
-	levelContainer = find_child("LevelContainer")
-	centerLabel = find_child("CenterLabel")
-	notificationLabel = find_child("NotificationLabel")
-	linesLabel = find_child("LinesLabel")
-	piecesLabel = find_child("PiecesLabel")
-	level = find_child("Board")
 	notificationLabel.text = ""
 	notificationLabel.hide()
 	focus_entered.connect(_on_focus_entered)
@@ -55,14 +49,14 @@ func applyState() -> void:
 			centerLabel.text = "GAME OVER"
 			centerLabel.show()
 
-func showNotification(notif:String, color:Color) -> void:
+func showNotification(notif:String, color:AP.ComplexColor) -> void:
 	if _timer and _timer.timeout.is_connected(_on_timer_timeout):
 		_timer.timeout.disconnect(_on_timer_timeout)
 		_timer = null
 	if notificationLabel:
 		notificationLabel.show()
 		notificationLabel.text = notif
-		notificationLabel.label_settings.font_color = color
+		notificationLabel.label_settings.font_color = color.calculate(notificationLabel)
 		_timer = get_tree().create_timer(5, false)
 		_timer.timeout.connect(_on_timer_timeout)
 
@@ -136,7 +130,7 @@ func _set_state(value:int) -> void:
 func _on_Btn_Quit_pressed() -> void:
 	get_tree().quit()
 
-func _on_DracominoState_notification_signal(notif:String, color:Color, force:bool = false) -> void:
+func _on_DracominoState_notification_signal(notif:String, color:AP.ComplexColor, force:bool = false) -> void:
 	if _timer and not force:
 		_timer.time_left = min(1.0, _timer.time_left)
 		_queuedNotifications.append({

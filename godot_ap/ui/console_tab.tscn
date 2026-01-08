@@ -179,5 +179,9 @@ size_flags_horizontal = 3
 disabled = true
 text = "Disconnect"
 
+[connection signal="text_submitted" from="ConnectBox/Row/Box/Margins/VBox/Content/IP_Box" to="ConnectBox/Row/Box/Margins/VBox/Content" method="try_connection" unbinds=1]
+[connection signal="text_submitted" from="ConnectBox/Row/Box/Margins/VBox/Content/Port_Box" to="ConnectBox/Row/Box/Margins/VBox/Content" method="try_connection" unbinds=1]
+[connection signal="text_submitted" from="ConnectBox/Row/Box/Margins/VBox/Content/Slot_Box" to="ConnectBox/Row/Box/Margins/VBox/Content" method="try_connection" unbinds=1]
+[connection signal="text_submitted" from="ConnectBox/Row/Box/Margins/VBox/Content/Pwd_Box" to="ConnectBox/Row/Box/Margins/VBox/Content" method="try_connection" unbinds=1]
 [connection signal="pressed" from="ConnectBox/Row/Box/Margins/VBox/ButtonRow/ConnectBtn" to="ConnectBox/Row/Box/Margins/VBox/Content" method="try_connection"]
 [connection signal="pressed" from="ConnectBox/Row/Box/Margins/VBox/ButtonRow/DisconnectBtn" to="ConnectBox/Row/Box/Margins/VBox/Content" method="kill_connection"]
