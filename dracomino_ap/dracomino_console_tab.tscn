@@ -198,6 +198,7 @@ focus_neighbor_right = NodePath(".")
 focus_neighbor_bottom = NodePath(".")
 focus_next = NodePath("../../../../../TypingBar")
 focus_previous = NodePath("../../../../../TypingBar")
+scroll_to_bottom_on_new_message = true
 
 [node name="TypingBar" parent="Console" instance=ExtResource("3_yws72")]
 custom_minimum_size = Vector2(0, 35)

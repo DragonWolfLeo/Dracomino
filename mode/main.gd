@@ -1,13 +1,14 @@
 extends Control
 
-var centerLabel:Label
-var levelContainer:Control
-var notificationLabel:Label
-var linesLabel:Label
-var piecesLabel:Label
+@onready var centerLabel:Label = %CenterLabel
+@onready var levelContainer:Control = %LevelContainer
+@onready var notificationLabel:Label = %NotificationLabel
+@onready var linesLabel:Label = %LinesLabel
+@onready var piecesLabel:Label = %PiecesLabel
+@onready var level:Board = %Board
+@onready var btnQuit:Button = %Btn_Quit
 var _timer:SceneTreeTimer
 var _queuedNotifications:Array[Dictionary]
-var level:Board
 var _goal:int=0
 var _line:int=0
 var _piecesStoredInPreview:int=0
@@ -23,12 +24,7 @@ var CHANGELOG_WINDOW_SCENE:PackedScene = load("res://ui/changelog_window.tscn")
 
 #==== Virtuals ====
 func _ready() -> void:
-	levelContainer = find_child("LevelContainer")
-	centerLabel = find_child("CenterLabel")
-	notificationLabel = find_child("NotificationLabel")
-	linesLabel = find_child("LinesLabel")
-	piecesLabel = find_child("PiecesLabel")
-	level = find_child("Board")
+	btnQuit.disabled = Config.isWeb
 	notificationLabel.text = ""
 	notificationLabel.hide()
 	focus_entered.connect(_on_focus_entered)

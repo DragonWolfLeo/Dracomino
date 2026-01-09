@@ -15,3 +15,6 @@ static func nil() -> APLocation:
 	ret.name = "INVALID"
 	ret.hint_status = NetworkHint.Status.UNSPECIFIED
 	return ret
+
+func _to_string() -> String:
+	return "LOCATION(%d '%s',Hint '%s')" % [id, name, NetworkHint.status_names[hint_status]]

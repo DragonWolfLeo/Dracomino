@@ -169,8 +169,8 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	randomizeOrientations = conn.slot_data.get("randomize_orientations", false)
 	conn.deathlink.connect(_on_deathlink)
 	conn.obtained_item.connect(_on_obtained_item)
-	conn.on_hint_update.connect(_on_on_hint_update)
-	
+	conn.set_hint_notify(_on_on_hint_update)
+
 	# Check min game version
 	var minGameVersion:String = conn.slot_data.get("min_game_version", "0.1.0")
 	var warningDialog:AcceptDialog
@@ -206,11 +206,6 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	missingPickups.clear()
 	id_to_line.clear()
 	id_to_pickupCoord.clear()
-	
-	var _checked:Dictionary[int,bool] = {}
-	if json.has("checked_locations"):
-		for loc:int in json["checked_locations"]:
-			_checked[loc] = true
 
 	var locsToCollect:Array[int] = []
 	var _missingLocations_changed:bool = false
@@ -218,7 +213,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	for loc_id:int in conn.slot_locations:
 		var loc_data:CONSTANTS.LocationData = CONSTANTS.LOCATIONS.get(loc_id)
 		if loc_data:
-			var checked:bool = _checked.get(loc_id, false)
+			var checked:bool = conn.slot_locations[loc_id]
 			# Sync missingLocations and checkedLocations with server
 			if not checked:
 				if checkedLocations.get(loc_id, false):
@@ -266,7 +261,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	# Set up lookup tables
 	for i:int in range(allLineLocations.size()):
 		id_to_line[allLineLocations[i]] = i
-		missingLines[i] = not _checked.get(allLineLocations[i], false)
+		missingLines[i] = not conn.slot_locations.get(allLineLocations[i], false)
 
 	for k:Vector2i in missingPickupCoordinates:
 		id_to_pickupCoord[missingPickupCoordinates.get(k,Vector2i())] = k
