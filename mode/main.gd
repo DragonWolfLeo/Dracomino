@@ -6,6 +6,7 @@ extends Control
 @onready var linesLabel:Label = %LinesLabel
 @onready var piecesLabel:Label = %PiecesLabel
 @onready var level:Board = %Board
+@onready var btnQuit:Button = %Btn_Quit
 var _timer:SceneTreeTimer
 var _queuedNotifications:Array[Dictionary]
 var _goal:int=0
@@ -23,6 +24,7 @@ var CHANGELOG_WINDOW_SCENE:PackedScene = load("res://ui/changelog_window.tscn")
 
 #==== Virtuals ====
 func _ready() -> void:
+	btnQuit.disabled = Config.isWeb
 	notificationLabel.text = ""
 	notificationLabel.hide()
 	focus_entered.connect(_on_focus_entered)

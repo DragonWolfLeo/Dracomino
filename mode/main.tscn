@@ -271,6 +271,7 @@ focus_mode = 0
 text = "Restart"
 
 [node name="Btn_Quit" type="Button" parent="HBoxContainer/HBoxContainer/MarginContainer/ButtonBar"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 9
 focus_mode = 0
