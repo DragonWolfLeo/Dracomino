@@ -115,7 +115,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/split_bar_background = SubResource("StyleBoxFlat_q3k4m")
-split_offset = 600
+split_offset = 900
 
 [node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer"]
 layout_mode = 2
@@ -134,7 +134,7 @@ stretch = true
 [node name="SubViewport" type="SubViewport" parent="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer"]
 handle_input_locally = false
 canvas_item_default_texture_filter = 3
-size = Vector2i(496, 540)
+size = Vector2i(504, 540)
 render_target_update_mode = 4
 
 [node name="Board" parent="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport" node_paths=PackedStringArray("previewStorage", "holdStorage") instance=ExtResource("1_q3k4m")]
@@ -278,7 +278,7 @@ text = "Quit"
 
 [node name="DracominoClient" parent="HBoxContainer" instance=ExtResource("5_svssi")]
 process_mode = 3
-custom_minimum_size = Vector2(320, 0)
+custom_minimum_size = Vector2(340, 0)
 layout_mode = 2
 
 [connection signal="activeAbilities_updated" from="DracominoHandler" to="HBoxContainer/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/PreviewStorage" method="_on_DracominoHandler_active_abilities_updated"]

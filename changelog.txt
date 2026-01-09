@@ -1,5 +1,7 @@
 Version 0.2.2.1 (beta)
+ - Set controller inputs to detect "all devices"
  - Re-adjust Gravity Speed option scaling so 1.0 is the default
+ - Adjust default screen split position
  
 Version 0.2.2
 Changes
