@@ -1,4 +1,4 @@
-Version 0.2.3 (beta)
+Version 0.2.3 (beta1)
  - Add new animated coin graphics
  - Add sound effects
 

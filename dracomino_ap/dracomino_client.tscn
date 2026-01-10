@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=3 uid="uid://c7613bp0awts"]
+[gd_scene load_steps=8 format=3 uid="uid://c7613bp0awts"]
 
 [ext_resource type="Script" uid="uid://ctx0wt81itx32" path="res://godot_ap/ui/console_window_container.gd" id="1_bn7tn"]
 [ext_resource type="Script" uid="uid://coc8hh7uywptt" path="res://dracomino_ap/dracomino_aphelper.gd" id="2_prof0"]
 [ext_resource type="PackedScene" uid="uid://dhya6ucgf72i8" path="res://godot_ap/ui/hints_tab.tscn" id="3_prof0"]
 [ext_resource type="PackedScene" uid="uid://c1pyfyn3ax5u2" path="res://dracomino_ap/dracomino_console_tab.tscn" id="3_vsama"]
 [ext_resource type="PackedScene" uid="uid://dp2yir3r1061y" path="res://godot_ap/ui/settings_tab.tscn" id="4_vsama"]
+[ext_resource type="AudioStream" uid="uid://rybtdauvlffp" path="res://assets/audio/sfx/drop.wav" id="6_prof0"]
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_1wnfu"]
 
@@ -20,6 +21,11 @@ script = ExtResource("1_bn7tn")
 
 [node name="DracominoAPHelper" type="Node" parent="."]
 script = ExtResource("2_prof0")
+
+[node name="SFX_AudioTest" type="AudioStreamPlayer" parent="DracominoAPHelper"]
+process_mode = 3
+stream = ExtResource("6_prof0")
+bus = &"Sfx"
 
 [node name="Tabs" type="TabContainer" parent="."]
 layout_mode = 2
@@ -98,5 +104,63 @@ text = "1.0"
 [node name="Btn_GravityAmt_reset" type="Button" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/MarginContainer/GridContainer"]
 layout_mode = 2
 text = "Reset"
+
+[node name="Audio" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs" index="3"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Tabs/Settings/Margin/Tabs/Audio"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="GridContainer" type="GridContainer" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 5
+theme_override_constants/v_separation = 5
+columns = 2
+
+[node name="Label_MasterVol" type="Label" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer/MarginContainer/GridContainer"]
+layout_mode = 2
+text = "Master Volume"
+
+[node name="HSlider_MasterVol" type="HSlider" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer/MarginContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+step = 5.0
+value = 100.0
+
+[node name="Label_MusicVol" type="Label" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer/MarginContainer/GridContainer"]
+visible = false
+layout_mode = 2
+text = "Music Volume"
+
+[node name="HSlider_MusicVol" type="HSlider" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer/MarginContainer/GridContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+step = 5.0
+value = 100.0
+
+[node name="Label_SfxVol" type="Label" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer/MarginContainer/GridContainer"]
+visible = false
+layout_mode = 2
+text = "Sound Volume"
+
+[node name="HSlider_SfxVol" type="HSlider" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer/MarginContainer/GridContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+step = 5.0
+value = 100.0
 
 [editable path="Tabs/Settings"]
