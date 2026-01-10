@@ -67,6 +67,14 @@ var SOFT_DROP_REPEAT_WAIT_TIME:float = .04
 @onready var HORIZONTAL_WAIT_TIME:float = horizontalTimer.wait_time
 var HORIZONTAL_REPEAT_WAIT_TIME:float = .075
 
+enum MOVEMENT {
+	NONE = -1,
+	HORIZONTAL,
+	SOFT_DROP,
+	GRAVITY,
+	HARD_DROP,
+}
+
 static var TOTAL_NUMBER_OF_COLORS = 12
 var pieceDefinition:PieceDefinition
 var localCells:Array[Vector2i] =[]
@@ -79,6 +87,7 @@ var moveLock:bool = false: ## Prevent moving this anymore
 	set(value):
 		if horizontalTimer: horizontalTimer.paused = value
 		moveLock = value
+var playHardDropSound:bool = false
 var ghost:GhostPiece
 
 static var GHOSTPIECE_SCENE:PackedScene = load("res://object/ghostpiece.tscn")
@@ -94,19 +103,23 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	var moved := Vector2i.ZERO
+	var movementType:int = MOVEMENT.NONE
 	if not moveLock:
 		if Input.is_action_just_pressed("moveLeft"):
+			movementType = MOVEMENT.HORIZONTAL
 			moved += Vector2i.LEFT
 			horizontalTimer.start()
 		if Input.is_action_just_pressed("moveRight"):
+			movementType = MOVEMENT.HORIZONTAL
 			moved += Vector2i.RIGHT
 			horizontalTimer.start()
 		if Input.is_action_just_pressed("moveDown") and DracominoHandler.activeAbilities.get("Soft Drop", 0):
+			movementType = MOVEMENT.SOFT_DROP
 			moved = Vector2i.DOWN
 			softDropTimer.start()
 	
 	if moved != Vector2i.ZERO:
-		movement_requested.emit(self, moved)
+		movement_requested.emit(self, moved, movementType)
 
 #==== Functions ======
 func makeActive():
@@ -207,6 +220,8 @@ func hardDrop():
 
 func move(direction:Vector2i):
 	currentPosition += direction
+	if moveLock:
+		playHardDropSound = true
 
 # Events
 func _on_HorizontalTimer_timeout():
@@ -220,11 +235,11 @@ func _on_HorizontalTimer_timeout():
 		return
 	horizontalTimer.wait_time = HORIZONTAL_REPEAT_WAIT_TIME
 	horizontalTimer.start()
-	movement_requested.emit(self, moved)
+	movement_requested.emit(self, moved, MOVEMENT.HORIZONTAL)
 
 func _on_SoftDropTimer_timeout():
 	if Input.is_action_pressed("moveDown") and DracominoHandler.activeAbilities.get("Soft Drop", 0):
-		movement_requested.emit(self, Vector2i.DOWN)
+		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP)
 		softDropTimer.wait_time = SOFT_DROP_REPEAT_WAIT_TIME
 		softDropTimer.start()
 	else:
@@ -232,7 +247,7 @@ func _on_SoftDropTimer_timeout():
 
 func _on_GravityTimer_timeout():
 	if moveLock or DracominoHandler.activeAbilities.get("Gravity", 0):
-		movement_requested.emit(self, Vector2i.DOWN)
+		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.HARD_DROP if playHardDropSound else MOVEMENT.GRAVITY)
 
 func _setCurrentPosition(value:Vector2i):
 	currentPosition = value

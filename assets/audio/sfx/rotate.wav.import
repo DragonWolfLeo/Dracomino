@@ -2,13 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://cr48vjhdfp8xq"
-path="res://.godot/imported/lineclear.wav-453a5ee505af06deef96fceb8ebd5500.sample"
+uid="uid://0ovedth7jefi"
+path="res://.godot/imported/rotate.wav-27d7a02fab2fd96f6e64ada4706182ac.sample"
 
 [deps]
 
-source_file="res://assets/audio/sfx/lineclear.wav"
-dest_files=["res://.godot/imported/lineclear.wav-453a5ee505af06deef96fceb8ebd5500.sample"]
+source_file="res://assets/audio/sfx/rotate.wav"
+dest_files=["res://.godot/imported/rotate.wav-27d7a02fab2fd96f6e64ada4706182ac.sample"]
 
 [params]
 

@@ -24,11 +24,15 @@ static var SET_TILE_ATLAS_ROW:int = 1
 @export var holdStorage:PieceStorage
 
 @onready var masterCoin:Node2D = $MasterCoin
+@onready var sfx_rotate:AudioStreamPlayer = $SFX_Rotate
+@onready var sfx_move:AudioStreamPlayer = $SFX_Move
+@onready var sfx_moveDown:AudioStreamPlayer = $SFX_MoveDown
 @onready var sfx_drop:AudioStreamPlayer = $SFX_Drop
 @onready var sfx_hardDrop:AudioStreamPlayer = $SFX_HardDrop
 @onready var sfx_hold:AudioStreamPlayer = $SFX_Hold
 @onready var sfx_itemPickup:AudioStreamPlayer = $SFX_ItemPickup
 @onready var sfx_lineClear:AudioStreamPlayer = $SFX_LineClear
+@onready var sfx_lineClearCheck:AudioStreamPlayer = $SFX_LineClearCheck
 @onready var sfx_gameOver:AudioStreamPlayer = $SFX_GameOver
 
 var currentPiece:Piece
@@ -329,7 +333,7 @@ func resetGame():
 
 func lockPiece(piece:Piece = currentPiece):
 	if piece == null: return
-	var pieceIsHardDropped:bool = piece.moveLock
+	# var pieceIsHardDropped:bool = piece.moveLock
 	holdOnCooldown = false
 	var pickedUpItem:bool = false
 	for pos in piece.localCells:
@@ -357,10 +361,11 @@ func lockPiece(piece:Piece = currentPiece):
 			linesCleared += fullRows.size()
 			rowsToClear = fullRows # TODO: Replace this with a tween
 			var clearedlines = fullRows.map(func(lineNum): return BOUNDS.end.y - lineNum -1)
+			# (sfx_hardDrop if pieceIsHardDropped else sfx_drop).play()
 			await rowClearAnimation_finished
 			lines_cleared.emit(clearedlines)
 		else:
-			(sfx_hardDrop if pieceIsHardDropped else sfx_drop).play()
+			# (sfx_hardDrop if pieceIsHardDropped else sfx_drop).play()
 			requestPiece.call_deferred()
 
 func checkForFullRows() -> Array:
@@ -374,7 +379,12 @@ func checkForFullRows() -> Array:
 		if full:
 			fullRows.append(y)
 	if fullRows.size():
-		sfx_lineClear.play()
+		# Figure out if this is a check or not so we can play the correct sound
+		var isMissingLineCheck:bool = false
+		for i in fullRows:
+			var line:int = _linemappings.get(BOUNDS.end.y - i - 1, 0) 
+			isMissingLineCheck = _missinglines.get(line, false)
+		(sfx_lineClearCheck if isMissingLineCheck else sfx_lineClear).play()
 	return fullRows
 
 func isInDanger() -> bool:
@@ -451,13 +461,17 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	elif event.is_action_pressed("rotateClockwise"):
 		if DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
+			sfx_rotate.play()
 			currentPiece.rotateClockwise()
 		elif USE_ALT_ROTATE and DracominoHandler.activeAbilities.get("Rotate Counterclockwise", 0):
+			sfx_rotate.play()
 			currentPiece.rotateCounterclockwise()
 	elif event.is_action_pressed("rotateCounterclockwise"):
 		if DracominoHandler.activeAbilities.get("Rotate Counterclockwise", 0):
+			sfx_rotate.play()
 			currentPiece.rotateCounterclockwise()
 		elif USE_ALT_ROTATE and DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
+			sfx_rotate.play()
 			currentPiece.rotateClockwise()
 	elif event.is_action_pressed("hardDrop"):
 		if DracominoHandler.activeAbilities.get("Hard Drop", 0):
@@ -468,10 +482,16 @@ func _unhandled_input(event: InputEvent) -> void:
 	inputTimer.reset()
 	get_viewport().set_input_as_handled()
 
-func _on_Piece_movement_requested(piece:Piece, direction:Vector2i):
+func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:int):
 	if areCellsValid(piece.localCells, piece.currentPosition + direction):
+		match movementType:
+			Piece.MOVEMENT.HORIZONTAL: sfx_move.play()
+			Piece.MOVEMENT.SOFT_DROP: sfx_moveDown.play()
 		piece.move(direction)
 	elif direction == Vector2i.DOWN:
+		match movementType:
+			Piece.MOVEMENT.HARD_DROP: sfx_hardDrop.play()
+			_: sfx_drop.play()
 		lockPiece(piece)
 
 func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
