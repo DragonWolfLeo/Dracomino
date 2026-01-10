@@ -1,3 +1,7 @@
+Version 0.2.3
+ - Add new animated coin graphics
+ - Add sound effects
+
 Version 0.2.2.1
  - Set controller inputs to detect "all devices"
  - Re-adjust Gravity Speed option scaling so 1.0 is the default

@@ -24,6 +24,12 @@ static var SET_TILE_ATLAS_ROW:int = 1
 @export var holdStorage:PieceStorage
 
 @onready var masterCoin:Node2D = $MasterCoin
+@onready var sfx_drop:AudioStreamPlayer = $SFX_Drop
+@onready var sfx_hardDrop:AudioStreamPlayer = $SFX_HardDrop
+@onready var sfx_hold:AudioStreamPlayer = $SFX_Hold
+@onready var sfx_itemPickup:AudioStreamPlayer = $SFX_ItemPickup
+@onready var sfx_lineClear:AudioStreamPlayer = $SFX_LineClear
+@onready var sfx_gameOver:AudioStreamPlayer = $SFX_GameOver
 
 var currentPiece:Piece
 
@@ -77,6 +83,7 @@ var pieceTimer:ActivityTimer ## For death context
 
 #===== Virtuals ======
 func _ready():
+	masterCoin.visible = false # Master coin is just a reference for the rest of the coins and should be hidden
 	inputTimer = ActivityTimer.new(); add_child(inputTimer)
 	inputTimer.afk_threshold = 10.0
 	pieceTimer = ActivityTimer.new(); add_child(pieceTimer)
@@ -200,7 +207,7 @@ func hold():
 		# Don't hold if hard dropping
 		return
 	if holdStorage and not holdOnCooldown:
-		# TODO: Swap sound
+		sfx_hold.play()
 		holdOnCooldown = true
 		var popped:Piece
 		if currentPiece:
@@ -250,7 +257,7 @@ func gameOver(deathContext:DracominoUtil.DeathContext = null):
 	if isGameOver:
 		print("You already died!")
 		return
-	# TODO: Death noise
+	sfx_gameOver.play()
 	isGameOver = true
 	lockPiece()
 	if currentPiece:
@@ -271,7 +278,7 @@ func sendDeathLink(deathContext:DracominoUtil.DeathContext):
 func resetGame():
 	# Send deathlink message
 	if sendDeathOnRestart and not isGameOver and not boardIsFresh:
-		# TODO: Death noise
+		sfx_gameOver.play()
 		var deathContext := DracominoUtil.DeathContext.new(
 			# category
 			"RESTART_NEAR_GAME_OVER" if currentPiece and isInDanger()
@@ -322,6 +329,7 @@ func resetGame():
 
 func lockPiece(piece:Piece = currentPiece):
 	if piece == null: return
+	var pieceIsHardDropped:bool = piece.moveLock
 	holdOnCooldown = false
 	var pickedUpItem:bool = false
 	for pos in piece.localCells:
@@ -337,7 +345,7 @@ func lockPiece(piece:Piece = currentPiece):
 				item_pickedup.emit(pickup.loc_id)
 				
 	if pickedUpItem:
-		pass # TODO: Coin sound
+		sfx_itemPickup.play()
 	if currentPiece == piece:
 		currentPiece = null
 	piece.queue_free()
@@ -352,7 +360,7 @@ func lockPiece(piece:Piece = currentPiece):
 			await rowClearAnimation_finished
 			lines_cleared.emit(clearedlines)
 		else:
-			# TODO: Block place sound
+			(sfx_hardDrop if pieceIsHardDropped else sfx_drop).play()
 			requestPiece.call_deferred()
 
 func checkForFullRows() -> Array:
@@ -366,7 +374,7 @@ func checkForFullRows() -> Array:
 		if full:
 			fullRows.append(y)
 	if fullRows.size():
-		pass # TODO: Row clear sound
+		sfx_lineClear.play()
 	return fullRows
 
 func isInDanger() -> bool:
@@ -404,7 +412,7 @@ func cancel_waitForItem():
 	if Archipelago.conn and Archipelago.conn.obtained_item.is_connected(_on_obtained_item):
 		Archipelago.conn.obtained_item.disconnect(_on_obtained_item)
 
-func setAnimBasedOnMasterCoinAndLine(node:Node2D, line:int = 0) -> void: # TODO: Fix this janky function
+func setAnimBasedOnMasterCoinAndLine(node:Node2D, line:int = 0) -> void:
 	var animPlayer:AnimationPlayer = node.get_node_or_null("AnimationPlayer")
 	var animPlayer_master:AnimationPlayer = masterCoin.get_node_or_null("AnimationPlayer")
 	if not animPlayer or not animPlayer_master: printerr("setAnimBasedOnMasterCoinAndLine error: No AnimationPlayer!"); return

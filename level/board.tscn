@@ -1,9 +1,15 @@
-[gd_scene load_steps=6 format=4 uid="uid://boraki5ygsa0g"]
+[gd_scene load_steps=12 format=4 uid="uid://boraki5ygsa0g"]
 
 [ext_resource type="TileSet" uid="uid://bik73l7fn0v3b" path="res://resource/tileset/dracomino_piece.tres" id="1_v832b"]
 [ext_resource type="TileSet" uid="uid://ci8crt0j6nrbr" path="res://resource/tileset/dracomino_board.tres" id="3_v832b"]
 [ext_resource type="Script" uid="uid://31c2rk5yp0ct" path="res://level/board.gd" id="4_m3cj1"]
 [ext_resource type="PackedScene" uid="uid://d0mgyh6oleq0m" path="res://object/itempickup.tscn" id="5_kcigw"]
+[ext_resource type="AudioStream" uid="uid://rybtdauvlffp" path="res://assets/audio/sfx/drop.wav" id="6_flfvq"]
+[ext_resource type="AudioStream" uid="uid://njmnbqn1jao0" path="res://assets/audio/sfx/harddrop.wav" id="7_wxhti"]
+[ext_resource type="AudioStream" uid="uid://bb2rusaqgo5ka" path="res://assets/audio/sfx/hold.wav" id="8_0sai4"]
+[ext_resource type="AudioStream" uid="uid://y4vfcclrah0j" path="res://assets/audio/sfx/itempickup.wav" id="9_v832b"]
+[ext_resource type="AudioStream" uid="uid://cugjh8x7j36ro" path="res://assets/audio/sfx/lineclear.wav" id="10_wxhti"]
+[ext_resource type="AudioStream" uid="uid://ca4ufssu283db" path="res://assets/audio/sfx/gameover.wav" id="11_0sai4"]
 [ext_resource type="Texture2D" uid="uid://cwfjvswwamuob" path="res://assets/art/dracomino_board_top.png" id="13_80s4l"]
 
 [node name="Board" type="TileMapLayer"]
@@ -27,3 +33,33 @@ position = Vector2(80, -16)
 texture = ExtResource("13_80s4l")
 
 [node name="MasterCoin" parent="." instance=ExtResource("5_kcigw")]
+
+[node name="SFX_Drop" type="AudioStreamPlayer" parent="."]
+process_mode = 3
+stream = ExtResource("6_flfvq")
+bus = &"Sfx"
+
+[node name="SFX_HardDrop" type="AudioStreamPlayer" parent="."]
+process_mode = 3
+stream = ExtResource("7_wxhti")
+bus = &"Sfx"
+
+[node name="SFX_Hold" type="AudioStreamPlayer" parent="."]
+process_mode = 3
+stream = ExtResource("8_0sai4")
+bus = &"Sfx"
+
+[node name="SFX_ItemPickup" type="AudioStreamPlayer" parent="."]
+process_mode = 3
+stream = ExtResource("9_v832b")
+bus = &"Sfx"
+
+[node name="SFX_LineClear" type="AudioStreamPlayer" parent="."]
+process_mode = 3
+stream = ExtResource("10_wxhti")
+bus = &"Sfx"
+
+[node name="SFX_GameOver" type="AudioStreamPlayer" parent="."]
+process_mode = 3
+stream = ExtResource("11_0sai4")
+bus = &"Sfx"
