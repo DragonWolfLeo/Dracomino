@@ -23,6 +23,8 @@ static var SET_TILE_ATLAS_ROW:int = 1
 
 @export var holdStorage:PieceStorage
 
+@onready var masterCoin:Node2D = $MasterCoin
+
 var currentPiece:Piece
 
 var currentPreview:Array[Vector2i]
@@ -402,7 +404,16 @@ func cancel_waitForItem():
 	if Archipelago.conn and Archipelago.conn.obtained_item.is_connected(_on_obtained_item):
 		Archipelago.conn.obtained_item.disconnect(_on_obtained_item)
 
-const MIN_VELOCITY_LENGTH_SQUARED = 0.4 * 0.4
+func setAnimBasedOnMasterCoinAndLine(node:Node2D, line:int = 0) -> void: # TODO: Fix this janky function
+	var animPlayer:AnimationPlayer = node.get_node_or_null("AnimationPlayer")
+	var animPlayer_master:AnimationPlayer = masterCoin.get_node_or_null("AnimationPlayer")
+	if not animPlayer or not animPlayer_master: printerr("setAnimBasedOnMasterCoinAndLine error: No AnimationPlayer!"); return
+	var WAVE_CYCLE:float = 40
+	var targetSeek:float = -(line/WAVE_CYCLE)*animPlayer_master.current_animation_length
+	targetSeek += animPlayer_master.current_animation_position
+	while targetSeek < 0: targetSeek += animPlayer_master.current_animation_length
+	animPlayer.seek(targetSeek)
+
 #==== Events =====
 func _unhandled_input(event: InputEvent) -> void:
 	if not isGameOver:
@@ -504,6 +515,7 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 				if itemPickups[vec].node == null:
 					itemPickups[vec].node = ITEMPICKUP_SCENE.instantiate()
 					add_child(itemPickups[vec].node)
+					setAnimBasedOnMasterCoinAndLine(itemPickups[vec].node, line)
 				# Move into the proper place
 				var mapCoord = Vector2i(j + BOUNDS.position.x, BOUNDS.end.y - i -1)
 				itemPickups[vec].node.position = map_to_local(mapCoord)

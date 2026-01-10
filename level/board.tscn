@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=4 uid="uid://boraki5ygsa0g"]
+[gd_scene load_steps=6 format=4 uid="uid://boraki5ygsa0g"]
 
 [ext_resource type="TileSet" uid="uid://bik73l7fn0v3b" path="res://resource/tileset/dracomino_piece.tres" id="1_v832b"]
 [ext_resource type="TileSet" uid="uid://ci8crt0j6nrbr" path="res://resource/tileset/dracomino_board.tres" id="3_v832b"]
 [ext_resource type="Script" uid="uid://31c2rk5yp0ct" path="res://level/board.gd" id="4_m3cj1"]
+[ext_resource type="PackedScene" uid="uid://d0mgyh6oleq0m" path="res://object/itempickup.tscn" id="5_kcigw"]
 [ext_resource type="Texture2D" uid="uid://cwfjvswwamuob" path="res://assets/art/dracomino_board_top.png" id="13_80s4l"]
 
 [node name="Board" type="TileMapLayer"]
@@ -24,3 +25,5 @@ position = Vector2(-28.3333, 0)
 z_index = -1
 position = Vector2(80, -16)
 texture = ExtResource("13_80s4l")
+
+[node name="MasterCoin" parent="." instance=ExtResource("5_kcigw")]
