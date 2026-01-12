@@ -128,6 +128,8 @@ func makeActive():
 	show()
 	if DracominoHandler.activeAbilities.get("Ghost Piece", 0) and ghost:
 		ghost.show()
+	# Avoid falling too soon
+	gravityTimer.start()
 
 func makeLimbo():
 	process_mode = Node.PROCESS_MODE_DISABLED

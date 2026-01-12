@@ -1,5 +1,7 @@
 Version 0.2.3 (beta2)
  - Sound balancing
+ - Reset gravity timer when respawing a held piece
+ 
 Version 0.2.3 (beta1)
  - Add new animated coin graphics
  - Add sound effects
