@@ -94,16 +94,16 @@ func _setVolume(busName:String, percent:float):
 	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(busName), lerpf(-60, 0, weight))
 
 func _on_slider_masterVol_value_changed(value):
-	Config.changeSetting("volume", value, false)
+	Config.changeSetting("volume", value)
 	_setVolume("Master",value)
 	if !slider_sfxVol.visible and !_sfxSliderBeingDragged: $SFX_AudioTest.play() # TODO: This is temporary while sfx slider is hidden
 
 func _on_slider_musicVol_value_changed(value):
-	Config.changeSetting("volume_music", value, false)
+	Config.changeSetting("volume_music", value)
 	_setVolume("Music",value)
 
 func _on_slider_sfxVol_value_changed(value):
-	Config.changeSetting("volume_sfx", value, false)
+	Config.changeSetting("volume_sfx", value)
 	_setVolume("Sfx",value)
 	if !_sfxSliderBeingDragged: $SFX_AudioTest.play()
 	
