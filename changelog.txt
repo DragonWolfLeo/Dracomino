@@ -1,7 +1,8 @@
-Version 0.2.3 (beta3)
+Version 0.2.3 (rc1)
  - Sound balancing
- - Change sounds for game over, hard drop, and move horizontal
- 
+ - Tweak sounds for game over, hard drop, and move horizontal
+ - Previously saved sound settings now apply when opening the app
+
 Version 0.2.3 (beta2)
  - Sound balancing
  - Reset gravity timer when respawning a held piece

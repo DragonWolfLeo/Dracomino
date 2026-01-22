@@ -36,6 +36,10 @@ func loadConfig():
 	UserData.upgradeDataToCurrentVersion(data, VERSION_UPGRADES)
 	import(data)
 	
+	DracominoUtil.setVolume("Master", getSetting("volume", 100.0))
+	DracominoUtil.setVolume("Music", getSetting("volume_music", 100.0))
+	DracominoUtil.setVolume("Sfx", getSetting("volume_sfx", 100.0))
+	
 func saveConfig():
 	UserData.saveDataToFile(export(), CONFIGPATH)
 

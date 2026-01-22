@@ -89,22 +89,18 @@ func _on_slider_gravityAmt_value_changed(value:float) -> void:
 		label_gravityAmt.text = str(value)
 
 # Volume stuff
-func _setVolume(busName:String, percent:float):
-	var weight:float = percent/100
-	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(busName), lerpf(-60, 0, weight))
-
 func _on_slider_masterVol_value_changed(value):
 	Config.changeSetting("volume", value)
-	_setVolume("Master",value)
+	DracominoUtil.setVolume("Master",value)
 	if !slider_sfxVol.visible and !_sfxSliderBeingDragged: $SFX_AudioTest.play() # TODO: This is temporary while sfx slider is hidden
 
 func _on_slider_musicVol_value_changed(value):
 	Config.changeSetting("volume_music", value)
-	_setVolume("Music",value)
+	DracominoUtil.setVolume("Music",value)
 
 func _on_slider_sfxVol_value_changed(value):
 	Config.changeSetting("volume_sfx", value)
-	_setVolume("Sfx",value)
+	DracominoUtil.setVolume("Sfx",value)
 	if !_sfxSliderBeingDragged: $SFX_AudioTest.play()
 	
 func _on_slider_sfxVol_drag_started():
