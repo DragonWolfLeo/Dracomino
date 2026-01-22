@@ -53,6 +53,7 @@ bus = &"Sfx"
 [node name="SFX_Move" type="AudioStreamPlayer" parent="."]
 process_mode = 3
 stream = ExtResource("7_80s4l")
+volume_db = -2.577
 bus = &"Sfx"
 
 [node name="SFX_Drop" type="AudioStreamPlayer" parent="."]
@@ -63,7 +64,7 @@ bus = &"Sfx"
 [node name="SFX_HardDrop" type="AudioStreamPlayer" parent="."]
 process_mode = 3
 stream = ExtResource("7_wxhti")
-volume_db = -4.062
+volume_db = -1.625
 bus = &"Sfx"
 
 [node name="SFX_Hold" type="AudioStreamPlayer" parent="."]
@@ -92,5 +93,5 @@ bus = &"Sfx"
 [node name="SFX_GameOver" type="AudioStreamPlayer" parent="."]
 process_mode = 3
 stream = ExtResource("11_0sai4")
-volume_db = -3.25
+volume_db = -6.5
 bus = &"Sfx"
