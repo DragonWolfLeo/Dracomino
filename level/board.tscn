@@ -6,7 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://d0mgyh6oleq0m" path="res://object/itempickup.tscn" id="5_kcigw"]
 [ext_resource type="AudioStream" uid="uid://rybtdauvlffp" path="res://assets/audio/sfx/drop.wav" id="6_flfvq"]
 [ext_resource type="AudioStream" uid="uid://0ovedth7jefi" path="res://assets/audio/sfx/rotate.wav" id="6_v832b"]
-[ext_resource type="AudioStream" uid="uid://cwivvkmb6ffbb" path="res://assets/audio/sfx/movedown.wav" id="7_80s4l"]
+[ext_resource type="AudioStream" uid="uid://cwivvkmb6ffbb" path="res://assets/audio/sfx/movehorizontal.wav" id="7_80s4l"]
 [ext_resource type="AudioStream" uid="uid://njmnbqn1jao0" path="res://assets/audio/sfx/harddrop.wav" id="7_wxhti"]
 [ext_resource type="AudioStream" uid="uid://bb2rusaqgo5ka" path="res://assets/audio/sfx/hold.wav" id="8_0sai4"]
 [ext_resource type="AudioStream" uid="uid://y4vfcclrah0j" path="res://assets/audio/sfx/itempickup.wav" id="9_v832b"]

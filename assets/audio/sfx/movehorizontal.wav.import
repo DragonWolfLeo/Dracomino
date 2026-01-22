@@ -3,12 +3,12 @@
 importer="wav"
 type="AudioStreamWAV"
 uid="uid://cwivvkmb6ffbb"
-path="res://.godot/imported/movedown.wav-6b966d0e7a3ffe5b0c4832bad6ea1d98.sample"
+path="res://.godot/imported/movehorizontal.wav-8c3c343c103f41fa9cb269203d30e75c.sample"
 
 [deps]
 
-source_file="res://assets/audio/sfx/movedown.wav"
-dest_files=["res://.godot/imported/movedown.wav-6b966d0e7a3ffe5b0c4832bad6ea1d98.sample"]
+source_file="res://assets/audio/sfx/movehorizontal.wav"
+dest_files=["res://.godot/imported/movehorizontal.wav-8c3c343c103f41fa9cb269203d30e75c.sample"]
 
 [params]
 
