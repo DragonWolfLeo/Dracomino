@@ -23,6 +23,18 @@ static var SET_TILE_ATLAS_ROW:int = 1
 
 @export var holdStorage:PieceStorage
 
+@onready var masterCoin:Node2D = $MasterCoin
+@onready var sfx_rotate:AudioStreamPlayer = $SFX_Rotate
+@onready var sfx_move:AudioStreamPlayer = $SFX_Move
+@onready var sfx_moveDown:AudioStreamPlayer = $SFX_MoveDown
+@onready var sfx_drop:AudioStreamPlayer = $SFX_Drop
+@onready var sfx_hardDrop:AudioStreamPlayer = $SFX_HardDrop
+@onready var sfx_hold:AudioStreamPlayer = $SFX_Hold
+@onready var sfx_itemPickup:AudioStreamPlayer = $SFX_ItemPickup
+@onready var sfx_lineClear:AudioStreamPlayer = $SFX_LineClear
+@onready var sfx_lineClearCheck:AudioStreamPlayer = $SFX_LineClearCheck
+@onready var sfx_gameOver:AudioStreamPlayer = $SFX_GameOver
+
 var currentPiece:Piece
 
 var currentPreview:Array[Vector2i]
@@ -75,6 +87,7 @@ var pieceTimer:ActivityTimer ## For death context
 
 #===== Virtuals ======
 func _ready():
+	masterCoin.visible = false # Master coin is just a reference for the rest of the coins and should be hidden
 	inputTimer = ActivityTimer.new(); add_child(inputTimer)
 	inputTimer.afk_threshold = 10.0
 	pieceTimer = ActivityTimer.new(); add_child(pieceTimer)
@@ -198,7 +211,7 @@ func hold():
 		# Don't hold if hard dropping
 		return
 	if holdStorage and not holdOnCooldown:
-		# TODO: Swap sound
+		sfx_hold.play()
 		holdOnCooldown = true
 		var popped:Piece
 		if currentPiece:
@@ -248,7 +261,7 @@ func gameOver(deathContext:DracominoUtil.DeathContext = null):
 	if isGameOver:
 		print("You already died!")
 		return
-	# TODO: Death noise
+	sfx_gameOver.play()
 	isGameOver = true
 	lockPiece()
 	if currentPiece:
@@ -269,7 +282,7 @@ func sendDeathLink(deathContext:DracominoUtil.DeathContext):
 func resetGame():
 	# Send deathlink message
 	if sendDeathOnRestart and not isGameOver and not boardIsFresh:
-		# TODO: Death noise
+		sfx_gameOver.play()
 		var deathContext := DracominoUtil.DeathContext.new(
 			# category
 			"RESTART_NEAR_GAME_OVER" if currentPiece and isInDanger()
@@ -320,6 +333,7 @@ func resetGame():
 
 func lockPiece(piece:Piece = currentPiece):
 	if piece == null: return
+	# var pieceIsHardDropped:bool = piece.moveLock
 	holdOnCooldown = false
 	var pickedUpItem:bool = false
 	for pos in piece.localCells:
@@ -335,7 +349,7 @@ func lockPiece(piece:Piece = currentPiece):
 				item_pickedup.emit(pickup.loc_id)
 				
 	if pickedUpItem:
-		pass # TODO: Coin sound
+		sfx_itemPickup.play()
 	if currentPiece == piece:
 		currentPiece = null
 	piece.queue_free()
@@ -347,10 +361,11 @@ func lockPiece(piece:Piece = currentPiece):
 			linesCleared += fullRows.size()
 			rowsToClear = fullRows # TODO: Replace this with a tween
 			var clearedlines = fullRows.map(func(lineNum): return BOUNDS.end.y - lineNum -1)
+			# (sfx_hardDrop if pieceIsHardDropped else sfx_drop).play()
 			await rowClearAnimation_finished
 			lines_cleared.emit(clearedlines)
 		else:
-			# TODO: Block place sound
+			# (sfx_hardDrop if pieceIsHardDropped else sfx_drop).play()
 			requestPiece.call_deferred()
 
 func checkForFullRows() -> Array:
@@ -364,7 +379,12 @@ func checkForFullRows() -> Array:
 		if full:
 			fullRows.append(y)
 	if fullRows.size():
-		pass # TODO: Row clear sound
+		# Figure out if this is a check or not so we can play the correct sound
+		var isMissingLineCheck:bool = false
+		for i in fullRows:
+			var line:int = _linemappings.get(BOUNDS.end.y - i - 1, 0) 
+			isMissingLineCheck = _missinglines.get(line, false)
+		(sfx_lineClearCheck if isMissingLineCheck else sfx_lineClear).play()
 	return fullRows
 
 func isInDanger() -> bool:
@@ -402,7 +422,16 @@ func cancel_waitForItem():
 	if Archipelago.conn and Archipelago.conn.obtained_item.is_connected(_on_obtained_item):
 		Archipelago.conn.obtained_item.disconnect(_on_obtained_item)
 
-const MIN_VELOCITY_LENGTH_SQUARED = 0.4 * 0.4
+func setAnimBasedOnMasterCoinAndLine(node:Node2D, line:int = 0) -> void:
+	var animPlayer:AnimationPlayer = node.get_node_or_null("AnimationPlayer")
+	var animPlayer_master:AnimationPlayer = masterCoin.get_node_or_null("AnimationPlayer")
+	if not animPlayer or not animPlayer_master: printerr("setAnimBasedOnMasterCoinAndLine error: No AnimationPlayer!"); return
+	var WAVE_CYCLE:float = 40
+	var targetSeek:float = -(line/WAVE_CYCLE)*animPlayer_master.current_animation_length
+	targetSeek += animPlayer_master.current_animation_position
+	while targetSeek < 0: targetSeek += animPlayer_master.current_animation_length
+	animPlayer.seek(targetSeek)
+
 #==== Events =====
 func _unhandled_input(event: InputEvent) -> void:
 	if not isGameOver:
@@ -432,13 +461,17 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	elif event.is_action_pressed("rotateClockwise"):
 		if DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
+			sfx_rotate.play()
 			currentPiece.rotateClockwise()
 		elif USE_ALT_ROTATE and DracominoHandler.activeAbilities.get("Rotate Counterclockwise", 0):
+			sfx_rotate.play()
 			currentPiece.rotateCounterclockwise()
 	elif event.is_action_pressed("rotateCounterclockwise"):
 		if DracominoHandler.activeAbilities.get("Rotate Counterclockwise", 0):
+			sfx_rotate.play()
 			currentPiece.rotateCounterclockwise()
 		elif USE_ALT_ROTATE and DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
+			sfx_rotate.play()
 			currentPiece.rotateClockwise()
 	elif event.is_action_pressed("hardDrop"):
 		if DracominoHandler.activeAbilities.get("Hard Drop", 0):
@@ -449,10 +482,16 @@ func _unhandled_input(event: InputEvent) -> void:
 	inputTimer.reset()
 	get_viewport().set_input_as_handled()
 
-func _on_Piece_movement_requested(piece:Piece, direction:Vector2i):
+func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:int):
 	if areCellsValid(piece.localCells, piece.currentPosition + direction):
+		match movementType:
+			Piece.MOVEMENT.HORIZONTAL: sfx_move.play()
+			Piece.MOVEMENT.SOFT_DROP: sfx_moveDown.play()
 		piece.move(direction)
 	elif direction == Vector2i.DOWN:
+		match movementType:
+			Piece.MOVEMENT.HARD_DROP: sfx_hardDrop.play()
+			_: sfx_drop.play()
 		lockPiece(piece)
 
 func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
@@ -504,6 +543,7 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 				if itemPickups[vec].node == null:
 					itemPickups[vec].node = ITEMPICKUP_SCENE.instantiate()
 					add_child(itemPickups[vec].node)
+					setAnimBasedOnMasterCoinAndLine(itemPickups[vec].node, line)
 				# Move into the proper place
 				var mapCoord = Vector2i(j + BOUNDS.position.x, BOUNDS.end.y - i -1)
 				itemPickups[vec].node.position = map_to_local(mapCoord)

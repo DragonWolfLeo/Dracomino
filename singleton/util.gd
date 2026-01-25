@@ -77,3 +77,8 @@ class DeathContext:
 		for tag in _contextTags:
 			addContext(tag)
 		return self
+
+# Volume set helper
+static func setVolume(busName:String, percent:float):
+	var weight:float = percent/100
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(busName), lerpf(-60, 0, weight))
