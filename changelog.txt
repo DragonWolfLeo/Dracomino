@@ -1,15 +1,7 @@
-Version 0.2.3 (rc1)
- - Sound balancing
- - Tweak sounds for game over, hard drop, and move horizontal
- - Previously saved sound settings now apply when opening the app
-
-Version 0.2.3 (beta2)
- - Sound balancing
- - Reset gravity timer when respawning a held piece
-
-Version 0.2.3 (beta1)
+Version 0.2.3
  - Add new animated coin graphics
  - Add sound effects
+ - Reset gravity timer when respawning a held piece
 
 Version 0.2.2.1
  - Set controller inputs to detect "all devices"
