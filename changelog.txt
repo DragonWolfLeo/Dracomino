@@ -1,3 +1,6 @@
+Version 0.2.3.1
+ - Remove unused file that caused game to not load on Chrome
+
 Version 0.2.3
  - Add new animated coin graphics
  - Add sound effects
