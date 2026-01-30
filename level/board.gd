@@ -473,7 +473,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif USE_ALT_ROTATE and DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
 			sfx_rotate.play()
 			currentPiece.rotateClockwise()
-	elif event.is_action_pressed("hardDrop"):
+	elif event.is_action_pressed("hardDrop") and Input.is_action_just_pressed("hardDrop"): # Double check to ignore events from slight axis movement
 		if DracominoHandler.activeAbilities.get("Hard Drop", 0):
 			currentPiece.hardDrop()
 	else:
