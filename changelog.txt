@@ -1,5 +1,6 @@
 Version 0.2.3.3
  - Adjust notification color for Progression+Useful and Useful+Trap items
+ - Pieces now always spawn on highest row
 
 Version 0.2.3.2
  - Prevent hard drop from activating multiple times due to slight joystick movement
