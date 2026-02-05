@@ -86,6 +86,7 @@ var context:DracominoHandler.StateItem = null
 var moveLock:bool = false: ## Prevent moving this anymore
 	set(value):
 		if horizontalTimer: horizontalTimer.paused = value
+		if softDropTimer: softDropTimer.paused = value
 		moveLock = value
 var playHardDropSound:bool = false
 var ghost:GhostPiece
