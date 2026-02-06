@@ -287,9 +287,10 @@ func _on_deathlink(source: String, cause: String, json: Dictionary):
 func _on_obtained_item(item: NetworkItem):
 	if not isJustConnected:
 		var color = (
-			Color.PURPLE if item.is_prog()
+			Color.GOLD if item.is_prog() and (item.flags & AP.ItemClassification.USEFUL)
+			else Color.PURPLE if item.is_prog()
+			else Color.TOMATO if item.flags & AP.ItemClassification.TRAP
 			else Color.ROYAL_BLUE if item.flags & AP.ItemClassification.USEFUL
-			else Color.TOMATO if  item.flags & AP.ItemClassification.TRAP
 			else Color.SKY_BLUE
 		)
 		if item.is_local():

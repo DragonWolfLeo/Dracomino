@@ -203,7 +203,8 @@ func spawnPiece(piece:Piece):
 	currentPiece.makeActive()
 	currentPiece.currentPosition = SPAWN_POINT + currentPiece.origin
 	pieceTimer.reset()
-	if not checkForFailure():
+	placeOnHighestRow(piece)
+	if not checkForFailure(piece):
 		piece_spawned.emit(currentPiece)
 
 func hold():
@@ -234,28 +235,29 @@ func hold():
 func isTileOccupied(coords:Vector2i) -> bool:
 	return get_cell_atlas_coords(coords).y == SET_TILE_ATLAS_ROW
 
-func checkForFailure() -> bool:
-	var failure:bool = false
+func placeOnHighestRow(piece:Piece = currentPiece):
 	var greatestY:int = 0
-	for cell in currentPiece.localCells:
-		var pos:Vector2i = currentPiece.currentPosition + cell
+	for cell in piece.localCells:
+		var pos:Vector2i = piece.currentPosition + cell
 		if greatestY < pos.y:
 			greatestY = pos.y
+	if greatestY > 0:
+		# If reach below top-most row, nudge up
+		piece.move(Vector2i.UP)
+		placeOnHighestRow(piece)
+
+func checkForFailure(piece:Piece = currentPiece) -> bool:
+	for cell in piece.localCells:
+		var pos:Vector2i = piece.currentPosition + cell
 		if isTileOccupied(pos):
-			failure = true
-	if failure:
-		if greatestY > 0:
-			# If reach below top-most row, nudge up
-			currentPiece.move(Vector2i.UP)
-			return checkForFailure()
-		else:
-			# This is as high as allowed. Trigger game over
+			# Trigger game over
 			var deathContext := DracominoUtil.DeathContext.new(
 				"TOP_NO_INPUT" if inputTimer.isAFK() else "TOP",
-				currentPiece.context
+				piece.context
 			)
 			gameOver(deathContext)
-	return failure
+			return true
+	return false
 
 func gameOver(deathContext:DracominoUtil.DeathContext = null):
 	if isGameOver:
@@ -361,11 +363,9 @@ func lockPiece(piece:Piece = currentPiece):
 			linesCleared += fullRows.size()
 			rowsToClear = fullRows # TODO: Replace this with a tween
 			var clearedlines = fullRows.map(func(lineNum): return BOUNDS.end.y - lineNum -1)
-			# (sfx_hardDrop if pieceIsHardDropped else sfx_drop).play()
 			await rowClearAnimation_finished
 			lines_cleared.emit(clearedlines)
 		else:
-			# (sfx_hardDrop if pieceIsHardDropped else sfx_drop).play()
 			requestPiece.call_deferred()
 
 func checkForFullRows() -> Array:

@@ -86,6 +86,7 @@ var context:DracominoHandler.StateItem = null
 var moveLock:bool = false: ## Prevent moving this anymore
 	set(value):
 		if horizontalTimer: horizontalTimer.paused = value
+		if softDropTimer: softDropTimer.paused = value
 		moveLock = value
 var playHardDropSound:bool = false
 var ghost:GhostPiece
@@ -117,6 +118,8 @@ func _physics_process(delta: float) -> void:
 			movementType = MOVEMENT.SOFT_DROP
 			moved = Vector2i.DOWN
 			softDropTimer.start()
+			# Avoid falling too soon
+			gravityTimer.start()
 	
 	if moved != Vector2i.ZERO:
 		movement_requested.emit(self, moved, movementType)
@@ -244,6 +247,8 @@ func _on_SoftDropTimer_timeout():
 		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP)
 		softDropTimer.wait_time = SOFT_DROP_REPEAT_WAIT_TIME
 		softDropTimer.start()
+		# Avoid falling too soon
+		gravityTimer.start()
 	else:
 		softDropTimer.wait_time = SOFT_DROP_WAIT_TIME
 
