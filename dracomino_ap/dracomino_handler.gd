@@ -221,9 +221,10 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 					locsToCollect.append(loc_id)
 					checked = true
 				else:
-					# This is a fresh load or different seed
-					missingLocations[loc_id] = true
-					_missingLocations_changed = true
+					if not missingLocations.get(loc_id, false):
+						# This is a fresh load or different seed
+						missingLocations[loc_id] = true
+						_missingLocations_changed = true
 			else:
 				checkedLocations[loc_id] = true
 				if missingLocations.get(loc_id, false):
@@ -239,10 +240,6 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 			printerr("Got invalid location: id: {id}; name: {name}; You may be running an outdated version of the client!"
 				.format({id=loc_id, name=conn.locations[loc_id].name})
 			)
-	
-	# Sync with server
-	if locsToCollect.size():
-		Archipelago.collect_locations(locsToCollect)
 	#
 	allLineLocations.sort()
 	_allPickups.sort()
@@ -261,7 +258,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	# Set up lookup tables
 	for i:int in range(allLineLocations.size()):
 		id_to_line[allLineLocations[i]] = i
-		missingLines[i] = not conn.slot_locations.get(allLineLocations[i], false)
+		missingLines[i] = missingLocations.get(allLineLocations[i], false)
 
 	for k:Vector2i in missingPickupCoordinates:
 		id_to_pickupCoord[missingPickupCoordinates.get(k,Vector2i())] = k
@@ -269,10 +266,15 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	if victory:
 		sendVictory()
 
+	# Send new state to board
 	if _missingLocations_changed:
 		missingLocations_updated.emit(missingLocations)
 		missingLines_updated.emit(missingLines)
 		missingPickupCoordinates_updated.emit(missingPickupCoordinates)
+
+	# Sync with server
+	if locsToCollect.size():
+		Archipelago.collect_locations(locsToCollect)
 
 	# Send started signal to start game
 	if is_instance_valid(warningDialog):
@@ -347,7 +349,8 @@ func _on_on_hint_update(hints: Array[NetworkHint]):
 					hintedRotateAbilities[item.id] = StateItem.fromNetworkItem(hint.item)
 
 func _on_remove_location(loc_id:int):
-	var changed := missingLocations.erase(loc_id)
+	var changed:bool = missingLocations.get(loc_id, false)
+	missingLocations.erase(loc_id)
 	if changed:
 		checkedLocations[loc_id] = true
 		missingLocations_updated.emit(missingLocations)
