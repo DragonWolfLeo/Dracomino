@@ -1,3 +1,6 @@
+Version 0.2.3.4
+ - Fix desync issue with coins
+
 Version 0.2.3.3
  - Adjust notification color for Progression+Useful and Useful+Trap items
  - Pieces now always spawn on highest row
