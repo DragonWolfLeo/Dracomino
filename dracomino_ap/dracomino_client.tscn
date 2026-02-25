@@ -105,6 +105,11 @@ text = "1.0"
 layout_mode = 2
 text = "Reset"
 
+[node name="Btn_AllowUnfocusedInputs" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
+layout_mode = 2
+text = "Allow Unfocused Inputs
+"
+
 [node name="Audio" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs" index="3"]
 visible = false
 layout_mode = 2
