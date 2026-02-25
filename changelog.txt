@@ -1,3 +1,6 @@
+Version 0.2.3.5
+ - Fix crash when game with invalid filename is in the multiworld
+
 Version 0.2.3.4
  - Fix desync issue with coins
 
