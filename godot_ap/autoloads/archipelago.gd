@@ -636,9 +636,11 @@ func handle_datapackage_checksums(checksums: Dictionary) -> void:
 	_datapack_pending = []
 	for game in checksums.keys():
 		if _datapack_cache.has(game):
-			var cached = _datapack_cache[game]
-			if cached["checksum"] == checksums[game] and cached["fields"] == datapack_cached_fields:
-				continue #already up-to-date, matching checksum
+			if FileAccess.file_exists("user://ap/datapacks/%s.json" % game.validate_filename()):
+				# cache file is valid
+				var cached: Dictionary = _datapack_cache[game]
+				if cached["checksum"] == checksums[game] and cached["fields"] == datapack_cached_fields:
+					continue # already up-to-date, matching checksum
 		_datapack_pending.append(game)
 
 # Caches and stores to disk `data` as the DataCache file for `game`
