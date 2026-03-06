@@ -2,6 +2,7 @@ extends Node
 
 var btn_deathLink:CheckButton
 var btn_deathOnRestart:CheckButton
+var btn_allowUnfocusedInputs:CheckButton
 var btn_gravityAmt_reset:Button
 var label_gravityAmt:Label
 var slider_gravityAmt:Slider
@@ -34,6 +35,11 @@ func _ready() -> void:
 		btn_deathOnRestart.toggled.connect(_on_btn_deathOnRestart_toggled)
 		SignalBus.getSignal("deathOnRestart_enabled").connect(btn_deathOnRestart.set_pressed_no_signal.bind(true))
 		SignalBus.getSignal("deathOnRestart_disabled").connect(btn_deathOnRestart.set_pressed_no_signal.bind(false))
+	# Unfocused inputs toggle
+	btn_allowUnfocusedInputs = get_parent().find_child("Btn_AllowUnfocusedInputs")
+	if btn_allowUnfocusedInputs:
+		btn_allowUnfocusedInputs.set_pressed_no_signal(Config.getSetting("allowUnfocusedInputs", false))
+		btn_allowUnfocusedInputs.toggled.connect(_on_btn_allowUnfocusedInputs_toggled)
 	# Gravity slider
 	slider_gravityAmt = get_parent().find_child("HSlider_GravityAmt")
 	if slider_gravityAmt:
@@ -82,6 +88,9 @@ func _on_btn_deathOnRestart_toggled(toggled_on:bool):
 	SignalBus.getSignal(
 		"deathOnRestart_enabled" if toggled_on else "deathOnRestart_disabled"
 	).emit()
+
+func _on_btn_allowUnfocusedInputs_toggled(toggled_on:bool):
+	Config.changeSetting("allowUnfocusedInputs", toggled_on)
 
 func _on_slider_gravityAmt_value_changed(value:float) -> void:
 	Config.changeSetting("gravity", value)

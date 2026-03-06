@@ -83,9 +83,12 @@ func _on_focus_exited():
 
 func _on_window_focus_entered():
 	set_process_input(true)
+	set_process_unhandled_input(true)
 
 func _on_window_focus_exited():
 	set_process_input(false)
+	if not Config.getSetting("allowUnfocusedInputs", false):
+		set_process_unhandled_input(false)
 	_on_focus_exited()
 
 func _on_Board_game_over_earned() -> void:
