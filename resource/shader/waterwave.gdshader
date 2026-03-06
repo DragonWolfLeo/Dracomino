@@ -4,7 +4,6 @@ uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_nearest;
 
 void fragment() {
 	float cutoff = 0.3;
-	float wave = 0.0;
 	float cutoff_depth = cutoff - SCREEN_UV.y;
 	if(cutoff_depth < 0.0){
 		float strength = 0.05;
