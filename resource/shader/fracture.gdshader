@@ -49,7 +49,7 @@ void fragment() {
 	}
 	// Make wobble
 	vec2 wobble = vec2(cos((TIME+center.x)*wobblespeed*0.5), sin((TIME+center.y)*wobblespeed))*wobblestrength;
-	wobble.x *= sin(TIME*shakespeed)*shakestrength;
+	wobble.x *= sin(TIME*shakespeed)*shakestrength + sin(TIME*shakespeed*5.0)*shakestrength;
 	md=1e8;
 	// Create cracks
 	for(float j=-2.;j<=2.;j++) for(float i=-2.;i<=2.;i++){
