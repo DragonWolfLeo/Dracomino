@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://dq05pcnj58yp0"]
+[gd_scene load_steps=29 format=3 uid="uid://dq05pcnj58yp0"]
 
 [ext_resource type="PackedScene" uid="uid://boraki5ygsa0g" path="res://level/board.tscn" id="1_q3k4m"]
 [ext_resource type="Script" uid="uid://c5jgcsxvnygnn" path="res://mode/main.gd" id="1_svssi"]
@@ -10,6 +10,7 @@
 [ext_resource type="Shader" uid="uid://jo62bd4fm34j" path="res://resource/shader/pixel.gdshader" id="6_gpyk6"]
 [ext_resource type="FontFile" uid="uid://c8dwaeydyfv6j" path="res://resource/font/PressStart2P-Regular.ttf" id="6_svssi"]
 [ext_resource type="Shader" uid="uid://38rkwlxs4jwj" path="res://resource/shader/fracture.gdshader" id="8_jjnvi"]
+[ext_resource type="Shader" uid="uid://pn15pak7pnld" path="res://resource/shader/invert.gdshader" id="9_d6dmn"]
 [ext_resource type="Shader" uid="uid://bqohxdob6tubs" path="res://resource/shader/crystal.gdshader" id="9_yivgv"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q3k4m"]
@@ -145,6 +146,9 @@ Button/styles/hover = SubResource("StyleBoxFlat_gpyk6")
 Button/styles/normal = SubResource("StyleBoxFlat_svssi")
 Button/styles/pressed = SubResource("StyleBoxFlat_gx2q7")
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ckgpy"]
+shader = ExtResource("9_d6dmn")
+
 [node name="Main" type="Control"]
 process_mode = 3
 layout_mode = 3
@@ -205,9 +209,9 @@ script = ExtResource("4_q3k4m")
 targetControl = NodePath("../../../../HoldContainer/ScrollContainer/HoldBar")
 slotAbilityName = "Hold Slot"
 
-[node name="Overlay" type="CanvasLayer" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport"]
+[node name="LevelOverlay" type="CanvasLayer" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport"]
 
-[node name="PixelFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Overlay"]
+[node name="PixelFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay"]
 visible = false
 material = SubResource("ShaderMaterial_jjnvi")
 anchors_preset = 15
@@ -216,7 +220,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="FractureFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Overlay"]
+[node name="FractureFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay"]
 visible = false
 material = SubResource("ShaderMaterial_d6dmn")
 anchors_preset = 15
@@ -225,7 +229,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="FractureFilter2" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Overlay"]
+[node name="FractureFilter2" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay"]
 visible = false
 material = SubResource("ShaderMaterial_w0fxs")
 anchors_preset = 15
@@ -234,7 +238,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="CrystalFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Overlay"]
+[node name="CrystalFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay"]
 visible = false
 material = SubResource("ShaderMaterial_m1ejn")
 anchors_preset = 15
@@ -243,7 +247,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="WaterFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Overlay"]
+[node name="WaterFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay"]
 texture_filter = 1
 material = SubResource("ShaderMaterial_gx2q7")
 anchors_preset = 15
@@ -380,6 +384,18 @@ text = "Quit"
 process_mode = 3
 custom_minimum_size = Vector2(340, 0)
 layout_mode = 2
+
+[node name="MainOverlay" type="CanvasLayer" parent="."]
+
+[node name="InvertFilter" type="ColorRect" parent="MainOverlay"]
+texture_filter = 1
+material = SubResource("ShaderMaterial_ckgpy")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 
 [connection signal="activeAbilities_updated" from="DracominoHandler" to="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/PreviewStorage" method="_on_DracominoHandler_active_abilities_updated"]
 [connection signal="activeAbilities_updated" from="DracominoHandler" to="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/HoldStorage" method="_on_DracominoHandler_active_abilities_updated"]
