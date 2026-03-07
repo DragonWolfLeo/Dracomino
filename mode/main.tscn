@@ -53,13 +53,15 @@ shader_parameter/edgeshine = 0.3
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_gx2q7"]
 shader = ExtResource("5_gpyk6")
 shader_parameter/water_color = Color(0, 0.0980392, 0.176471, 1)
-shader_parameter/watersurface_color = Color(0.342, 0.606733, 0.76, 1)
-shader_parameter/watersurface_height = 0.085
+shader_parameter/watersurface_color = Color(0.316286, 0.496441, 0.521942, 1)
+shader_parameter/watersurface_height = 0.115
 shader_parameter/wave_strength = 0.004
 shader_parameter/wave_frequency = 50.0
 shader_parameter/cycle = 16.0
 shader_parameter/distortion_strength = 0.05
 shader_parameter/water_height = 0.3
+shader_parameter/reflection_shear = 0.0
+shader_parameter/reflection_strength = 0.315
 
 [sub_resource type="Theme" id="Theme_d5o15"]
 default_font = ExtResource("5_kwn67")
