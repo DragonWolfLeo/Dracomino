@@ -1,16 +1,23 @@
 shader_type canvas_item;
 
 uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_nearest;
+uniform vec4 water_color : source_color;
+uniform vec4 watersurface_color : source_color = vec4(1.0);
+uniform float watersurface_height = 0.05;
+uniform float wave_strength = 0.004;
+uniform float wave_frequency = 50.0;
+uniform float cycle = 16.0;
+uniform float distortion_strength = 0.05;
+uniform float water_height = 0.3;
 
 void fragment() {
-	float cutoff = 0.3;
+	float cutoff = water_height + (sin(TIME+(SCREEN_UV.x*wave_frequency))*wave_strength*sin(TIME));
 	float cutoff_depth = cutoff - SCREEN_UV.y;
+	float water_surface_effect = 1.0-clamp(-cutoff_depth/watersurface_height, 0.0, 1.0);
 	if(cutoff_depth < 0.0){
-		float strength = 0.05;
-		float cycle = 16.0;
-		float wave = strength*sin(TIME+SCREEN_UV.y*cycle)*cutoff_depth;
-		COLOR = texture(SCREEN_TEXTURE, SCREEN_UV + vec2(wave, 0.0));
+		float wave = distortion_strength*sin(TIME+SCREEN_UV.y*cycle)*cutoff_depth;
+		COLOR = texture(SCREEN_TEXTURE, SCREEN_UV + vec2(wave, 0.0)) + water_color + (watersurface_color*water_surface_effect);
 	} else {
-		COLOR = texture(SCREEN_TEXTURE, SCREEN_UV);
+		COLOR = vec4(0.0);
 	}
 }

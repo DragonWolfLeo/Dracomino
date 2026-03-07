@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3 uid="uid://dq05pcnj58yp0"]
+[gd_scene load_steps=27 format=3 uid="uid://dq05pcnj58yp0"]
 
 [ext_resource type="PackedScene" uid="uid://boraki5ygsa0g" path="res://level/board.tscn" id="1_q3k4m"]
 [ext_resource type="Script" uid="uid://c5jgcsxvnygnn" path="res://mode/main.gd" id="1_svssi"]
@@ -8,19 +8,12 @@
 [ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="5_kwn67"]
 [ext_resource type="PackedScene" uid="uid://c7613bp0awts" path="res://dracomino_ap/dracomino_client.tscn" id="5_svssi"]
 [ext_resource type="Shader" uid="uid://jo62bd4fm34j" path="res://resource/shader/pixel.gdshader" id="6_gpyk6"]
-[ext_resource type="Shader" uid="uid://b6jf5nxowmt0d" path="res://resource/shader/water.gdshader" id="6_gx2q7"]
 [ext_resource type="FontFile" uid="uid://c8dwaeydyfv6j" path="res://resource/font/PressStart2P-Regular.ttf" id="6_svssi"]
 [ext_resource type="Shader" uid="uid://38rkwlxs4jwj" path="res://resource/shader/fracture.gdshader" id="8_jjnvi"]
 [ext_resource type="Shader" uid="uid://bqohxdob6tubs" path="res://resource/shader/crystal.gdshader" id="9_yivgv"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q3k4m"]
 bg_color = Color(0.0562916, 0.0562916, 0.0562916, 1)
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_gx2q7"]
-shader = ExtResource("5_gpyk6")
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_yivgv"]
-shader = ExtResource("6_gx2q7")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_jjnvi"]
 shader = ExtResource("6_gpyk6")
@@ -37,6 +30,17 @@ shader_parameter/shakespeed = 12.4
 shader_parameter/shakestrength = 0.6
 shader_parameter/disp = Vector2(0, 0)
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_w0fxs"]
+shader = ExtResource("8_jjnvi")
+shader_parameter/color = Color(0, 0, 0, 1)
+shader_parameter/scale = 0.6
+shader_parameter/speed = 0.00999998
+shader_parameter/wobblespeed = 0.9
+shader_parameter/wobblestrength = 0.14
+shader_parameter/shakespeed = 0.4
+shader_parameter/shakestrength = 1.5
+shader_parameter/disp = Vector2(0, 0)
+
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_m1ejn"]
 shader = ExtResource("9_yivgv")
 shader_parameter/color = Color(0, 0, 0, 1)
@@ -45,6 +49,17 @@ shader_parameter/speed = 0.04
 shader_parameter/disp = Vector2(0, 0)
 shader_parameter/tint_strength = Vector3(0.195, 0.105, 0.165)
 shader_parameter/edgeshine = 0.3
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gx2q7"]
+shader = ExtResource("5_gpyk6")
+shader_parameter/water_color = Color(0, 0.0980392, 0.176471, 1)
+shader_parameter/watersurface_color = Color(0.342, 0.606733, 0.76, 1)
+shader_parameter/watersurface_height = 0.085
+shader_parameter/wave_strength = 0.004
+shader_parameter/wave_frequency = 50.0
+shader_parameter/cycle = 16.0
+shader_parameter/distortion_strength = 0.05
+shader_parameter/water_height = 0.3
 
 [sub_resource type="Theme" id="Theme_d5o15"]
 default_font = ExtResource("5_kwn67")
@@ -190,26 +205,8 @@ slotAbilityName = "Hold Slot"
 
 [node name="Overlay" type="CanvasLayer" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport"]
 
-[node name="WaterFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Overlay"]
-texture_filter = 1
-material = SubResource("ShaderMaterial_gx2q7")
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="ColorRect" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Overlay/WaterFilter"]
-material = SubResource("ShaderMaterial_yivgv")
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0, 0.0980392, 0.176471, 1)
-
 [node name="PixelFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Overlay"]
+visible = false
 material = SubResource("ShaderMaterial_jjnvi")
 anchors_preset = 15
 anchor_right = 1.0
@@ -218,7 +215,17 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="FractureFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Overlay"]
+visible = false
 material = SubResource("ShaderMaterial_d6dmn")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="FractureFilter2" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Overlay"]
+visible = false
+material = SubResource("ShaderMaterial_w0fxs")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -228,6 +235,15 @@ grow_vertical = 2
 [node name="CrystalFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Overlay"]
 visible = false
 material = SubResource("ShaderMaterial_m1ejn")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="WaterFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Overlay"]
+texture_filter = 1
+material = SubResource("ShaderMaterial_gx2q7")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
