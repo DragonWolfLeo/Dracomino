@@ -61,7 +61,7 @@ shader_parameter/cycle = 16.0
 shader_parameter/distortion_strength = 0.05
 shader_parameter/water_height = 0.3
 shader_parameter/reflection_shear = 0.0
-shader_parameter/reflection_strength = 0.315
+shader_parameter/reflection_strength = 0.155
 
 [sub_resource type="Theme" id="Theme_d5o15"]
 default_font = ExtResource("5_kwn67")
