@@ -6,6 +6,7 @@ uniform float speed : hint_range(-1.0, 1.0, 0.01) = 1.0;
 uniform vec2 disp = vec2(0.0, 0.0);
 uniform vec3 tint_strength = vec3(1.0);
 uniform float edgeshine : hint_range(0.1, 5.0, 0.1) = 1.0;
+uniform float refraction : hint_range(-1.0, 1.0, 0.01) = 0.03;
 
 uniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_nearest;
 
@@ -59,7 +60,7 @@ void fragment() {
 		}
 	}
 	d = clamp(exp2(-32.0*md), 0.0, 1.0);
-	vec2 offset = vec2(cos(core.x*8.0),sin(core.y))*0.03;
+	vec2 offset = -((core-center))*refraction;
 
 	// Shiny effect
 	float shineheight = -0.8;
@@ -72,7 +73,9 @@ void fragment() {
 	edgeeffect = max(edgeeffect, 0.0);
 	tint += (d*edgeshine*edgeeffect) + vec4(vec3(1.0)*effect*shinestrength, 1.0);
 
-	// Apply color
-	COLOR = texture(SCREEN_TEXTURE, SCREEN_UV + offset) + tint;
+	// Apply offset and color
+	vec2 uv = SCREEN_UV + offset;
+	uv = (floor(uv/SCREEN_PIXEL_SIZE)+0.5)*SCREEN_PIXEL_SIZE; // Snap to pixel
+	COLOR = textureLod(SCREEN_TEXTURE, uv, 0.0) + tint;
 
 }

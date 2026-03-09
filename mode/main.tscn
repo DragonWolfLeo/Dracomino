@@ -36,10 +36,10 @@ shader = ExtResource("8_jjnvi")
 shader_parameter/color = Color(0, 0, 0, 1)
 shader_parameter/scale = 0.6
 shader_parameter/speed = 0.00999998
-shader_parameter/wobblespeed = 0.9
-shader_parameter/wobblestrength = 0.14
-shader_parameter/shakespeed = 0.4
-shader_parameter/shakestrength = 1.5
+shader_parameter/wobblespeed = 0.2
+shader_parameter/wobblestrength = 0.21
+shader_parameter/shakespeed = 0.3
+shader_parameter/shakestrength = 0.9
 shader_parameter/disp = Vector2(0, 0)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_m1ejn"]
@@ -50,6 +50,7 @@ shader_parameter/speed = 0.04
 shader_parameter/disp = Vector2(0, 0)
 shader_parameter/tint_strength = Vector3(0.195, 0.105, 0.165)
 shader_parameter/edgeshine = 0.3
+shader_parameter/refraction = 0.1
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_gx2q7"]
 shader = ExtResource("5_gpyk6")
@@ -388,6 +389,7 @@ layout_mode = 2
 [node name="MainOverlay" type="CanvasLayer" parent="."]
 
 [node name="InvertFilter" type="ColorRect" parent="MainOverlay"]
+visible = false
 texture_filter = 1
 material = SubResource("ShaderMaterial_ckgpy")
 anchors_preset = 15

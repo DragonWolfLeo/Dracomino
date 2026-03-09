@@ -63,7 +63,9 @@ void fragment() {
 	d = exp(-200.0*md);
 	vec2 offset = wobble*0.05;
 	if(d<0.1){
-		COLOR = texture(SCREEN_TEXTURE, SCREEN_UV - offset);
+		vec2 uv = SCREEN_UV + offset;
+		uv = (floor(uv/SCREEN_PIXEL_SIZE)+0.5)*SCREEN_PIXEL_SIZE; // Snap to pixel
+		COLOR = texture(SCREEN_TEXTURE, uv);
 	} else {
 		COLOR = vec4(0.0,0.0,0.0,1);
 	}
