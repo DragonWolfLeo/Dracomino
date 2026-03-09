@@ -12,7 +12,7 @@ func _on_enabledSignal():
 	show()
 	var parent:Node = get_parent()
 	if parent:
-		parent.move_child(self, get_child_count(true)-1)
+		parent.move_child(self, parent.get_child_count(true)-1)
 
 func _on_disabledSignal():
 	hide()
