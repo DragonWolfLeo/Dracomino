@@ -1,3 +1,7 @@
+Version 0.2.3.6 (traps-alpha1)
+ - Add overlay effects: Pixel, Crystal, Fracture, Water, Invert
+ - Add debug tab with overlay toggles. Priority depends on order toggled.
+
 Version 0.2.3.6
  - Fix issue with handling of cached datapackages
 

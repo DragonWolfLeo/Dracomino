@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3 uid="uid://dq05pcnj58yp0"]
+[gd_scene load_steps=29 format=3 uid="uid://dq05pcnj58yp0"]
 
 [ext_resource type="PackedScene" uid="uid://boraki5ygsa0g" path="res://level/board.tscn" id="1_q3k4m"]
 [ext_resource type="Script" uid="uid://c5jgcsxvnygnn" path="res://mode/main.gd" id="1_svssi"]
@@ -7,6 +7,7 @@
 [ext_resource type="Shader" uid="uid://dobuvt43qhvwi" path="res://resource/shader/waterwave.gdshader" id="5_gpyk6"]
 [ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="5_kwn67"]
 [ext_resource type="PackedScene" uid="uid://c7613bp0awts" path="res://dracomino_ap/dracomino_client.tscn" id="5_svssi"]
+[ext_resource type="Script" uid="uid://dvj4uugycseke" path="res://module/overlayfilter.gd" id="6_d6dmn"]
 [ext_resource type="Shader" uid="uid://jo62bd4fm34j" path="res://resource/shader/pixel.gdshader" id="6_gpyk6"]
 [ext_resource type="FontFile" uid="uid://c8dwaeydyfv6j" path="res://resource/font/PressStart2P-Regular.ttf" id="6_svssi"]
 [ext_resource type="Shader" uid="uid://38rkwlxs4jwj" path="res://resource/shader/fracture.gdshader" id="8_jjnvi"]
@@ -15,6 +16,16 @@
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q3k4m"]
 bg_color = Color(0.0562916, 0.0562916, 0.0562916, 1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_m1ejn"]
+shader = ExtResource("9_yivgv")
+shader_parameter/color = Color(0, 0, 0, 1)
+shader_parameter/scale = 0.6
+shader_parameter/speed = 0.04
+shader_parameter/disp = Vector2(0, 0)
+shader_parameter/tint_strength = Vector3(0.195, 0.105, 0.165)
+shader_parameter/edgeshine = 0.3
+shader_parameter/refraction = 0.1
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_jjnvi"]
 shader = ExtResource("6_gpyk6")
@@ -30,16 +41,6 @@ shader_parameter/wobblestrength = 0.21
 shader_parameter/shakespeed = 0.3
 shader_parameter/shakestrength = 0.9
 shader_parameter/disp = Vector2(0, 0)
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_m1ejn"]
-shader = ExtResource("9_yivgv")
-shader_parameter/color = Color(0, 0, 0, 1)
-shader_parameter/scale = 0.6
-shader_parameter/speed = 0.04
-shader_parameter/disp = Vector2(0, 0)
-shader_parameter/tint_strength = Vector3(0.195, 0.105, 0.165)
-shader_parameter/edgeshine = 0.3
-shader_parameter/refraction = 0.1
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_gx2q7"]
 shader = ExtResource("5_gpyk6")
@@ -201,6 +202,20 @@ slotAbilityName = "Hold Slot"
 
 [node name="LevelOverlay" type="CanvasLayer" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport"]
 
+[node name="CrystalFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay"]
+material = SubResource("ShaderMaterial_m1ejn")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("6_d6dmn")
+debugSignalKey = "overlay_crystal"
+
+[node name="BackBufferCopy" type="BackBufferCopy" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay/CrystalFilter"]
+copy_mode = 2
+
 [node name="PixelFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay"]
 material = SubResource("ShaderMaterial_jjnvi")
 anchors_preset = 15
@@ -208,6 +223,9 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("6_d6dmn")
+debugSignalKey = "overlay_pixel"
 
 [node name="BackBufferCopy" type="BackBufferCopy" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay/PixelFilter"]
 copy_mode = 2
@@ -219,19 +237,11 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("6_d6dmn")
+debugSignalKey = "overlay_fracture"
 
 [node name="BackBufferCopy" type="BackBufferCopy" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay/FractureFilter"]
-copy_mode = 2
-
-[node name="CrystalFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay"]
-material = SubResource("ShaderMaterial_m1ejn")
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="BackBufferCopy" type="BackBufferCopy" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay/CrystalFilter"]
 copy_mode = 2
 
 [node name="WaterFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay"]
@@ -242,6 +252,9 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("6_d6dmn")
+debugSignalKey = "overlay_water"
 
 [node name="BackBufferCopy" type="BackBufferCopy" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay/WaterFilter"]
 copy_mode = 2
@@ -387,6 +400,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+script = ExtResource("6_d6dmn")
+debugSignalKey = "overlay_invert"
 
 [connection signal="activeAbilities_updated" from="DracominoHandler" to="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/PreviewStorage" method="_on_DracominoHandler_active_abilities_updated"]
 [connection signal="activeAbilities_updated" from="DracominoHandler" to="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/HoldStorage" method="_on_DracominoHandler_active_abilities_updated"]
