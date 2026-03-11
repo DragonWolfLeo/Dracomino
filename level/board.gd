@@ -112,8 +112,9 @@ func _process(delta):
 
 #===== Functions ======
 func getFocusPiece() -> Piece:
-	if activePieces.size():
-		return activePieces[0]
+	for piece in activePieces:
+		if not piece.moveLock:
+			return piece
 	return null
 
 func blockRemoveAnimationStep(delta):
@@ -146,10 +147,12 @@ func requestPieceCreation(): ## This functions usually leads into createPiece be
 	if not activePieces.size() or (previewStorage and previewStorage.isEmpty()):
 		waitForItem()
 
-func requestPiece():
+func requestPiece(allowMultiplePieces:bool = false):
 	if isGameOver: return
-	if activePieces.size() and (not previewStorage or previewStorage.isFull()):
-		# We can end up at this point if preview is filled through state update
+	# if activePieces.size() and (not previewStorage or previewStorage.isFull()):
+	# 	# We can end up at this point if preview is filled through state update
+	# 	return
+	if activePieces.size() and not allowMultiplePieces:
 		return
 	var storedPiece:Piece
 	if previewStorage:
@@ -439,14 +442,22 @@ func setAnimBasedOnMasterCoinAndLine(node:Node2D, line:int = 0) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	var focusPiece:Piece = getFocusPiece()
 	if not isGameOver:
-		if event.is_action_pressed("hold"):
+		if Config.getSetting("debug", false) and event.is_action_pressed("spawn"):
+			requestPiece(true)
+			inputTimer.reset()
+			get_viewport().set_input_as_handled()
+			return
+		elif event.is_action_pressed("hold"):
 			if DracominoHandler.activeAbilities.get("Hold Slot", 0):
 				hold()
+				get_viewport().set_input_as_handled()
+				return
 		elif not focusPiece:
 			if event.is_action_pressed("ui_accept"):
 				requestPiece.call_deferred()
 				inputTimer.reset()
 				get_viewport().set_input_as_handled()
+				return
 	if focusPiece == null: return
 	if (event.is_action_pressed("moveRight") 
 	or event.is_action_pressed("moveLeft")
@@ -480,6 +491,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("hardDrop") and Input.is_action_just_pressed("hardDrop"): # Double check to ignore events from slight axis movement
 		if DracominoHandler.activeAbilities.get("Hard Drop", 0):
 			focusPiece.hardDrop()
+			if activePieces.size() <= 1:
+				requestPiece(true)
 	else:
 		return
 	
