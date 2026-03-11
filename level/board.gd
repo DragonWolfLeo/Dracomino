@@ -35,10 +35,7 @@ static var SET_TILE_ATLAS_ROW:int = 1
 @onready var sfx_lineClearCheck:AudioStreamPlayer = $SFX_LineClearCheck
 @onready var sfx_gameOver:AudioStreamPlayer = $SFX_GameOver
 
-var currentPiece:Piece
-
-var currentPreview:Array[Vector2i]
-var currentPreviewTileNumber:int
+var activePieces:Array[Piece] = []
 
 var rowsToClear = []
 var blocksToClear = []
@@ -114,6 +111,11 @@ func _process(delta):
 		blockRemoveAnimationStep(delta)
 
 #===== Functions ======
+func getFocusPiece() -> Piece:
+	if activePieces.size():
+		return activePieces[0]
+	return null
+
 func blockRemoveAnimationStep(delta):
 	if !animation_started and blocksToClear.size() == 0:
 		for x in range(BOUNDS.position.x, BOUNDS.end.x):
@@ -141,12 +143,12 @@ func blockRemoveAnimationStep(delta):
 func requestPieceCreation(): ## This functions usually leads into createPiece being called, if there's pieces available
 	if isGameOver: return
 	piece_requested.emit(self)
-	if not currentPiece or (previewStorage and previewStorage.isEmpty()):
+	if not activePieces.size() or (previewStorage and previewStorage.isEmpty()):
 		waitForItem()
 
 func requestPiece():
 	if isGameOver: return
-	if currentPiece and (not previewStorage or previewStorage.isFull()):
+	if activePieces.size() and (not previewStorage or previewStorage.isFull()):
 		# We can end up at this point if preview is filled through state update
 		return
 	var storedPiece:Piece
@@ -178,10 +180,11 @@ func createPiece(pieceName:StringName = "", pieceContext:DracominoHandler.StateI
 	add_child(piece)
 	game_started.connect(piece.queue_free)
 	
-	if currentPiece:
+	if activePieces.size():
 		if previewStorage and not previewStorage.isFull():
 			previewStorage.pushPiece(piece)
 		else:
+			# TODO: What's the point of this again?
 			# Store this piece for now
 			printerr("Piece is eaten!")
 			piece.queue_free()
@@ -196,35 +199,37 @@ func createPiece(pieceName:StringName = "", pieceContext:DracominoHandler.StateI
 	fillPreview()
 
 func spawnPiece(piece:Piece):
-	currentPiece = piece
-	currentPiece.movement_requested.connect(_on_Piece_movement_requested)
-	currentPiece.new_cells_requested.connect(_on_Piece_new_cells_requested)
-	currentPiece.ghost_cells_requested.connect(_on_Piece_ghost_cells_requested)
-	currentPiece.makeActive()
-	currentPiece.currentPosition = SPAWN_POINT + currentPiece.origin
-	pieceTimer.reset()
-	placeOnHighestRow(piece)
-	if not checkForFailure(piece):
-		piece_spawned.emit(currentPiece)
+	if not activePieces.has(piece):
+		activePieces.append(piece)
+		piece.movement_requested.connect(_on_Piece_movement_requested)
+		piece.new_cells_requested.connect(_on_Piece_new_cells_requested)
+		piece.ghost_cells_requested.connect(_on_Piece_ghost_cells_requested)
+		piece.makeActive()
+		piece.currentPosition = SPAWN_POINT + piece.origin
+		pieceTimer.reset()
+		placeOnHighestRow(piece)
+		if not checkForFailure(piece):
+			piece_spawned.emit(piece)
 
 func hold():
-	if currentPiece and currentPiece.moveLock:
+	var piece:Piece = getFocusPiece()
+	if piece and piece.moveLock:
 		# Don't hold if hard dropping
 		return
 	if holdStorage and not holdOnCooldown:
 		sfx_hold.play()
 		holdOnCooldown = true
 		var popped:Piece
-		if currentPiece:
+		if piece:
 			# Cleanup
-			if currentPiece.movement_requested.is_connected(_on_Piece_movement_requested):
-				currentPiece.movement_requested.disconnect(_on_Piece_movement_requested)
-			if currentPiece.new_cells_requested.is_connected(_on_Piece_new_cells_requested):
-				currentPiece.new_cells_requested.disconnect(_on_Piece_new_cells_requested)
-			if currentPiece.ghost_cells_requested.is_connected(_on_Piece_ghost_cells_requested):
-				currentPiece.ghost_cells_requested.disconnect(_on_Piece_ghost_cells_requested)
-			popped = holdStorage.pushPiece(currentPiece)
-			currentPiece = null
+			if piece.movement_requested.is_connected(_on_Piece_movement_requested):
+				piece.movement_requested.disconnect(_on_Piece_movement_requested)
+			if piece.new_cells_requested.is_connected(_on_Piece_new_cells_requested):
+				piece.new_cells_requested.disconnect(_on_Piece_new_cells_requested)
+			if piece.ghost_cells_requested.is_connected(_on_Piece_ghost_cells_requested):
+				piece.ghost_cells_requested.disconnect(_on_Piece_ghost_cells_requested)
+			popped = holdStorage.pushPiece(piece)
+			activePieces.erase(piece)
 		else:
 			popped = holdStorage.popPiece()
 		if popped:
@@ -235,7 +240,7 @@ func hold():
 func isTileOccupied(coords:Vector2i) -> bool:
 	return get_cell_atlas_coords(coords).y == SET_TILE_ATLAS_ROW
 
-func placeOnHighestRow(piece:Piece = currentPiece):
+func placeOnHighestRow(piece:Piece):
 	var greatestY:int = 0
 	for cell in piece.localCells:
 		var pos:Vector2i = piece.currentPosition + cell
@@ -246,7 +251,7 @@ func placeOnHighestRow(piece:Piece = currentPiece):
 		piece.move(Vector2i.UP)
 		placeOnHighestRow(piece)
 
-func checkForFailure(piece:Piece = currentPiece) -> bool:
+func checkForFailure(piece:Piece) -> bool:
 	for cell in piece.localCells:
 		var pos:Vector2i = piece.currentPosition + cell
 		if isTileOccupied(pos):
@@ -265,10 +270,10 @@ func gameOver(deathContext:DracominoUtil.DeathContext = null):
 		return
 	sfx_gameOver.play()
 	isGameOver = true
-	lockPiece()
-	if currentPiece:
-		currentPiece.queue_free()
-	currentPiece = null
+	for piece in activePieces:
+		lockPiece(piece)
+		# piece.queue_free()
+	activePieces.clear()
 	game_over_earned.emit()
 	cancel_waitForItem()
 	if deathContext and Archipelago.is_deathlink():
@@ -282,17 +287,18 @@ func sendDeathLink(deathContext:DracominoUtil.DeathContext):
 		deathlink_earned.emit(deathContext) # For DracominoHandler to handle
 
 func resetGame():
+	var focusPiece:Piece = getFocusPiece()
 	# Send deathlink message
 	if sendDeathOnRestart and not isGameOver and not boardIsFresh:
 		sfx_gameOver.play()
 		var deathContext := DracominoUtil.DeathContext.new(
 			# category
-			"RESTART_NEAR_GAME_OVER" if currentPiece and isInDanger()
-			else "RESTART_WITH_PIECES" if currentPiece
+			"RESTART_NEAR_GAME_OVER" if focusPiece and isInDanger()
+			else "RESTART_WITH_PIECES" if focusPiece
 			else "RESTART_HELD_PIECE" if holdOnCooldown and _lastHeldPieceContext
 			else "RESTART",
 			# itemContext
-			currentPiece.context if currentPiece
+			focusPiece.context if focusPiece
 			else _lastHeldPieceContext
 		)
 		if not deathContext.itemContext and pieceTimer.isAFK():
@@ -307,10 +313,10 @@ func resetGame():
 			itemPickups[k].node = null
 		itemPickups.erase(k)
 
-	# Delete current piece
-	if currentPiece:
-		currentPiece.queue_free()
-	currentPiece = null
+	# Delete current pieces
+	for piece in activePieces:
+		piece.queue_free()
+	activePieces.clear()
 
 	# Clear previews and hold
 	if previewStorage: previewStorage.clear()
@@ -333,9 +339,7 @@ func resetGame():
 	# Create new piece
 	requestPiece.call_deferred()
 
-func lockPiece(piece:Piece = currentPiece):
-	if piece == null: return
-	# var pieceIsHardDropped:bool = piece.moveLock
+func lockPiece(piece:Piece):
 	holdOnCooldown = false
 	var pickedUpItem:bool = false
 	for pos in piece.localCells:
@@ -352,8 +356,7 @@ func lockPiece(piece:Piece = currentPiece):
 				
 	if pickedUpItem:
 		sfx_itemPickup.play()
-	if currentPiece == piece:
-		currentPiece = null
+	activePieces.erase(piece)
 	piece.queue_free()
 	boardIsFresh = false
 	
@@ -414,7 +417,7 @@ func areCellsValid(cells:Array[Vector2i], offset:Vector2i) -> bool:
 	return true
 
 func waitForItem():
-	if not currentPiece:
+	if not activePieces.size():
 		if Archipelago.conn and not Archipelago.conn.obtained_item.is_connected(_on_obtained_item):
 			Archipelago.conn.obtained_item.connect(_on_obtained_item.unbind(1), CONNECT_ONE_SHOT)
 
@@ -434,16 +437,17 @@ func setAnimBasedOnMasterCoinAndLine(node:Node2D, line:int = 0) -> void:
 
 #==== Events =====
 func _unhandled_input(event: InputEvent) -> void:
+	var focusPiece:Piece = getFocusPiece()
 	if not isGameOver:
 		if event.is_action_pressed("hold"):
 			if DracominoHandler.activeAbilities.get("Hold Slot", 0):
 				hold()
-		elif not currentPiece:
+		elif not focusPiece:
 			if event.is_action_pressed("ui_accept"):
 				requestPiece.call_deferred()
 				inputTimer.reset()
 				get_viewport().set_input_as_handled()
-	if currentPiece == null: return
+	if focusPiece == null: return
 	if (event.is_action_pressed("moveRight") 
 	or event.is_action_pressed("moveLeft")
 	or event.is_action_pressed("moveDown")
@@ -462,20 +466,20 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("rotateClockwise"):
 		if DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
 			sfx_rotate.play()
-			currentPiece.rotateClockwise()
+			focusPiece.rotateClockwise()
 		elif USE_ALT_ROTATE and DracominoHandler.activeAbilities.get("Rotate Counterclockwise", 0):
 			sfx_rotate.play()
-			currentPiece.rotateCounterclockwise()
+			focusPiece.rotateCounterclockwise()
 	elif event.is_action_pressed("rotateCounterclockwise"):
 		if DracominoHandler.activeAbilities.get("Rotate Counterclockwise", 0):
 			sfx_rotate.play()
-			currentPiece.rotateCounterclockwise()
+			focusPiece.rotateCounterclockwise()
 		elif USE_ALT_ROTATE and DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
 			sfx_rotate.play()
-			currentPiece.rotateClockwise()
+			focusPiece.rotateClockwise()
 	elif event.is_action_pressed("hardDrop") and Input.is_action_just_pressed("hardDrop"): # Double check to ignore events from slight axis movement
 		if DracominoHandler.activeAbilities.get("Hard Drop", 0):
-			currentPiece.hardDrop()
+			focusPiece.hardDrop()
 	else:
 		return
 	
@@ -516,7 +520,7 @@ func _on_deathlink(_source, _cause, _json):
 	gameOver()
 
 func _on_obtained_item():
-	if currentPiece == null and not isGameOver:
+	if activePieces.size() and not isGameOver:
 		requestPiece.call_deferred()
 
 func _on_Btn_Restart_pressed() -> void:
@@ -572,5 +576,6 @@ func _on_DracominoState_slot_context_hash_updated(ctx:int) -> void:
 
 func _on_holdOnCooldown_set(value):
 	## For deathlink message context
-	_lastHeldPieceContext = currentPiece.context if (value and currentPiece) else null
+	var focusPiece:Piece = getFocusPiece()
+	_lastHeldPieceContext = focusPiece.context if (value and focusPiece) else null
 	holdOnCooldown = value
