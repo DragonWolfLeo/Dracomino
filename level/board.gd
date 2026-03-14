@@ -533,8 +533,7 @@ func _on_deathlink(_source, _cause, _json):
 	gameOver()
 
 func _on_obtained_item():
-	if activePieces.size() and not isGameOver:
-		requestPiece.call_deferred()
+	requestPiece.call_deferred()
 
 func _on_Btn_Restart_pressed() -> void:
 	resetGame()
