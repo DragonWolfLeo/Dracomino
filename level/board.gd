@@ -183,14 +183,8 @@ func createPiece(pieceName:StringName = "", pieceContext:DracominoHandler.StateI
 	add_child(piece)
 	game_started.connect(piece.queue_free)
 	
-	if activePieces.size():
-		if previewStorage and not previewStorage.isFull():
-			previewStorage.pushPiece(piece)
-		else:
-			# TODO: What's the point of this again?
-			# Store this piece for now
-			printerr("Piece is eaten!")
-			piece.queue_free()
+	if activePieces.size() and previewStorage and not previewStorage.isFull():
+		previewStorage.pushPiece(piece)
 	else:
 		spawnPiece(piece)
 		print("Spawned {pieceName} from {sender}'s {location} in {game}".format({
