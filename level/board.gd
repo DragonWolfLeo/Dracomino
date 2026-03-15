@@ -185,6 +185,7 @@ func createPiece(pieceName:StringName = "", pieceContext:DracominoHandler.StateI
 
 func spawnPiece(piece:Piece):
 	if not activePieces.has(piece):
+		holdOnCooldown = false # Holding sets this to true immediately
 		activePieces.append(piece)
 		piece.movement_requested.connect(_on_Piece_movement_requested)
 		piece.new_cells_requested.connect(_on_Piece_new_cells_requested)
@@ -204,7 +205,6 @@ func hold():
 		return
 	if holdStorage and not holdOnCooldown:
 		sfx_hold.play()
-		holdOnCooldown = true
 		var popped:Piece
 		if piece:
 			# Cleanup
@@ -222,7 +222,8 @@ func hold():
 		if popped:
 			spawnPiece(popped)
 		else:
-			requestPiece()
+			requestPiece(true)	
+		holdOnCooldown = true
 
 func isTileOccupied(coords:Vector2i) -> bool:
 	return get_cell_atlas_coords(coords).y == SET_TILE_ATLAS_ROW
@@ -327,7 +328,6 @@ func resetGame():
 	requestPiece.call_deferred()
 
 func lockPiece(piece:Piece):
-	holdOnCooldown = false
 	var pickedUpItem:bool = false
 	for pos in piece.localCells:
 		if BOUNDS.has_point(piece.currentPosition + pos):
