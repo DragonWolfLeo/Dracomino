@@ -340,7 +340,10 @@ func lockPiece(piece:Piece):
 	piece.queue_free()
 	boardIsFresh = false
 	
-	if not isGameOver:
+	var focusPiece:Piece = getFocusPiece() # Check collisions with new piece
+	if focusPiece and checkForFailure(focusPiece):
+		pass # Game over
+	elif not isGameOver:
 		var fullRows = checkForFullRows()
 		if fullRows.size() > 0:
 			linesCleared += fullRows.size()
