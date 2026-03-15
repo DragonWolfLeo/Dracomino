@@ -388,13 +388,14 @@ func pushDownRows(full_row):
 			var target_atlas = get_cell_atlas_coords(aboveCell)
 			set_cell(Vector2i(x,y), 0, target_atlas)
 
-func areCellsValid(cells:Array[Vector2i], offset:Vector2i) -> bool:
+func areCellsValid(cells:Array[Vector2i], offset:Vector2i, invalidCells:Array[Vector2i] = []) -> bool:
 	for cell in cells:
 		var pos:Vector2i = offset + cell
 		if (
 			isTileOccupied(pos)
 			or pos.x < BOUNDS.position.x or pos.x >= BOUNDS.end.x # Check horizontal bounds
 			or pos.y >= BOUNDS.end.y # Check if reached bottom
+			or invalidCells.has(pos)
 		):
 			return false
 	return true
@@ -488,7 +489,17 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 
 func _on_Piece_ghost_cells_requested(piece:Piece, ghost:GhostPiece):
 	var relativePosition:Vector2i = Vector2i.ZERO
-	while areCellsValid(piece.localCells, piece.currentPosition+ relativePosition + Vector2i.DOWN):
+	var invalidCells:Array[Vector2i] = []
+	# Let ghosts stack on each other
+	for activePiece:Piece in activePieces:
+		if piece == activePiece: break
+		if activePiece.ghost:
+			for cell:Vector2i in activePiece.ghost.localCells:
+				cell += activePiece.ghost.relativePosition + activePiece.currentPosition
+				if not invalidCells.has(cell):
+					invalidCells.append(cell)
+	# Move down until collide with something
+	while areCellsValid(piece.localCells, piece.currentPosition+ relativePosition + Vector2i.DOWN, invalidCells):
 		relativePosition += Vector2i.DOWN
 	ghost.relativePosition = relativePosition
 
