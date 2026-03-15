@@ -223,6 +223,11 @@ func hardDrop():
 		gravityTimer.wait_time = HARD_DROP_WAIT_TIME
 		gravityTimer.start()
 
+func gravityDrop():
+	if not moveLock:
+		moveLock = true
+		canRotate = false
+
 func move(direction:Vector2i):
 	currentPosition += direction
 	if moveLock:

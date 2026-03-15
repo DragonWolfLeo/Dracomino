@@ -8,6 +8,7 @@ const BOUNDS := Rect2i(0, 0, 10, 20)
 const SPAWN_POINT := BOUNDS.position + Vector2i(BOUNDS.size.x / 2, 0)
 var DANGER_ZONE := BOUNDS.grow_individual(-2, 0, -2, -17)
 var USE_ALT_ROTATE:bool = true # TODO: Make an option
+var ALLOW_GRAVITY_DROP:bool = true # TODO: Make an option
 var OPACITY_REDUCTION_PER_GHOST:float = 0.4
 
 static var ACTIVE_TILE_ATLAS_ROW:int = 0
@@ -470,8 +471,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("hardDrop") and Input.is_action_just_pressed("hardDrop"): # Double check to ignore events from slight axis movement
 		if DracominoHandler.activeAbilities.get("Hard Drop", 0):
 			focusPiece.hardDrop()
-			if activePieces.size() <= 1:
-				requestPiece(true)
+			requestPiece(true)
+		elif ALLOW_GRAVITY_DROP and DracominoHandler.activeAbilities.get("Gravity", 0):
+			focusPiece.gravityDrop()
+			requestPiece(true)
 	else:
 		return
 	
