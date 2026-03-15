@@ -471,10 +471,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("hardDrop") and Input.is_action_just_pressed("hardDrop"): # Double check to ignore events from slight axis movement
 		if DracominoHandler.activeAbilities.get("Hard Drop", 0):
 			focusPiece.hardDrop()
-			requestPiece(true)
+			if not getFocusPiece(): requestPiece(true)
 		elif ALLOW_GRAVITY_DROP and DracominoHandler.activeAbilities.get("Gravity", 0):
 			focusPiece.gravityDrop()
-			requestPiece(true)
+			if not getFocusPiece(): requestPiece(true)
 	else:
 		return
 	
