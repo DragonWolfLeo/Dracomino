@@ -140,6 +140,7 @@ func blockRemoveAnimationStep(delta):
 		rowsToClear = []
 		animation_started = false
 		rowClearAnimation_finished.emit()
+		updateGhostFromIndex(0)
 		requestPiece()
 
 func requestPiece(allowMultiplePieces:bool = false):
@@ -490,8 +491,10 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 func _on_Piece_ghost_cells_requested(piece:Piece, ghost:GhostPiece):
 	var relativePosition:Vector2i = Vector2i.ZERO
 	var invalidCells:Array[Vector2i] = []
+	var updateIndex:int = 0
 	# Let ghosts stack on each other
 	for activePiece:Piece in activePieces:
+		updateIndex += 1
 		if piece == activePiece: break
 		if activePiece.ghost:
 			for cell:Vector2i in activePiece.ghost.localCells:
@@ -502,6 +505,35 @@ func _on_Piece_ghost_cells_requested(piece:Piece, ghost:GhostPiece):
 	while areCellsValid(piece.localCells, piece.currentPosition+ relativePosition + Vector2i.DOWN, invalidCells):
 		relativePosition += Vector2i.DOWN
 	ghost.relativePosition = relativePosition
+	
+	# Add to invalid cells for other ghosts
+	for cell:Vector2i in ghost.localCells:
+		cell += ghost.relativePosition + piece.currentPosition
+		if not invalidCells.has(cell):
+			invalidCells.append(cell)
+	
+	# Fix other ghosts
+	updateGhostFromIndex(updateIndex, invalidCells)
+
+func updateGhostFromIndex(index:int = 0, invalidCells:Array[Vector2i] = []):
+	if index >= activePieces.size():
+		return
+
+	var piece:Piece = activePieces[index]
+	var relativePosition:Vector2i = Vector2i.ZERO
+	# Move down until collide with something
+	while areCellsValid(piece.localCells, piece.currentPosition + relativePosition + Vector2i.DOWN, invalidCells):
+		relativePosition += Vector2i.DOWN
+	piece.ghost.relativePosition = relativePosition
+	
+	# Add to invalid cells for other ghosts
+	for cell:Vector2i in piece.ghost.localCells:
+		cell += piece.ghost.relativePosition + piece.currentPosition
+		if not invalidCells.has(cell):
+			invalidCells.append(cell)
+
+	updateGhostFromIndex(index + 1, invalidCells)
+
 
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	conn.deathlink.connect(_on_deathlink)
