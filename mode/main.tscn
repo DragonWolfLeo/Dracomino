@@ -145,7 +145,6 @@ holdStorage = NodePath("HoldStorage")
 [node name="PreviewStorage" type="Node" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" node_paths=PackedStringArray("targetControl")]
 script = ExtResource("4_q3k4m")
 targetControl = NodePath("../../../../PreviewContainer/ScrollContainer/PreviewBar")
-storageSlots = 5
 slotAbilityName = "Next Piece Slot"
 
 [node name="HoldStorage" type="Node" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" node_paths=PackedStringArray("targetControl")]
@@ -301,7 +300,7 @@ layout_mode = 2
 [connection signal="linesCleared_updated" from="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_lines_cleared_updated"]
 [connection signal="linesCleared_updated" from="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_lines_cleared_updated"]
 [connection signal="lines_cleared" from="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_lines_cleared"]
-[connection signal="piece_requested" from="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_piece_requested"]
+[connection signal="pieces_requested" from="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_pieces_requested"]
 [connection signal="numStored_changed" from="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/PreviewStorage" to="." method="_on_PreviewStorage_num_stored_changed"]
 [connection signal="pressed" from="MainSplit/HBoxContainer/MarginContainer/ButtonBar/Btn_AP" to="MainSplit/DracominoClient" method="_on_APButton_pressed"]
 [connection signal="pressed" from="MainSplit/HBoxContainer/MarginContainer/ButtonBar/Btn_Changelog" to="." method="_on_BtnChangelog_pressed"]

@@ -331,6 +331,7 @@ func _on_obtained_item(item: NetworkItem):
 				activeAbilities[prettyName] = collectedAbilities[item.id]
 				activeAbilities_updated.emit(activeAbilities)
 		elif CONSTANTS.ITEMS[item.id].tags.get("shape"):
+			SignalBus.getSignal("newPieceObtained").emit.call_deferred()
 			piecesLeft_updated.emit.call_deferred(countPieces(currentIndex))
 	else:
 		print("Obtained invalid item: id: {id}; name: {name}; You may be running an outdated version of the client!"
@@ -361,12 +362,14 @@ func _on_remove_location(loc_id:int):
 			missingPickupCoordinates.erase(id_to_pickupCoord[loc_id])
 			missingPickupCoordinates_updated.emit(missingPickupCoordinates)
 
-func _on_Board_piece_requested(board:Board) -> void:
-	var nextPiece:Dictionary = getNextPiece()
-	if nextPiece:
-		board.createPiece(nextPiece.get("name", ""), nextPiece.get("stateItem"))
-	else:
-		print("Outta pieces!")
+func _on_Board_pieces_requested(callback:Callable, num:int) -> void:
+	for i:int in range(num):
+		var nextPiece:Dictionary = getNextPiece()
+		if nextPiece:
+			callback.call(nextPiece.get("name", ""), nextPiece.get("stateItem"))
+		else:
+			print("Outta pieces!")
+			break;
 
 func _on_Board_game_started() -> void:
 	reset()

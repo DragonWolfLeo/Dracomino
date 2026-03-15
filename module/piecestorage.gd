@@ -20,7 +20,9 @@ func _ready() -> void:
 	if targetControl:
 		targetControl.hide()
 
-func pushPiece(piece:Piece) -> Piece:
+	numStored_changed.connect(_on_numStoredChanged.unbind(1))
+
+func pushPiece(piece:Piece, ignoreLimit:bool = false) -> Piece:
 	var preview:PiecePreview = PIECEPREVIEW_SCENE.instantiate()
 	var target:Node = targetControl as Node if targetControl else self
 	target.add_child(preview)
@@ -28,7 +30,7 @@ func pushPiece(piece:Piece) -> Piece:
 	preview.piece = piece
 	preview.tree_exiting.connect(storage.erase.bind(preview))
 
-	if storage.size() > storageSlots:
+	if not ignoreLimit and storage.size() > storageSlots:
 		return popPiece()
 	numStored_changed.emit(storage.size())
 	return null
@@ -48,8 +50,11 @@ func isFull() -> bool:
 func isEmpty() -> bool:
 	return storage.size() == 0
 
-func numStoredPiecies() -> int:
+func getNumStored() -> int:
 	return storage.size()
+
+func getAvailableSpace(bufferSize:int = 0) -> int:
+	return max(0, storageSlots + bufferSize - storage.size())
 
 func clear():
 	if storage.size():
@@ -60,7 +65,13 @@ func clear():
 			preview.queue_free()
 		numStored_changed.emit(0)
 
+# === Events ===
 func _on_DracominoHandler_active_abilities_updated(abilities: Dictionary[String, int]) -> void:
 	storageSlots = abilities.get(slotAbilityName, 0)
 	if targetControl:
 		targetControl.visible = storageSlots > 0
+
+func _on_numStoredChanged():
+	# Make extra buffered pieces invisible
+	for i:int in range(storage.size()):
+		storage[i].visible = i < storageSlots

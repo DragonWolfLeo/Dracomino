@@ -68,7 +68,7 @@ signal lines_cleared(lines:Array)
 signal linesCleared_updated(num:int)
 signal game_over_earned()
 signal game_started()
-signal piece_requested(board:Board)
+signal pieces_requested(callback:Callable, num:int)
 signal piece_spawned(piece:Piece)
 signal item_pickedup(loc_id:int)
 signal rowClearAnimation_finished()
@@ -90,11 +90,12 @@ func _ready():
 	pieceTimer = ActivityTimer.new(); add_child(pieceTimer)
 	game_started.emit()
 	
-	requestPiece.call_deferred()
 	Archipelago.connected.connect(_on_connected)
 	SignalBus.getSignal("restartGame").connect(resetGame)
 	SignalBus.getSignal("deathOnRestart_enabled").connect(set.bind("sendDeathOnRestart", true))
 	SignalBus.getSignal("deathOnRestart_disabled").connect(set.bind("sendDeathOnRestart", false))
+
+	SignalBus.getSignal("newPieceObtained").connect(_on_newPieceObtained)
 
 	# Make line numbers labels
 	for i:int in range(BOUNDS.end.y):
@@ -141,59 +142,42 @@ func blockRemoveAnimationStep(delta):
 		rowClearAnimation_finished.emit()
 		requestPiece()
 
-func requestPieceCreation(): ## This functions usually leads into createPiece being called, if there's pieces available
-	if isGameOver: return
-	piece_requested.emit(self)
-	if not activePieces.size() or (previewStorage and previewStorage.isEmpty()):
-		waitForItem()
-
 func requestPiece(allowMultiplePieces:bool = false):
 	if isGameOver: return
-	# if activePieces.size() and (not previewStorage or previewStorage.isFull()):
-	# 	# We can end up at this point if preview is filled through state update
-	# 	return
 	if activePieces.size() and not allowMultiplePieces:
 		return
-	var storedPiece:Piece
+	fillPreview(1) # Generate one extra because we're gonna use it
+	var poppedPiece:Piece
 	if previewStorage:
-		storedPiece = previewStorage.popPiece()
-	if storedPiece:
+		poppedPiece = previewStorage.popPiece()
+	if poppedPiece:
 		print("Spawned {pieceName} from {sender}'s {location} in {game}".format({
-			pieceName = storedPiece.prettyName,
-			sender = "self" if storedPiece.context.isLocal else storedPiece.context.senderName,
-			location = storedPiece.context.locationName,
-			game = storedPiece.context.gameName,
+			pieceName = poppedPiece.prettyName,
+			sender = "self" if poppedPiece.context.isLocal else poppedPiece.context.senderName,
+			location = poppedPiece.context.locationName,
+			game = poppedPiece.context.gameName,
 		}))
-		spawnPiece(storedPiece)
-		fillPreview()
-	else:
-		requestPieceCreation()
+		spawnPiece(poppedPiece)
 
-func fillPreview():
-	if previewStorage and not previewStorage.isFull():
-		requestPieceCreation()
+func fillPreview(buffer:int = 0): ## This functions usually leads into createPiece being called, if there's pieces available
+	if isGameOver: return
+
+	var availableSpace:int = 0
+	if previewStorage: availableSpace += previewStorage.getAvailableSpace(buffer)
+
+	pieces_requested.emit(createPiece, availableSpace)
 
 func createPiece(pieceName:StringName = "", pieceContext:DracominoHandler.StateItem = null) -> void:
 	if pieceName.is_empty():
 		return
-	cancel_waitForItem()
 
 	var piece:Piece = PIECE_SCENE.instantiate()
 	piece.setPiece(pieceName, pieceContext)
 	add_child(piece)
 	game_started.connect(piece.queue_free)
 	
-	if activePieces.size() and previewStorage and not previewStorage.isFull():
-		previewStorage.pushPiece(piece)
-	else:
-		spawnPiece(piece)
-		print("Spawned {pieceName} from {sender}'s {location} in {game}".format({
-			pieceName = piece.prettyName,
-			sender = "self" if piece.context.isLocal else piece.context.senderName,
-			location = piece.context.locationName,
-			game = piece.context.gameName,
-		}))
-	fillPreview()
+	if previewStorage:
+		previewStorage.pushPiece(piece, true)
 
 func spawnPiece(piece:Piece):
 	if not activePieces.has(piece):
@@ -272,7 +256,6 @@ func gameOver(deathContext:DracominoUtil.DeathContext = null):
 		# piece.queue_free()
 	activePieces.clear()
 	game_over_earned.emit()
-	cancel_waitForItem()
 	if deathContext and Archipelago.is_deathlink():
 		if Archipelago.conn:
 			sendDeathLink(deathContext)
@@ -413,15 +396,6 @@ func areCellsValid(cells:Array[Vector2i], offset:Vector2i) -> bool:
 			return false
 	return true
 
-func waitForItem():
-	if not activePieces.size():
-		if Archipelago.conn and not Archipelago.conn.obtained_item.is_connected(_on_obtained_item):
-			Archipelago.conn.obtained_item.connect(_on_obtained_item.unbind(1), CONNECT_ONE_SHOT)
-
-func cancel_waitForItem():
-	if Archipelago.conn and Archipelago.conn.obtained_item.is_connected(_on_obtained_item):
-		Archipelago.conn.obtained_item.disconnect(_on_obtained_item)
-
 func setAnimBasedOnMasterCoinAndLine(node:Node2D, line:int = 0) -> void:
 	var animPlayer:AnimationPlayer = node.get_node_or_null("AnimationPlayer")
 	var animPlayer_master:AnimationPlayer = masterCoin.get_node_or_null("AnimationPlayer")
@@ -521,13 +495,12 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		hasOfflineDeath = false
 		sendDeathLink(DracominoUtil.DeathContext.new("OFFLINE"))
 
-	waitForItem()
-
 func _on_deathlink(_source, _cause, _json):
 	gameOver()
 
-func _on_obtained_item():
-	requestPiece.call_deferred()
+func _on_newPieceObtained():
+	fillPreview()
+	requestPiece()
 
 func _on_Btn_Restart_pressed() -> void:
 	resetGame()
