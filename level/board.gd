@@ -8,6 +8,7 @@ const BOUNDS := Rect2i(0, 0, 10, 20)
 const SPAWN_POINT := BOUNDS.position + Vector2i(BOUNDS.size.x / 2, 0)
 var DANGER_ZONE := BOUNDS.grow_individual(-2, 0, -2, -17)
 var USE_ALT_ROTATE:bool = true # TODO: Make an option
+var OPACITY_REDUCTION_PER_GHOST:float = 0.4
 
 static var ACTIVE_TILE_ATLAS_ROW:int = 0
 static var SET_TILE_ATLAS_ROW:int = 1
@@ -73,6 +74,7 @@ signal piece_spawned(piece:Piece)
 signal item_pickedup(loc_id:int)
 signal rowClearAnimation_finished()
 signal deathlink_earned(deathContext:DracominoUtil.DeathContext)
+signal activePieces_changed()
 
 class ItemPickupContext:
 	var node:Node2D
@@ -94,8 +96,8 @@ func _ready():
 	SignalBus.getSignal("restartGame").connect(resetGame)
 	SignalBus.getSignal("deathOnRestart_enabled").connect(set.bind("sendDeathOnRestart", true))
 	SignalBus.getSignal("deathOnRestart_disabled").connect(set.bind("sendDeathOnRestart", false))
-
 	SignalBus.getSignal("newPieceObtained").connect(_on_newPieceObtained)
+	activePieces_changed.connect(_on_activePieces_changed)
 
 	# Make line numbers labels
 	for i:int in range(BOUNDS.end.y):
@@ -190,6 +192,7 @@ func spawnPiece(piece:Piece):
 		piece.currentPosition = SPAWN_POINT + piece.origin
 		pieceTimer.reset()
 		placeOnHighestRow(piece)
+		activePieces_changed.emit()
 		if not checkForFailure(piece):
 			piece_spawned.emit(piece)
 
@@ -212,6 +215,7 @@ func hold():
 				piece.ghost_cells_requested.disconnect(_on_Piece_ghost_cells_requested)
 			popped = holdStorage.pushPiece(piece)
 			activePieces.erase(piece)
+			activePieces_changed.emit()
 		else:
 			popped = holdStorage.popPiece()
 		if popped:
@@ -254,8 +258,8 @@ func gameOver(deathContext:DracominoUtil.DeathContext = null):
 	isGameOver = true
 	for piece in activePieces:
 		lockPiece(piece)
-		# piece.queue_free()
 	activePieces.clear()
+	activePieces_changed.emit()
 	game_over_earned.emit()
 	if deathContext and Archipelago.is_deathlink():
 		if Archipelago.conn:
@@ -298,6 +302,7 @@ func resetGame():
 	for piece in activePieces:
 		piece.queue_free()
 	activePieces.clear()
+	activePieces_changed.emit()
 
 	# Clear previews and hold
 	if previewStorage: previewStorage.clear()
@@ -338,6 +343,7 @@ func lockPiece(piece:Piece):
 	if pickedUpItem:
 		sfx_itemPickup.play()
 	activePieces.erase(piece)
+	activePieces_changed.emit()
 	piece.queue_free()
 	boardIsFresh = false
 	
@@ -604,3 +610,12 @@ func _on_holdOnCooldown_set(value):
 	var focusPiece:Piece = getFocusPiece()
 	_lastHeldPieceContext = focusPiece.context if (value and focusPiece) else null
 	holdOnCooldown = value
+
+func _on_activePieces_changed():
+	## Make ghosts have a gradient
+	var a:float = 1.0
+	for piece in activePieces:
+		if piece.ghost:
+			piece.ghost.modulate.a = clamp(a, 0.0, 1.0)
+			if not piece.moveLock:
+				a -= OPACITY_REDUCTION_PER_GHOST
