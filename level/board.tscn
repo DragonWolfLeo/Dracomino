@@ -95,3 +95,6 @@ process_mode = 3
 stream = ExtResource("11_0sai4")
 volume_db = -6.5
 bus = &"Sfx"
+
+[node name="HoldSlotCycleTimer" type="Timer" parent="."]
+wait_time = 0.3

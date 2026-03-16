@@ -92,6 +92,8 @@ class ItemPickupContext:
 var inputTimer:ActivityTimer ## For death context
 var pieceTimer:ActivityTimer ## For death context
 
+@onready var holdSlotCycleTimer:Timer = $HoldSlotCycleTimer
+
 #===== Virtuals ======
 func _ready():
 	masterCoin.visible = false # Master coin is just a reference for the rest of the coins and should be hidden
@@ -446,7 +448,26 @@ func _unhandled_input(event: InputEvent) -> void:
 				inputTimer.reset()
 				get_viewport().set_input_as_handled()
 				return
+		
+		# Cycle hold slots
+		if holdStorage and holdStorage.storageSlots > 1 and (event.is_action("scrollUp") or event.is_action("scrollDown")):
+			var strength:float = Input.get_action_strength("scrollDown") - Input.get_action_strength("scrollUp")
+			if strength == 0:
+				holdSlotCycleTimer.stop()
+				if holdSlotCycleTimer.timeout.is_connected(_on_holdSlotCycleTimer_timeout):
+					holdSlotCycleTimer.timeout.disconnect(_on_holdSlotCycleTimer_timeout)
+			elif holdSlotCycleTimer.is_stopped():
+				var fn:Callable = holdStorage.cycleUp if strength < 0 else holdStorage.cycleDown
+				fn.call()
+				holdSlotCycleTimer.start()
+				if not holdSlotCycleTimer.timeout.is_connected(_on_holdSlotCycleTimer_timeout):
+					holdSlotCycleTimer.timeout.connect(_on_holdSlotCycleTimer_timeout.bind(fn))
+			get_viewport().set_input_as_handled()
+			return
+
 	if focusPiece == null: return
+	
+	# Stuff that requires an active piece
 	if (event.is_action_pressed("moveRight") 
 	or event.is_action_pressed("moveLeft")
 	or event.is_action_pressed("moveDown")
@@ -488,6 +509,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	
 	inputTimer.reset()
 	get_viewport().set_input_as_handled()
+
+func _on_holdSlotCycleTimer_timeout(callback:Callable):
+	callback.call()
 
 func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:int):
 	if areCellsValid(piece.localCells, piece.currentPosition + direction):

@@ -71,14 +71,14 @@ func pushPiece(piece:Piece, ignoreLimit:bool = false, index:int = -1) -> Piece:
 
 	# Used index to swap
 	if popped:
-		numStored_changed.emit(storage.size())
+		storageSlots_updated.emit()
 		return popped
 	elif oldPreview:
 		# "Fill" empty slot by deleting it
 		if not oldPreview.piece:
 			storage.erase(oldPreview)
 			oldPreview.queue_free()
-		numStored_changed.emit(storage.size())
+		storageSlots_updated.emit()
 		return null
 
 	# "Fill" empty spaces by deleting them
@@ -162,6 +162,24 @@ func clear():
 				preview.piece.queue_free()
 			preview.queue_free()
 		numStored_changed.emit(0)
+
+func cycleUp():
+	# Move top to the bottom
+	if storage.size() > 1:
+		var popped:PiecePreview = storage.pop_front() as PiecePreview
+		var parent:Node = popped.get_parent()
+		parent.move_child(popped, -1)
+		storage.append(popped)
+		storageSlots_updated.emit()
+
+func cycleDown():
+	# Move bottom to the top
+	if storage.size() > 1:
+		var popped:PiecePreview = storage.pop_back() as PiecePreview
+		var parent:Node = popped.get_parent()
+		parent.move_child(popped, (storage.front() as PiecePreview).get_index())
+		storage.push_front(popped)
+		storageSlots_updated.emit()
 
 # === Events ===
 func _on_DracominoHandler_active_abilities_updated(abilities: Dictionary[String, int]) -> void:
