@@ -9,14 +9,29 @@ class_name PieceStorage extends Node
 
 @export var slotAbilityName:String
 @export var emptyFill:bool = false
+@export var useNumberedSlots:bool = false
 
 @onready var PIECEPREVIEW_SCENE:PackedScene = load("res://object/piecepreview.tscn")
 @onready var EMPTYPREVIEW_SCENE:PackedScene = load("res://object/emptypreview.tscn")
+
+static var INPUT_MAPPINGS:Dictionary = {
+	"slot1":  "1",
+	"slot2":  "2",
+	"slot3":  "3",
+	"slot4":  "4",
+	"slot5":  "5",
+	"slot6":  "6",
+	"slot7":  "7",
+	"slot8":  "8",
+	"slot9":  "9",
+	"slot10": "0",
+}
 
 var storage:Array[PiecePreview]
 
 signal storageSlots_updated()
 signal numStored_changed(num:int)
+signal slot_triggered(index:int)
 
 func _ready() -> void:
 	if targetControl:
@@ -27,15 +42,38 @@ func _ready() -> void:
 	if emptyFill:
 		for i:int in range(storageSlots):
 			pushEmpty()
-			
 
-func pushPiece(piece:Piece, ignoreLimit:bool = false) -> Piece:
+func pushPiece(piece:Piece, ignoreLimit:bool = false, index:int = -1) -> Piece:
+	var popped:Piece = null
+	var oldPreview:PiecePreview = null
 	var preview:PiecePreview = PIECEPREVIEW_SCENE.instantiate()
 	var target:Node = targetControl as Node if targetControl else self
 	target.add_child(preview)
-	storage.append(preview)
+	if index >= 0 and index < storage.size():
+		# Switch this preview with previous
+		oldPreview = storage[index]
+		var moveToNodeIndex:int = oldPreview.get_index()
+		popped = popPiece(index, true)
+		storage.insert(index, preview)
+		target.move_child(preview, moveToNodeIndex)
+	else:
+		# Add to end
+		storage.append(preview)
 	preview.piece = piece
 	preview.tree_exiting.connect(storage.erase.bind(preview))
+	preview.triggered.connect(_on_PiecePreview_triggered.bind(preview))
+
+	# Used index to swap
+	if popped:
+		numStored_changed.emit(storage.size())
+		return popped
+	elif oldPreview:
+		# "Fill" empty slot by deleting it
+		if not oldPreview.piece:
+			storage.erase(oldPreview)
+			oldPreview.queue_free()
+		numStored_changed.emit(storage.size())
+		return null
 
 	# "Fill" empty spaces by deleting them
 	var first:PiecePreview = storage[0]
@@ -48,28 +86,55 @@ func pushPiece(piece:Piece, ignoreLimit:bool = false) -> Piece:
 	numStored_changed.emit(storage.size())
 	return null
 
-func popPiece() -> Piece:
+func popPiece(index:int = -1, swap:bool = false) -> Piece:
+	# Return at index if that is set
+	if index >= 0 and index < storage.size():
+		var preview:PiecePreview = storage[index]
+		if preview.piece == null:
+			# Don't delete empty slots
+			return null
+		
+		if not swap and emptyFill:
+			pushEmpty(index, false)
+		storage.erase(preview)
+		preview.queue_free()
+		if not swap: numStored_changed.emit(storage.size())
+		return preview.piece
+	
+	# Return first valid
 	for preview in storage.duplicate():
 		var piece:Piece = preview.piece
 		if piece:
 			storage.erase(preview)
 			preview.queue_free()
-			numStored_changed.emit(storage.size())
+			if not swap: numStored_changed.emit(storage.size())
 			return piece
 	return null
 
-func pushEmpty() -> void:
+
+func getPreviewAtIndex(index:int = 0) -> PiecePreview:
+	if index >= 0 and index < storage.size():
+		return storage[index]
+	return null
+
+func pushEmpty(index:int = -1, emit_numStored_changed:bool = true) -> void:
 	var preview:PiecePreview = EMPTYPREVIEW_SCENE.instantiate()
 	var target:Node = targetControl as Node if targetControl else self
 	target.add_child(preview)
 	if storage.size():
-		# Move to front
-		var first:PiecePreview = storage[0]
-		target.move_child(preview, first.get_index())
-	storage.push_front(preview)
+		if index >= 0 and index < storage.size():
+			target.move_child(preview, storage[index].get_index())
+			storage.insert(index, preview)
+		else:
+			# Move to front
+			target.move_child(preview, storage[0].get_index())
+			storage.push_front(preview)
+	else:
+		storage.push_front(preview)
 	preview.tree_exiting.connect(storage.erase.bind(preview))
+	preview.triggered.connect(_on_PiecePreview_triggered.bind(preview))
 
-	numStored_changed.emit(storage.size())
+	if emit_numStored_changed: numStored_changed.emit(storage.size())
 
 func isFull() -> bool:
 	return storage.size() >= storageSlots
@@ -103,6 +168,28 @@ func _updatePreviews():
 	if emptyFill:
 		while storage.size() < storageSlots:
 			pushEmpty()
-	# Make extra buffered pieces invisible
+	# Make extra buffered pieces invisible and update numbers
+	var actions:Array = INPUT_MAPPINGS.keys()
 	for i:int in range(storage.size()):
-		storage[i].visible = i < storageSlots
+		var preview:PiecePreview = storage[i]
+		var visibilityState = i < storageSlots
+		preview.visible = Config.debugMode or visibilityState
+		preview.modulate.a = 1.0 if visibilityState or not Config.debugMode else 0.2
+
+		# Clear shortcuts
+		if useNumberedSlots:
+			if i < storageSlots and i < actions.size():
+				preview.shortcut = actions[i]
+				preview.setLabel(INPUT_MAPPINGS[actions[i]])
+			else:
+				preview.shortcut = ""
+				preview.setLabel()
+
+func _on_PiecePreview_triggered(triggeredPreview:PiecePreview):
+	# Emit a signal after receiving signal from preview
+	var index:int = 0
+	for preview:PiecePreview in storage:
+		if triggeredPreview == preview:
+			slot_triggered.emit(index)
+			break
+		index += 1

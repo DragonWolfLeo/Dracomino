@@ -37,3 +37,11 @@ tile_set = ExtResource("2_3udnl")
 [node name="Camera2D" type="Camera2D" parent="SubViewportContainer/SubViewport/TileMapLayer"]
 scale = Vector2(0.333333, 0.333333)
 offset = Vector2(4, 4)
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 6.0
+offset_right = 50.0
+offset_bottom = 29.0
+text = "000"

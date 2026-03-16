@@ -152,6 +152,7 @@ script = ExtResource("4_q3k4m")
 targetControl = NodePath("../../../../HoldContainer/ScrollContainer/HoldBar")
 slotAbilityName = "Hold Slot"
 emptyFill = true
+useNumberedSlots = true
 
 [node name="MarginContainer" type="MarginContainer" parent="MainSplit/HBoxContainer/LevelContainer"]
 layout_mode = 2

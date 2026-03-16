@@ -23,7 +23,14 @@ static var SET_TILE_ATLAS_ROW:int = 1
 		if previewStorage and not previewStorage.storageSlots_updated.is_connected(fillPreview):
 			previewStorage.storageSlots_updated.connect(fillPreview)
 
-@export var holdStorage:PieceStorage
+@export var holdStorage:PieceStorage:
+	set(value):
+		if holdStorage == value: return
+		if holdStorage and holdStorage.slot_triggered.is_connected(hold):
+			holdStorage.slot_triggered.disconnect(hold)
+		holdStorage = value
+		if holdStorage and not holdStorage.slot_triggered.is_connected(hold):
+			holdStorage.slot_triggered.connect(hold)
 
 @onready var masterCoin:Node2D = $MasterCoin
 @onready var sfx_rotate:AudioStreamPlayer = $SFX_Rotate
@@ -198,13 +205,13 @@ func spawnPiece(piece:Piece):
 		if not checkForFailure(piece):
 			piece_spawned.emit(piece)
 
-func hold():
+func hold(index:int = -1):
 	var piece:Piece = getFocusPiece()
 	if piece and piece.moveLock:
 		# Don't hold if hard dropping
 		return
 	if holdStorage and not holdOnCooldown:
-		sfx_hold.play()
+		var succeeded:bool = piece != null
 		var popped:Piece
 		if piece:
 			# Cleanup
@@ -214,16 +221,19 @@ func hold():
 				piece.new_cells_requested.disconnect(_on_Piece_new_cells_requested)
 			if piece.ghost_cells_requested.is_connected(_on_Piece_ghost_cells_requested):
 				piece.ghost_cells_requested.disconnect(_on_Piece_ghost_cells_requested)
-			popped = holdStorage.pushPiece(piece)
+			popped = holdStorage.pushPiece(piece, false, index)
 			activePieces.erase(piece)
 			activePieces_changed.emit()
 		else:
-			popped = holdStorage.popPiece()
+			popped = holdStorage.popPiece(index)
 		if popped:
+			succeeded = true
 			spawnPiece(popped)
 		else:
-			requestPiece(true)	
-		holdOnCooldown = true
+			requestPiece(true)
+		if succeeded:
+			sfx_hold.play()
+			holdOnCooldown = true
 
 func isTileOccupied(coords:Vector2i) -> bool:
 	return get_cell_atlas_coords(coords).y == SET_TILE_ATLAS_ROW
