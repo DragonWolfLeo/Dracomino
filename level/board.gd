@@ -163,7 +163,7 @@ func blockRemoveAnimationStep(delta):
 		rowsToClear = []
 		animation_started = false
 		rowClearAnimation_finished.emit()
-		updateGhostFromIndex(0)
+		updateAllGhosts()
 		requestPiece()
 
 func requestPiece(allowMultiplePieces:bool = false):
@@ -444,6 +444,24 @@ func setAnimBasedOnMasterCoinAndLine(node:Node2D, line:int = 0) -> void:
 	while targetSeek < 0: targetSeek += animPlayer_master.current_animation_length
 	animPlayer.seek(targetSeek)
 
+func updateAllGhosts():
+	var floatingPieces:Array[Piece] = []
+	var invalidCells:Array[Vector2i] = []
+	var relativePosition:Vector2i = Vector2i.ZERO
+	for piece in activePieces:
+		if piece.ghost:
+			floatingPieces.append(piece)
+	while floatingPieces.size():
+		var somethingLanded:bool = false
+		for piece:Piece in floatingPieces.duplicate():
+			if not areCellsOpen(getTranslatedCells(piece.globalCells, relativePosition + Vector2i.DOWN), invalidCells):
+				piece.ghost.relativePosition = relativePosition
+				floatingPieces.erase(piece)
+				mergeCells(invalidCells, getTranslatedCells(piece.globalCells, piece.ghost.relativePosition))
+				somethingLanded = true
+		if not somethingLanded:
+			relativePosition += Vector2i.DOWN
+
 #==== Events =====
 func _unhandled_input(event: InputEvent) -> void:
 	var focusPiece:Piece = getFocusPiece()
@@ -549,43 +567,8 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 	if areCellsOpen(translatedCells) and not areCellsCollidingWithActivePieces(translatedCells):
 		piece.setCells(cells)
 
-func _on_Piece_ghost_cells_requested(piece:Piece, ghost:GhostPiece):
-	var relativePosition:Vector2i = Vector2i.ZERO
-	var invalidCells:Array[Vector2i] = []
-	var updateIndex:int = 0
-	# Let ghosts stack on each other
-	for activePiece:Piece in activePieces:
-		updateIndex += 1
-		if piece == activePiece: break
-		if activePiece.ghost:
-			mergeCells(invalidCells, getTranslatedCells(activePiece.ghost.localCells, activePiece.ghost.relativePosition + activePiece.currentPosition))
-	# Move down until collide with something
-	while areCellsOpen(getTranslatedCells(piece.localCells, piece.currentPosition + relativePosition + Vector2i.DOWN), invalidCells):
-		relativePosition += Vector2i.DOWN
-	ghost.relativePosition = relativePosition
-	
-	# Add to invalid cells for other ghosts
-	mergeCells(invalidCells, getTranslatedCells(ghost.localCells, ghost.relativePosition + piece.currentPosition))
-	
-	# Fix other ghosts
-	updateGhostFromIndex(updateIndex, invalidCells)
-
-func updateGhostFromIndex(index:int = 0, invalidCells:Array[Vector2i] = []):
-	if index >= activePieces.size():
-		return
-
-	var piece:Piece = activePieces[index]
-	var relativePosition:Vector2i = Vector2i.ZERO
-	# Move down until collide with something
-	while areCellsOpen(getTranslatedCells(piece.localCells, piece.currentPosition + relativePosition + Vector2i.DOWN), invalidCells):
-		relativePosition += Vector2i.DOWN
-	piece.ghost.relativePosition = relativePosition
-	
-	# Add to invalid cells for other ghosts
-	mergeCells(invalidCells, getTranslatedCells(piece.ghost.localCells, piece.ghost.relativePosition + piece.currentPosition))
-
-	updateGhostFromIndex(index + 1, invalidCells)
-
+func _on_Piece_ghost_cells_requested(_piece:Piece, _ghost:GhostPiece):
+	updateAllGhosts()			
 
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	conn.deathlink.connect(_on_deathlink)
