@@ -49,12 +49,6 @@ func pushPiece(piece:Piece, ignoreLimit:bool = false, index:int = -1) -> Piece:
 	var preview:PiecePreview = PIECEPREVIEW_SCENE.instantiate()
 	var target:Node = targetControl as Node if targetControl else self
 	target.add_child(preview)
-	if index < 0:
-		# Target last empty if no index
-		for i:int in range(storage.size()-1, -1, -1):
-			if not storage[i].piece:
-				index = i
-				break
 	if index >= 0 and index < storage.size():
 		# Switch this preview with previous
 		oldPreview = storage[index]
