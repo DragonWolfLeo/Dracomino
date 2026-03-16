@@ -10,6 +10,7 @@ var DANGER_ZONE := BOUNDS.grow_individual(-2, 0, -2, -17)
 var USE_ALT_ROTATE:bool = true # TODO: Make an option
 var ALLOW_GRAVITY_DROP:bool = true # TODO: Make an option
 var OPACITY_REDUCTION_PER_GHOST:float = 0.4
+var MAX_PIECES:int = 10
 
 static var ACTIVE_TILE_ATLAS_ROW:int = 0
 static var SET_TILE_ATLAS_ROW:int = 1
@@ -168,7 +169,7 @@ func blockRemoveAnimationStep(delta):
 
 func requestPiece(allowMultiplePieces:bool = false):
 	if isGameOver: return
-	if activePieces.size() and not allowMultiplePieces:
+	if activePieces.size() > MAX_PIECES or (activePieces.size() and not allowMultiplePieces):
 		return
 	fillPreview(1) # Generate one extra because we're gonna use it
 	var poppedPiece:Piece
@@ -215,6 +216,8 @@ func spawnPiece(piece:Piece):
 		placeOnHighestRow(piece)
 		activePieces_changed.emit()
 		if not checkForFailure(piece):
+			if piece != getFocusPiece():
+				placeAboveOtherPieces(piece)
 			piece_spawned.emit(piece)
 
 func hold(index:int = -1):
@@ -259,6 +262,23 @@ func placeOnHighestRow(piece:Piece):
 		# If reach below top-most row, nudge up
 		piece.move(Vector2i.UP)
 		placeOnHighestRow(piece)
+
+func placeRandomHorizontally(piece:Piece):
+	var rect:Rect2i
+	rect.position = piece.currentPosition
+	for cell:Vector2i in piece.globalCells:
+		rect = rect.expand(cell)
+	piece.move(Vector2i(randi_range(-rect.position.x, BOUNDS.end.x-rect.end.x-1),0))
+
+func placeAboveOtherPieces(piece:Piece):
+	placeRandomHorizontally(piece)
+	for cell:Vector2i in piece.globalCells:
+		for activePiece:Piece in activePieces:
+			if activePiece != piece and not activePiece.moveLock:
+				if activePiece.globalCells.has(cell):
+					piece.move(Vector2i.UP)
+					placeAboveOtherPieces(piece)
+					return
 
 func checkForFailure(piece:Piece) -> bool:
 	for cell in piece.globalCells:
