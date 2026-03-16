@@ -156,6 +156,18 @@ func sendVictory():
 	victory = true
 	Archipelago.set_client_status(Archipelago.ClientStatus.CLIENT_GOAL)
 
+func upgradeFeatures(generatedVersion:String = "0.0.0"): ## Add new features to old games
+	if UserData.versionIsOlderThan(generatedVersion, "0.2.2"):
+		# TODO: Make an array of ids to retrofit?
+		var item := CONSTANTS.ITEMS[7] # Kick
+		if item:
+			collectedAbilities[item.id] = 1
+			if activeAbilities.get(item.prettyName, 0) < collectedAbilities[item.id]:
+				activeAbilities[item.prettyName] = collectedAbilities[item.id]
+				activeAbilities_updated.emit(activeAbilities)
+				notification_signal.emit("Retrofitted {item} into your game!".format({item=item.prettyName}), Color.YELLOW_GREEN, false)
+		
+
 #===== Events =====
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	isJustConnected = true
@@ -275,6 +287,9 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	# Sync with server
 	if locsToCollect.size():
 		Archipelago.collect_locations(locsToCollect)
+
+	# Add new features to older games
+	upgradeFeatures(conn.slot_data.get("generator_version", "0.0.0"))
 
 	# Send started signal to start game
 	if is_instance_valid(warningDialog):
