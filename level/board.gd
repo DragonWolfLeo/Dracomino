@@ -545,7 +545,8 @@ func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:
 		lockPiece(piece)
 
 func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
-	if areCellsOpen(getTranslatedCells(cells, piece.currentPosition)):
+	var translatedCells := getTranslatedCells(cells, piece.currentPosition)
+	if areCellsOpen(translatedCells) and not areCellsCollidingWithActivePieces(translatedCells):
 		piece.setCells(cells)
 
 func _on_Piece_ghost_cells_requested(piece:Piece, ghost:GhostPiece):
