@@ -77,7 +77,8 @@ enum MOVEMENT {
 
 static var TOTAL_NUMBER_OF_COLORS = 12
 var pieceDefinition:PieceDefinition
-var localCells:Array[Vector2i] =[]
+var localCells:Array[Vector2i] = []
+var globalCells:Array[Vector2i] = []
 var currentPosition:Vector2i: set = _setCurrentPosition
 var origin:Vector2i
 var id:int
@@ -89,6 +90,7 @@ var moveLock:bool = false: ## Prevent moving this anymore
 		if softDropTimer: softDropTimer.paused = value
 		moveLock = value
 var holdLock:bool = false ## Prevent from holding this anymore
+var collidible:bool = false ## Enable when piece doesn't overlap with another
 var playHardDropSound:bool = false
 var ghost:GhostPiece
 
@@ -134,6 +136,8 @@ func makeActive():
 		ghost.show()
 	# Avoid falling too soon
 	gravityTimer.start()
+	# Wait for pieces to get out of this one
+	collidible = false
 
 func makeLimbo():
 	process_mode = Node.PROCESS_MODE_DISABLED
@@ -173,6 +177,7 @@ func updateTiles():
 		# if Board.BOUNDS.has_point(pos+currentPosition): # Render in bounds
 		set_cell(pos, 0, Vector2i(id, Board.ACTIVE_TILE_ATLAS_ROW))
 	
+	globalCells = Board.getTranslatedCells(localCells, currentPosition)
 	if ghost:
 		ghost.setCells(localCells)
 		ghost_cells_requested.emit(self, ghost)

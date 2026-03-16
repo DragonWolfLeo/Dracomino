@@ -252,7 +252,7 @@ func isTileOccupied(coords:Vector2i) -> bool:
 
 func placeOnHighestRow(piece:Piece):
 	var greatestY:int = 0
-	for cell in getTranslatedCells(piece.localCells, piece.currentPosition):
+	for cell in piece.globalCells:
 		if greatestY < cell.y:
 			greatestY = cell.y
 	if greatestY > 0:
@@ -261,7 +261,7 @@ func placeOnHighestRow(piece:Piece):
 		placeOnHighestRow(piece)
 
 func checkForFailure(piece:Piece) -> bool:
-	for cell in getTranslatedCells(piece.localCells, piece.currentPosition):
+	for cell in piece.globalCells:
 		if isTileOccupied(cell):
 			# Trigger game over
 			var deathContext := DracominoUtil.DeathContext.new(
@@ -348,7 +348,7 @@ func resetGame():
 
 func lockPiece(piece:Piece):
 	var pickedUpItem:bool = false
-	for cell in getTranslatedCells(piece.localCells, piece.currentPosition):
+	for cell in piece.globalCells:
 		if BOUNDS.has_point(cell):
 			var mapCoord:Vector2i = cell
 			set_cell(mapCoord, 0, Vector2i(piece.id, SET_TILE_ATLAS_ROW))
@@ -425,6 +425,14 @@ func areCellsOpen(cells:Array[Vector2i], invalidCells:Array[Vector2i] = []) -> b
 		):
 			return false
 	return true
+
+func areCellsCollidingWithActivePieces(cells:Array[Vector2i], sourcePiece:Piece = null) -> bool:
+	for cell:Vector2i in cells:
+		for piece:Piece in activePieces:
+			if piece != sourcePiece and piece.collidible:
+				if piece.globalCells.has(cell):
+					return true
+	return false
 
 func setAnimBasedOnMasterCoinAndLine(node:Node2D, line:int = 0) -> void:
 	var animPlayer:AnimationPlayer = node.get_node_or_null("AnimationPlayer")
@@ -522,11 +530,14 @@ func _on_holdSlotCycleTimer_timeout(callback:Callable):
 	callback.call()
 
 func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:int):
-	if areCellsOpen(getTranslatedCells(piece.localCells, piece.currentPosition + direction)):
-		match movementType:
-			Piece.MOVEMENT.HORIZONTAL: sfx_move.play()
-			Piece.MOVEMENT.SOFT_DROP: sfx_moveDown.play()
-		piece.move(direction)
+	var translatedCells := getTranslatedCells(piece.globalCells, direction)
+	if areCellsOpen(translatedCells):
+		if not areCellsCollidingWithActivePieces(translatedCells, piece):
+			match movementType:
+				Piece.MOVEMENT.HORIZONTAL: sfx_move.play()
+				Piece.MOVEMENT.SOFT_DROP: sfx_moveDown.play()
+			piece.move(direction)
+			piece.collidible = true # Allow collision now that we know it's in a free space
 	elif direction == Vector2i.DOWN:
 		match movementType:
 			Piece.MOVEMENT.HARD_DROP: sfx_hardDrop.play()
@@ -548,7 +559,7 @@ func _on_Piece_ghost_cells_requested(piece:Piece, ghost:GhostPiece):
 		if activePiece.ghost:
 			mergeCells(invalidCells, getTranslatedCells(activePiece.ghost.localCells, activePiece.ghost.relativePosition + activePiece.currentPosition))
 	# Move down until collide with something
-	while areCellsOpen(getTranslatedCells(piece.localCells, piece.currentPosition+ relativePosition + Vector2i.DOWN), invalidCells):
+	while areCellsOpen(getTranslatedCells(piece.localCells, piece.currentPosition + relativePosition + Vector2i.DOWN), invalidCells):
 		relativePosition += Vector2i.DOWN
 	ghost.relativePosition = relativePosition
 	
