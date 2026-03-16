@@ -88,6 +88,7 @@ var moveLock:bool = false: ## Prevent moving this anymore
 		if horizontalTimer: horizontalTimer.paused = value
 		if softDropTimer: softDropTimer.paused = value
 		moveLock = value
+var holdLock:bool = false ## Prevent from holding this anymore
 var playHardDropSound:bool = false
 var ghost:GhostPiece
 

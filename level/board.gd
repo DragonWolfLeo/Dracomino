@@ -60,8 +60,8 @@ var linesCleared:int = 0:
 	set(value):
 		linesCleared = value
 		linesCleared_updated.emit(linesCleared)
-var holdOnCooldown:bool = false: set = _on_holdOnCooldown_set
-var _lastHeldPieceContext:DracominoHandler.StateItem ## For deathlink message context
+
+var _lastHeldPieceContext:DracominoHandler.StateItem ## For deathlink message context; TODO: Obsolete
 
 var _linemappings:Dictionary[int, int] = {}
 var _missinglines:Dictionary[int, bool] = {}
@@ -192,7 +192,6 @@ func createPiece(pieceName:StringName = "", pieceContext:DracominoHandler.StateI
 
 func spawnPiece(piece:Piece):
 	if not activePieces.has(piece):
-		holdOnCooldown = false # Holding sets this to true immediately
 		activePieces.append(piece)
 		piece.movement_requested.connect(_on_Piece_movement_requested)
 		piece.new_cells_requested.connect(_on_Piece_new_cells_requested)
@@ -207,13 +206,14 @@ func spawnPiece(piece:Piece):
 
 func hold(index:int = -1):
 	var piece:Piece = getFocusPiece()
-	if piece and piece.moveLock:
-		# Don't hold if hard dropping
+	if piece and (piece.moveLock or piece.holdLock):
+		# Don't hold if hard dropping or hold-locked
 		return
-	if holdStorage and not holdOnCooldown:
+	if holdStorage:
 		var succeeded:bool = piece != null
 		var popped:Piece
 		if piece:
+			piece.holdLock = true # Prevent from being held again
 			# Cleanup
 			if piece.movement_requested.is_connected(_on_Piece_movement_requested):
 				piece.movement_requested.disconnect(_on_Piece_movement_requested)
@@ -233,7 +233,6 @@ func hold(index:int = -1):
 			requestPiece(true)
 		if succeeded:
 			sfx_hold.play()
-			holdOnCooldown = true
 
 func isTileOccupied(coords:Vector2i) -> bool:
 	return get_cell_atlas_coords(coords).y == SET_TILE_ATLAS_ROW
@@ -292,7 +291,7 @@ func resetGame():
 			# category
 			"RESTART_NEAR_GAME_OVER" if focusPiece and isInDanger()
 			else "RESTART_WITH_PIECES" if focusPiece
-			else "RESTART_HELD_PIECE" if holdOnCooldown and _lastHeldPieceContext
+			else "RESTART_HELD_PIECE" if _lastHeldPieceContext # TODO: Not possible anymore
 			else "RESTART",
 			# itemContext
 			focusPiece.context if focusPiece
@@ -326,7 +325,6 @@ func resetGame():
 	linesCleared = 0
 	random.state = randomSaveState
 	rotate_random.state = rotate_randomSaveState
-	holdOnCooldown = false
 
 	# Clear board
 	for y in range(BOUNDS.position.y, BOUNDS.end.y):
@@ -617,12 +615,6 @@ func _on_DracominoState_slot_context_hash_updated(ctx:int) -> void:
 	randomSaveState = random.state
 	rotate_random.seed = ctx+1
 	rotate_randomSaveState = rotate_random.state
-
-func _on_holdOnCooldown_set(value):
-	## For deathlink message context
-	var focusPiece:Piece = getFocusPiece()
-	_lastHeldPieceContext = focusPiece.context if (value and focusPiece) else null
-	holdOnCooldown = value
 
 func _on_activePieces_changed():
 	## Make ghosts have a gradient
