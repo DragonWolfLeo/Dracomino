@@ -415,8 +415,8 @@ func pushDownRows(full_row):
 			var target_atlas = get_cell_atlas_coords(aboveCell)
 			set_cell(Vector2i(x,y), 0, target_atlas)
 
-func areCellsOpen(cells:Array[Vector2i], offset:Vector2i, invalidCells:Array[Vector2i] = []) -> bool:
-	for cell in getTranslatedCells(cells, offset):
+func areCellsOpen(cells:Array[Vector2i], invalidCells:Array[Vector2i] = []) -> bool:
+	for cell in cells:
 		if (
 			isTileOccupied(cell)
 			or cell.x < BOUNDS.position.x or cell.x >= BOUNDS.end.x # Check horizontal bounds
@@ -522,7 +522,7 @@ func _on_holdSlotCycleTimer_timeout(callback:Callable):
 	callback.call()
 
 func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:int):
-	if areCellsOpen(piece.localCells, piece.currentPosition + direction):
+	if areCellsOpen(getTranslatedCells(piece.localCells, piece.currentPosition + direction)):
 		match movementType:
 			Piece.MOVEMENT.HORIZONTAL: sfx_move.play()
 			Piece.MOVEMENT.SOFT_DROP: sfx_moveDown.play()
@@ -534,7 +534,7 @@ func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:
 		lockPiece(piece)
 
 func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
-	if areCellsOpen(cells, piece.currentPosition):
+	if areCellsOpen(getTranslatedCells(cells, piece.currentPosition)):
 		piece.setCells(cells)
 
 func _on_Piece_ghost_cells_requested(piece:Piece, ghost:GhostPiece):
@@ -548,7 +548,7 @@ func _on_Piece_ghost_cells_requested(piece:Piece, ghost:GhostPiece):
 		if activePiece.ghost:
 			mergeCells(invalidCells, getTranslatedCells(activePiece.ghost.localCells, activePiece.ghost.relativePosition + activePiece.currentPosition))
 	# Move down until collide with something
-	while areCellsOpen(piece.localCells, piece.currentPosition+ relativePosition + Vector2i.DOWN, invalidCells):
+	while areCellsOpen(getTranslatedCells(piece.localCells, piece.currentPosition+ relativePosition + Vector2i.DOWN), invalidCells):
 		relativePosition += Vector2i.DOWN
 	ghost.relativePosition = relativePosition
 	
@@ -565,7 +565,7 @@ func updateGhostFromIndex(index:int = 0, invalidCells:Array[Vector2i] = []):
 	var piece:Piece = activePieces[index]
 	var relativePosition:Vector2i = Vector2i.ZERO
 	# Move down until collide with something
-	while areCellsOpen(piece.localCells, piece.currentPosition + relativePosition + Vector2i.DOWN, invalidCells):
+	while areCellsOpen(getTranslatedCells(piece.localCells, piece.currentPosition + relativePosition + Vector2i.DOWN), invalidCells):
 		relativePosition += Vector2i.DOWN
 	piece.ghost.relativePosition = relativePosition
 	
