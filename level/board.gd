@@ -426,7 +426,7 @@ func areCellsOpen(cells:Array[Vector2i], invalidCells:Array[Vector2i] = []) -> b
 			return false
 	return true
 
-func areCellsCollidingWithActivePieces(cells:Array[Vector2i], sourcePiece:Piece = null) -> bool:
+func areCellsCollidingWithActivePieces(cells:Array[Vector2i], sourcePiece:Piece) -> bool:
 	for cell:Vector2i in cells:
 		for piece:Piece in activePieces:
 			if piece != sourcePiece and piece.collidible:
@@ -563,9 +563,21 @@ func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:
 		lockPiece(piece)
 
 func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
-	var translatedCells := getTranslatedCells(cells, piece.currentPosition)
-	if areCellsOpen(translatedCells) and not areCellsCollidingWithActivePieces(translatedCells):
-		piece.setCells(cells)
+	var dirs:Array[Vector2i] = [Vector2i.ZERO]
+	if DracominoHandler.activeAbilities.get("Kick", 0):
+		# Add more directions to push when kick is active
+		for cell in cells:
+			var dir = -cell
+			if not dirs.has(dir):
+				dirs.append(dir)
+		
+	for dir:Vector2i in dirs:
+		var translatedCells := getTranslatedCells(cells, piece.currentPosition + dir)
+		if areCellsOpen(translatedCells) and not areCellsCollidingWithActivePieces(translatedCells, piece):
+			piece.setCells(cells)
+			piece.move(dir)
+			return
+
 
 func _on_Piece_ghost_cells_requested(_piece:Piece, _ghost:GhostPiece):
 	updateAllGhosts()			
