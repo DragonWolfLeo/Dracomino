@@ -214,10 +214,11 @@ func spawnPiece(piece:Piece):
 		piece.currentPosition = SPAWN_POINT + piece.origin
 		pieceTimer.reset()
 		placeOnHighestRow(piece)
-		activePieces_changed.emit()
 		if not checkForFailure(piece):
 			if piece != getFocusPiece():
 				placeAboveOtherPieces(piece)
+				sortActivePieces()
+			activePieces_changed.emit()
 			piece_spawned.emit(piece)
 
 func hold(index:int = -1):
@@ -279,6 +280,19 @@ func placeAboveOtherPieces(piece:Piece):
 					piece.move(Vector2i.UP)
 					placeAboveOtherPieces(piece)
 					return
+
+func sortActivePieces():
+	activePieces.sort_custom(
+		func(a:Piece, b:Piece):
+			var focusPiece = getFocusPiece()
+			if a == focusPiece: return true
+			if b == focusPiece: return false
+			if a.moveLock and not b.moveLock:
+				return true
+			if b.moveLock and not a.moveLock:
+				return false
+			return a.currentPosition.y >= b.currentPosition.y
+	)
 
 func checkForFailure(piece:Piece) -> bool:
 	for cell in piece.globalCells:
