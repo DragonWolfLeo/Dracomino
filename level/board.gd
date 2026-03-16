@@ -94,6 +94,17 @@ var pieceTimer:ActivityTimer ## For death context
 
 @onready var holdSlotCycleTimer:Timer = $HoldSlotCycleTimer
 
+#===== Static Functions ======
+static func getTranslatedCells(cells:Array[Vector2i], offset:Vector2i) -> Array[Vector2i]:
+	var ret:Array[Vector2i] = []
+	ret.append_array(cells.map(func(cell:Vector2i): return cell + offset))
+	return ret
+
+static func mergeCells(destination:Array[Vector2i], cells:Array[Vector2i]) -> void:
+	for cell in cells:
+		if not destination.has(cell):
+			destination.append(cell)
+
 #===== Virtuals ======
 func _ready():
 	masterCoin.visible = false # Master coin is just a reference for the rest of the coins and should be hidden
@@ -241,19 +252,17 @@ func isTileOccupied(coords:Vector2i) -> bool:
 
 func placeOnHighestRow(piece:Piece):
 	var greatestY:int = 0
-	for cell in piece.localCells:
-		var pos:Vector2i = piece.currentPosition + cell
-		if greatestY < pos.y:
-			greatestY = pos.y
+	for cell in getTranslatedCells(piece.localCells, piece.currentPosition):
+		if greatestY < cell.y:
+			greatestY = cell.y
 	if greatestY > 0:
 		# If reach below top-most row, nudge up
 		piece.move(Vector2i.UP)
 		placeOnHighestRow(piece)
 
 func checkForFailure(piece:Piece) -> bool:
-	for cell in piece.localCells:
-		var pos:Vector2i = piece.currentPosition + cell
-		if isTileOccupied(pos):
+	for cell in getTranslatedCells(piece.localCells, piece.currentPosition):
+		if isTileOccupied(cell):
 			# Trigger game over
 			var deathContext := DracominoUtil.DeathContext.new(
 				"TOP_NO_INPUT" if inputTimer.isAFK() else "TOP",
@@ -339,9 +348,9 @@ func resetGame():
 
 func lockPiece(piece:Piece):
 	var pickedUpItem:bool = false
-	for pos in piece.localCells:
-		if BOUNDS.has_point(piece.currentPosition + pos):
-			var mapCoord:Vector2i = piece.currentPosition + pos
+	for cell in getTranslatedCells(piece.localCells, piece.currentPosition):
+		if BOUNDS.has_point(cell):
+			var mapCoord:Vector2i = cell
 			set_cell(mapCoord, 0, Vector2i(piece.id, SET_TILE_ATLAS_ROW))
 			var pickup:ItemPickupContext = _mappedpickups.get(mapCoord)
 			if pickup:
@@ -406,14 +415,13 @@ func pushDownRows(full_row):
 			var target_atlas = get_cell_atlas_coords(aboveCell)
 			set_cell(Vector2i(x,y), 0, target_atlas)
 
-func areCellsValid(cells:Array[Vector2i], offset:Vector2i, invalidCells:Array[Vector2i] = []) -> bool:
-	for cell in cells:
-		var pos:Vector2i = offset + cell
+func areCellsOpen(cells:Array[Vector2i], offset:Vector2i, invalidCells:Array[Vector2i] = []) -> bool:
+	for cell in getTranslatedCells(cells, offset):
 		if (
-			isTileOccupied(pos)
-			or pos.x < BOUNDS.position.x or pos.x >= BOUNDS.end.x # Check horizontal bounds
-			or pos.y >= BOUNDS.end.y # Check if reached bottom
-			or invalidCells.has(pos)
+			isTileOccupied(cell)
+			or cell.x < BOUNDS.position.x or cell.x >= BOUNDS.end.x # Check horizontal bounds
+			or cell.y >= BOUNDS.end.y # Check if reached bottom
+			or invalidCells.has(cell)
 		):
 			return false
 	return true
@@ -514,7 +522,7 @@ func _on_holdSlotCycleTimer_timeout(callback:Callable):
 	callback.call()
 
 func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:int):
-	if areCellsValid(piece.localCells, piece.currentPosition + direction):
+	if areCellsOpen(piece.localCells, piece.currentPosition + direction):
 		match movementType:
 			Piece.MOVEMENT.HORIZONTAL: sfx_move.play()
 			Piece.MOVEMENT.SOFT_DROP: sfx_moveDown.play()
@@ -526,7 +534,7 @@ func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:
 		lockPiece(piece)
 
 func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
-	if areCellsValid(cells, piece.currentPosition):
+	if areCellsOpen(cells, piece.currentPosition):
 		piece.setCells(cells)
 
 func _on_Piece_ghost_cells_requested(piece:Piece, ghost:GhostPiece):
@@ -538,20 +546,14 @@ func _on_Piece_ghost_cells_requested(piece:Piece, ghost:GhostPiece):
 		updateIndex += 1
 		if piece == activePiece: break
 		if activePiece.ghost:
-			for cell:Vector2i in activePiece.ghost.localCells:
-				cell += activePiece.ghost.relativePosition + activePiece.currentPosition
-				if not invalidCells.has(cell):
-					invalidCells.append(cell)
+			mergeCells(invalidCells, getTranslatedCells(activePiece.ghost.localCells, activePiece.ghost.relativePosition + activePiece.currentPosition))
 	# Move down until collide with something
-	while areCellsValid(piece.localCells, piece.currentPosition+ relativePosition + Vector2i.DOWN, invalidCells):
+	while areCellsOpen(piece.localCells, piece.currentPosition+ relativePosition + Vector2i.DOWN, invalidCells):
 		relativePosition += Vector2i.DOWN
 	ghost.relativePosition = relativePosition
 	
 	# Add to invalid cells for other ghosts
-	for cell:Vector2i in ghost.localCells:
-		cell += ghost.relativePosition + piece.currentPosition
-		if not invalidCells.has(cell):
-			invalidCells.append(cell)
+	mergeCells(invalidCells, getTranslatedCells(ghost.localCells, ghost.relativePosition + piece.currentPosition))
 	
 	# Fix other ghosts
 	updateGhostFromIndex(updateIndex, invalidCells)
@@ -563,15 +565,12 @@ func updateGhostFromIndex(index:int = 0, invalidCells:Array[Vector2i] = []):
 	var piece:Piece = activePieces[index]
 	var relativePosition:Vector2i = Vector2i.ZERO
 	# Move down until collide with something
-	while areCellsValid(piece.localCells, piece.currentPosition + relativePosition + Vector2i.DOWN, invalidCells):
+	while areCellsOpen(piece.localCells, piece.currentPosition + relativePosition + Vector2i.DOWN, invalidCells):
 		relativePosition += Vector2i.DOWN
 	piece.ghost.relativePosition = relativePosition
 	
 	# Add to invalid cells for other ghosts
-	for cell:Vector2i in piece.ghost.localCells:
-		cell += piece.ghost.relativePosition + piece.currentPosition
-		if not invalidCells.has(cell):
-			invalidCells.append(cell)
+	mergeCells(invalidCells, getTranslatedCells(piece.ghost.localCells, piece.ghost.relativePosition + piece.currentPosition))
 
 	updateGhostFromIndex(index + 1, invalidCells)
 
