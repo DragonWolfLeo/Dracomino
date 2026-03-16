@@ -23,6 +23,8 @@ enum STATE {
 }
 var state:int: set = _set_state
 var CHANGELOG_WINDOW_SCENE:PackedScene = load("res://ui/changelog_window.tscn")
+var DRACOMINO_NOTIFICATION_TIME:float = 5.0
+var DRACOMINO_NOTIFICATION_TIME_SHORT:float = 1.0
 
 #==== Virtuals ====
 func _ready() -> void:
@@ -65,7 +67,7 @@ func showNotification(notif:String, color:Color) -> void:
 		notificationLabel.show()
 		notificationLabel.text = notif
 		notificationLabel.label_settings.font_color = color
-		_timer = get_tree().create_timer(5, false)
+		_timer = get_tree().create_timer(DRACOMINO_NOTIFICATION_TIME_SHORT if _queuedNotifications.size() else DRACOMINO_NOTIFICATION_TIME, false)
 		_timer.timeout.connect(_on_timer_timeout)
 
 func updateLineClearedLabel():
@@ -143,7 +145,7 @@ func _on_Btn_Quit_pressed() -> void:
 
 func _on_DracominoState_notification_signal(notif:String, color:Color, force:bool = false) -> void:
 	if _timer and not force:
-		_timer.time_left = min(1.0, _timer.time_left)
+		_timer.time_left = min(DRACOMINO_NOTIFICATION_TIME_SHORT, _timer.time_left)
 		_queuedNotifications.append({
 			notif = notif,
 			color = color,

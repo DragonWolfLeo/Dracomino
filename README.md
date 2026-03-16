@@ -31,7 +31,7 @@ coins are revealed.
 
   - Choose how you'll play Dracomino
     - [Windows and Linux Builds](https://github.com/DragonWolfLeo/Dracomino/releases/latest)
-    - [Web Version](https://dragonwolfleo.github.io/Dracomino/)
+    - [Web Version](https://dragonwolfleo.github.io/Dracomino/) May not work in all browsers. If it fails to load, try another browser.
     - From source. You can run the project in [Godot 4.4.x](https://godotengine.org/download/archive/4.4.1-stable/)
 
 ## In Beta
@@ -43,9 +43,10 @@ This is playable with either keyboard or controller. Abilities and stuff will re
  - **Movement:** WASD/Arrow Keys/D-pad
  - **Soft Drop:** Down
  - **Hard Drop:** Up
- - **Rotate Clockwise:** E/Z/Joypad Right Action
- - **Rotate Counterclockwise:** Q/X/Joypad Bottom Action
- - **Hold:** Shift/Space/Joypad Right Shoulder
+ - **Rotate Clockwise:** E/X/Joypad Right Action
+ - **Rotate Counterclockwise:** Q/Z/Joypad Bottom Action
+ - **Hold:** Shift/Space/Joypad Right Shoulder/Number Keys
+ - **Cycle Hold Slots:** Right Joystick Up/Down
  - **Restart:** Ctrl-R/Joypad Back
  - **Pause:** Enter/Escape/Joypad Start
 

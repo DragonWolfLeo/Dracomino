@@ -23,6 +23,7 @@ class LocationData extends Data: pass
 	[4,   "Rotate Clockwise",         [ "progression", "ability", "rotate" ] ],
 	[5,   "Rotate Counterclockwise",  [ "progression", "ability", "rotate" ] ],
 	[6,   "Ghost Piece",              [ "useful", "ability" ] ],
+	[7,   "Kick",                     [ "useful", "ability" ] ],
 
 	# Progressive Items (101-200)
 	[101, "Next Piece Slot",          [ "useful", "ability", "progressive" ] ],

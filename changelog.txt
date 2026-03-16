@@ -1,3 +1,16 @@
+Version 0.2.4 (dev-alpha1)
+ - Switch binding of Z and X
+ - Fix issues with piece spawning and Next Piece Slots filling
+ - Improve multiple-piece tech
+ - Next piece now spawns immediately after a hard drop
+ - Allow dropping with gravity
+ - Fix notification duration not shortening when queued
+ - Empty Hold Slots are visible
+ - Specific Hold Slots can be used with number keys
+ - Hold Slots can be cycled with right controller stick
+ - Hold cooldown only activates when pulling a piece from a Hold Slot
+ - Add Kick ability
+
 Version 0.2.4 (traps-alpha1)
  - Add overlay effects: Pixel, Crystal, Fracture, Water, Invert
  - Add debug tab with overlay toggles. Priority depends on order toggled.
