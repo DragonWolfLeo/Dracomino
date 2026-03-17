@@ -10,6 +10,7 @@ var DANGER_ZONE := BOUNDS.grow_individual(-2, 0, -2, -17)
 var USE_ALT_ROTATE:bool = true # TODO: Make an option
 var ALLOW_GRAVITY_DROP:bool = true # TODO: Make an option
 var OPACITY_REDUCTION_PER_GHOST:float = 0.4
+var MAX_PIECES:int = 8
 
 static var ACTIVE_TILE_ATLAS_ROW:int = 0
 static var SET_TILE_ATLAS_ROW:int = 1
@@ -141,6 +142,14 @@ func getFocusPiece() -> Piece:
 			return piece
 	return null
 
+func countNonlockedPieces() -> int:
+	var num = activePieces.reduce(
+		func(accum:int, piece:Piece):
+			return accum + (0 if piece.moveLock else 1),
+			0
+		)
+	return num
+
 func blockRemoveAnimationStep(delta):
 	if !animation_started and blocksToClear.size() == 0:
 		for x in range(BOUNDS.position.x, BOUNDS.end.x):
@@ -168,9 +177,9 @@ func blockRemoveAnimationStep(delta):
 
 func requestPiece(allowMultiplePieces:bool = false):
 	if isGameOver: return
-	if activePieces.size() and not allowMultiplePieces:
+	if activePieces.size() > MAX_PIECES or (activePieces.size() and not allowMultiplePieces):
 		return
-	fillPreview(1) # Generate one extra because we're gonna use it
+	fillPreview(2) # Generate one extra because we're gonna use it, and another so gravity drop can work
 	var poppedPiece:Piece
 	if previewStorage:
 		poppedPiece = previewStorage.popPiece()
@@ -213,8 +222,13 @@ func spawnPiece(piece:Piece):
 		piece.currentPosition = SPAWN_POINT + piece.origin
 		pieceTimer.reset()
 		placeOnHighestRow(piece)
-		activePieces_changed.emit()
 		if not checkForFailure(piece):
+			if piece == getFocusPiece():
+				shoveOtherPiecesDown(piece)
+			else:
+				placeAboveOtherPieces(piece)
+				sortActivePieces()
+			activePieces_changed.emit()
 			piece_spawned.emit(piece)
 
 func hold(index:int = -1):
@@ -259,6 +273,80 @@ func placeOnHighestRow(piece:Piece):
 		# If reach below top-most row, nudge up
 		piece.move(Vector2i.UP)
 		placeOnHighestRow(piece)
+
+func placeRandomHorizontally(piece:Piece):
+	var rect:Rect2i
+	rect.position = piece.currentPosition
+	for cell:Vector2i in piece.globalCells:
+		rect = rect.expand(cell)
+	piece.move(Vector2i(randi_range(-rect.position.x, BOUNDS.end.x-rect.end.x-1),0))
+
+func placeAboveOtherPieces(piece:Piece):
+	placeRandomHorizontally(piece)
+	for cell:Vector2i in piece.globalCells:
+		for activePiece:Piece in activePieces:
+			if activePiece != piece and not activePiece.moveLock:
+				if activePiece.globalCells.has(cell):
+					piece.move(Vector2i.UP)
+					placeAboveOtherPieces(piece)
+					return
+
+func shoveOtherPiecesDown(piece:Piece):
+	var lowerPieces:Array[Piece] = []
+	for activePiece:Piece in activePieces:
+		if activePiece == piece:
+			break
+		lowerPieces.append(activePiece)
+	for lowerPiece:Piece in activePieces:
+		if lowerPiece != piece and lowerPiece.moveLock:
+			nudgePiece(piece.globalCells, lowerPiece, Vector2i.DOWN)
+
+func nudgePiece(cells:Array[Vector2i], piece:Piece, direction:Vector2i) -> bool: ## false = unblocked; true = blocked
+	if not piece.moveLock: 
+		return true
+	for cell:Vector2i in cells:
+		if piece.globalCells.has(cell):
+			var blocked:bool = tryMovePiece(piece, direction, Piece.MOVEMENT.SHOVE)
+			if activePieces.has(piece) and not blocked:
+				return nudgePiece(cells, piece, direction)
+			return blocked
+	return false
+
+func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ## false = unblocked; true = blocked
+	var translatedCells := getTranslatedCells(piece.globalCells, direction)
+	if areCellsOpen(translatedCells):
+		var blocked:bool = false
+		piece.collidible = true # Allow collision now that we know it's in a free space
+		var collidingPieces:Array[Piece] = getAllCollidingPieces(translatedCells, piece)
+		if collidingPieces.size():
+			for collidingPiece:Piece in collidingPieces:
+				var nudgeResult = nudgePiece(translatedCells, collidingPiece, direction)
+				if nudgeResult: blocked = true
+		if not blocked:
+			piece.move(direction)
+			match movementType:
+				Piece.MOVEMENT.HORIZONTAL: sfx_move.play()
+				Piece.MOVEMENT.SOFT_DROP: sfx_moveDown.play()
+		return blocked
+	elif direction == Vector2i.DOWN:
+		match movementType:
+			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE: sfx_hardDrop.play()
+			_: sfx_drop.play()
+		lockPiece(piece)
+	return true
+
+func sortActivePieces():
+	activePieces.sort_custom(
+		func(a:Piece, b:Piece):
+			var focusPiece = getFocusPiece()
+			if a == focusPiece: return true
+			if b == focusPiece: return false
+			if a.moveLock and not b.moveLock:
+				return true
+			if b.moveLock and not a.moveLock:
+				return false
+			return a.currentPosition.y >= b.currentPosition.y
+	)
 
 func checkForFailure(piece:Piece) -> bool:
 	for cell in piece.globalCells:
@@ -426,13 +514,23 @@ func areCellsOpen(cells:Array[Vector2i], invalidCells:Array[Vector2i] = []) -> b
 			return false
 	return true
 
-func areCellsCollidingWithActivePieces(cells:Array[Vector2i], sourcePiece:Piece) -> bool:
-	for cell:Vector2i in cells:
-		for piece:Piece in activePieces:
-			if piece != sourcePiece and piece.collidible:
+func getCollidingPiece(cells:Array[Vector2i], sourcePiece:Piece) -> Piece:
+	for piece:Piece in activePieces:
+		if piece != sourcePiece and piece.collidible:
+			for cell:Vector2i in cells:
 				if piece.globalCells.has(cell):
-					return true
-	return false
+					return piece
+	return null
+
+func getAllCollidingPieces(cells:Array[Vector2i], sourcePiece:Piece) -> Array[Piece]:
+	var ret:Array[Piece] = []
+	for piece:Piece in activePieces:
+		if piece != sourcePiece and piece.collidible:
+			for cell:Vector2i in cells:
+				if piece.globalCells.has(cell):
+					ret.append(piece)
+					break
+	return ret
 
 func setAnimBasedOnMasterCoinAndLine(node:Node2D, line:int = 0) -> void:
 	var animPlayer:AnimationPlayer = node.get_node_or_null("AnimationPlayer")
@@ -535,7 +633,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		if DracominoHandler.activeAbilities.get("Hard Drop", 0):
 			focusPiece.hardDrop()
 			if not getFocusPiece(): requestPiece(true)
-		elif ALLOW_GRAVITY_DROP and DracominoHandler.activeAbilities.get("Gravity", 0):
+		elif (
+			ALLOW_GRAVITY_DROP 
+			and DracominoHandler.activeAbilities.get("Gravity", 0)
+			and activePieces.size() < MAX_PIECES
+			and (countNonlockedPieces() > 1 or (previewStorage and previewStorage.getNumStored()))
+		):
+			# Only gravity drop if it's not your last piece
 			focusPiece.gravityDrop()
 			if not getFocusPiece(): requestPiece(true)
 	else:
@@ -548,19 +652,7 @@ func _on_holdSlotCycleTimer_timeout(callback:Callable):
 	callback.call()
 
 func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:int):
-	var translatedCells := getTranslatedCells(piece.globalCells, direction)
-	if areCellsOpen(translatedCells):
-		if not areCellsCollidingWithActivePieces(translatedCells, piece):
-			match movementType:
-				Piece.MOVEMENT.HORIZONTAL: sfx_move.play()
-				Piece.MOVEMENT.SOFT_DROP: sfx_moveDown.play()
-			piece.move(direction)
-			piece.collidible = true # Allow collision now that we know it's in a free space
-	elif direction == Vector2i.DOWN:
-		match movementType:
-			Piece.MOVEMENT.HARD_DROP: sfx_hardDrop.play()
-			_: sfx_drop.play()
-		lockPiece(piece)
+	tryMovePiece(piece, direction, movementType)
 
 func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 	var dirs:Array[Vector2i] = [Vector2i.ZERO]
@@ -573,7 +665,7 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 		
 	for dir:Vector2i in dirs:
 		var translatedCells := getTranslatedCells(cells, piece.currentPosition + dir)
-		if areCellsOpen(translatedCells) and not areCellsCollidingWithActivePieces(translatedCells, piece):
+		if areCellsOpen(translatedCells) and not getCollidingPiece(translatedCells, piece):
 			piece.setCells(cells)
 			piece.move(dir)
 			return
@@ -652,5 +744,5 @@ func _on_activePieces_changed():
 	for piece in activePieces:
 		if piece.ghost:
 			piece.ghost.modulate.a = clamp(a, 0.0, 1.0)
-			if not piece.moveLock:
+			if piece != getFocusPiece() and not piece.moveLock:
 				a -= OPACITY_REDUCTION_PER_GHOST

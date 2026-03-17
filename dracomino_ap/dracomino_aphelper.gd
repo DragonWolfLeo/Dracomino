@@ -2,6 +2,9 @@ extends Node
 
 var btn_deathLink:CheckButton
 var btn_deathOnRestart:CheckButton
+var optionBtn_deathLinkGroup:OptionButton
+var lineEdit_deathLinkGroup:LineEdit
+var btn_allowUnfocusedInputs:CheckButton
 var btn_gravityAmt_reset:Button
 var label_gravityAmt:Label
 var slider_gravityAmt:Slider
@@ -10,6 +13,12 @@ var slider_musicVol:Slider
 var slider_sfxVol:Slider
 
 var _sfxSliderBeingDragged:bool = true # Set to true prevent triggering when loading
+
+enum DEATH_LINK_GROUP {
+	DEFAULT,
+	DRACOMINO,
+	CUSTOM,
+}
 	
 func _ready() -> void:
 	if OS.is_debug_build():
@@ -18,8 +27,6 @@ func _ready() -> void:
 	Archipelago.creds.updated.connect((Archipelago.config as DracominoConfigManager).update_credentials)
 
 	Archipelago.load_console(get_parent(), false)
-	SignalBus.getSignal("theme_set").connect(_on_theme_set)
-	_on_theme_set()
 
 	Archipelago.on_tag_change.connect(_on_Archipelago_tag_change)
 
@@ -34,7 +41,25 @@ func _ready() -> void:
 		btn_deathOnRestart.toggled.connect(_on_btn_deathOnRestart_toggled)
 		SignalBus.getSignal("deathOnRestart_enabled").connect(btn_deathOnRestart.set_pressed_no_signal.bind(true))
 		SignalBus.getSignal("deathOnRestart_disabled").connect(btn_deathOnRestart.set_pressed_no_signal.bind(false))
+	# Death link group
+	SignalBus.getSignal("setting_changed", "deathLinkGroup").connect(_on_deathLinkGroup_setting_changed)
+	SignalBus.getSignal("setting_changed", "deathLinkGroup_custom").connect(_on_deathLinkGroup_custom_setting_changed)
+	optionBtn_deathLinkGroup = get_parent().find_child("OptionButton_DeathLinkGroup")
+	if optionBtn_deathLinkGroup:
+		optionBtn_deathLinkGroup.select(Config.getSetting("deathLinkGroup", DEATH_LINK_GROUP.DEFAULT))
+		optionBtn_deathLinkGroup.item_selected.connect(_on_optionBtn_deathLinkGroup_item_selected)
+	lineEdit_deathLinkGroup = get_parent().find_child("LineEdit_DeathLinkGroup")
+	if lineEdit_deathLinkGroup:
+		lineEdit_deathLinkGroup.text = Config.getSetting("deathLinkGroup_custom", "")
+		lineEdit_deathLinkGroup.focus_exited.connect(func(): _on_lineEdit_deathLinkGroup_text_submitted(lineEdit_deathLinkGroup.text))
+		lineEdit_deathLinkGroup.text_submitted.connect(_on_lineEdit_deathLinkGroup_text_submitted)
+	_on_deathLinkGroup_setting_changed()
 
+	# Unfocused inputs toggle
+	btn_allowUnfocusedInputs = get_parent().find_child("Btn_AllowUnfocusedInputs")
+	if btn_allowUnfocusedInputs:
+		btn_allowUnfocusedInputs.set_pressed_no_signal(Config.getSetting("allowUnfocusedInputs", false))
+		btn_allowUnfocusedInputs.toggled.connect(_on_btn_allowUnfocusedInputs_toggled)
 	# Gravity slider
 	slider_gravityAmt = get_parent().find_child("HSlider_GravityAmt")
 	if slider_gravityAmt:
@@ -65,10 +90,8 @@ func _ready() -> void:
 	_sfxSliderBeingDragged = false
 
 #===== Events =====
-func _on_theme_set():
+func _on_Theme_update_theme(theme_res:Theme) -> void:
 	var parent := get_parent() as Control
-	var theme_path := Archipelago.config.window_theme_path
-	var theme_res = load(theme_path)
 	if parent and theme_res:
 		parent.theme = theme_res
 
@@ -83,6 +106,30 @@ func _on_btn_deathOnRestart_toggled(toggled_on:bool):
 	SignalBus.getSignal(
 		"deathOnRestart_enabled" if toggled_on else "deathOnRestart_disabled"
 	).emit()
+
+func _on_deathLinkGroup_setting_changed():
+	var _deathLinkGroupId:int = int(Config.getSetting("deathLinkGroup", DEATH_LINK_GROUP.DEFAULT))
+	if lineEdit_deathLinkGroup:
+		lineEdit_deathLinkGroup.visible = _deathLinkGroupId == DEATH_LINK_GROUP.CUSTOM
+	match _deathLinkGroupId:
+		DEATH_LINK_GROUP.DEFAULT:
+			Archipelago.set_deathlink_group("")
+		DEATH_LINK_GROUP.DRACOMINO:
+			Archipelago.set_deathlink_group("Dracomino")
+		DEATH_LINK_GROUP.CUSTOM:
+			Archipelago.set_deathlink_group(Config.getSetting("deathLinkGroup_custom", ""))
+
+func _on_deathLinkGroup_custom_setting_changed():
+	Archipelago.set_deathlink_group(Config.getSetting("deathLinkGroup_custom", ""))
+
+func _on_optionBtn_deathLinkGroup_item_selected(index:int):
+	Config.changeSetting("deathLinkGroup", index)
+
+func _on_lineEdit_deathLinkGroup_text_submitted(new_text:String):
+	Config.changeSetting("deathLinkGroup_custom", new_text)
+
+func _on_btn_allowUnfocusedInputs_toggled(toggled_on:bool):
+	Config.changeSetting("allowUnfocusedInputs", toggled_on)
 
 func _on_slider_gravityAmt_value_changed(value:float) -> void:
 	Config.changeSetting("gravity", value)

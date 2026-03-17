@@ -1,3 +1,8 @@
+Version 0.2.4 (dev-alpha2)
+ - Pieces avoid being placed in each other
+ - Pieces can be shoved by other pieces
+ - Prevent dropping and losing control of your last piece
+
 Version 0.2.4 (dev-alpha1)
  - Switch binding of Z and X
  - Fix issues with piece spawning and Next Piece Slots filling
@@ -14,6 +19,9 @@ Version 0.2.4 (dev-alpha1)
 Version 0.2.4 (traps-alpha1)
  - Add overlay effects: Pixel, Crystal, Fracture, Water, Invert
  - Add debug tab with overlay toggles. Priority depends on order toggled.
+
+Version 0.2.3.7
+ - Add option for Death Link Group
 
 Version 0.2.3.6
  - Fix issue with handling of cached datapackages

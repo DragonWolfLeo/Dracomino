@@ -73,6 +73,7 @@ enum MOVEMENT {
 	SOFT_DROP,
 	GRAVITY,
 	HARD_DROP,
+	SHOVE,
 }
 
 static var TOTAL_NUMBER_OF_COLORS = 12
@@ -90,7 +91,10 @@ var moveLock:bool = false: ## Prevent moving this anymore
 		if softDropTimer: softDropTimer.paused = value
 		moveLock = value
 var holdLock:bool = false ## Prevent from holding this anymore
-var collidible:bool = false ## Enable when piece doesn't overlap with another
+var collidible:bool = false: ## Enable when piece doesn't overlap with another
+	set(value):
+		collidible = value
+		modulate.a = 1.0 if collidible or not Config.debugMode else 0.7
 var playHardDropSound:bool = false
 var ghost:GhostPiece
 

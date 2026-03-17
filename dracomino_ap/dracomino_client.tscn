@@ -68,24 +68,58 @@ layout_mode = 2
 text = "Death On Restart
 "
 
-[node name="MarginContainer" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
+[node name="Container_DeathLinkGroup" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/margin_left = 5
 theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 5
 
-[node name="GridContainer" type="GridContainer" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_DeathLinkGroup"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HFlowContainer" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_DeathLinkGroup/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_DeathLinkGroup/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Death Link Group:"
+
+[node name="OptionButton_DeathLinkGroup" type="OptionButton" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_DeathLinkGroup/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+selected = 0
+item_count = 3
+popup/item_0/text = "Default"
+popup/item_0/id = 0
+popup/item_1/text = "Dracomino"
+popup/item_1/id = 1
+popup/item_2/text = "Custom"
+popup/item_2/id = 2
+
+[node name="LineEdit_DeathLinkGroup" type="LineEdit" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_DeathLinkGroup/VBoxContainer/HBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="Container_Gravity" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="GridContainer" type="GridContainer" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_Gravity"]
 layout_mode = 2
 theme_override_constants/h_separation = 5
 theme_override_constants/v_separation = 5
 columns = 4
 
-[node name="Label" type="Label" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/MarginContainer/GridContainer"]
+[node name="Label" type="Label" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_Gravity/GridContainer"]
 layout_mode = 2
 text = "Gravity Speed"
 
-[node name="HSlider_GravityAmt" type="HSlider" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/MarginContainer/GridContainer"]
+[node name="HSlider_GravityAmt" type="HSlider" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_Gravity/GridContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
@@ -94,13 +128,13 @@ max_value = 4.0
 step = 0.1
 value = 1.0
 
-[node name="Label_GravityAmt" type="Label" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/MarginContainer/GridContainer"]
+[node name="Label_GravityAmt" type="Label" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_Gravity/GridContainer"]
 clip_contents = true
 custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
 text = "1.0"
 
-[node name="Btn_GravityAmt_reset" type="Button" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/MarginContainer/GridContainer"]
+[node name="Btn_GravityAmt_reset" type="Button" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_Gravity/GridContainer"]
 layout_mode = 2
 text = "Reset"
 
@@ -212,5 +246,7 @@ layout_mode = 2
 text = "Invert Filter"
 script = ExtResource("7_vsama")
 signalKey = "overlay_invert"
+
+[connection signal="update_theme" from="Tabs/Settings/Margin/Tabs/Theme" to="DracominoAPHelper" method="_on_Theme_update_theme"]
 
 [editable path="Tabs/Settings"]
