@@ -1,3 +1,6 @@
+Version 0.2.3.7
+ - Add option for Death Link Group
+
 Version 0.2.3.6
  - Fix issue with handling of cached datapackages
 
