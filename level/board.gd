@@ -142,6 +142,14 @@ func getFocusPiece() -> Piece:
 			return piece
 	return null
 
+func countNonlockedPieces() -> int:
+	var num = activePieces.reduce(
+		func(accum:int, piece:Piece):
+			return accum + (0 if piece.moveLock else 1),
+			0
+		)
+	return num
+
 func blockRemoveAnimationStep(delta):
 	if !animation_started and blocksToClear.size() == 0:
 		for x in range(BOUNDS.position.x, BOUNDS.end.x):
@@ -171,7 +179,7 @@ func requestPiece(allowMultiplePieces:bool = false):
 	if isGameOver: return
 	if activePieces.size() > MAX_PIECES or (activePieces.size() and not allowMultiplePieces):
 		return
-	fillPreview(1) # Generate one extra because we're gonna use it
+	fillPreview(2) # Generate one extra because we're gonna use it, and another so gravity drop can work
 	var poppedPiece:Piece
 	if previewStorage:
 		poppedPiece = previewStorage.popPiece()
@@ -569,7 +577,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		if DracominoHandler.activeAbilities.get("Hard Drop", 0):
 			focusPiece.hardDrop()
 			if not getFocusPiece(): requestPiece(true)
-		elif ALLOW_GRAVITY_DROP and DracominoHandler.activeAbilities.get("Gravity", 0):
+		elif (
+			ALLOW_GRAVITY_DROP 
+			and DracominoHandler.activeAbilities.get("Gravity", 0)
+			and activePieces.size() < MAX_PIECES
+			and (countNonlockedPieces() > 1 or (previewStorage and previewStorage.getNumStored()))
+		):
+			# Only gravity drop if it's not your last piece
 			focusPiece.gravityDrop()
 			if not getFocusPiece(): requestPiece(true)
 	else:
