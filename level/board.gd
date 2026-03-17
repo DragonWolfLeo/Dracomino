@@ -10,7 +10,7 @@ var DANGER_ZONE := BOUNDS.grow_individual(-2, 0, -2, -17)
 var USE_ALT_ROTATE:bool = true # TODO: Make an option
 var ALLOW_GRAVITY_DROP:bool = true # TODO: Make an option
 var OPACITY_REDUCTION_PER_GHOST:float = 0.4
-var MAX_PIECES:int = 10
+var MAX_PIECES:int = 8
 
 static var ACTIVE_TILE_ATLAS_ROW:int = 0
 static var SET_TILE_ATLAS_ROW:int = 1
@@ -223,7 +223,9 @@ func spawnPiece(piece:Piece):
 		pieceTimer.reset()
 		placeOnHighestRow(piece)
 		if not checkForFailure(piece):
-			if piece != getFocusPiece():
+			if piece == getFocusPiece():
+				shoveOtherPiecesDown(piece)
+			else:
 				placeAboveOtherPieces(piece)
 				sortActivePieces()
 			activePieces_changed.emit()
@@ -288,6 +290,25 @@ func placeAboveOtherPieces(piece:Piece):
 					piece.move(Vector2i.UP)
 					placeAboveOtherPieces(piece)
 					return
+
+func shoveOtherPiecesDown(piece:Piece):
+	var lowerPieces:Array[Piece] = []
+	for activePiece:Piece in activePieces:
+		if activePiece == piece:
+			break
+		lowerPieces.append(activePiece)
+	for lowerPiece:Piece in activePieces:
+		if lowerPiece != piece and lowerPiece.moveLock:
+			nudgePieceDown(piece.globalCells, lowerPiece, piece.prettyName)
+
+func nudgePieceDown(cells:Array[Vector2i], piece:Piece, debugname:String = "Something" ):
+	if not piece.moveLock: return
+	for cell:Vector2i in cells:
+		if piece.globalCells.has(cell):
+			_on_Piece_movement_requested(piece, Vector2i.DOWN, Piece.MOVEMENT.SHOVE)
+			if activePieces.has(piece):
+				nudgePieceDown(cells, piece)
+			return
 
 func sortActivePieces():
 	activePieces.sort_custom(
@@ -468,13 +489,13 @@ func areCellsOpen(cells:Array[Vector2i], invalidCells:Array[Vector2i] = []) -> b
 			return false
 	return true
 
-func areCellsCollidingWithActivePieces(cells:Array[Vector2i], sourcePiece:Piece) -> bool:
+func getCollidingPiece(cells:Array[Vector2i], sourcePiece:Piece) -> Piece:
 	for cell:Vector2i in cells:
 		for piece:Piece in activePieces:
 			if piece != sourcePiece and piece.collidible:
 				if piece.globalCells.has(cell):
-					return true
-	return false
+					return piece
+	return null
 
 func setAnimBasedOnMasterCoinAndLine(node:Node2D, line:int = 0) -> void:
 	var animPlayer:AnimationPlayer = node.get_node_or_null("AnimationPlayer")
@@ -598,15 +619,19 @@ func _on_holdSlotCycleTimer_timeout(callback:Callable):
 func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:int):
 	var translatedCells := getTranslatedCells(piece.globalCells, direction)
 	if areCellsOpen(translatedCells):
-		if not areCellsCollidingWithActivePieces(translatedCells, piece):
+		piece.collidible = true # Allow collision now that we know it's in a free space
+		var collidingPiece = getCollidingPiece(translatedCells, piece)
+		if collidingPiece and movementType == Piece.MOVEMENT.SHOVE:
+			nudgePieceDown(translatedCells, collidingPiece, piece.prettyName)
+			piece.move(direction)
+		elif not collidingPiece:
 			match movementType:
 				Piece.MOVEMENT.HORIZONTAL: sfx_move.play()
 				Piece.MOVEMENT.SOFT_DROP: sfx_moveDown.play()
 			piece.move(direction)
-			piece.collidible = true # Allow collision now that we know it's in a free space
 	elif direction == Vector2i.DOWN:
 		match movementType:
-			Piece.MOVEMENT.HARD_DROP: sfx_hardDrop.play()
+			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE: sfx_hardDrop.play()
 			_: sfx_drop.play()
 		lockPiece(piece)
 
@@ -621,7 +646,7 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 		
 	for dir:Vector2i in dirs:
 		var translatedCells := getTranslatedCells(cells, piece.currentPosition + dir)
-		if areCellsOpen(translatedCells) and not areCellsCollidingWithActivePieces(translatedCells, piece):
+		if areCellsOpen(translatedCells) and not getCollidingPiece(translatedCells, piece):
 			piece.setCells(cells)
 			piece.move(dir)
 			return
@@ -700,5 +725,5 @@ func _on_activePieces_changed():
 	for piece in activePieces:
 		if piece.ghost:
 			piece.ghost.modulate.a = clamp(a, 0.0, 1.0)
-			if not piece.moveLock:
+			if piece != getFocusPiece() and not piece.moveLock:
 				a -= OPACITY_REDUCTION_PER_GHOST
