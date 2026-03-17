@@ -299,16 +299,41 @@ func shoveOtherPiecesDown(piece:Piece):
 		lowerPieces.append(activePiece)
 	for lowerPiece:Piece in activePieces:
 		if lowerPiece != piece and lowerPiece.moveLock:
-			nudgePieceDown(piece.globalCells, lowerPiece, piece.prettyName)
+			nudgePiece(piece.globalCells, lowerPiece, Vector2i.DOWN)
 
-func nudgePieceDown(cells:Array[Vector2i], piece:Piece, debugname:String = "Something" ):
-	if not piece.moveLock: return
+func nudgePiece(cells:Array[Vector2i], piece:Piece, direction:Vector2i) -> bool: ## false = unblocked; true = blocked
+	if not piece.moveLock: 
+		return true
 	for cell:Vector2i in cells:
 		if piece.globalCells.has(cell):
-			_on_Piece_movement_requested(piece, Vector2i.DOWN, Piece.MOVEMENT.SHOVE)
-			if activePieces.has(piece):
-				nudgePieceDown(cells, piece)
-			return
+			var blocked:bool = tryMovePiece(piece, direction, Piece.MOVEMENT.SHOVE)
+			if activePieces.has(piece) and not blocked:
+				return nudgePiece(cells, piece, direction)
+			return blocked
+	return false
+
+func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ## false = unblocked; true = blocked
+	var translatedCells := getTranslatedCells(piece.globalCells, direction)
+	if areCellsOpen(translatedCells):
+		var blocked:bool = false
+		piece.collidible = true # Allow collision now that we know it's in a free space
+		var collidingPieces:Array[Piece] = getAllCollidingPieces(translatedCells, piece)
+		if collidingPieces.size():
+			for collidingPiece:Piece in collidingPieces:
+				var nudgeResult = nudgePiece(translatedCells, collidingPiece, direction)
+				if nudgeResult: blocked = true
+		if not blocked:
+			piece.move(direction)
+			match movementType:
+				Piece.MOVEMENT.HORIZONTAL: sfx_move.play()
+				Piece.MOVEMENT.SOFT_DROP: sfx_moveDown.play()
+		return blocked
+	elif direction == Vector2i.DOWN:
+		match movementType:
+			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE: sfx_hardDrop.play()
+			_: sfx_drop.play()
+		lockPiece(piece)
+	return true
 
 func sortActivePieces():
 	activePieces.sort_custom(
@@ -490,12 +515,22 @@ func areCellsOpen(cells:Array[Vector2i], invalidCells:Array[Vector2i] = []) -> b
 	return true
 
 func getCollidingPiece(cells:Array[Vector2i], sourcePiece:Piece) -> Piece:
-	for cell:Vector2i in cells:
-		for piece:Piece in activePieces:
-			if piece != sourcePiece and piece.collidible:
+	for piece:Piece in activePieces:
+		if piece != sourcePiece and piece.collidible:
+			for cell:Vector2i in cells:
 				if piece.globalCells.has(cell):
 					return piece
 	return null
+
+func getAllCollidingPieces(cells:Array[Vector2i], sourcePiece:Piece) -> Array[Piece]:
+	var ret:Array[Piece] = []
+	for piece:Piece in activePieces:
+		if piece != sourcePiece and piece.collidible:
+			for cell:Vector2i in cells:
+				if piece.globalCells.has(cell):
+					ret.append(piece)
+					break
+	return ret
 
 func setAnimBasedOnMasterCoinAndLine(node:Node2D, line:int = 0) -> void:
 	var animPlayer:AnimationPlayer = node.get_node_or_null("AnimationPlayer")
@@ -617,23 +652,7 @@ func _on_holdSlotCycleTimer_timeout(callback:Callable):
 	callback.call()
 
 func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:int):
-	var translatedCells := getTranslatedCells(piece.globalCells, direction)
-	if areCellsOpen(translatedCells):
-		piece.collidible = true # Allow collision now that we know it's in a free space
-		var collidingPiece = getCollidingPiece(translatedCells, piece)
-		if collidingPiece and movementType == Piece.MOVEMENT.SHOVE:
-			nudgePieceDown(translatedCells, collidingPiece, piece.prettyName)
-			piece.move(direction)
-		elif not collidingPiece:
-			match movementType:
-				Piece.MOVEMENT.HORIZONTAL: sfx_move.play()
-				Piece.MOVEMENT.SOFT_DROP: sfx_moveDown.play()
-			piece.move(direction)
-	elif direction == Vector2i.DOWN:
-		match movementType:
-			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE: sfx_hardDrop.play()
-			_: sfx_drop.play()
-		lockPiece(piece)
+	tryMovePiece(piece, direction, movementType)
 
 func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 	var dirs:Array[Vector2i] = [Vector2i.ZERO]
