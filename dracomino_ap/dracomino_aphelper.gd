@@ -19,8 +19,6 @@ func _ready() -> void:
 	Archipelago.creds.updated.connect((Archipelago.config as DracominoConfigManager).update_credentials)
 
 	Archipelago.load_console(get_parent(), false)
-	SignalBus.getSignal("theme_set").connect(_on_theme_set)
-	_on_theme_set()
 
 	Archipelago.on_tag_change.connect(_on_Archipelago_tag_change)
 
@@ -70,10 +68,8 @@ func _ready() -> void:
 	_sfxSliderBeingDragged = false
 
 #===== Events =====
-func _on_theme_set():
+func _on_Theme_update_theme(theme_res:Theme) -> void:
 	var parent := get_parent() as Control
-	var theme_path := Archipelago.config.window_theme_path
-	var theme_res = load(theme_path)
 	if parent and theme_res:
 		parent.theme = theme_res
 

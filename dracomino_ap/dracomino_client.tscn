@@ -168,4 +168,6 @@ size_flags_vertical = 4
 step = 5.0
 value = 100.0
 
+[connection signal="update_theme" from="Tabs/Settings/Margin/Tabs/Theme" to="DracominoAPHelper" method="_on_Theme_update_theme"]
+
 [editable path="Tabs/Settings"]
