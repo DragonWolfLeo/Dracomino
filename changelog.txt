@@ -1,3 +1,8 @@
+Version 0.2.4 (dev-alpha2)
+ - Pieces avoid being placed in each other
+ - Pieces can be shoved by other pieces
+ - Prevent dropping and losing control of your last piece
+
 Version 0.2.4 (dev-alpha1)
  - Switch binding of Z and X
  - Fix issues with piece spawning and Next Piece Slots filling
