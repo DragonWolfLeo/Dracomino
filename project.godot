@@ -52,6 +52,7 @@ window/size/height=720
 [editor]
 
 naming/default_signal_callback_name="_on_{NodeName}_{signal_name}"
+export/convert_text_resources_to_binary=false
 
 [importer_defaults]
 
