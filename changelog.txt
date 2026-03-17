@@ -11,6 +11,9 @@ Version 0.2.4 (dev-alpha1)
  - Hold cooldown only activates when pulling a piece from a Hold Slot
  - Add Kick ability
 
+Version 0.2.3.7
+ - Add option for Death Link Group
+
 Version 0.2.3.6
  - Fix issue with handling of cached datapackages
 

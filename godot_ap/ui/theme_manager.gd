@@ -1,4 +1,6 @@
-extends MarginContainer
+class_name ThemeManager extends MarginContainer
+
+signal update_theme(new_theme: Theme)
 
 @export var themes: Array[ThemeBox]
 @export var default_theme: ThemeBox
@@ -20,7 +22,7 @@ func set_console_theme(path: String) -> void:
 		Archipelago.output_console.theme = theme_res
 	get_window().theme = theme_res
 	Archipelago.config.window_theme_path = path
-	SignalBus.getSignal("theme_set").emit()
+	update_theme.emit(theme_res)
 
 func refresh_console_theme() -> void:
 	set_console_theme(Archipelago.config.window_theme_path)
