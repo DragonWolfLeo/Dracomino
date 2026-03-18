@@ -70,6 +70,13 @@ class LocationData extends Data: pass
 
 @onready var LOCATIONS:Dictionary[int, LocationData] = (_generateLocationConstants().reduce(_generateDataTable.bind(LocationData.new), {} as Dictionary[int, LocationData]))
 
+@onready var ITEM_NAME_TO_ID:Dictionary[StringName, int] = ITEMS.values().reduce(
+	func(acc:Dictionary[StringName, int], itemData:ItemData):
+		acc[itemData.prettyName] = itemData.id
+		return acc,
+	{} as Dictionary[StringName, int]
+)
+
 func _addDLMessageTemplate(message:String) -> DracominoUtil.DeathLinkMessageTemplate:
 	return DracominoUtil.DeathLinkMessageTemplate.new(message)
 
