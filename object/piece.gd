@@ -289,7 +289,7 @@ func _on_SoftDropTimer_timeout():
 		softDropTimer.wait_time = SOFT_DROP_WAIT_TIME
 
 func _on_GravityTimer_timeout():
-	if moveLock or DracominoHandler.activeAbilities.get("Gravity", 0):
+	if moveLock or DracominoHandler.activeAbilities.get("Gravity", 0) or not isFocus:
 		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.HARD_DROP if playHardDropSound else MOVEMENT.GRAVITY)
 
 func _setCurrentPosition(value:Vector2i):
