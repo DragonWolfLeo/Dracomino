@@ -271,8 +271,8 @@ func hold(index:int = -1):
 				piece.ghost_cells_requested.disconnect(_on_Piece_ghost_cells_requested)
 			if piece.focus_lost.is_connected(_on_Piece_focus_lost):
 				piece.focus_lost.disconnect(_on_Piece_focus_lost)
-			if piece.tree_exiting.is_connected(activePieces.erase):
-				piece.tree_exiting.disconnect(activePieces.erase)
+			if piece.tree_exiting.is_connected(_on_Piece_tree_exiting):
+				piece.tree_exiting.disconnect(_on_Piece_tree_exiting)
 			popped = holdStorage.pushPiece(piece, false, index)
 			activePieces.erase(piece)
 		else:
