@@ -226,7 +226,7 @@ func spawnPiece(piece:Piece):
 		placeOnHighestRow(piece)
 		if not checkForFailure(piece):
 			if piece == getFocusPiece():
-				shoveOtherPiecesDown(piece)
+				forceShoveOtherPiecesDown(piece)
 			else:
 				placeAboveOtherPieces(piece)
 				sortActivePieces()
@@ -293,7 +293,7 @@ func placeAboveOtherPieces(piece:Piece):
 					placeAboveOtherPieces(piece)
 					return
 
-func shoveOtherPiecesDown(piece:Piece):
+func forceShoveOtherPiecesDown(piece:Piece):
 	var lowerPieces:Array[Piece] = []
 	for activePiece:Piece in activePieces:
 		if activePiece == piece:
@@ -301,16 +301,16 @@ func shoveOtherPiecesDown(piece:Piece):
 		lowerPieces.append(activePiece)
 	for lowerPiece:Piece in activePieces:
 		if lowerPiece != piece and lowerPiece.moveLock:
-			nudgePiece(piece.globalCells, lowerPiece, Vector2i.DOWN)
+			nudgePiece(piece.globalCells, lowerPiece, Vector2i.DOWN, true)
 
-func nudgePiece(cells:Array[Vector2i], piece:Piece, direction:Vector2i) -> bool: ## false = unblocked; true = blocked
+func nudgePiece(cells:Array[Vector2i], piece:Piece, direction:Vector2i, force:bool = false) -> bool: ## false = unblocked; true = blocked
 	if not piece.moveLock: 
 		return true
 	for cell:Vector2i in cells:
 		if piece.globalCells.has(cell):
-			var blocked:bool = tryMovePiece(piece, direction, Piece.MOVEMENT.SHOVE)
+			var blocked:bool = tryMovePiece(piece, direction, Piece.MOVEMENT.FORCED_SHOVE if force else Piece.MOVEMENT.SHOVE)
 			if activePieces.has(piece) and not blocked:
-				return nudgePiece(cells, piece, direction)
+				return nudgePiece(cells, piece, direction, force)
 			return blocked
 	return false
 
@@ -318,6 +318,7 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 	var translatedCells := getTranslatedCells(piece.globalCells, direction)
 	if areCellsOpen(translatedCells):
 		var blocked:bool = false
+		var forceful:bool = movementType == Piece.MOVEMENT.FORCED_SHOVE or Piece.MOVEMENT.HARD_DROP
 		piece.collidible = true # Allow collision now that we know it's in a free space
 		var collidingPieces:Array[Piece] = getAllCollidingPieces(translatedCells, piece)
 		if collidingPieces.size():
@@ -330,7 +331,7 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 						blocked = true
 			if not blocked:
 				for collidingPiece:Piece in collidingPieces:
-					var nudgeResult = nudgePiece(translatedCells, collidingPiece, direction)
+					var nudgeResult = nudgePiece(translatedCells, collidingPiece, direction, forceful)
 					if nudgeResult: blocked = true
 		if not blocked:
 			piece.move(direction)
@@ -340,7 +341,7 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 		return blocked
 	elif direction == Vector2i.DOWN:
 		match movementType:
-			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE: sfx_hardDrop.play()
+			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE: sfx_hardDrop.play()
 			_: sfx_drop.play()
 		lockPiece(piece)
 	return true
