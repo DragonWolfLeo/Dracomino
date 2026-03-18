@@ -177,7 +177,7 @@ func blockRemoveAnimationStep(delta):
 
 func requestPiece(allowMultiplePieces:bool = false):
 	if isGameOver: return
-	if activePieces.size() > MAX_PIECES or (activePieces.size() and not allowMultiplePieces):
+	if activePieces.size() > MAX_PIECES or (countNonlockedPieces() and not allowMultiplePieces):
 		return
 	fillPreview(2) # Generate one extra because we're gonna use it, and another so gravity drop can work
 	var poppedPiece:Piece
