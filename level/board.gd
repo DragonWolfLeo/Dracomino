@@ -319,9 +319,17 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 		piece.collidible = true # Allow collision now that we know it's in a free space
 		var collidingPieces:Array[Piece] = getAllCollidingPieces(translatedCells, piece)
 		if collidingPieces.size():
-			for collidingPiece:Piece in collidingPieces:
-				var nudgeResult = nudgePiece(translatedCells, collidingPiece, direction)
-				if nudgeResult: blocked = true
+			match movementType:
+				Piece.MOVEMENT.HORIZONTAL: 
+					if not DracominoHandler.activeAbilities.get("Horizontal Shove", 0):
+						blocked = true
+				Piece.MOVEMENT.SOFT_DROP:
+					if not DracominoHandler.activeAbilities.get("Vertical Shove", 0):
+						blocked = true
+			if not blocked:
+				for collidingPiece:Piece in collidingPieces:
+					var nudgeResult = nudgePiece(translatedCells, collidingPiece, direction)
+					if nudgeResult: blocked = true
 		if not blocked:
 			piece.move(direction)
 			match movementType:
