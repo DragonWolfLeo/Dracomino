@@ -198,6 +198,8 @@ func fillPreview(buffer:int = 0): ## This functions usually leads into createPie
 	var availableSpace:int = 0
 	if previewStorage: availableSpace += previewStorage.getAvailableSpace(buffer)
 
+	if availableSpace <= 0: return
+
 	pieces_requested.emit(createPiece, availableSpace)
 
 func createPiece(pieceName:StringName = "", pieceContext:DracominoHandler.StateItem = null) -> void:
