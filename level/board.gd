@@ -220,6 +220,7 @@ func spawnPiece(piece:Piece):
 		piece.movement_requested.connect(_on_Piece_movement_requested)
 		piece.new_cells_requested.connect(_on_Piece_new_cells_requested)
 		piece.ghost_cells_requested.connect(_on_Piece_ghost_cells_requested)
+		piece.focus_lost.connect(_on_Piece_focus_lost)
 		piece.makeActive()
 		piece.currentPosition = SPAWN_POINT + piece.origin
 		pieceTimer.reset()
@@ -250,6 +251,8 @@ func hold(index:int = -1):
 				piece.new_cells_requested.disconnect(_on_Piece_new_cells_requested)
 			if piece.ghost_cells_requested.is_connected(_on_Piece_ghost_cells_requested):
 				piece.ghost_cells_requested.disconnect(_on_Piece_ghost_cells_requested)
+			if piece.focus_lost.is_connected(_on_Piece_focus_lost):
+				piece.focus_lost.disconnect(_on_Piece_focus_lost)
 			popped = holdStorage.pushPiece(piece, false, index)
 			activePieces.erase(piece)
 			activePieces_changed.emit()
@@ -611,22 +614,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if focusPiece == null: return
 	
 	# Stuff that requires an active piece
-	if (event.is_action_pressed("moveRight") 
-	or event.is_action_pressed("moveLeft")
-	or event.is_action_pressed("moveDown")
-	):
-		pass
-		# # TODO: This doesn't do anything due to piece handling it
-		# # I know there's Input.get_vector, but a controller that can't reset perfectly to zero needs per-axis deadzones
-		# var inputVector:Vector2 = Vector2(
-		# 	Input.get_action_strength("moveRight") - Input.get_action_strength("moveLeft"),
-		# 	Input.get_action_strength("moveDown") if DracominoHandler.activeAbilities.get("Soft Drop", 0) else 0.0
-		# )
-		
-		# if inputVector.length_squared() < MIN_VELOCITY_LENGTH_SQUARED:
-		# 	inputVector = Vector2.ZERO
-
-	elif event.is_action_pressed("rotateClockwise"):
+	if event.is_action_pressed("rotateClockwise"):
 		if DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
 			sfx_rotate.play()
 			focusPiece.rotateClockwise()
@@ -681,9 +669,12 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 			piece.move(dir)
 			return
 
-
 func _on_Piece_ghost_cells_requested(_piece:Piece, _ghost:GhostPiece):
 	updateAllGhosts()			
+
+func _on_Piece_focus_lost():
+	var focusPiece:Piece = getFocusPiece()
+	if focusPiece: focusPiece.isFocus = true
 
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	conn.deathlink.connect(_on_deathlink)
@@ -750,10 +741,12 @@ func _on_DracominoState_slot_context_hash_updated(ctx:int) -> void:
 	rotate_randomSaveState = rotate_random.state
 
 func _on_activePieces_changed():
-	## Make ghosts have a gradient
 	var a:float = 1.0
+	var focusPiece:Piece = getFocusPiece()
 	for piece in activePieces:
+		piece.isFocus = piece == focusPiece
+		## Make ghosts have a gradient
 		if piece.ghost:
 			piece.ghost.modulate.a = clamp(a, 0.0, 1.0)
-			if piece != getFocusPiece() and not piece.moveLock:
+			if piece != focusPiece and not piece.moveLock:
 				a -= OPACITY_REDUCTION_PER_GHOST

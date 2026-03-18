@@ -88,9 +88,12 @@ var prettyName:String = "Piece"
 var context:DracominoHandler.StateItem = null
 var moveLock:bool = false: ## Prevent moving this anymore
 	set(value):
+		moveLock = value
 		if horizontalTimer: horizontalTimer.paused = value
 		if softDropTimer: softDropTimer.paused = value
-		moveLock = value
+		if value:
+			isFocus = false
+			set_process_unhandled_input(false)
 var holdLock:bool = false ## Prevent from holding this anymore
 var collidible:bool = false: ## Enable when piece doesn't overlap with another
 	set(value):
@@ -98,44 +101,48 @@ var collidible:bool = false: ## Enable when piece doesn't overlap with another
 		modulate.a = 1.0 if collidible or not Config.debugMode else 0.7
 var playHardDropSound:bool = false
 var ghost:GhostPiece
+var isFocus:bool: ## Decides whether or not piece listens to inputs
+	set(value):
+		if isFocus == value: return
+		isFocus = value
+		set_process_unhandled_input(value)
+		focus_lost.emit()
 
 static var GHOSTPIECE_SCENE:PackedScene = load("res://object/ghostpiece.tscn")
 
 signal movement_requested(piece:Piece, direction:Vector2i)
 signal new_cells_requested(piece:Piece, cells:Array[Vector2i])
 signal ghost_cells_requested(piece:Piece, ghostPiece:GhostPiece)
+signal focus_lost()
 
 #==== Virtuals ======
 func _ready() -> void:
 	SignalBus.getSignal("setting_changed", "gravity").connect(_on_gravity_setting_changed)
 	_on_gravity_setting_changed()
 
-func _physics_process(delta: float) -> void:
-	var moved := Vector2i.ZERO
-	var movementType:int = MOVEMENT.NONE
-	if not moveLock:
-		if Input.is_action_just_pressed("moveLeft"):
-			movementType = MOVEMENT.HORIZONTAL
-			moved += Vector2i.LEFT
-			horizontalTimer.start()
-		if Input.is_action_just_pressed("moveRight"):
-			movementType = MOVEMENT.HORIZONTAL
-			moved += Vector2i.RIGHT
-			horizontalTimer.start()
-		if Input.is_action_just_pressed("moveDown") and DracominoHandler.activeAbilities.get("Soft Drop", 0):
-			movementType = MOVEMENT.SOFT_DROP
-			moved = Vector2i.DOWN
-			softDropTimer.start()
-			# Avoid falling too soon
-			gravityTimer.start()
-	
-	if moved != Vector2i.ZERO:
-		movement_requested.emit(self, moved, movementType)
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("moveLeft") and Input.is_action_just_pressed("moveLeft"):
+		horizontalTimer.start(HORIZONTAL_WAIT_TIME)
+		movement_requested.emit(self, Vector2i.LEFT, MOVEMENT.HORIZONTAL)
+		get_viewport().set_input_as_handled()
+		return
+	elif event.is_action_pressed("moveRight") and Input.is_action_just_pressed("moveRight"):
+		horizontalTimer.start(HORIZONTAL_WAIT_TIME)
+		movement_requested.emit(self, Vector2i.RIGHT, MOVEMENT.HORIZONTAL)
+		get_viewport().set_input_as_handled()
+		return
+	elif event.is_action_pressed("moveDown") and Input.is_action_just_pressed("moveDown"):
+		softDropTimer.start(SOFT_DROP_WAIT_TIME)
+		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP)
+		# Avoid falling too soon
+		gravityTimer.start()
+		get_viewport().set_input_as_handled()
+		return
 
 #==== Functions ======
 func makeActive():
 	process_mode = Node.PROCESS_MODE_INHERIT
-	set_process_input(true)
+	set_process_unhandled_input(isFocus)
 	show()
 	if DracominoHandler.activeAbilities.get("Ghost Piece", 0) and ghost:
 		ghost.show()
@@ -146,7 +153,7 @@ func makeActive():
 
 func makeLimbo():
 	process_mode = Node.PROCESS_MODE_DISABLED
-	set_process_input(false)
+	set_process_unhandled_input(false)
 	hide()
 
 func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null) -> void:
@@ -246,6 +253,7 @@ func move(direction:Vector2i):
 
 # Events
 func _on_HorizontalTimer_timeout():
+	if not isFocus: return
 	var moved = Vector2i.ZERO
 	if Input.is_action_pressed("moveLeft"):
 		moved = Vector2i.LEFT
@@ -259,6 +267,7 @@ func _on_HorizontalTimer_timeout():
 	movement_requested.emit(self, moved, MOVEMENT.HORIZONTAL)
 
 func _on_SoftDropTimer_timeout():
+	if not isFocus: return
 	if Input.is_action_pressed("moveDown") and DracominoHandler.activeAbilities.get("Soft Drop", 0):
 		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP)
 		softDropTimer.wait_time = SOFT_DROP_REPEAT_WAIT_TIME
