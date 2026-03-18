@@ -331,8 +331,6 @@ func forceShoveOtherPiecesDown(piece:Piece):
 				lockPiece(lowerPiece)
 
 func nudgePiece(cells:Array[Vector2i], piece:Piece, direction:Vector2i, force:bool = false) -> bool: ## false = unblocked; true = blocked
-	if not piece.moveLock: 
-		return true
 	for cell:Vector2i in cells:
 		if piece.globalCells.has(cell):
 			var blocked:bool = tryMovePiece(piece, direction, Piece.MOVEMENT.FORCED_SHOVE if force else Piece.MOVEMENT.SHOVE)
