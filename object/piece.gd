@@ -66,6 +66,7 @@ var HARD_DROP_WAIT_TIME:float = 0.01
 var SOFT_DROP_REPEAT_WAIT_TIME:float = .04
 @onready var HORIZONTAL_WAIT_TIME:float = horizontalTimer.wait_time
 var HORIZONTAL_REPEAT_WAIT_TIME:float = .075
+var USE_ALT_ROTATE:bool = true # TODO: Make an option
 
 enum MOVEMENT {
 	NONE = -1,
@@ -121,7 +122,17 @@ func _ready() -> void:
 	_on_gravity_setting_changed()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("moveLeft") and Input.is_action_just_pressed("moveLeft"):
+	if event.is_action_pressed("rotateClockwise"):
+		if DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
+			rotateClockwise()
+		elif USE_ALT_ROTATE and DracominoHandler.activeAbilities.get("Rotate Counterclockwise", 0):
+			rotateCounterclockwise()
+	elif event.is_action_pressed("rotateCounterclockwise"):
+		if DracominoHandler.activeAbilities.get("Rotate Counterclockwise", 0):
+			rotateCounterclockwise()
+		elif USE_ALT_ROTATE and DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
+			rotateClockwise()
+	elif event.is_action_pressed("moveLeft") and Input.is_action_just_pressed("moveLeft"):
 		horizontalTimer.start(HORIZONTAL_WAIT_TIME)
 		movement_requested.emit(self, Vector2i.LEFT, MOVEMENT.HORIZONTAL)
 		get_viewport().set_input_as_handled()

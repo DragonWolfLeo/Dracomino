@@ -7,7 +7,6 @@ class_name Board extends TileMapLayer
 const BOUNDS := Rect2i(0, 0, 10, 20)
 const SPAWN_POINT := BOUNDS.position + Vector2i(BOUNDS.size.x / 2, 0)
 var DANGER_ZONE := BOUNDS.grow_individual(-2, 0, -2, -17)
-var USE_ALT_ROTATE:bool = true # TODO: Make an option
 var ALLOW_GRAVITY_DROP:bool = true # TODO: Make an option
 var OPACITY_REDUCTION_PER_GHOST:float = 0.4
 var MAX_PIECES:int = 8
@@ -584,12 +583,15 @@ func updateAllGhosts():
 			relativePosition += Vector2i.DOWN
 
 #==== Events =====
+func _input(event: InputEvent) -> void:
+	if event.is_action_type():
+		inputTimer.reset()
+
 func _unhandled_input(event: InputEvent) -> void:
 	var focusPiece:Piece = getFocusPiece()
 	if not isGameOver:
 		if Config.getSetting("debug", false) and event.is_action_pressed("spawn"):
 			requestPiece(true)
-			inputTimer.reset()
 			get_viewport().set_input_as_handled()
 			return
 		elif event.is_action_pressed("hold"):
@@ -600,7 +602,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif not focusPiece:
 			if event.is_action_pressed("ui_accept"):
 				requestPiece.call_deferred()
-				inputTimer.reset()
 				get_viewport().set_input_as_handled()
 				return
 		
@@ -623,21 +624,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if focusPiece == null: return
 	
 	# Stuff that requires an active piece
-	if event.is_action_pressed("rotateClockwise"):
-		if DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
-			sfx_rotate.play()
-			focusPiece.rotateClockwise()
-		elif USE_ALT_ROTATE and DracominoHandler.activeAbilities.get("Rotate Counterclockwise", 0):
-			sfx_rotate.play()
-			focusPiece.rotateCounterclockwise()
-	elif event.is_action_pressed("rotateCounterclockwise"):
-		if DracominoHandler.activeAbilities.get("Rotate Counterclockwise", 0):
-			sfx_rotate.play()
-			focusPiece.rotateCounterclockwise()
-		elif USE_ALT_ROTATE and DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
-			sfx_rotate.play()
-			focusPiece.rotateClockwise()
-	elif event.is_action_pressed("hardDrop") and Input.is_action_just_pressed("hardDrop"): # Double check to ignore events from slight axis movement
+	if event.is_action_pressed("hardDrop") and Input.is_action_just_pressed("hardDrop"): # Double check to ignore events from slight axis movement
 		if DracominoHandler.activeAbilities.get("Hard Drop", 0):
 			focusPiece.hardDrop()
 			if not getFocusPiece(): requestPiece(true)
@@ -653,7 +640,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	else:
 		return
 	
-	inputTimer.reset()
 	get_viewport().set_input_as_handled()
 
 func _on_holdSlotCycleTimer_timeout(callback:Callable):
@@ -663,6 +649,7 @@ func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:
 	tryMovePiece(piece, direction, movementType)
 
 func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
+	sfx_rotate.play()
 	var dirs:Array[Vector2i] = [Vector2i.ZERO]
 	if DracominoHandler.activeAbilities.get("Kick", 0):
 		# Add more directions to push when kick is active
