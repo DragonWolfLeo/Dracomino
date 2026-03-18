@@ -1,3 +1,8 @@
+Version 0.2.4 (dev-alpha3)
+ - Turn Vertical Shove and Horizontal Shove into abilities
+ - Horizontal Shove is disabled
+ - Spawn next piece even if another is still dropping
+
 Version 0.2.4 (dev-alpha2)
  - Pieces avoid being placed in each other
  - Pieces can be shoved by other pieces
