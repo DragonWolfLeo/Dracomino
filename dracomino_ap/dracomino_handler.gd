@@ -158,14 +158,19 @@ func sendVictory():
 
 func upgradeFeatures(generatedVersion:String = "0.0.0"): ## Add new features to old games
 	if UserData.versionIsOlderThan(generatedVersion, "0.2.2"):
-		# TODO: Make an array of ids to retrofit?
-		var item := CONSTANTS.ITEMS[7] # Kick
-		if item:
-			collectedAbilities[item.id] = 1
-			if activeAbilities.get(item.prettyName, 0) < collectedAbilities[item.id]:
-				activeAbilities[item.prettyName] = collectedAbilities[item.id]
-				activeAbilities_updated.emit(activeAbilities)
-				notification_signal.emit("Retrofitted {item} into your game!".format({item=item.prettyName}), Color.YELLOW_GREEN, false)
+		var retrofittedAbilities:Array[StringName] = [
+			"Kick",
+			"Vertical Shove",
+		]
+		for abilityName:StringName in retrofittedAbilities:
+			var id:Variant = CONSTANTS.ITEM_NAME_TO_ID.get(abilityName)
+			var item := CONSTANTS.ITEMS[id] if id != null else null
+			if item:
+				collectedAbilities[item.id] = 1
+				if activeAbilities.get(item.prettyName, 0) < collectedAbilities[item.id]:
+					activeAbilities[item.prettyName] = collectedAbilities[item.id]
+					activeAbilities_updated.emit(activeAbilities)
+					notification_signal.emit("Retrofitted {item} into your game!".format({item=item.prettyName}), Color.YELLOW_GREEN, false)
 		
 
 #===== Events =====
