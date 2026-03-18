@@ -142,7 +142,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		movement_requested.emit(self, Vector2i.RIGHT, MOVEMENT.HORIZONTAL)
 		get_viewport().set_input_as_handled()
 		return
-	elif event.is_action_pressed("moveDown") and Input.is_action_just_pressed("moveDown"):
+	elif event.is_action_pressed("moveDown") and Input.is_action_just_pressed("moveDown") and DracominoHandler.activeAbilities.get("Soft Drop", 0):
 		softDropTimer.start(SOFT_DROP_WAIT_TIME)
 		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP)
 		# Avoid falling too soon
