@@ -138,9 +138,19 @@ func _process(delta):
 #===== Functions ======
 func getFocusPiece() -> Piece:
 	for piece in activePieces:
-		if not piece.moveLock:
+		if piece.isFocus:
 			return piece
 	return null
+
+func chooseNewFocusPiece() -> Piece:
+	var focusPiece:Piece = null
+	for piece in activePieces:
+		if not piece.moveLock and not focusPiece:
+			piece.isFocus = true
+			focusPiece = piece
+		else:
+			piece.isFocus = false
+	return focusPiece
 
 func countNonlockedPieces() -> int:
 	var num = activePieces.reduce(
@@ -226,12 +236,12 @@ func spawnPiece(piece:Piece):
 		pieceTimer.reset()
 		placeOnHighestRow(piece)
 		if not checkForFailure(piece):
-			if piece == getFocusPiece():
+			activePieces_changed.emit()
+			if piece.isFocus:
 				forceShoveOtherPiecesDown(piece)
 			else:
 				placeAboveOtherPieces(piece)
 				sortActivePieces()
-			activePieces_changed.emit()
 			piece_spawned.emit(piece)
 
 func hold(index:int = -1):
@@ -352,9 +362,8 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 func sortActivePieces():
 	activePieces.sort_custom(
 		func(a:Piece, b:Piece):
-			var focusPiece = getFocusPiece()
-			if a == focusPiece: return true
-			if b == focusPiece: return false
+			if a.isFocus: return true
+			if b.isFocus: return false
 			if a.moveLock and not b.moveLock:
 				return true
 			if b.moveLock and not a.moveLock:
@@ -673,8 +682,7 @@ func _on_Piece_ghost_cells_requested(_piece:Piece, _ghost:GhostPiece):
 	updateAllGhosts()			
 
 func _on_Piece_focus_lost():
-	var focusPiece:Piece = getFocusPiece()
-	if focusPiece: focusPiece.isFocus = true
+	chooseNewFocusPiece()
 
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	conn.deathlink.connect(_on_deathlink)
@@ -742,11 +750,10 @@ func _on_DracominoState_slot_context_hash_updated(ctx:int) -> void:
 
 func _on_activePieces_changed():
 	var a:float = 1.0
-	var focusPiece:Piece = getFocusPiece()
+	chooseNewFocusPiece()
 	for piece in activePieces:
-		piece.isFocus = piece == focusPiece
 		## Make ghosts have a gradient
 		if piece.ghost:
 			piece.ghost.modulate.a = clamp(a, 0.0, 1.0)
-			if piece != focusPiece and not piece.moveLock:
+			if not piece.isFocus and not piece.moveLock:
 				a -= OPACITY_REDUCTION_PER_GHOST
