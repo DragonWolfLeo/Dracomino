@@ -141,7 +141,7 @@ func getFocusPiece() -> Piece:
 			return piece
 	return null
 
-func chooseNewFocusPiece() -> Piece:
+func chooseNewFocusPiece(requestIfNone:bool = false) -> void:
 	var focusPiece:Piece = null
 	for piece in activePieces:
 		if not piece.moveLock and not focusPiece:
@@ -149,7 +149,8 @@ func chooseNewFocusPiece() -> Piece:
 			focusPiece = piece
 		else:
 			piece.isFocus = false
-	return focusPiece
+	if requestIfNone and not focusPiece:
+		requestPiece(true)
 
 func countNonlockedPieces() -> int:
 	var num = activePieces.reduce(
@@ -230,6 +231,7 @@ func spawnPiece(piece:Piece):
 		piece.new_cells_requested.connect(_on_Piece_new_cells_requested)
 		piece.ghost_cells_requested.connect(_on_Piece_ghost_cells_requested)
 		piece.focus_lost.connect(_on_Piece_focus_lost)
+		piece.tree_exiting.connect(_on_Piece_tree_exiting.bind(piece))
 		piece.makeActive()
 		piece.currentPosition = SPAWN_POINT + piece.origin
 		pieceTimer.reset()
@@ -242,6 +244,13 @@ func spawnPiece(piece:Piece):
 				placeAboveOtherPieces(piece)
 				sortActivePieces()
 			piece_spawned.emit(piece)
+
+func deletePiece(piece:Piece): ## Remove a piece and immediately update activePieces
+	if piece.focus_lost.is_connected(_on_Piece_focus_lost):
+		piece.focus_lost.disconnect(_on_Piece_focus_lost)
+	activePieces.erase(piece)
+	piece.queue_free()
+	activePieces_changed.emit()
 
 func hold(index:int = -1):
 	var piece:Piece = getFocusPiece()
@@ -262,9 +271,10 @@ func hold(index:int = -1):
 				piece.ghost_cells_requested.disconnect(_on_Piece_ghost_cells_requested)
 			if piece.focus_lost.is_connected(_on_Piece_focus_lost):
 				piece.focus_lost.disconnect(_on_Piece_focus_lost)
+			if piece.tree_exiting.is_connected(activePieces.erase):
+				piece.tree_exiting.disconnect(activePieces.erase)
 			popped = holdStorage.pushPiece(piece, false, index)
 			activePieces.erase(piece)
-			activePieces_changed.emit()
 		else:
 			popped = holdStorage.popPiece(index)
 		if popped:
@@ -273,6 +283,7 @@ func hold(index:int = -1):
 		else:
 			requestPiece(true)
 		if succeeded:
+			activePieces_changed.emit()
 			sfx_hold.play()
 
 func isTileOccupied(coords:Vector2i) -> bool:
@@ -390,8 +401,6 @@ func gameOver(deathContext:DracominoUtil.DeathContext = null):
 	isGameOver = true
 	for piece in activePieces:
 		lockPiece(piece)
-	activePieces.clear()
-	activePieces_changed.emit()
 	game_over_earned.emit()
 	if deathContext and Archipelago.is_deathlink():
 		if Archipelago.conn:
@@ -432,9 +441,8 @@ func resetGame():
 
 	# Delete current pieces
 	for piece in activePieces:
-		piece.queue_free()
-	activePieces.clear()
-	activePieces_changed.emit()
+		deletePiece(piece)
+	activePieces.clear() # Clear now to avoid weird race condition
 
 	# Clear previews and hold
 	if previewStorage: previewStorage.clear()
@@ -448,9 +456,7 @@ func resetGame():
 	rotate_random.state = rotate_randomSaveState
 
 	# Clear board
-	for y in range(BOUNDS.position.y, BOUNDS.end.y):
-		for x in range(BOUNDS.position.x, BOUNDS.end.x):
-			set_cell(Vector2i(x, y))
+	clear()
 	game_started.emit()
 
 	# Create new piece
@@ -472,15 +478,10 @@ func lockPiece(piece:Piece):
 				
 	if pickedUpItem:
 		sfx_itemPickup.play()
-	activePieces.erase(piece)
-	activePieces_changed.emit()
-	piece.queue_free()
+	deletePiece(piece)
 	boardIsFresh = false
 	
-	var focusPiece:Piece = getFocusPiece() # Check collisions with new piece
-	if focusPiece and checkForFailure(focusPiece):
-		pass # Game over
-	elif not isGameOver:
+	if not isGameOver:
 		var fullRows = checkForFullRows()
 		if fullRows.size() > 0:
 			linesCleared += fullRows.size()
@@ -488,8 +489,6 @@ func lockPiece(piece:Piece):
 			var clearedlines = fullRows.map(func(lineNum): return BOUNDS.end.y - lineNum -1)
 			await rowClearAnimation_finished
 			lines_cleared.emit(clearedlines)
-		else:
-			requestPiece.call_deferred()
 
 func checkForFullRows() -> Array:
 	var fullRows = []
@@ -627,7 +626,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("hardDrop") and Input.is_action_just_pressed("hardDrop"): # Double check to ignore events from slight axis movement
 		if DracominoHandler.activeAbilities.get("Hard Drop", 0):
 			focusPiece.hardDrop()
-			if not getFocusPiece(): requestPiece(true)
 		elif (
 			ALLOW_GRAVITY_DROP 
 			and DracominoHandler.activeAbilities.get("Gravity", 0)
@@ -636,7 +634,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		):
 			# Only gravity drop if it's not your last piece
 			focusPiece.gravityDrop()
-			if not getFocusPiece(): requestPiece(true)
 	else:
 		return
 	
@@ -669,7 +666,12 @@ func _on_Piece_ghost_cells_requested(_piece:Piece, _ghost:GhostPiece):
 	updateAllGhosts()			
 
 func _on_Piece_focus_lost():
-	chooseNewFocusPiece()
+	chooseNewFocusPiece(true)
+
+func _on_Piece_tree_exiting(piece:Piece): # Fallback if piece didn't delete properly
+	if activePieces.has(piece):
+		activePieces.erase(piece)
+		activePieces_changed.emit()
 
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	conn.deathlink.connect(_on_deathlink)
@@ -737,7 +739,7 @@ func _on_DracominoState_slot_context_hash_updated(ctx:int) -> void:
 
 func _on_activePieces_changed():
 	var a:float = 1.0
-	chooseNewFocusPiece()
+	chooseNewFocusPiece(true)
 	for piece in activePieces:
 		## Make ghosts have a gradient
 		if piece.ghost:
