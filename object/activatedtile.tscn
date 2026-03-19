@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://bqbrxme55446w"]
+
+[ext_resource type="Texture2D" uid="uid://b1ycr243kmd45" path="res://assets/art/activatedtile.png" id="1_8iaa4"]
+[ext_resource type="Script" uid="uid://chkpp4k1kfxqp" path="res://object/activatedtile.gd" id="2_pnwat"]
+
+[node name="ActivatedTile" type="Sprite2D"]
+texture = ExtResource("1_8iaa4")
+script = ExtResource("2_pnwat")
