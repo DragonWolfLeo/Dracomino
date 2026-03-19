@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=4 uid="uid://boraki5ygsa0g"]
+[gd_scene load_steps=17 format=4 uid="uid://boraki5ygsa0g"]
 
 [ext_resource type="TileSet" uid="uid://bik73l7fn0v3b" path="res://resource/tileset/dracomino_piece.tres" id="1_v832b"]
 [ext_resource type="TileSet" uid="uid://ci8crt0j6nrbr" path="res://resource/tileset/dracomino_board.tres" id="3_v832b"]
@@ -7,6 +7,7 @@
 [ext_resource type="AudioStream" uid="uid://rybtdauvlffp" path="res://assets/audio/sfx/drop.wav" id="6_flfvq"]
 [ext_resource type="AudioStream" uid="uid://0ovedth7jefi" path="res://assets/audio/sfx/rotate.wav" id="6_v832b"]
 [ext_resource type="AudioStream" uid="uid://c8npieq36og3i" path="res://assets/audio/sfx/movedown.wav" id="7_80s4l"]
+[ext_resource type="AudioStream" uid="uid://cknqj4jveeiuv" path="res://assets/audio/sfx/rotate_fail.wav" id="7_liqvo"]
 [ext_resource type="AudioStream" uid="uid://njmnbqn1jao0" path="res://assets/audio/sfx/harddrop.wav" id="7_wxhti"]
 [ext_resource type="AudioStream" uid="uid://bb2rusaqgo5ka" path="res://assets/audio/sfx/hold.wav" id="8_0sai4"]
 [ext_resource type="AudioStream" uid="uid://cwivvkmb6ffbb" path="res://assets/audio/sfx/movehorizontal.wav" id="8_akaqt"]
@@ -42,6 +43,11 @@ visible = false
 [node name="SFX_Rotate" type="AudioStreamPlayer" parent="."]
 process_mode = 3
 stream = ExtResource("6_v832b")
+bus = &"Sfx"
+
+[node name="SFX_RotateFail" type="AudioStreamPlayer" parent="."]
+process_mode = 3
+stream = ExtResource("7_liqvo")
 bus = &"Sfx"
 
 [node name="SFX_MoveDown" type="AudioStreamPlayer" parent="."]

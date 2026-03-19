@@ -34,6 +34,7 @@ static var SET_TILE_ATLAS_ROW:int = 1
 
 @onready var masterCoin:Node2D = $MasterCoin
 @onready var sfx_rotate:AudioStreamPlayer = $SFX_Rotate
+@onready var sfx_rotateFail:AudioStreamPlayer = $SFX_RotateFail
 @onready var sfx_move:AudioStreamPlayer = $SFX_Move
 @onready var sfx_moveDown:AudioStreamPlayer = $SFX_MoveDown
 @onready var sfx_drop:AudioStreamPlayer = $SFX_Drop
@@ -649,7 +650,6 @@ func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:
 	tryMovePiece(piece, direction, movementType)
 
 func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
-	sfx_rotate.play()
 	var dirs:Array[Vector2i] = [Vector2i.ZERO]
 	if DracominoHandler.activeAbilities.get("Kick", 0):
 		# Add more directions to push when kick is active
@@ -663,7 +663,9 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 		if areCellsOpen(translatedCells) and not getCollidingPiece(translatedCells, piece):
 			piece.setCells(cells)
 			piece.move(dir)
+			sfx_rotate.play()
 			return
+	sfx_rotateFail.play()
 
 func _on_Piece_ghost_cells_requested(_piece:Piece, _ghost:GhostPiece):
 	updateAllGhosts()			
