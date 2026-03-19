@@ -1,3 +1,14 @@
+Version 0.2.4 (dev-alpha3)
+ - Turn Vertical Shove and Horizontal Shove into abilities
+ - Horizontal Shove is disabled
+ - Spawn next piece even if another is still dropping
+ - Make active pieces shovable
+ - Allow only a single piece control at a time
+ - Next piece spawns happen instantly even during Soft Drop line clear animation
+ - Non-focused pieces are always affected by gravity
+ - Line clears burst into magic crystals
+ - Add rotate failure sound
+
 Version 0.2.4 (dev-alpha2)
  - Pieces avoid being placed in each other
  - Pieces can be shoved by other pieces

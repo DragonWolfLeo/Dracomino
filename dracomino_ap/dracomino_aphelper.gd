@@ -91,12 +91,14 @@ func _ready() -> void:
 
 #===== Events =====
 func _on_Theme_update_theme(theme_res:Theme) -> void:
-	var parent := get_parent() as Control
-	if parent and theme_res:
+	var parent:Node = get_parent()
+	if parent is Control and theme_res:
 		parent.theme = theme_res
+	else:
+		printerr("dracomino_aphelper.gd: Failed to update theme")
 
 func _on_Archipelago_tag_change():
-	var isDeathLink := Archipelago.is_deathlink()
+	var isDeathLink:bool = Archipelago.is_deathlink()
 	if btn_deathLink:
 		btn_deathLink.set_pressed_no_signal(isDeathLink)
 	if btn_deathOnRestart:

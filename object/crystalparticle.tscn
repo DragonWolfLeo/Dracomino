@@ -1,0 +1,30 @@
+[gd_scene load_steps=3 format=3 uid="uid://binx2s1s2fvf0"]
+
+[ext_resource type="Texture2D" uid="uid://s1sges7avk27" path="res://assets/art/crystalfragment.png" id="1_jqylm"]
+
+[sub_resource type="Gradient" id="Gradient_jqylm"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
+
+[node name="CrystalParticle" type="CPUParticles2D"]
+emitting = false
+amount = 2
+texture = ExtResource("1_jqylm")
+one_shot = true
+explosiveness = 1.0
+fract_delta = false
+local_coords = true
+emission_shape = 3
+emission_rect_extents = Vector2(8, 8)
+direction = Vector2(0, -1)
+spread = 0.0
+gravity = Vector2(0, 400)
+initial_velocity_min = 15.0
+initial_velocity_max = 20.0
+angular_velocity_min = -360.0
+angular_velocity_max = 360.0
+damping_max = 100.0
+scale_amount_min = 0.5
+split_scale = true
+scale_curve_x = null
+scale_curve_y = null
+color_ramp = SubResource("Gradient_jqylm")

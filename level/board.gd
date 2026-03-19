@@ -7,7 +7,6 @@ class_name Board extends TileMapLayer
 const BOUNDS := Rect2i(0, 0, 10, 20)
 const SPAWN_POINT := BOUNDS.position + Vector2i(BOUNDS.size.x / 2, 0)
 var DANGER_ZONE := BOUNDS.grow_individual(-2, 0, -2, -17)
-var USE_ALT_ROTATE:bool = true # TODO: Make an option
 var ALLOW_GRAVITY_DROP:bool = true # TODO: Make an option
 var OPACITY_REDUCTION_PER_GHOST:float = 0.4
 var MAX_PIECES:int = 8
@@ -35,6 +34,7 @@ static var SET_TILE_ATLAS_ROW:int = 1
 
 @onready var masterCoin:Node2D = $MasterCoin
 @onready var sfx_rotate:AudioStreamPlayer = $SFX_Rotate
+@onready var sfx_rotateFail:AudioStreamPlayer = $SFX_RotateFail
 @onready var sfx_move:AudioStreamPlayer = $SFX_Move
 @onready var sfx_moveDown:AudioStreamPlayer = $SFX_MoveDown
 @onready var sfx_drop:AudioStreamPlayer = $SFX_Drop
@@ -138,9 +138,20 @@ func _process(delta):
 #===== Functions ======
 func getFocusPiece() -> Piece:
 	for piece in activePieces:
-		if not piece.moveLock:
+		if piece.isFocus:
 			return piece
 	return null
+
+func chooseNewFocusPiece(requestIfNone:bool = false) -> void:
+	var focusPiece:Piece = null
+	for piece in activePieces:
+		if not piece.moveLock and not focusPiece:
+			piece.isFocus = true
+			focusPiece = piece
+		else:
+			piece.isFocus = false
+	if requestIfNone and not focusPiece:
+		requestPiece(true)
 
 func countNonlockedPieces() -> int:
 	var num = activePieces.reduce(
@@ -158,26 +169,27 @@ func blockRemoveAnimationStep(delta):
 	
 	animation_timer += delta
 	
-	if animation_timer >= 0.08: 	#this number controls at which speed blocks get removed
+	if animation_timer >= 0.07: 	#this number controls at which speed blocks get removed
 		animation_timer = 0
-		for y in rowsToClear:
-			set_cell(Vector2i(blocksToClear.front(),y))
-			set_cell(Vector2i(blocksToClear.back(),y))
-		blocksToClear.pop_front()
-		blocksToClear.pop_back()
+		if blocksToClear.size():
+			for y in rowsToClear:
+				set_cell(Vector2i(blocksToClear.front(),y),1,Vector2i.ZERO,1)
+				set_cell(Vector2i(blocksToClear.back(),y),1,Vector2i.ZERO,1)
+			blocksToClear.pop_front()
+			blocksToClear.pop_back()
 	
-	if animation_started and blocksToClear.size() == 0: 	#Animation has finished
-		for i in rowsToClear:
-			pushDownRows(i)
-		rowsToClear = []
-		animation_started = false
-		rowClearAnimation_finished.emit()
-		updateAllGhosts()
-		requestPiece()
+		elif animation_started and blocksToClear.size() == 0: 	#Animation has finished
+			for i in rowsToClear:
+				pushDownRows(i)
+			rowsToClear = []
+			animation_started = false
+			rowClearAnimation_finished.emit()
+			updateAllGhosts()
+			requestPiece()
 
 func requestPiece(allowMultiplePieces:bool = false):
 	if isGameOver: return
-	if activePieces.size() > MAX_PIECES or (activePieces.size() and not allowMultiplePieces):
+	if activePieces.size() > MAX_PIECES or (countNonlockedPieces() and not allowMultiplePieces):
 		return
 	fillPreview(2) # Generate one extra because we're gonna use it, and another so gravity drop can work
 	var poppedPiece:Piece
@@ -197,6 +209,8 @@ func fillPreview(buffer:int = 0): ## This functions usually leads into createPie
 
 	var availableSpace:int = 0
 	if previewStorage: availableSpace += previewStorage.getAvailableSpace(buffer)
+
+	if availableSpace <= 0: return
 
 	pieces_requested.emit(createPiece, availableSpace)
 
@@ -218,18 +232,27 @@ func spawnPiece(piece:Piece):
 		piece.movement_requested.connect(_on_Piece_movement_requested)
 		piece.new_cells_requested.connect(_on_Piece_new_cells_requested)
 		piece.ghost_cells_requested.connect(_on_Piece_ghost_cells_requested)
+		piece.focus_lost.connect(_on_Piece_focus_lost)
+		piece.tree_exiting.connect(_on_Piece_tree_exiting.bind(piece))
 		piece.makeActive()
 		piece.currentPosition = SPAWN_POINT + piece.origin
 		pieceTimer.reset()
 		placeOnHighestRow(piece)
 		if not checkForFailure(piece):
-			if piece == getFocusPiece():
-				shoveOtherPiecesDown(piece)
+			activePieces_changed.emit()
+			if piece.isFocus:
+				forceShoveOtherPiecesDown(piece)
 			else:
 				placeAboveOtherPieces(piece)
 				sortActivePieces()
-			activePieces_changed.emit()
 			piece_spawned.emit(piece)
+
+func deletePiece(piece:Piece): ## Remove a piece and immediately update activePieces
+	if piece.focus_lost.is_connected(_on_Piece_focus_lost):
+		piece.focus_lost.disconnect(_on_Piece_focus_lost)
+	activePieces.erase(piece)
+	piece.queue_free()
+	activePieces_changed.emit()
 
 func hold(index:int = -1):
 	var piece:Piece = getFocusPiece()
@@ -248,9 +271,12 @@ func hold(index:int = -1):
 				piece.new_cells_requested.disconnect(_on_Piece_new_cells_requested)
 			if piece.ghost_cells_requested.is_connected(_on_Piece_ghost_cells_requested):
 				piece.ghost_cells_requested.disconnect(_on_Piece_ghost_cells_requested)
+			if piece.focus_lost.is_connected(_on_Piece_focus_lost):
+				piece.focus_lost.disconnect(_on_Piece_focus_lost)
+			if piece.tree_exiting.is_connected(_on_Piece_tree_exiting):
+				piece.tree_exiting.disconnect(_on_Piece_tree_exiting)
 			popped = holdStorage.pushPiece(piece, false, index)
 			activePieces.erase(piece)
-			activePieces_changed.emit()
 		else:
 			popped = holdStorage.popPiece(index)
 		if popped:
@@ -259,10 +285,11 @@ func hold(index:int = -1):
 		else:
 			requestPiece(true)
 		if succeeded:
+			activePieces_changed.emit()
 			sfx_hold.play()
 
 func isTileOccupied(coords:Vector2i) -> bool:
-	return get_cell_atlas_coords(coords).y == SET_TILE_ATLAS_ROW
+	return get_cell_source_id(coords) != -1
 
 func placeOnHighestRow(piece:Piece):
 	var greatestY:int = 0
@@ -291,7 +318,7 @@ func placeAboveOtherPieces(piece:Piece):
 					placeAboveOtherPieces(piece)
 					return
 
-func shoveOtherPiecesDown(piece:Piece):
+func forceShoveOtherPiecesDown(piece:Piece):
 	var lowerPieces:Array[Piece] = []
 	for activePiece:Piece in activePieces:
 		if activePiece == piece:
@@ -299,16 +326,18 @@ func shoveOtherPiecesDown(piece:Piece):
 		lowerPieces.append(activePiece)
 	for lowerPiece:Piece in activePieces:
 		if lowerPiece != piece and lowerPiece.moveLock:
-			nudgePiece(piece.globalCells, lowerPiece, Vector2i.DOWN)
+			var nudgeResult:bool = nudgePiece(piece.globalCells, lowerPiece, Vector2i.DOWN, true)
+			if nudgeResult:
+				# Can't move, so lock pieces, and instantly lose
+				lockPiece(piece)
+				lockPiece(lowerPiece)
 
-func nudgePiece(cells:Array[Vector2i], piece:Piece, direction:Vector2i) -> bool: ## false = unblocked; true = blocked
-	if not piece.moveLock: 
-		return true
+func nudgePiece(cells:Array[Vector2i], piece:Piece, direction:Vector2i, force:bool = false) -> bool: ## false = unblocked; true = blocked
 	for cell:Vector2i in cells:
 		if piece.globalCells.has(cell):
-			var blocked:bool = tryMovePiece(piece, direction, Piece.MOVEMENT.SHOVE)
+			var blocked:bool = tryMovePiece(piece, direction, Piece.MOVEMENT.FORCED_SHOVE if force else Piece.MOVEMENT.SHOVE)
 			if activePieces.has(piece) and not blocked:
-				return nudgePiece(cells, piece, direction)
+				return nudgePiece(cells, piece, direction, force)
 			return blocked
 	return false
 
@@ -316,12 +345,21 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 	var translatedCells := getTranslatedCells(piece.globalCells, direction)
 	if areCellsOpen(translatedCells):
 		var blocked:bool = false
+		var forceful:bool = movementType == Piece.MOVEMENT.FORCED_SHOVE or Piece.MOVEMENT.HARD_DROP
 		piece.collidible = true # Allow collision now that we know it's in a free space
 		var collidingPieces:Array[Piece] = getAllCollidingPieces(translatedCells, piece)
 		if collidingPieces.size():
-			for collidingPiece:Piece in collidingPieces:
-				var nudgeResult = nudgePiece(translatedCells, collidingPiece, direction)
-				if nudgeResult: blocked = true
+			match movementType:
+				Piece.MOVEMENT.HORIZONTAL: 
+					if not DracominoHandler.activeAbilities.get("Horizontal Shove", 0):
+						blocked = true
+				Piece.MOVEMENT.SOFT_DROP:
+					if not DracominoHandler.activeAbilities.get("Vertical Shove", 0):
+						blocked = true
+			if not blocked:
+				for collidingPiece:Piece in collidingPieces:
+					var nudgeResult = nudgePiece(translatedCells, collidingPiece, direction, forceful)
+					if nudgeResult: blocked = true
 		if not blocked:
 			piece.move(direction)
 			match movementType:
@@ -330,7 +368,7 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 		return blocked
 	elif direction == Vector2i.DOWN:
 		match movementType:
-			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE: sfx_hardDrop.play()
+			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE: sfx_hardDrop.play()
 			_: sfx_drop.play()
 		lockPiece(piece)
 	return true
@@ -338,9 +376,8 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 func sortActivePieces():
 	activePieces.sort_custom(
 		func(a:Piece, b:Piece):
-			var focusPiece = getFocusPiece()
-			if a == focusPiece: return true
-			if b == focusPiece: return false
+			if a.isFocus: return true
+			if b.isFocus: return false
 			if a.moveLock and not b.moveLock:
 				return true
 			if b.moveLock and not a.moveLock:
@@ -368,8 +405,6 @@ func gameOver(deathContext:DracominoUtil.DeathContext = null):
 	isGameOver = true
 	for piece in activePieces:
 		lockPiece(piece)
-	activePieces.clear()
-	activePieces_changed.emit()
 	game_over_earned.emit()
 	if deathContext and Archipelago.is_deathlink():
 		if Archipelago.conn:
@@ -410,9 +445,8 @@ func resetGame():
 
 	# Delete current pieces
 	for piece in activePieces:
-		piece.queue_free()
-	activePieces.clear()
-	activePieces_changed.emit()
+		deletePiece(piece)
+	activePieces.clear() # Clear now to avoid weird race condition
 
 	# Clear previews and hold
 	if previewStorage: previewStorage.clear()
@@ -426,9 +460,7 @@ func resetGame():
 	rotate_random.state = rotate_randomSaveState
 
 	# Clear board
-	for y in range(BOUNDS.position.y, BOUNDS.end.y):
-		for x in range(BOUNDS.position.x, BOUNDS.end.x):
-			set_cell(Vector2i(x, y))
+	clear()
 	game_started.emit()
 
 	# Create new piece
@@ -450,15 +482,10 @@ func lockPiece(piece:Piece):
 				
 	if pickedUpItem:
 		sfx_itemPickup.play()
-	activePieces.erase(piece)
-	activePieces_changed.emit()
-	piece.queue_free()
+	deletePiece(piece)
 	boardIsFresh = false
 	
-	var focusPiece:Piece = getFocusPiece() # Check collisions with new piece
-	if focusPiece and checkForFailure(focusPiece):
-		pass # Game over
-	elif not isGameOver:
+	if not isGameOver:
 		var fullRows = checkForFullRows()
 		if fullRows.size() > 0:
 			linesCleared += fullRows.size()
@@ -466,8 +493,6 @@ func lockPiece(piece:Piece):
 			var clearedlines = fullRows.map(func(lineNum): return BOUNDS.end.y - lineNum -1)
 			await rowClearAnimation_finished
 			lines_cleared.emit(clearedlines)
-		else:
-			requestPiece.call_deferred()
 
 func checkForFullRows() -> Array:
 	var fullRows = []
@@ -561,12 +586,15 @@ func updateAllGhosts():
 			relativePosition += Vector2i.DOWN
 
 #==== Events =====
+func _input(event: InputEvent) -> void:
+	if event.is_action_type():
+		inputTimer.reset()
+
 func _unhandled_input(event: InputEvent) -> void:
 	var focusPiece:Piece = getFocusPiece()
 	if not isGameOver:
 		if Config.getSetting("debug", false) and event.is_action_pressed("spawn"):
 			requestPiece(true)
-			inputTimer.reset()
 			get_viewport().set_input_as_handled()
 			return
 		elif event.is_action_pressed("hold"):
@@ -577,7 +605,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif not focusPiece:
 			if event.is_action_pressed("ui_accept"):
 				requestPiece.call_deferred()
-				inputTimer.reset()
 				get_viewport().set_input_as_handled()
 				return
 		
@@ -600,39 +627,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if focusPiece == null: return
 	
 	# Stuff that requires an active piece
-	if (event.is_action_pressed("moveRight") 
-	or event.is_action_pressed("moveLeft")
-	or event.is_action_pressed("moveDown")
-	):
-		pass
-		# # TODO: This doesn't do anything due to piece handling it
-		# # I know there's Input.get_vector, but a controller that can't reset perfectly to zero needs per-axis deadzones
-		# var inputVector:Vector2 = Vector2(
-		# 	Input.get_action_strength("moveRight") - Input.get_action_strength("moveLeft"),
-		# 	Input.get_action_strength("moveDown") if DracominoHandler.activeAbilities.get("Soft Drop", 0) else 0.0
-		# )
-		
-		# if inputVector.length_squared() < MIN_VELOCITY_LENGTH_SQUARED:
-		# 	inputVector = Vector2.ZERO
-
-	elif event.is_action_pressed("rotateClockwise"):
-		if DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
-			sfx_rotate.play()
-			focusPiece.rotateClockwise()
-		elif USE_ALT_ROTATE and DracominoHandler.activeAbilities.get("Rotate Counterclockwise", 0):
-			sfx_rotate.play()
-			focusPiece.rotateCounterclockwise()
-	elif event.is_action_pressed("rotateCounterclockwise"):
-		if DracominoHandler.activeAbilities.get("Rotate Counterclockwise", 0):
-			sfx_rotate.play()
-			focusPiece.rotateCounterclockwise()
-		elif USE_ALT_ROTATE and DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
-			sfx_rotate.play()
-			focusPiece.rotateClockwise()
-	elif event.is_action_pressed("hardDrop") and Input.is_action_just_pressed("hardDrop"): # Double check to ignore events from slight axis movement
+	if event.is_action_pressed("hardDrop") and Input.is_action_just_pressed("hardDrop"): # Double check to ignore events from slight axis movement
 		if DracominoHandler.activeAbilities.get("Hard Drop", 0):
 			focusPiece.hardDrop()
-			if not getFocusPiece(): requestPiece(true)
 		elif (
 			ALLOW_GRAVITY_DROP 
 			and DracominoHandler.activeAbilities.get("Gravity", 0)
@@ -641,11 +638,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		):
 			# Only gravity drop if it's not your last piece
 			focusPiece.gravityDrop()
-			if not getFocusPiece(): requestPiece(true)
 	else:
 		return
 	
-	inputTimer.reset()
 	get_viewport().set_input_as_handled()
 
 func _on_holdSlotCycleTimer_timeout(callback:Callable):
@@ -668,11 +663,20 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 		if areCellsOpen(translatedCells) and not getCollidingPiece(translatedCells, piece):
 			piece.setCells(cells)
 			piece.move(dir)
+			sfx_rotate.play()
 			return
-
+	sfx_rotateFail.play()
 
 func _on_Piece_ghost_cells_requested(_piece:Piece, _ghost:GhostPiece):
 	updateAllGhosts()			
+
+func _on_Piece_focus_lost():
+	chooseNewFocusPiece(true)
+
+func _on_Piece_tree_exiting(piece:Piece): # Fallback if piece didn't delete properly
+	if activePieces.has(piece):
+		activePieces.erase(piece)
+		activePieces_changed.emit()
 
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	conn.deathlink.connect(_on_deathlink)
@@ -739,10 +743,11 @@ func _on_DracominoState_slot_context_hash_updated(ctx:int) -> void:
 	rotate_randomSaveState = rotate_random.state
 
 func _on_activePieces_changed():
-	## Make ghosts have a gradient
 	var a:float = 1.0
+	chooseNewFocusPiece(true)
 	for piece in activePieces:
+		## Make ghosts have a gradient
 		if piece.ghost:
 			piece.ghost.modulate.a = clamp(a, 0.0, 1.0)
-			if piece != getFocusPiece() and not piece.moveLock:
+			if not piece.isFocus and not piece.moveLock:
 				a -= OPACITY_REDUCTION_PER_GHOST
