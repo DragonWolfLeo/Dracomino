@@ -6,6 +6,7 @@ Version 0.2.4 (dev-alpha3)
  - Allow only a single piece control at a time
  - Next piece spawns happen instantly even during Soft Drop line clear animation
  - Non-focused pieces are always affected by gravity
+ - Line clears burst into magic crystals
 
 Version 0.2.4 (dev-alpha2)
  - Pieces avoid being placed in each other

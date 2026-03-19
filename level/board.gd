@@ -168,22 +168,23 @@ func blockRemoveAnimationStep(delta):
 	
 	animation_timer += delta
 	
-	if animation_timer >= 0.08: 	#this number controls at which speed blocks get removed
+	if animation_timer >= 0.07: 	#this number controls at which speed blocks get removed
 		animation_timer = 0
-		for y in rowsToClear:
-			set_cell(Vector2i(blocksToClear.front(),y))
-			set_cell(Vector2i(blocksToClear.back(),y))
-		blocksToClear.pop_front()
-		blocksToClear.pop_back()
+		if blocksToClear.size():
+			for y in rowsToClear:
+				set_cell(Vector2i(blocksToClear.front(),y),1,Vector2i.ZERO,1)
+				set_cell(Vector2i(blocksToClear.back(),y),1,Vector2i.ZERO,1)
+			blocksToClear.pop_front()
+			blocksToClear.pop_back()
 	
-	if animation_started and blocksToClear.size() == 0: 	#Animation has finished
-		for i in rowsToClear:
-			pushDownRows(i)
-		rowsToClear = []
-		animation_started = false
-		rowClearAnimation_finished.emit()
-		updateAllGhosts()
-		requestPiece()
+		elif animation_started and blocksToClear.size() == 0: 	#Animation has finished
+			for i in rowsToClear:
+				pushDownRows(i)
+			rowsToClear = []
+			animation_started = false
+			rowClearAnimation_finished.emit()
+			updateAllGhosts()
+			requestPiece()
 
 func requestPiece(allowMultiplePieces:bool = false):
 	if isGameOver: return
@@ -287,7 +288,7 @@ func hold(index:int = -1):
 			sfx_hold.play()
 
 func isTileOccupied(coords:Vector2i) -> bool:
-	return get_cell_atlas_coords(coords).y == SET_TILE_ATLAS_ROW
+	return get_cell_source_id(coords) != -1
 
 func placeOnHighestRow(piece:Piece):
 	var greatestY:int = 0
