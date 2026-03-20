@@ -682,9 +682,7 @@ func _on_Piece_focus_lost():
 	chooseNewFocusPiece(true)
 
 func _on_Piece_tree_exiting(piece:Piece): # Fallback if piece didn't delete properly
-	if activePieces.has(piece):
-		activePieces.erase(piece)
-		activePieces_changed.emit()
+	activePieces.erase(piece)
 
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	conn.deathlink.connect(_on_deathlink)
