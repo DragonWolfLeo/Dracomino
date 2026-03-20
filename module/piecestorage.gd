@@ -192,7 +192,7 @@ func _updatePreviews():
 		var preview:PiecePreview = storage[i]
 		var visibilityState = i < storageSlots
 		preview.visible = Config.debugMode or visibilityState
-		preview.modulate.a = 1.0 if visibilityState or not Config.debugMode else 0.2
+		preview.modulate.a = 1.0 if visibilityState or not Config.debugMode else 0.33333
 
 		# Clear shortcuts
 		if useNumberedSlots:

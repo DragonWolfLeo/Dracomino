@@ -1,3 +1,6 @@
+Version 0.2.4 (dev-alpha4)
+ - Prevent topping out when top line is filled
+
 Version 0.2.4 (traps-alpha2)
  - Add 6-bit palette option
 

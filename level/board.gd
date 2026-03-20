@@ -8,7 +8,7 @@ const BOUNDS := Rect2i(0, 0, 10, 20)
 const SPAWN_POINT := BOUNDS.position + Vector2i(BOUNDS.size.x / 2, 0)
 var DANGER_ZONE := BOUNDS.grow_individual(-2, 0, -2, -17)
 var ALLOW_GRAVITY_DROP:bool = true # TODO: Make an option
-var OPACITY_REDUCTION_PER_GHOST:float = 0.4
+var OPACITY_REDUCTION_PER_GHOST:float = 1/3 # 
 var MAX_PIECES:int = 8
 
 static var ACTIVE_TILE_ATLAS_ROW:int = 0
@@ -189,7 +189,8 @@ func blockRemoveAnimationStep(delta):
 
 func requestPiece(allowMultiplePieces:bool = false):
 	if isGameOver: return
-	if activePieces.size() > MAX_PIECES or (countNonlockedPieces() and not allowMultiplePieces):
+	if activePieces.size() > MAX_PIECES or (countNonlockedPieces() and not allowMultiplePieces) or isTopRowFull():
+		# Don't spawn a piece if max is reached, if multiple pieces disallowed, or top row is full
 		return
 	fillPreview(2) # Generate one extra because we're gonna use it, and another so gravity drop can work
 	var poppedPiece:Piece
@@ -513,6 +514,13 @@ func checkForFullRows() -> Array:
 		(sfx_lineClearCheck if isMissingLineCheck else sfx_lineClear).play()
 	return fullRows
 
+func isTopRowFull() -> bool:
+	var y = BOUNDS.position.y
+	for x in range(BOUNDS.position.x, BOUNDS.end.x):
+		if not isTileOccupied(Vector2i(x, y)):
+			return false
+	return true
+
 func isInDanger() -> bool:
 	for y in range(DANGER_ZONE.position.y, DANGER_ZONE.end.y):
 		for x in range(DANGER_ZONE.position.x, DANGER_ZONE.end.x):
@@ -701,7 +709,7 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 		# Re-number the labels
 		var line:int = lineMappings.get(i, 0)
 		lineNumberLabels[i].text = str(line + 1)
-		lineNumberLabels[i].modulate.a = 1.0 if _missinglines.get(line, false) else 0.2 # Make transparent if collected
+		lineNumberLabels[i].modulate.a = 1.0 if _missinglines.get(line, false) else 0.33333 # Make transparent if collected
 
 		# Organize the pickups
 		for j:int in range(BOUNDS.size.x):
