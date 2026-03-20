@@ -99,7 +99,7 @@ var holdLock:bool = false ## Prevent from holding this anymore
 var collidible:bool = false: ## Enable when piece doesn't overlap with another
 	set(value):
 		collidible = value
-		modulate.a = 1.0 if collidible or not Config.debugMode else 0.7
+		modulate.a = 1.0 if collidible or not Config.debugMode else 0.66667
 var playHardDropSound:bool = false
 var ghost:GhostPiece
 var isFocus:bool: ## Decides whether or not piece listens to inputs
