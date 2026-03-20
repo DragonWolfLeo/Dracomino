@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://c46cohvdcknws"]
+
+[ext_resource type="PackedScene" uid="uid://binx2s1s2fvf0" path="res://object/crystalparticle.tscn" id="1_wxkp2"]
+[ext_resource type="Texture2D" uid="uid://du8u2wii7nje4" path="res://assets/art/crystalfragment_2.png" id="2_kitva"]
+
+[node name="CrystalParticle" instance=ExtResource("1_wxkp2")]
+amount = 3
+texture = ExtResource("2_kitva")
+spread = 30.0
+initial_velocity_max = 80.0
