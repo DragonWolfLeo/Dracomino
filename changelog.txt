@@ -1,3 +1,6 @@
+Version 0.2.4 (traps-alpha2)
+ - Add 6-bit palette option
+
 Version 0.2.4 (dev-alpha3)
  - Turn Vertical Shove and Horizontal Shove into abilities
  - Horizontal Shove is disabled

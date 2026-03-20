@@ -1,10 +1,11 @@
 extends ColorRect
 
 @export var debugSignalKey:String = ""
+@export var startEnabled:bool = false
 
 func _ready() -> void:
 	if debugSignalKey.length():
-		hide();
+		visible = startEnabled;
 		SignalBus.getSignal(debugSignalKey+"_enabled").connect(_on_enabledSignal)
 		SignalBus.getSignal(debugSignalKey+"_disabled").connect(_on_disabledSignal)
 

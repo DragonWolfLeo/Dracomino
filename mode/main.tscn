@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3 uid="uid://dq05pcnj58yp0"]
+[gd_scene load_steps=31 format=3 uid="uid://dq05pcnj58yp0"]
 
 [ext_resource type="PackedScene" uid="uid://boraki5ygsa0g" path="res://level/board.tscn" id="1_q3k4m"]
 [ext_resource type="Script" uid="uid://c5jgcsxvnygnn" path="res://mode/main.gd" id="1_svssi"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://dutbiv2hgugwn" path="res://module/piecestorage.gd" id="4_q3k4m"]
 [ext_resource type="Shader" uid="uid://dobuvt43qhvwi" path="res://resource/shader/waterwave.gdshader" id="5_gpyk6"]
 [ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="5_kwn67"]
+[ext_resource type="Shader" uid="uid://cc45hk356mhko" path="res://resource/shader/ega.gdshader" id="5_m1ejn"]
 [ext_resource type="PackedScene" uid="uid://c7613bp0awts" path="res://dracomino_ap/dracomino_client.tscn" id="5_svssi"]
 [ext_resource type="Script" uid="uid://dvj4uugycseke" path="res://module/overlayfilter.gd" id="6_d6dmn"]
 [ext_resource type="Shader" uid="uid://jo62bd4fm34j" path="res://resource/shader/pixel.gdshader" id="6_gpyk6"]
@@ -136,6 +137,9 @@ Button/colors/font_pressed_color = Color(0, 0, 0, 1)
 Button/styles/hover = SubResource("StyleBoxFlat_gpyk6")
 Button/styles/normal = SubResource("StyleBoxFlat_svssi")
 Button/styles/pressed = SubResource("StyleBoxFlat_gx2q7")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wule5"]
+shader = ExtResource("5_m1ejn")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ckgpy"]
 shader = ExtResource("9_d6dmn")
@@ -391,6 +395,22 @@ layout_mode = 2
 
 [node name="MainOverlay" type="CanvasLayer" parent="."]
 
+[node name="EGAFilter" type="ColorRect" parent="MainOverlay"]
+visible = false
+z_index = 100
+material = SubResource("ShaderMaterial_wule5")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("6_d6dmn")
+debugSignalKey = "overlay_ega"
+
+[node name="BackBufferCopy" type="BackBufferCopy" parent="MainOverlay/EGAFilter"]
+copy_mode = 2
+
 [node name="InvertFilter" type="ColorRect" parent="MainOverlay"]
 visible = false
 texture_filter = 1
@@ -403,6 +423,9 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("6_d6dmn")
 debugSignalKey = "overlay_invert"
+
+[node name="BackBufferCopy" type="BackBufferCopy" parent="MainOverlay/InvertFilter"]
+copy_mode = 2
 
 [connection signal="activeAbilities_updated" from="DracominoHandler" to="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/PreviewStorage" method="_on_DracominoHandler_active_abilities_updated"]
 [connection signal="activeAbilities_updated" from="DracominoHandler" to="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/HoldStorage" method="_on_DracominoHandler_active_abilities_updated"]
