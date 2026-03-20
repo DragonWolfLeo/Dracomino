@@ -45,8 +45,8 @@ shader_parameter/disp = Vector2(0, 0)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_gx2q7"]
 shader = ExtResource("5_gpyk6")
-shader_parameter/water_color = Color(0, 0.0980392, 0.176471, 1)
-shader_parameter/watersurface_color = Color(0.316286, 0.496441, 0.521942, 1)
+shader_parameter/water_color = Color(0, 0, 0.333333, 1)
+shader_parameter/watersurface_color = Color(0.333333, 0.666667, 0.666667, 1)
 shader_parameter/watersurface_height = 0.115
 shader_parameter/wave_strength = 0.004
 shader_parameter/wave_frequency = 50.0
