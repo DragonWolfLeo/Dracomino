@@ -189,7 +189,8 @@ func blockRemoveAnimationStep(delta):
 
 func requestPiece(allowMultiplePieces:bool = false):
 	if isGameOver: return
-	if activePieces.size() > MAX_PIECES or (countNonlockedPieces() and not allowMultiplePieces):
+	if activePieces.size() > MAX_PIECES or (countNonlockedPieces() and not allowMultiplePieces) or isTopRowFull():
+		# Don't spawn a piece if max is reached, if multiple pieces disallowed, or top row is full
 		return
 	fillPreview(2) # Generate one extra because we're gonna use it, and another so gravity drop can work
 	var poppedPiece:Piece
@@ -512,6 +513,13 @@ func checkForFullRows() -> Array:
 			isMissingLineCheck = _missinglines.get(line, false)
 		(sfx_lineClearCheck if isMissingLineCheck else sfx_lineClear).play()
 	return fullRows
+
+func isTopRowFull() -> bool:
+	var y = BOUNDS.position.y
+	for x in range(BOUNDS.position.x, BOUNDS.end.x):
+		if not isTileOccupied(Vector2i(x, y)):
+			return false
+	return true
 
 func isInDanger() -> bool:
 	for y in range(DANGER_ZONE.position.y, DANGER_ZONE.end.y):
