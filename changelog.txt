@@ -1,5 +1,6 @@
 Version 0.2.4 (dev-alpha4)
  - Prevent topping out when top line is filled
+ - Fix visual pixel bug that can happen when resizing the window
 
 Version 0.2.4 (dev-alpha3)
  - Turn Vertical Shove and Horizontal Shove into abilities

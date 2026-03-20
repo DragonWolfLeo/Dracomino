@@ -7,7 +7,6 @@ extends Control
 @onready var piecesLabel:Label = %PiecesLabel
 @onready var level:Board = %Board
 @onready var btnQuit:Button = %Btn_Quit
-@onready var mainSplit:HSplitContainer = $MainSplit
 
 var _timer:SceneTreeTimer
 var _queuedNotifications:Array[Dictionary]
@@ -38,10 +37,6 @@ func _ready() -> void:
 	state = STATE.PAUSED
 
 	_on_SubViewportContainer_resized.call_deferred()
-	mainSplit.dragged.connect( # Scale only evenly to fix weird pixel scaling
-		func(_offset):
-			mainSplit.split_offset -= mainSplit.split_offset % 2
-	)
 
 #==== Functions ====
 func applyState() -> void:
