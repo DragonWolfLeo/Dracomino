@@ -672,6 +672,10 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 			piece.setCells(cells)
 			piece.move(dir)
 			sfx_rotate.play()
+			if dir.x != 0:
+				sfx_move.play()
+			elif dir.y != 0:
+				sfx_moveDown.play()
 			return
 	sfx_rotateFail.play()
 
