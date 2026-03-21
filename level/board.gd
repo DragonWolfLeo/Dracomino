@@ -367,8 +367,16 @@ func nudgePiece(cells:Array[Vector2i], piece:Piece, direction:Vector2i, force:bo
 
 func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ## false = unblocked; true = blocked
 	var translatedCells := getTranslatedCells(piece.globalCells, direction)
-	if areCellsOpen(translatedCells):
+	if areCellsOpen(translatedCells, [], true):
 		var blocked:bool = false
+		# Prevent going through activated lines
+		if direction == Vector2i.DOWN:
+			var lowestY:int = BOUNDS.position.y
+			for cell in translatedCells:
+				if cell.y > lowestY:
+					lowestY = cell.y
+			if isRowClearing(lowestY):
+				return true
 		var forceful:bool = movementType == Piece.MOVEMENT.FORCED_SHOVE or Piece.MOVEMENT.HARD_DROP
 		piece.collidible = true # Allow collision now that we know it's in a free space
 		var collidingPieces:Array[Piece] = getAllCollidingPieces(translatedCells, piece)
@@ -391,6 +399,7 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 				Piece.MOVEMENT.SOFT_DROP: sfx_moveDown.play()
 		return blocked
 	elif direction == Vector2i.DOWN:
+		# Lock piece
 		match movementType:
 			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE: sfx_hardDrop.play()
 			_: sfx_drop.play()
@@ -574,8 +583,10 @@ func pushDownRows(clearedChunk:ClearingChunk) -> void:
 	# Update ghosts
 	updateAllGhosts()
 
-func areCellsOpen(cells:Array[Vector2i], invalidCells:Array[Vector2i] = []) -> bool:
+func areCellsOpen(cells:Array[Vector2i], invalidCells:Array[Vector2i] = [], clearingRowsAreOpen:bool = false) -> bool:
 	for cell in cells:
+		if clearingRowsAreOpen and isRowClearing(cell.y):
+			continue
 		if (
 			isTileOccupied(cell)
 			or cell.x < BOUNDS.position.x or cell.x >= BOUNDS.end.x # Check horizontal bounds
@@ -623,7 +634,7 @@ func updateAllGhosts():
 	while floatingPieces.size():
 		var somethingLanded:bool = false
 		for piece:Piece in floatingPieces.duplicate():
-			if not areCellsOpen(getTranslatedCells(piece.globalCells, relativePosition + Vector2i.DOWN), invalidCells):
+			if not areCellsOpen(getTranslatedCells(piece.globalCells, relativePosition + Vector2i.DOWN), invalidCells, false):
 				piece.ghost.relativePosition = relativePosition
 				floatingPieces.erase(piece)
 				mergeCells(invalidCells, getTranslatedCells(piece.globalCells, piece.ghost.relativePosition))
