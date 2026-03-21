@@ -3,6 +3,7 @@ class_name Board extends TileMapLayer
 @onready var PIECE_SCENE:PackedScene = load("res://object/piece.tscn")
 @onready var LINENUMBER_SCENE:PackedScene = load("res://ui/linenumber.tscn")
 @onready var ITEMPICKUP_SCENE:PackedScene = load("res://object/itempickup.tscn")
+@onready var ACTIVATEDTILE_SCENE:PackedScene = load("res://object/activatedtile.tscn")
 
 const BOUNDS := Rect2i(0, 0, 10, 20)
 const SPAWN_POINT := BOUNDS.position + Vector2i(BOUNDS.size.x / 2, 0)
@@ -47,10 +48,7 @@ static var SET_TILE_ATLAS_ROW:int = 1
 
 var activePieces:Array[Piece] = []
 
-var rowsToClear = []
-var blocksToClear = []
-var animation_timer = 0.0
-var animation_started = false
+var clearingChunks:Array[ClearingChunk] = []
 var isGameOver:bool = false
 var sendDeathOnRestart:bool = false
 var boardIsFresh:bool = true
@@ -89,6 +87,30 @@ class ItemPickupContext:
 	var node:Node2D
 	var coord:Vector2i
 	var loc_id:int
+
+class ClearingChunk:
+	var row:int
+	var tilesToActivate:Array[Vector2i]
+	var activatedTileCoords:Dictionary[Node2D, Vector2i]
+	var mappedLine:int
+	var animationTimer:float = 0
+	var ANIMATION_INTERVAL:float = 0.04
+	static var flip:bool = false
+	func _init(_row:int) -> void:
+		row = _row
+		var arr:Array = range(BOUNDS.position.x, BOUNDS.end.x).map(func(x): return Vector2i(x, row))
+		if flip: arr.reverse() # Make alternating chunks flip
+		flip = !flip
+		tilesToActivate.append_array(arr)
+		mappedLine = BOUNDS.end.y - row - 1
+	func pushDown() -> void:
+		# Remap data when rows get pushed down
+		row += 1
+		for i in range(tilesToActivate.size()):
+			tilesToActivate[i].y += 1
+		for activatedTile:Node2D in activatedTileCoords.keys():
+			activatedTileCoords[activatedTile].y += 1
+		mappedLine -= 1
 
 var inputTimer:ActivityTimer ## For death context
 var pieceTimer:ActivityTimer ## For death context
@@ -130,10 +152,6 @@ func _ready():
 		scn.position = map_to_local(Vector2i(BOUNDS.position.x, BOUNDS.end.y-i ))
 		$LineNumberBar.add_child(scn)
 
-func _process(delta):
-	# TODO: Replace with tween
-	if rowsToClear.size() > 0:
-		blockRemoveAnimationStep(delta)
 
 #===== Functions ======
 func getFocusPiece() -> Piece:
@@ -161,31 +179,34 @@ func countNonlockedPieces() -> int:
 		)
 	return num
 
-func blockRemoveAnimationStep(delta):
-	if !animation_started and blocksToClear.size() == 0:
-		for x in range(BOUNDS.position.x, BOUNDS.end.x):
-			blocksToClear.append(x)
-		animation_started = true
-	
-	animation_timer += delta
-	
-	if animation_timer >= 0.07: 	#this number controls at which speed blocks get removed
-		animation_timer = 0
-		if blocksToClear.size():
-			for y in rowsToClear:
-				set_cell(Vector2i(blocksToClear.front(),y),1,Vector2i.ZERO,1)
-				set_cell(Vector2i(blocksToClear.back(),y),1,Vector2i.ZERO,1)
-			blocksToClear.pop_front()
-			blocksToClear.pop_back()
-	
-		elif animation_started and blocksToClear.size() == 0: 	#Animation has finished
-			for i in rowsToClear:
-				pushDownRows(i)
-			rowsToClear = []
-			animation_started = false
-			rowClearAnimation_finished.emit()
-			updateAllGhosts()
-			requestPiece()
+func processClearingChunk(chunk:ClearingChunk) -> void:
+	chunk.animationTimer -= chunk.ANIMATION_INTERVAL
+	var old_tilesToActivate_size = chunk.tilesToActivate.size()
+	for i:int in range(old_tilesToActivate_size):
+		# Create activated tiles
+		var cell:Vector2i = chunk.tilesToActivate.pop_back()
+		var activatedTile:Node2D = ACTIVATEDTILE_SCENE.instantiate()
+		chunk.activatedTileCoords[activatedTile] = cell
+		activatedTile.position = map_to_local(cell)
+		add_child(activatedTile)
+		var tween = activatedTile.create_tween().set_parallel()
+		tween.tween_property(activatedTile, "modulate", Color.WHITE, i * chunk.ANIMATION_INTERVAL).from(Color(1,1,1,0))
+		tween.tween_callback((activatedTile as AnimatedSprite2D).play).set_delay(0.1 + (i * chunk.ANIMATION_INTERVAL))
+		if chunk.tilesToActivate.size() == 0:
+			# Connect to last tile
+			(activatedTile as AnimatedSprite2D).animation_finished.connect(
+				func():
+					# Delete activated tiles
+					for at:Node in chunk.activatedTileCoords.keys():
+						at.queue_free()
+					chunk.activatedTileCoords.clear()
+							
+					clearingChunks.erase(chunk)
+					pushDownRows(chunk)
+					lines_cleared.emit([chunk.mappedLine])
+					if not clearingChunks.size():
+						requestPiece()
+			)
 
 func requestPiece(allowMultiplePieces:bool = false):
 	if isGameOver: return
@@ -344,8 +365,16 @@ func nudgePiece(cells:Array[Vector2i], piece:Piece, direction:Vector2i, force:bo
 
 func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ## false = unblocked; true = blocked
 	var translatedCells := getTranslatedCells(piece.globalCells, direction)
-	if areCellsOpen(translatedCells):
+	if areCellsOpen(translatedCells, [], true):
 		var blocked:bool = false
+		# Prevent going through activated lines
+		if direction == Vector2i.DOWN:
+			var lowestY:int = BOUNDS.position.y
+			for cell in translatedCells:
+				if cell.y > lowestY:
+					lowestY = cell.y
+			if isRowClearing(lowestY):
+				return true
 		var forceful:bool = movementType == Piece.MOVEMENT.FORCED_SHOVE or Piece.MOVEMENT.HARD_DROP
 		piece.collidible = true # Allow collision now that we know it's in a free space
 		var collidingPieces:Array[Piece] = getAllCollidingPieces(translatedCells, piece)
@@ -368,6 +397,7 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 				Piece.MOVEMENT.SOFT_DROP: sfx_moveDown.play()
 		return blocked
 	elif direction == Vector2i.DOWN:
+		# Lock piece
 		match movementType:
 			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE: sfx_hardDrop.play()
 			_: sfx_drop.play()
@@ -487,17 +517,21 @@ func lockPiece(piece:Piece):
 	boardIsFresh = false
 	
 	if not isGameOver:
-		var fullRows = checkForFullRows()
+		var fullRows:Array[int] = getFullRows()
 		if fullRows.size() > 0:
 			linesCleared += fullRows.size()
-			rowsToClear = fullRows # TODO: Replace this with a tween
-			var clearedlines = fullRows.map(func(lineNum): return BOUNDS.end.y - lineNum -1)
-			await rowClearAnimation_finished
-			lines_cleared.emit(clearedlines)
+			for row:int in fullRows:
+				var chunk := ClearingChunk.new(row)
+				clearingChunks.append(chunk)
+				processClearingChunk(chunk)
 
-func checkForFullRows() -> Array:
-	var fullRows = []
+func getFullRows() -> Array[int]:
+	var fullRows:Array[int] = []
 	for y in range(BOUNDS.position.y, BOUNDS.end.y):
+		# Ignore chunks that are already recognized as clearing
+		if isRowClearing(y):
+			continue
+		# Check if row is full
 		var full:bool = true
 		for x in range(BOUNDS.position.x, BOUNDS.end.x):
 			if not isTileOccupied(Vector2i(x, y)):
@@ -514,6 +548,12 @@ func checkForFullRows() -> Array:
 		(sfx_lineClearCheck if isMissingLineCheck else sfx_lineClear).play()
 	return fullRows
 
+func isRowClearing(row:int) -> bool:
+	for chunk in clearingChunks:
+		if chunk.row == row:
+			return true
+	return false
+
 func isTopRowFull() -> bool:
 	var y = BOUNDS.position.y
 	for x in range(BOUNDS.position.x, BOUNDS.end.x):
@@ -528,16 +568,25 @@ func isInDanger() -> bool:
 				return true
 	return false
 
-func pushDownRows(full_row):
-	for y in range(full_row, BOUNDS.position.y -1, -1):
+func pushDownRows(clearedChunk:ClearingChunk) -> void:
+	# Move tiles down
+	for y in range(clearedChunk.row, BOUNDS.position.y -1, -1):
 		for x in range(BOUNDS.position.x, BOUNDS.end.x):
-			var aboveCell := Vector2i(x, y - 1)
-			var target_id = get_cell_source_id(aboveCell)
-			var target_atlas = get_cell_atlas_coords(aboveCell)
-			set_cell(Vector2i(x,y), 0, target_atlas)
+			set_cell(Vector2i(x,y), 0, get_cell_atlas_coords(Vector2i(x, y - 1)))
+	# Move clearing chunks down
+	for chunk in clearingChunks:
+		if chunk.row < clearedChunk.row:
+			chunk.pushDown()
+			# Update activatedTile positions
+			for activatedTile:Node2D in chunk.activatedTileCoords.keys():
+				activatedTile.position = map_to_local(chunk.activatedTileCoords[activatedTile])
+	# Update ghosts
+	updateAllGhosts()
 
-func areCellsOpen(cells:Array[Vector2i], invalidCells:Array[Vector2i] = []) -> bool:
+func areCellsOpen(cells:Array[Vector2i], invalidCells:Array[Vector2i] = [], clearingRowsAreOpen:bool = false) -> bool:
 	for cell in cells:
+		if clearingRowsAreOpen and isRowClearing(cell.y):
+			continue
 		if (
 			isTileOccupied(cell)
 			or cell.x < BOUNDS.position.x or cell.x >= BOUNDS.end.x # Check horizontal bounds
@@ -585,7 +634,7 @@ func updateAllGhosts():
 	while floatingPieces.size():
 		var somethingLanded:bool = false
 		for piece:Piece in floatingPieces.duplicate():
-			if not areCellsOpen(getTranslatedCells(piece.globalCells, relativePosition + Vector2i.DOWN), invalidCells):
+			if not areCellsOpen(getTranslatedCells(piece.globalCells, relativePosition + Vector2i.DOWN), invalidCells, false):
 				piece.ghost.relativePosition = relativePosition
 				floatingPieces.erase(piece)
 				mergeCells(invalidCells, getTranslatedCells(piece.globalCells, piece.ghost.relativePosition))
@@ -672,6 +721,10 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 			piece.setCells(cells)
 			piece.move(dir)
 			sfx_rotate.play()
+			if dir.x != 0:
+				sfx_move.play()
+			elif dir.y != 0:
+				sfx_moveDown.play()
 			return
 	sfx_rotateFail.play()
 
@@ -682,9 +735,7 @@ func _on_Piece_focus_lost():
 	chooseNewFocusPiece(true)
 
 func _on_Piece_tree_exiting(piece:Piece): # Fallback if piece didn't delete properly
-	if activePieces.has(piece):
-		activePieces.erase(piece)
-		activePieces_changed.emit()
+	activePieces.erase(piece)
 
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	conn.deathlink.connect(_on_deathlink)
