@@ -90,10 +90,13 @@ class ItemPickupContext:
 	var loc_id:int
 
 class ClearingChunk:
+	signal completed()
 	var row:int
 	var tilesToActivate:Array[Vector2i]
 	var mappedLine:int
 	var ANIMATION_INTERVAL:float = 0.04
+	var CRYSTALLIZE_DELAY:float = 0.225
+	var SHATTER_DELAY:float = 0.775
 	static var flip:bool = false
 	func _init(_row:int) -> void:
 		row = _row
@@ -176,34 +179,16 @@ func countNonlockedPieces() -> int:
 		)
 	return num
 
-func processClearingChunk(chunk:ClearingChunk) -> void:
-	var old_tilesToActivate_size = chunk.tilesToActivate.size()
-	var CRYSTALLIZE_DELAY:float = 0.225
-	var SHATTER_DELAY:float = 0.375 + (chunk.ANIMATION_INTERVAL*old_tilesToActivate_size)
-	
-	# Set up shatter, which happens after activating
-	var shatterTween:Tween = activatedTileHandler.create_tween()
-	shatterTween.tween_callback(activatedTileHandler.shatterTiles.bind(chunk.tilesToActivate.duplicate())).set_delay(SHATTER_DELAY)
-	game_started.connect(shatterTween.kill)
-	shatterTween.finished.connect(
+func processClearingChunk(chunk:ClearingChunk) -> void:	
+	activatedTileHandler.activateChunk(chunk, 
 		func():					
 			clearingChunks.erase(chunk)
+			chunk.completed.emit()
 			pushDownRows(chunk)
 			lines_cleared.emit([chunk.mappedLine])
 			if not clearingChunks.size():
 				requestPiece()
 	)
-
-	# Set up activations
-	for i:int in range(old_tilesToActivate_size):
-		# Create activated tiles
-		var cell:Vector2i = chunk.tilesToActivate.pop_back()
-		var tween:Tween = activatedTileHandler.create_tween().set_parallel()
-		tween.tween_callback(activatedTileHandler.activateTile.bind(cell)).set_delay(i * chunk.ANIMATION_INTERVAL)
-		tween.tween_callback(activatedTileHandler.crystallizeTile.bind(cell)).set_delay(CRYSTALLIZE_DELAY + (i * chunk.ANIMATION_INTERVAL))
-		game_started.connect(tween.kill)
-		shatterTween.finished.connect(tween.kill)
-		
 
 func requestPiece(allowMultiplePieces:bool = false):
 	if isGameOver: return

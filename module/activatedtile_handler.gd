@@ -10,30 +10,46 @@ var CRYSTALPARTICLE_SCENE_PATHS:Array[String] = [
 	"res://object/crystalparticle_1.tscn",
 	"res://object/crystalparticle_2.tscn",
 ]
-
-# === Virtuals ===
-func _exit_tree() -> void:
-	# Explode into particles when deleted
-	var res:Resource = load(CRYSTALPARTICLE_SCENE_PATHS.pick_random())
-	if res is PackedScene:
-		var particles:CPUParticles2D = res.instantiate()
-		get_parent().add_child.call_deferred(particles)
-		particles.position = position
-		particles.emitting = true
-		particles.finished.connect(particles.queue_free)
-	else:
-		printerr("activatedtile.gd: Failed to load crystal particle scene")
 	
 # === Functions ===
+func activateChunk(chunk:Board.ClearingChunk, callback:Callable):
+	# Set up shatter tween
+	var shatterTween:Tween = create_tween()
+	shatterTween.tween_callback(shatterChunkTiles.bind(chunk)).set_delay(chunk.SHATTER_DELAY)
+	shatterTween.finished.connect(callback, CONNECT_DEFERRED)
+	cleared.connect(shatterTween.kill)
+	chunk.completed.connect(shatterTween.kill)
+
+	# Set up activations
+	for i:int in range(chunk.tilesToActivate.size()):
+		var BIG_CRYSTALLIZE_DELAY:float = 0.125 + chunk.CRYSTALLIZE_DELAY + (i * chunk.ANIMATION_INTERVAL)
+		# Create activated tiles
+		var cell:Vector2i = chunk.tilesToActivate[i]
+		var tween:Tween = create_tween().set_parallel()
+		tween.tween_callback(activateChunkTileIndex.bind(chunk, i)).set_delay(i * chunk.ANIMATION_INTERVAL)
+		tween.tween_callback(crystallizeTileIndex.bind(chunk, i)).set_delay(chunk.CRYSTALLIZE_DELAY + (i * chunk.ANIMATION_INTERVAL))
+		tween.tween_callback(bigCrystallizeTileIndex.bind(chunk, i)).set_delay(BIG_CRYSTALLIZE_DELAY)
+		cleared.connect(tween.kill)
+		chunk.completed.connect(tween.kill)
+		shatterTween.finished.connect(tween.kill)
+
+func activateChunkTileIndex(chunk:Board.ClearingChunk, index:int):
+	if chunk.tilesToActivate.size() > index:
+		activateTile(chunk.tilesToActivate[index])
+
+func crystallizeTileIndex(chunk:Board.ClearingChunk, index:int):
+	if chunk.tilesToActivate.size() > index:
+		crystallizeTile(chunk.tilesToActivate[index])
+
+func bigCrystallizeTileIndex(chunk:Board.ClearingChunk, index:int):
+	if chunk.tilesToActivate.size() > index:
+		bigCrystallizeTile(chunk.tilesToActivate[index])
+
 func activateTile(cell:Vector2i) -> void:
 	activatedTileMap.set_cell(cell, 0, Vector2i.ZERO, 1)
 
 func crystallizeTile(cell:Vector2i) -> void:
-	var BIG_CRYSTALLIZE_DELAY:float = 0.125
 	activatedTileMap.set_cell(cell, 1, Vector2i(1,0))
-	var tween:Tween = create_tween()
-	tween.tween_callback(bigCrystallizeTile.bind(cell)).set_delay(BIG_CRYSTALLIZE_DELAY)
-	cleared.connect(tween.kill)
 
 func bigCrystallizeTile(cell:Vector2i) -> void:
 	var nativeCell:Vector2i = cell*2
@@ -62,12 +78,11 @@ func updateCrystallizedSurrounding(cell:Vector2i) -> void:
 		cell+Vector2i.DOWN+Vector2i.LEFT,
 		cell+Vector2i.DOWN+Vector2i.RIGHT,
 	]:
-		if not isCellCrystallized(v):
-			updateCrystallizedCell(v)
+		updateCrystallizedCell(v)
 
 func updateCrystallizedCell(cell:Vector2i) -> void:
-	if not Board.BOUNDS.has_point(cell):
-		# Only change cells in bounds
+	if not Board.BOUNDS.has_point(cell) or isCellCrystallized(cell):
+		# Only change crystal edges in bounds
 		return
 	var nativeCell:Vector2i = cell*2
 	var up_occupied = isCellCrystallized(cell+Vector2i.UP)
@@ -126,7 +141,9 @@ func shatterTile(cell:Vector2i, updateCrystal:bool = true) -> void:
 	else:
 		printerr("activatedtile.gd: Failed to load crystal particle scene")
 
-func shatterTiles(cells:Array[Vector2i]) -> void:
+func shatterChunkTiles(chunk:Board.ClearingChunk) -> void:
+	var cells:Array[Vector2i] = chunk.tilesToActivate.duplicate()
+	chunk.tilesToActivate.clear()
 	for cell in cells:
 		shatterTile(cell, false)
 
@@ -148,8 +165,15 @@ func pushDownRows(row:int) -> void:
 	# Move tiles down
 	for y in range(row, Board.BOUNDS.position.y -1, -1):
 		for x in range(Board.BOUNDS.position.x, Board.BOUNDS.end.x):
-			activatedTileMap.set_cell(Vector2i(x,y), 0, activatedTileMap.get_cell_atlas_coords(Vector2i(x, y - 1)))
-			var crystallizedCell = Vector2i(x,y) * 2
+			var cell := Vector2i(x,y)
+			var aboveCell := cell + Vector2i.UP
+			activatedTileMap.set_cell(
+				cell,
+				activatedTileMap.get_cell_source_id(aboveCell),
+				activatedTileMap.get_cell_atlas_coords(aboveCell),
+				activatedTileMap.get_cell_alternative_tile(aboveCell)
+			)
+			var crystallizedCell = cell*2
 			for v in [
 				crystallizedCell, 
 				crystallizedCell+Vector2i.RIGHT, 
