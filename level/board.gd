@@ -152,9 +152,6 @@ func _ready():
 		scn.position = map_to_local(Vector2i(BOUNDS.position.x, BOUNDS.end.y-i ))
 		$LineNumberBar.add_child(scn)
 
-func _physics_process(delta: float) -> void:
-	for chunk in clearingChunks:
-		processClearingChunk(chunk, delta)
 
 #===== Functions ======
 func getFocusPiece() -> Piece:
@@ -182,33 +179,34 @@ func countNonlockedPieces() -> int:
 		)
 	return num
 
-func processClearingChunk(chunk:ClearingChunk, delta:float) -> void:
-	chunk.animationTimer += delta
-	while(chunk.animationTimer > chunk.ANIMATION_INTERVAL):
-		chunk.animationTimer -= chunk.ANIMATION_INTERVAL
-		if chunk.tilesToActivate.size():
-			# Create activated tiles
-			var cell:Vector2i = chunk.tilesToActivate.pop_back()
-			var activatedTile:Node2D = ACTIVATEDTILE_SCENE.instantiate()
-			chunk.activatedTileCoords[activatedTile] = cell
-			activatedTile.position = map_to_local(cell)
-			add_child(activatedTile)
-			if chunk.tilesToActivate.size() == 0:
-				# Connect to last tile
-				(activatedTile as AnimatedSprite2D).animation_finished.connect(
-					func():
-						# Delete activated tiles
-						for at:Node in chunk.activatedTileCoords.keys():
-							at.queue_free()
-						chunk.activatedTileCoords.clear()
-								
-						clearingChunks.erase(chunk)
-						pushDownRows(chunk)
-						lines_cleared.emit([chunk.mappedLine])
-						if not clearingChunks.size():
-							requestPiece()
-				)
-
+func processClearingChunk(chunk:ClearingChunk) -> void:
+	chunk.animationTimer -= chunk.ANIMATION_INTERVAL
+	var old_tilesToActivate_size = chunk.tilesToActivate.size()
+	for i:int in range(old_tilesToActivate_size):
+		# Create activated tiles
+		var cell:Vector2i = chunk.tilesToActivate.pop_back()
+		var activatedTile:Node2D = ACTIVATEDTILE_SCENE.instantiate()
+		chunk.activatedTileCoords[activatedTile] = cell
+		activatedTile.position = map_to_local(cell)
+		add_child(activatedTile)
+		var tween = activatedTile.create_tween().set_parallel()
+		tween.tween_property(activatedTile, "modulate", Color.WHITE, i * chunk.ANIMATION_INTERVAL).from(Color(1,1,1,0))
+		tween.tween_callback((activatedTile as AnimatedSprite2D).play).set_delay(0.1 + (i * chunk.ANIMATION_INTERVAL))
+		if chunk.tilesToActivate.size() == 0:
+			# Connect to last tile
+			(activatedTile as AnimatedSprite2D).animation_finished.connect(
+				func():
+					# Delete activated tiles
+					for at:Node in chunk.activatedTileCoords.keys():
+						at.queue_free()
+					chunk.activatedTileCoords.clear()
+							
+					clearingChunks.erase(chunk)
+					pushDownRows(chunk)
+					lines_cleared.emit([chunk.mappedLine])
+					if not clearingChunks.size():
+						requestPiece()
+			)
 
 func requestPiece(allowMultiplePieces:bool = false):
 	if isGameOver: return
@@ -523,7 +521,9 @@ func lockPiece(piece:Piece):
 		if fullRows.size() > 0:
 			linesCleared += fullRows.size()
 			for row:int in fullRows:
-				clearingChunks.append(ClearingChunk.new(row))
+				var chunk := ClearingChunk.new(row)
+				clearingChunks.append(chunk)
+				processClearingChunk(chunk)
 
 func getFullRows() -> Array[int]:
 	var fullRows:Array[int] = []
