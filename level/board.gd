@@ -33,6 +33,7 @@ static var SET_TILE_ATLAS_ROW:int = 1
 		if holdStorage and not holdStorage.slot_triggered.is_connected(hold):
 			holdStorage.slot_triggered.connect(hold)
 
+@onready var activatedTileHandler:ActivatedTileHandler = $ActivatedTileHandler
 @onready var masterCoin:Node2D = $MasterCoin
 @onready var sfx_rotate:AudioStreamPlayer = $SFX_Rotate
 @onready var sfx_rotateFail:AudioStreamPlayer = $SFX_RotateFail
@@ -91,9 +92,7 @@ class ItemPickupContext:
 class ClearingChunk:
 	var row:int
 	var tilesToActivate:Array[Vector2i]
-	var activatedTileCoords:Dictionary[Node2D, Vector2i]
 	var mappedLine:int
-	var animationTimer:float = 0
 	var ANIMATION_INTERVAL:float = 0.04
 	static var flip:bool = false
 	func _init(_row:int) -> void:
@@ -108,8 +107,6 @@ class ClearingChunk:
 		row += 1
 		for i in range(tilesToActivate.size()):
 			tilesToActivate[i].y += 1
-		for activatedTile:Node2D in activatedTileCoords.keys():
-			activatedTileCoords[activatedTile].y += 1
 		mappedLine -= 1
 
 var inputTimer:ActivityTimer ## For death context
@@ -180,33 +177,33 @@ func countNonlockedPieces() -> int:
 	return num
 
 func processClearingChunk(chunk:ClearingChunk) -> void:
-	chunk.animationTimer -= chunk.ANIMATION_INTERVAL
 	var old_tilesToActivate_size = chunk.tilesToActivate.size()
+	var CRYSTALLIZE_DELAY:float = 0.225
+	var SHATTER_DELAY:float = 0.375 + (chunk.ANIMATION_INTERVAL*old_tilesToActivate_size)
+	
+	# Set up shatter, which happens after activating
+	var shatterTween:Tween = activatedTileHandler.create_tween()
+	shatterTween.tween_callback(activatedTileHandler.shatterTiles.bind(chunk.tilesToActivate.duplicate())).set_delay(SHATTER_DELAY)
+	game_started.connect(shatterTween.kill)
+	shatterTween.finished.connect(
+		func():					
+			clearingChunks.erase(chunk)
+			pushDownRows(chunk)
+			lines_cleared.emit([chunk.mappedLine])
+			if not clearingChunks.size():
+				requestPiece()
+	)
+
+	# Set up activations
 	for i:int in range(old_tilesToActivate_size):
 		# Create activated tiles
 		var cell:Vector2i = chunk.tilesToActivate.pop_back()
-		var activatedTile:Node2D = ACTIVATEDTILE_SCENE.instantiate()
-		chunk.activatedTileCoords[activatedTile] = cell
-		activatedTile.position = map_to_local(cell)
-		add_child(activatedTile)
-		var tween = activatedTile.create_tween().set_parallel()
-		tween.tween_property(activatedTile, "modulate", Color.WHITE, i * chunk.ANIMATION_INTERVAL).from(Color(1,1,1,0))
-		tween.tween_callback((activatedTile as AnimatedSprite2D).play).set_delay(0.1 + (i * chunk.ANIMATION_INTERVAL))
-		if chunk.tilesToActivate.size() == 0:
-			# Connect to last tile
-			(activatedTile as AnimatedSprite2D).animation_finished.connect(
-				func():
-					# Delete activated tiles
-					for at:Node in chunk.activatedTileCoords.keys():
-						at.queue_free()
-					chunk.activatedTileCoords.clear()
-							
-					clearingChunks.erase(chunk)
-					pushDownRows(chunk)
-					lines_cleared.emit([chunk.mappedLine])
-					if not clearingChunks.size():
-						requestPiece()
-			)
+		var tween:Tween = activatedTileHandler.create_tween().set_parallel()
+		tween.tween_callback(activatedTileHandler.activateTile.bind(cell)).set_delay(i * chunk.ANIMATION_INTERVAL)
+		tween.tween_callback(activatedTileHandler.crystallizeTile.bind(cell)).set_delay(CRYSTALLIZE_DELAY + (i * chunk.ANIMATION_INTERVAL))
+		game_started.connect(tween.kill)
+		shatterTween.finished.connect(tween.kill)
+		
 
 func requestPiece(allowMultiplePieces:bool = false):
 	if isGameOver: return
@@ -489,8 +486,10 @@ func resetGame():
 	linesCleared = 0
 	random.state = randomSaveState
 	rotate_random.state = rotate_randomSaveState
+	clearingChunks.clear()
 
 	# Clear board
+	activatedTileHandler.clear()
 	clear()
 	game_started.emit()
 
@@ -573,13 +572,14 @@ func pushDownRows(clearedChunk:ClearingChunk) -> void:
 	for y in range(clearedChunk.row, BOUNDS.position.y -1, -1):
 		for x in range(BOUNDS.position.x, BOUNDS.end.x):
 			set_cell(Vector2i(x,y), 0, get_cell_atlas_coords(Vector2i(x, y - 1)))
+
+	activatedTileHandler.pushDownRows(clearedChunk.row)
+			
 	# Move clearing chunks down
 	for chunk in clearingChunks:
 		if chunk.row < clearedChunk.row:
 			chunk.pushDown()
-			# Update activatedTile positions
-			for activatedTile:Node2D in chunk.activatedTileCoords.keys():
-				activatedTile.position = map_to_local(chunk.activatedTileCoords[activatedTile])
+
 	# Update ghosts
 	updateAllGhosts()
 
