@@ -15,13 +15,13 @@ static var ACTIVATE_INTERVAL:float = 0.03
 static var CRYSTALLIZE_DELAY:float = 0.125
 static var BIG_CRYSTALLIZE_INTERVAL:float = 0.03
 static var BIG_CRYSTALLIZE_DELAY:float = 0.5 - (BIG_CRYSTALLIZE_INTERVAL*10)
-static var SHATTER_DELAY:float = 0.6 - (BIG_CRYSTALLIZE_INTERVAL*10)
-static var FINISH_DELAY:float = 0.7
+static var FINISH_DELAY:float = 0.6
 # === Functions ===
 func activateChunk(chunk:Board.ClearingChunk, callback:Callable):
 	# Set up shatter tween
 	var callbackTween:Tween = create_tween()
-	callbackTween.tween_callback(callback.call_deferred).set_delay(FINISH_DELAY)
+	callbackTween.tween_callback(shatterChunkTiles.bind(chunk)).set_delay(FINISH_DELAY)
+	callbackTween.finished.connect(callback)
 	cleared.connect(callbackTween.kill)
 	chunk.completed.connect(callbackTween.kill)
 
@@ -33,7 +33,6 @@ func activateChunk(chunk:Board.ClearingChunk, callback:Callable):
 		var tween:Tween = create_tween().set_parallel()
 		tween.tween_callback(callWithTileIndex.bind(crystallizeTile, chunk, i)).set_delay(CRYSTALLIZE_DELAY + (i * ACTIVATE_INTERVAL))
 		tween.tween_callback(callWithTileIndex.bind(bigCrystallizeTile, chunk, i)).set_delay(BIG_CRYSTALLIZE_DELAY + (i * BIG_CRYSTALLIZE_INTERVAL))
-		tween.tween_callback(shatterTileIndex.bind(chunk, i)).set_delay(SHATTER_DELAY + (i * BIG_CRYSTALLIZE_INTERVAL))
 		cleared.connect(tween.kill)
 		chunk.completed.connect(tween.kill)
 		callbackTween.finished.connect(tween.kill)
@@ -143,6 +142,19 @@ func shatterTile(cell:Vector2i, updateCrystal:bool = true) -> void:
 		particles.finished.connect(particles.queue_free)
 	else:
 		printerr("activatedtile.gd: Failed to load crystal particle scene")
+
+func shatterChunkTiles(chunk:Board.ClearingChunk) -> void:
+	var cells:Array[Vector2i] = chunk.tilesToActivate.duplicate()
+	for cell in cells:
+		shatterTile(cell, false)
+
+	var cellsToUpdate:Array[Vector2i] = []
+	cellsToUpdate.append_array(cells)
+	# Get all cells above and below
+	Board.mergeCells(cellsToUpdate, Board.getTranslatedCells(cells, Vector2i.UP))
+	Board.mergeCells(cellsToUpdate, Board.getTranslatedCells(cells, Vector2i.DOWN))
+	for cell in cellsToUpdate:
+		updateCrystallizedCell(cell)
 
 func clear() -> void:
 	activatedTileMap.clear()
