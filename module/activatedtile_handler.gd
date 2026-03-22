@@ -5,45 +5,47 @@ class_name ActivatedTileHandler extends Node2D
 
 signal cleared()
 
-var CRYSTALPARTICLE_SCENE_PATHS:Array[String] = [
+static var CRYSTALPARTICLE_SCENE_PATHS:Array[String] = [
 	"res://object/crystalparticle.tscn",
 	"res://object/crystalparticle_1.tscn",
 	"res://object/crystalparticle_2.tscn",
 ]
-	
+
+static var ACTIVATE_INTERVAL:float = 0.03
+static var CRYSTALLIZE_DELAY:float = 0.125
+static var BIG_CRYSTALLIZE_INTERVAL:float = 0.03
+static var BIG_CRYSTALLIZE_DELAY:float = 0.5 - (BIG_CRYSTALLIZE_INTERVAL*10)
+static var SHATTER_DELAY:float = 0.6 - (BIG_CRYSTALLIZE_INTERVAL*10)
+static var FINISH_DELAY:float = 0.7
 # === Functions ===
 func activateChunk(chunk:Board.ClearingChunk, callback:Callable):
 	# Set up shatter tween
-	var shatterTween:Tween = create_tween()
-	shatterTween.tween_callback(shatterChunkTiles.bind(chunk)).set_delay(chunk.SHATTER_DELAY)
-	shatterTween.finished.connect(callback, CONNECT_DEFERRED)
-	cleared.connect(shatterTween.kill)
-	chunk.completed.connect(shatterTween.kill)
+	var callbackTween:Tween = create_tween()
+	callbackTween.tween_callback(callback.call_deferred).set_delay(FINISH_DELAY)
+	cleared.connect(callbackTween.kill)
+	chunk.completed.connect(callbackTween.kill)
 
 	# Set up activations
 	for i:int in range(chunk.tilesToActivate.size()):
-		var BIG_CRYSTALLIZE_DELAY:float = 0.125 + chunk.CRYSTALLIZE_DELAY + (i * chunk.ANIMATION_INTERVAL)
 		# Create activated tiles
 		var cell:Vector2i = chunk.tilesToActivate[i]
+		activateTile(cell)
 		var tween:Tween = create_tween().set_parallel()
-		tween.tween_callback(activateChunkTileIndex.bind(chunk, i)).set_delay(i * chunk.ANIMATION_INTERVAL)
-		tween.tween_callback(crystallizeTileIndex.bind(chunk, i)).set_delay(chunk.CRYSTALLIZE_DELAY + (i * chunk.ANIMATION_INTERVAL))
-		tween.tween_callback(bigCrystallizeTileIndex.bind(chunk, i)).set_delay(BIG_CRYSTALLIZE_DELAY)
+		tween.tween_callback(callWithTileIndex.bind(crystallizeTile, chunk, i)).set_delay(CRYSTALLIZE_DELAY + (i * ACTIVATE_INTERVAL))
+		tween.tween_callback(callWithTileIndex.bind(bigCrystallizeTile, chunk, i)).set_delay(BIG_CRYSTALLIZE_DELAY + (i * BIG_CRYSTALLIZE_INTERVAL))
+		tween.tween_callback(shatterTileIndex.bind(chunk, i)).set_delay(SHATTER_DELAY + (i * BIG_CRYSTALLIZE_INTERVAL))
 		cleared.connect(tween.kill)
 		chunk.completed.connect(tween.kill)
-		shatterTween.finished.connect(tween.kill)
+		callbackTween.finished.connect(tween.kill)
 
-func activateChunkTileIndex(chunk:Board.ClearingChunk, index:int):
+func callWithTileIndex(fn:Callable, chunk:Board.ClearingChunk, index:int):
 	if chunk.tilesToActivate.size() > index:
-		activateTile(chunk.tilesToActivate[index])
+		fn.call(chunk.tilesToActivate[index])
 
-func crystallizeTileIndex(chunk:Board.ClearingChunk, index:int):
+func shatterTileIndex(chunk:Board.ClearingChunk, index:int):
 	if chunk.tilesToActivate.size() > index:
-		crystallizeTile(chunk.tilesToActivate[index])
-
-func bigCrystallizeTileIndex(chunk:Board.ClearingChunk, index:int):
-	if chunk.tilesToActivate.size() > index:
-		bigCrystallizeTile(chunk.tilesToActivate[index])
+		shatterTile(chunk.tilesToActivate[index])
+		chunk.tile_shattered.emit(chunk.tilesToActivate[index])
 
 func activateTile(cell:Vector2i) -> void:
 	activatedTileMap.set_cell(cell, 0, Vector2i.ZERO, 1)
@@ -51,14 +53,15 @@ func activateTile(cell:Vector2i) -> void:
 func crystallizeTile(cell:Vector2i) -> void:
 	activatedTileMap.set_cell(cell, 1, Vector2i(1,0))
 
-func bigCrystallizeTile(cell:Vector2i) -> void:
+func bigCrystallizeTile(cell:Vector2i, updateCrystal:bool = true) -> void:
 	var nativeCell:Vector2i = cell*2
 	crystallizedTileMap.set_cell(nativeCell, 0, Vector2i(5,1))
 	# Clear overlapping tiles
 	crystallizedTileMap.set_cell(nativeCell+Vector2i.RIGHT)
 	crystallizedTileMap.set_cell(nativeCell+Vector2i.DOWN)
 	crystallizedTileMap.set_cell(nativeCell+Vector2i.RIGHT+Vector2i.DOWN)
-	updateCrystallizedSurrounding(cell)
+	if updateCrystal:
+		updateCrystallizedSurrounding(cell)
 
 func clearBigCrystallizeTile(cell:Vector2i, updateCrystal:bool) -> void:
 	var nativeCell:Vector2i = cell*2
@@ -140,20 +143,6 @@ func shatterTile(cell:Vector2i, updateCrystal:bool = true) -> void:
 		particles.finished.connect(particles.queue_free)
 	else:
 		printerr("activatedtile.gd: Failed to load crystal particle scene")
-
-func shatterChunkTiles(chunk:Board.ClearingChunk) -> void:
-	var cells:Array[Vector2i] = chunk.tilesToActivate.duplicate()
-	chunk.tilesToActivate.clear()
-	for cell in cells:
-		shatterTile(cell, false)
-
-	var cellsToUpdate:Array[Vector2i] = []
-	cellsToUpdate.append_array(cells)
-	# Get all cells above and below
-	Board.mergeCells(cellsToUpdate, Board.getTranslatedCells(cells, Vector2i.UP))
-	Board.mergeCells(cellsToUpdate, Board.getTranslatedCells(cells, Vector2i.DOWN))
-	for cell in cellsToUpdate:
-		updateCrystallizedCell(cell)
 
 func clear() -> void:
 	activatedTileMap.clear()

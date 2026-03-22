@@ -91,12 +91,10 @@ class ItemPickupContext:
 
 class ClearingChunk:
 	signal completed()
+	signal tile_shattered(cell:Vector2i)
 	var row:int
 	var tilesToActivate:Array[Vector2i]
 	var mappedLine:int
-	var ANIMATION_INTERVAL:float = 0.04
-	var CRYSTALLIZE_DELAY:float = 0.225
-	var SHATTER_DELAY:float = 0.775
 	static var flip:bool = false
 	func _init(_row:int) -> void:
 		row = _row
@@ -180,6 +178,7 @@ func countNonlockedPieces() -> int:
 	return num
 
 func processClearingChunk(chunk:ClearingChunk) -> void:	
+	chunk.tile_shattered.connect(set_cell)
 	activatedTileHandler.activateChunk(chunk, 
 		func():					
 			clearingChunks.erase(chunk)
