@@ -345,6 +345,10 @@ func nudgePiece(cells:Array[Vector2i], piece:Piece, direction:Vector2i, force:bo
 	return false
 
 func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ## false = unblocked; true = blocked
+	# Check if a non-collidible piece isn't inside another piece
+	if not piece.collidible and getCollidingPiece(piece.globalCells, piece) != null:
+		return true
+	# Check tiles the piece want to move
 	var translatedCells := getTranslatedCells(piece.globalCells, direction)
 	if areCellsOpen(translatedCells, [], true):
 		var blocked:bool = false
@@ -373,6 +377,7 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 					if nudgeResult: blocked = true
 		if not blocked:
 			piece.move(direction)
+			tryToMakePiecesCollible()
 			match movementType:
 				Piece.MOVEMENT.HORIZONTAL:
 					sfx_move.play()
@@ -396,6 +401,11 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 				lockPiece(piece)
 				sfx_drop.play()
 	return true
+
+func tryToMakePiecesCollible() -> void: ## Check if all noncollible pieces are in a free space to turn them collidible
+	for piece:Piece in activePieces:
+		if not piece.collidible and getCollidingPiece(piece.globalCells, piece) == null:
+			piece.collidible = true
 
 func sortActivePieces():
 	activePieces.sort_custom(

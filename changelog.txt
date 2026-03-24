@@ -2,6 +2,7 @@ Version 0.2.4 (dev-beta2)
  - Tweak line clear animation
  - Tweak kick behavior
  - Add Lock Delay
+ - Fix bug where pieces could spawn inside another
 
 Version 0.2.4 (dev-beta1)
  - Prevent topping out when top line is filled
