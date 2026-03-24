@@ -345,6 +345,10 @@ func nudgePiece(cells:Array[Vector2i], piece:Piece, direction:Vector2i, force:bo
 	return false
 
 func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ## false = unblocked; true = blocked
+	# Check if a non-collidible piece isn't inside another piece
+	if not piece.collidible and getCollidingPiece(piece.globalCells, piece) != null:
+		return true
+	# Check tiles the piece want to move
 	var translatedCells := getTranslatedCells(piece.globalCells, direction)
 	if areCellsOpen(translatedCells, [], true):
 		var blocked:bool = false
@@ -364,7 +368,7 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 				Piece.MOVEMENT.HORIZONTAL: 
 					if not DracominoHandler.activeAbilities.get("Horizontal Shove", 0):
 						blocked = true
-				Piece.MOVEMENT.SOFT_DROP:
+				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
 					if not DracominoHandler.activeAbilities.get("Vertical Shove", 0):
 						blocked = true
 			if not blocked:
@@ -373,17 +377,35 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 					if nudgeResult: blocked = true
 		if not blocked:
 			piece.move(direction)
+			tryToMakePiecesCollible()
 			match movementType:
-				Piece.MOVEMENT.HORIZONTAL: sfx_move.play()
-				Piece.MOVEMENT.SOFT_DROP: sfx_moveDown.play()
+				Piece.MOVEMENT.HORIZONTAL:
+					sfx_move.play()
+				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
+					sfx_moveDown.play()
 		return blocked
 	elif direction == Vector2i.DOWN:
 		# Lock piece
 		match movementType:
-			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE: sfx_hardDrop.play()
-			_: sfx_drop.play()
-		lockPiece(piece)
+			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE:
+
+				lockPiece(piece)
+				sfx_hardDrop.play()
+			Piece.MOVEMENT.SOFT_DROP:
+				if DracominoHandler.activeAbilities.get("Lock Delay", 0):
+					piece.lockDelayed = true
+				else:
+					lockPiece(piece)
+					sfx_drop.play()
+			_:
+				lockPiece(piece)
+				sfx_drop.play()
 	return true
+
+func tryToMakePiecesCollible() -> void: ## Check if all noncollible pieces are in a free space to turn them collidible
+	for piece:Piece in activePieces:
+		if not piece.collidible and getCollidingPiece(piece.globalCells, piece) == null:
+			piece.collidible = true
 
 func sortActivePieces():
 	activePieces.sort_custom(
@@ -694,10 +716,16 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 	var dirs:Array[Vector2i] = [Vector2i.ZERO]
 	if DracominoHandler.activeAbilities.get("Kick", 0):
 		# Add more directions to push when kick is active
-		for cell in cells:
-			var dir = -cell
-			if not dirs.has(dir):
-				dirs.append(dir)
+		dirs.append_array([
+			Vector2i.DOWN,
+			Vector2i.LEFT,
+			Vector2i.RIGHT,
+			Vector2i.DOWN+Vector2i.LEFT,
+			Vector2i.DOWN+Vector2i.RIGHT,
+			(Vector2i.DOWN*2)+Vector2i.RIGHT,
+			(Vector2i.DOWN*2)+Vector2i.LEFT,
+			Vector2i.UP,
+		])
 		
 	for dir:Vector2i in dirs:
 		var translatedCells := getTranslatedCells(cells, piece.currentPosition + dir)

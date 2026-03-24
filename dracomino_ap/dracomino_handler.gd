@@ -186,6 +186,7 @@ func upgradeFeatures(generatedVersion:String = "0.0.0"): ## Add new features to 
 		var RETROFITTED_ABILITIES:Array[StringName] = [
 			"Kick",
 			"Vertical Shove",
+			"Lock Delay",
 		]
 		for abilityName:StringName in RETROFITTED_ABILITIES:
 			var id:Variant = CONSTANTS.ITEM_NAME_TO_ID.get(abilityName)
