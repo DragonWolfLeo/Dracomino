@@ -364,7 +364,7 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 				Piece.MOVEMENT.HORIZONTAL: 
 					if not DracominoHandler.activeAbilities.get("Horizontal Shove", 0):
 						blocked = true
-				Piece.MOVEMENT.SOFT_DROP:
+				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
 					if not DracominoHandler.activeAbilities.get("Vertical Shove", 0):
 						blocked = true
 			if not blocked:
@@ -374,15 +374,27 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 		if not blocked:
 			piece.move(direction)
 			match movementType:
-				Piece.MOVEMENT.HORIZONTAL: sfx_move.play()
-				Piece.MOVEMENT.SOFT_DROP: sfx_moveDown.play()
+				Piece.MOVEMENT.HORIZONTAL:
+					sfx_move.play()
+				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
+					sfx_moveDown.play()
 		return blocked
 	elif direction == Vector2i.DOWN:
 		# Lock piece
 		match movementType:
-			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE: sfx_hardDrop.play()
-			_: sfx_drop.play()
-		lockPiece(piece)
+			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE:
+
+				lockPiece(piece)
+				sfx_hardDrop.play()
+			Piece.MOVEMENT.SOFT_DROP:
+				if DracominoHandler.activeAbilities.get("Lock Delay", 0):
+					piece.lockDelayed = true
+				else:
+					lockPiece(piece)
+					sfx_drop.play()
+			_:
+				lockPiece(piece)
+				sfx_drop.play()
 	return true
 
 func sortActivePieces():
