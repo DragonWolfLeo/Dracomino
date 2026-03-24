@@ -4,6 +4,7 @@ var btn_deathLink:CheckButton
 var btn_deathOnRestart:CheckButton
 var optionBtn_deathLinkGroup:OptionButton
 var lineEdit_deathLinkGroup:LineEdit
+var btn_energyLink:CheckButton
 var btn_allowUnfocusedInputs:CheckButton
 var btn_gravityAmt_reset:Button
 var label_gravityAmt:Label
@@ -54,6 +55,13 @@ func _ready() -> void:
 		lineEdit_deathLinkGroup.focus_exited.connect(func(): _on_lineEdit_deathLinkGroup_text_submitted(lineEdit_deathLinkGroup.text))
 		lineEdit_deathLinkGroup.text_submitted.connect(_on_lineEdit_deathLinkGroup_text_submitted)
 	_on_deathLinkGroup_setting_changed()
+
+	# Energy Link toggle
+	btn_energyLink = get_parent().find_child("Btn_EnergyLink")
+	if btn_energyLink:
+		btn_energyLink.toggled.connect(_on_btn_energyLink_toggled)
+		SignalBus.getSignal("energyLink_enabled").connect(btn_energyLink.set_pressed_no_signal.bind(true))
+		SignalBus.getSignal("energyLink_disabled").connect(btn_energyLink.set_pressed_no_signal.bind(false))
 
 	# Unfocused inputs toggle
 	btn_allowUnfocusedInputs = get_parent().find_child("Btn_AllowUnfocusedInputs")
@@ -107,6 +115,11 @@ func _on_Archipelago_tag_change():
 func _on_btn_deathOnRestart_toggled(toggled_on:bool):
 	SignalBus.getSignal(
 		"deathOnRestart_enabled" if toggled_on else "deathOnRestart_disabled"
+	).emit()
+
+func _on_btn_energyLink_toggled(toggled_on:bool):
+	SignalBus.getSignal(
+		"energyLink_enabled" if toggled_on else "energyLink_disabled"
 	).emit()
 
 func _on_deathLinkGroup_setting_changed():

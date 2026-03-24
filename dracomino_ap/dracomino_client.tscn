@@ -102,6 +102,12 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 
+[node name="Btn_EnergyLink" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "Share your generated mana to other players as Energy"
+text = "Energy Link
+"
+
 [node name="Container_Gravity" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/margin_left = 5

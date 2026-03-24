@@ -64,6 +64,7 @@ static var PIECES:Dictionary[StringName, PieceDefinition] = {
 var HARD_DROP_WAIT_TIME:float = 0.01
 @onready var SOFT_DROP_WAIT_TIME:float = softDropTimer.wait_time
 var SOFT_DROP_REPEAT_WAIT_TIME:float = .04
+var SOFT_DROP_LOCK_DELAY:float = 0.2
 @onready var HORIZONTAL_WAIT_TIME:float = horizontalTimer.wait_time
 var HORIZONTAL_REPEAT_WAIT_TIME:float = .075
 var USE_ALT_ROTATE:bool = true # TODO: Make an option
@@ -72,6 +73,7 @@ enum MOVEMENT {
 	NONE = -1,
 	HORIZONTAL,
 	SOFT_DROP,
+	SOFT_DROP_LOCK,
 	GRAVITY,
 	HARD_DROP,
 	SHOVE,
@@ -96,6 +98,12 @@ var moveLock:bool = false: ## Prevent moving this anymore
 			isFocus = false
 			set_process_unhandled_input(false)
 var holdLock:bool = false ## Prevent from holding this anymore
+var lockDelayed:bool = false: ## Prevent from locking for a bit
+	set(value):
+		if lockDelayed != value:
+			lockDelayed = value
+			if lockDelayed:
+				softDropTimer.start(SOFT_DROP_LOCK_DELAY)
 var collidible:bool = false ## Enable when piece doesn't overlap with another
 var playHardDropSound:bool = false
 var ghost:GhostPiece
@@ -141,7 +149,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	elif event.is_action_pressed("moveDown") and Input.is_action_just_pressed("moveDown") and DracominoHandler.activeAbilities.get("Soft Drop", 0):
 		softDropTimer.start(SOFT_DROP_WAIT_TIME)
-		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP)
+		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP_LOCK)
 		# Avoid falling too soon
 		gravityTimer.start()
 		get_viewport().set_input_as_handled()
@@ -277,13 +285,13 @@ func _on_HorizontalTimer_timeout():
 func _on_SoftDropTimer_timeout():
 	if not isFocus: return
 	if Input.is_action_pressed("moveDown") and DracominoHandler.activeAbilities.get("Soft Drop", 0):
-		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP)
-		softDropTimer.wait_time = SOFT_DROP_REPEAT_WAIT_TIME
-		softDropTimer.start()
+		softDropTimer.start(SOFT_DROP_REPEAT_WAIT_TIME)
+		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP_LOCK if lockDelayed else MOVEMENT.SOFT_DROP)
 		# Avoid falling too soon
 		gravityTimer.start()
 	else:
 		softDropTimer.wait_time = SOFT_DROP_WAIT_TIME
+		lockDelayed = false
 
 func _on_GravityTimer_timeout():
 	if moveLock or DracominoHandler.activeAbilities.get("Gravity", 0) or not isFocus:

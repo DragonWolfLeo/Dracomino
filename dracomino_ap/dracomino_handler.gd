@@ -29,12 +29,15 @@ var slotContextHash:int:
 			return
 		slotContextHash = value
 		slotContextHash_updated.emit(slotContextHash)
+var energyLinkEnabled:bool = false ## Static variable. Could probably be put somewhere neater
+var storedMana:float = 0 ## The amount of mana saved. Doesn't do anything yet
 
 var isJustConnected:bool = false
 var VERSION_WARNING_DIALOG_SCENE:PackedScene = load("res://ui/versionwarning_dialog.tscn")
 
 var LINE_THRESHOLD_FOR_NO_ROTATE_DEATH_CONTEXT:int = 8 ## For death context
 var _canUseDeathContext_NO_ROTATE:bool = false ## For death context
+var _energySendBuffer:int = 0 ## Energy to send to server when reconnecting
 
 signal lineMappings_updated(mappings:Dictionary[int, int])
 signal missingLocations_updated(locs:Dictionary[int, bool]) # TODO: This isn't actually used for anything?
@@ -76,6 +79,8 @@ class Streak:
 func _ready() -> void:
 	Archipelago.connected.connect(_on_connected)
 	Archipelago.remove_location.connect(_on_remove_location)
+	SignalBus.getSignal("energyLink_enabled").connect(set.bind("energyLinkEnabled", true))
+	SignalBus.getSignal("energyLink_disabled").connect(set.bind("energyLinkEnabled", false))
 
 #===== Functions =====
 func reset():
@@ -156,6 +161,23 @@ func sendVictory():
 	victory = true
 	Archipelago.set_client_status(Archipelago.ClientStatus.CLIENT_GOAL)
 
+func sendEnergy(amount:int = 0):
+	amount += _energySendBuffer
+	_energySendBuffer = 0
+	if amount == 0:
+		return
+	if Archipelago.conn:
+		var args:Dictionary = {
+			"key": "EnergyLink" + str(Archipelago.conn.team_id),
+			"default": 0,
+			"operations": [
+				{"operation": "add", "value": amount},
+			],
+		}
+		Archipelago.send_command("Set", args)
+	else:
+		_energySendBuffer = amount
+
 func upgradeFeatures(generatedVersion:String = "0.0.0"): ## Add new features to old games
 	var upgradeResult:Dictionary = {
 		retrofitted = [],
@@ -164,6 +186,7 @@ func upgradeFeatures(generatedVersion:String = "0.0.0"): ## Add new features to 
 		var RETROFITTED_ABILITIES:Array[StringName] = [
 			"Kick",
 			"Vertical Shove",
+			"Lock Delay",
 		]
 		for abilityName:StringName in RETROFITTED_ABILITIES:
 			var id:Variant = CONSTANTS.ITEM_NAME_TO_ID.get(abilityName)
@@ -184,12 +207,19 @@ func upgradeFeatures(generatedVersion:String = "0.0.0"): ## Add new features to 
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	isJustConnected = true
 	get_tree().create_timer(2, true).timeout.connect(set.bind("isJustConnected", false))
+	# Set death link
 	Archipelago.set_deathlink(conn.slot_data.get("death_link", false) as bool)
 	if "death_on_restart" in conn.slot_data:
 		SignalBus.getSignal(
 			"deathOnRestart_enabled" if conn.slot_data.get("death_on_restart", false)
 			else "deathOnRestart_disabled"
 		).emit()
+	# Set energy link
+	SignalBus.getSignal(
+		"energyLink_enabled" if conn.slot_data.get("energy_link", true)
+		else "energyLink_disabled"
+	).emit()
+	#
 	randomizeOrientations = conn.slot_data.get("randomize_orientations", false)
 	conn.deathlink.connect(_on_deathlink)
 	conn.obtained_item.connect(_on_obtained_item)
@@ -309,6 +339,9 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	else:
 		started.emit()
 
+	# Send energy that couldn't be sent earlier
+	sendEnergy.call_deferred()
+
 func _on_deathlink(source: String, cause: String, json: Dictionary):
 	if not cause: cause = "Died."
 	notification_signal.emit("{source}: {cause}".format({source=source, cause=cause}), Color.RED, true)
@@ -419,9 +452,18 @@ func _on_Board_item_pickedup(loc_id) -> void:
 	sendLocation(loc_id)
 
 func _on_Board_lines_cleared_updated(num:int) -> void:
+	# Make NO_ROTATE death context only happen when you're putting the effort
 	_canUseDeathContext_NO_ROTATE = num >= LINE_THRESHOLD_FOR_NO_ROTATE_DEATH_CONTEXT
+	# Send victory if reached goal
 	if not victory and goal > 0 and num >= goal:
 		sendVictory()
+	# Send mana/energy
+	var manaEarned:float = num * Board.BOUNDS.size.x * CONSTANTS.MANA_PER_BLOCK
+	var sharedMana:float = 0.0
+	if energyLinkEnabled:
+		sharedMana = manaEarned * CONSTANTS.ENERGY_LINK_SHARE
+		sendEnergy(round(sharedMana * CONSTANTS.MANA_TO_ENERGY_RATIO))
+	storedMana += manaEarned - sharedMana
 
 func _on_Board_deathlink_earned(deathContext:DracominoUtil.DeathContext) -> void:
 	if Archipelago.conn:

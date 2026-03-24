@@ -1,5 +1,10 @@
 extends Node
 
+# Constants
+var MANA_TO_ENERGY_RATIO:float = 1e6
+var MANA_PER_BLOCK:float = 4
+var ENERGY_LINK_SHARE:float = 0.5
+
 # Item + Location Data
 class Data:
 	var id:int
@@ -26,6 +31,7 @@ class LocationData extends Data: pass
 	[7,   "Kick",                     [ "useful", "ability", "classic" ] ],
 	[8,   "Vertical Shove",           [ "useful", "ability" ] ],
 	[9,   "Horizontal Shove",         [ "useful", "trap", "ability" ] ],
+	[10,  "Lock Delay",             [ "useful", "ability", "classic" ] ],
 
 	# Progressive Items (101-200)
 	[101, "Next Piece Slot",          [ "useful", "ability", "progressive" ] ],
