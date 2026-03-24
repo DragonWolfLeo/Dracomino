@@ -694,10 +694,16 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 	var dirs:Array[Vector2i] = [Vector2i.ZERO]
 	if DracominoHandler.activeAbilities.get("Kick", 0):
 		# Add more directions to push when kick is active
-		for cell in cells:
-			var dir = -cell
-			if not dirs.has(dir):
-				dirs.append(dir)
+		dirs.append_array([
+			Vector2i.DOWN,
+			Vector2i.LEFT,
+			Vector2i.RIGHT,
+			Vector2i.DOWN+Vector2i.LEFT,
+			Vector2i.DOWN+Vector2i.RIGHT,
+			(Vector2i.DOWN*2)+Vector2i.RIGHT,
+			(Vector2i.DOWN*2)+Vector2i.LEFT,
+			Vector2i.UP,
+		])
 		
 	for dir:Vector2i in dirs:
 		var translatedCells := getTranslatedCells(cells, piece.currentPosition + dir)
