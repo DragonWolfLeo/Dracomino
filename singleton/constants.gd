@@ -1,5 +1,10 @@
 extends Node
 
+# Constants
+var MANA_TO_ENERGY_RATIO:float = 1e6
+var MANA_PER_BLOCK:float = 4
+var ENERGY_LINK_SHARE:float = 0.5
+
 # Item + Location Data
 class Data:
 	var id:int
