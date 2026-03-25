@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://gov6o57aw668"]
+[gd_scene load_steps=19 format=3 uid="uid://gov6o57aw668"]
 
 [ext_resource type="Script" uid="uid://cj7q6qijx22yq" path="res://singleton/soundmanager.gd" id="1_u1q4g"]
 [ext_resource type="AudioStream" uid="uid://0ovedth7jefi" path="res://assets/audio/sfx/rotate.wav" id="2_tb4q0"]
@@ -12,6 +12,19 @@
 [ext_resource type="AudioStream" uid="uid://cugjh8x7j36ro" path="res://assets/audio/sfx/lineclear_check.wav" id="10_rsogl"]
 [ext_resource type="AudioStream" uid="uid://cr48vjhdfp8xq" path="res://assets/audio/sfx/lineclear.wav" id="11_id3fu"]
 [ext_resource type="AudioStream" uid="uid://ca4ufssu283db" path="res://assets/audio/sfx/gameover.wav" id="12_pmnmq"]
+[ext_resource type="AudioStream" uid="uid://b52pnfu4o26vk" path="res://assets/audio/voice/congratulations.wav" id="13_rjk6y"]
+[ext_resource type="AudioStream" uid="uid://bup2j6vprmdye" path="res://assets/audio/voice/incredible.wav" id="14_j5l5k"]
+[ext_resource type="AudioStream" uid="uid://dvo67m5460o56" path="res://assets/audio/voice/wow.wav" id="15_rsogl"]
+[ext_resource type="AudioStream" uid="uid://dxkm0jv0vx662" path="res://assets/audio/voice/wowthatsgreat.wav" id="16_id3fu"]
+[ext_resource type="AudioStream" uid="uid://unibtnrcgx5x" path="res://assets/audio/voice/youdidit.wav" id="17_pmnmq"]
+
+[sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_w3tpd"]
+streams_count = 5
+stream_0/stream = ExtResource("13_rjk6y")
+stream_1/stream = ExtResource("14_j5l5k")
+stream_2/stream = ExtResource("15_rsogl")
+stream_3/stream = ExtResource("16_id3fu")
+stream_4/stream = ExtResource("17_pmnmq")
 
 [node name="SoundManager" type="Node"]
 script = ExtResource("1_u1q4g")
@@ -73,3 +86,11 @@ bus = &"Sfx"
 stream = ExtResource("12_pmnmq")
 volume_db = -6.5
 bus = &"Sfx"
+
+[node name="voice" type="Node" parent="."]
+process_mode = 3
+
+[node name="welldone" type="AudioStreamPlayer" parent="voice"]
+stream = SubResource("AudioStreamRandomizer_w3tpd")
+volume_db = -6.0
+bus = &"Voice"
