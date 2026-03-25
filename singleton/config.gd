@@ -20,6 +20,7 @@ const DEFAULT_SETTINGS:Dictionary[StringName, Variant] = {
 	volume = 80.0,
 	volume_music = 100.0,
 	volume_sfx = 100.0,
+	volume_voice = 100.0,
 	# Game
 	gravity = 1.0,
 	allowUnfocusedInputs = false,
@@ -43,9 +44,10 @@ func loadConfig():
 	UserData.upgradeDataToCurrentVersion(data, VERSION_UPGRADES)
 	import(data)
 	
-	DracominoUtil.setVolume("Master", getSetting("volume", 100.0))
-	DracominoUtil.setVolume("Music", getSetting("volume_music", 100.0))
-	DracominoUtil.setVolume("Sfx", getSetting("volume_sfx", 100.0))
+	SoundManager.setVolume("Master", getSetting("volume", 100.0))
+	SoundManager.setVolume("Music", getSetting("volume_music", 100.0))
+	SoundManager.setVolume("Sfx", getSetting("volume_sfx", 100.0))
+	SoundManager.setVolume("Voice", getSetting("volume_voice", 100.0))
 	
 func saveConfig():
 	UserData.saveDataToFile(export(), CONFIGPATH)

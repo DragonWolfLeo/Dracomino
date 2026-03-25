@@ -11,3 +11,8 @@ func play(trackName:String, soundType:String = "sfx"):
 		targetPlayer.play()
 	else:
 		printerr("Tried to play invalid %s sound: %s"%[soundType, trackName])
+
+# Volume set helper
+func setVolume(busName:String, percent:float):
+	var weight:float = percent/100
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(busName), lerpf(-60, 0, weight))

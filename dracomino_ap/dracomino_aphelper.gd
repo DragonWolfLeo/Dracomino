@@ -12,6 +12,7 @@ var slider_gravityAmt:Slider
 var slider_masterVol:Slider
 var slider_musicVol:Slider
 var slider_sfxVol:Slider
+var slider_voiceVol:Slider
 
 var _sfxSliderBeingDragged:bool = true # Set to true prevent triggering when loading
 
@@ -81,19 +82,40 @@ func _ready() -> void:
 	slider_masterVol = get_parent().find_child("HSlider_MasterVol")
 	if slider_masterVol:
 		slider_masterVol.value = Config.getSetting("volume", 80.0) as float
-		slider_masterVol.value_changed.connect(_on_slider_masterVol_value_changed)
-		slider_masterVol.drag_started.connect(_on_slider_sfxVol_drag_started) # TODO: This is temporary while sfx slider is hidden
-		slider_masterVol.drag_ended.connect(_on_slider_sfxVol_drag_ended) # TODO: This is temporary while sfx slider is hidden
+		slider_masterVol.value_changed.connect(_on_slider_value_changed.bind(
+			"volume",
+			"Master",
+			"sfx", # TODO# Remove when music gets implemented
+		))
+		slider_masterVol.drag_started.connect(_on_slider_sfxVol_drag_started)
+		slider_masterVol.drag_ended.connect(_on_slider_sfxVol_drag_ended.bind("sfx"))
 	slider_musicVol = get_parent().find_child("HSlider_MusicVol")
 	if slider_musicVol:
 		slider_musicVol.value = Config.getSetting("volume_music", 100.0) as float
-		slider_musicVol.value_changed.connect(_on_slider_musicVol_value_changed)
+		slider_musicVol.value_changed.connect(_on_slider_value_changed.bind(
+			"volume_music",
+			"Music",
+		))
 	slider_sfxVol = get_parent().find_child("HSlider_SfxVol")
 	if slider_sfxVol:
 		slider_sfxVol.value = Config.getSetting("volume_sfx", 100.0) as float
-		slider_sfxVol.value_changed.connect(_on_slider_sfxVol_value_changed)
+		slider_sfxVol.value_changed.connect(_on_slider_value_changed.bind(
+			"volume_sfx",
+			"Sfx",
+			"sfx",
+		))
 		slider_sfxVol.drag_started.connect(_on_slider_sfxVol_drag_started)
-		slider_sfxVol.drag_ended.connect(_on_slider_sfxVol_drag_ended)
+		slider_sfxVol.drag_ended.connect(_on_slider_sfxVol_drag_ended.bind("sfx"))
+	slider_voiceVol = get_parent().find_child("HSlider_VoiceVol")
+	if slider_voiceVol:
+		slider_voiceVol.value = Config.getSetting("volume_voice", 100.0) as float
+		slider_voiceVol.value_changed.connect(_on_slider_value_changed.bind(
+			"volume_voice",
+			"Voice",
+			"voice",
+		))
+		slider_voiceVol.drag_started.connect(_on_slider_sfxVol_drag_started)
+		slider_voiceVol.drag_ended.connect(_on_slider_sfxVol_drag_ended.bind("voice"))
 
 	_sfxSliderBeingDragged = false
 
@@ -152,23 +174,14 @@ func _on_slider_gravityAmt_value_changed(value:float) -> void:
 		label_gravityAmt.text = str(value)
 
 # Volume stuff
-func _on_slider_masterVol_value_changed(value):
-	Config.changeSetting("volume", value)
-	DracominoUtil.setVolume("Master",value)
-	if !slider_sfxVol.visible and !_sfxSliderBeingDragged: $SFX_AudioTest.play() # TODO: This is temporary while sfx slider is hidden
-
-func _on_slider_musicVol_value_changed(value):
-	Config.changeSetting("volume_music", value)
-	DracominoUtil.setVolume("Music",value)
-
-func _on_slider_sfxVol_value_changed(value):
-	Config.changeSetting("volume_sfx", value)
-	DracominoUtil.setVolume("Sfx",value)
-	if !_sfxSliderBeingDragged: $SFX_AudioTest.play()
+func _on_slider_value_changed(value:float, settingName:String, busName:String, testSoundType:String=""):
+	Config.changeSetting(settingName, value)
+	SoundManager.setVolume(busName,value)
+	if testSoundType and !_sfxSliderBeingDragged: SoundManager.play("test", testSoundType)
 	
 func _on_slider_sfxVol_drag_started():
 	_sfxSliderBeingDragged = true
 
-func _on_slider_sfxVol_drag_ended(_value_changed):
-	$SFX_AudioTest.play()
+func _on_slider_sfxVol_drag_ended(_value_changed:bool, soundType:String):
+	SoundManager.play("test", soundType)
 	_sfxSliderBeingDragged = false

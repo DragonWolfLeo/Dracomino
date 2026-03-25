@@ -36,6 +36,10 @@ bus = &"Sfx"
 [node name="sfx" type="Node" parent="."]
 process_mode = 3
 
+[node name="test" type="AudioStreamPlayer" parent="sfx"]
+stream = ExtResource("4_8si6r")
+bus = &"Sfx"
+
 [node name="rotate" type="AudioStreamPlayer" parent="sfx"]
 stream = ExtResource("2_tb4q0")
 bus = &"Sfx"
@@ -89,6 +93,11 @@ bus = &"Sfx"
 
 [node name="voice" type="Node" parent="."]
 process_mode = 3
+
+[node name="test" type="AudioStreamPlayer" parent="voice"]
+stream = ExtResource("15_rsogl")
+volume_db = -6.0
+bus = &"Voice"
 
 [node name="welldone" type="AudioStreamPlayer" parent="voice"]
 stream = SubResource("AudioStreamRandomizer_w3tpd")
