@@ -262,10 +262,16 @@ func gravityDrop():
 		moveLock = true
 		canRotate = false
 
-func move(direction:Vector2i):
+func move(direction:Vector2i, isRotate:bool = false):
 	currentPosition += direction
 	if moveLock:
 		playHardDropSound = true
+	if isRotate:
+		# Avoid falling/locking too soon
+		if lockDelayed:
+			gravityTimer.start()
+			lockDelayed = false
+			softDropTimer.start(SOFT_DROP_LOCK_DELAY)
 
 # Events
 func _on_HorizontalTimer_timeout():
