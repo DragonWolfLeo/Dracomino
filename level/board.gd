@@ -35,17 +35,6 @@ static var SET_TILE_ATLAS_ROW:int = 1
 
 @onready var activatedTileHandler:ActivatedTileHandler = $ActivatedTileHandler
 @onready var masterCoin:Node2D = $MasterCoin
-@onready var sfx_rotate:AudioStreamPlayer = $SFX_Rotate
-@onready var sfx_rotateFail:AudioStreamPlayer = $SFX_RotateFail
-@onready var sfx_move:AudioStreamPlayer = $SFX_Move
-@onready var sfx_moveDown:AudioStreamPlayer = $SFX_MoveDown
-@onready var sfx_drop:AudioStreamPlayer = $SFX_Drop
-@onready var sfx_hardDrop:AudioStreamPlayer = $SFX_HardDrop
-@onready var sfx_hold:AudioStreamPlayer = $SFX_Hold
-@onready var sfx_itemPickup:AudioStreamPlayer = $SFX_ItemPickup
-@onready var sfx_lineClear:AudioStreamPlayer = $SFX_LineClear
-@onready var sfx_lineClearCheck:AudioStreamPlayer = $SFX_LineClearCheck
-@onready var sfx_gameOver:AudioStreamPlayer = $SFX_GameOver
 
 var activePieces:Array[Piece] = []
 
@@ -289,7 +278,7 @@ func hold(index:int = -1):
 			requestPiece(true)
 		if succeeded:
 			activePieces_changed.emit()
-			sfx_hold.play()
+			SoundManager.play("hold")
 
 func isTileOccupied(coords:Vector2i) -> bool:
 	return get_cell_source_id(coords) != -1
@@ -380,9 +369,9 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 			tryToMakePiecesCollible()
 			match movementType:
 				Piece.MOVEMENT.HORIZONTAL:
-					sfx_move.play()
+					SoundManager.play("move")
 				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
-					sfx_moveDown.play()
+					SoundManager.play("move_down")
 		return blocked
 	elif direction == Vector2i.DOWN:
 		# Lock piece
@@ -390,16 +379,16 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE:
 
 				lockPiece(piece)
-				sfx_hardDrop.play()
+				SoundManager.play("harddrop")
 			Piece.MOVEMENT.SOFT_DROP:
 				if DracominoHandler.activeAbilities.get("Lock Delay", 0):
 					piece.lockDelayed = true
 				else:
 					lockPiece(piece)
-					sfx_drop.play()
+					SoundManager.play("drop")
 			_:
 				lockPiece(piece)
-				sfx_drop.play()
+				SoundManager.play("drop")
 	return true
 
 func tryToMakePiecesCollible() -> void: ## Check if all noncollible pieces are in a free space to turn them collidible
@@ -435,7 +424,7 @@ func gameOver(deathContext:DracominoUtil.DeathContext = null):
 	if isGameOver:
 		print("You already died!")
 		return
-	sfx_gameOver.play()
+	SoundManager.play("gameover")
 	isGameOver = true
 	for piece in activePieces:
 		lockPiece(piece)
@@ -454,7 +443,7 @@ func resetGame():
 	var focusPiece:Piece = getFocusPiece()
 	# Send deathlink message
 	if sendDeathOnRestart and not isGameOver and not boardIsFresh:
-		sfx_gameOver.play()
+		SoundManager.play("gameover")
 		var deathContext := DracominoUtil.DeathContext.new(
 			# category
 			"RESTART_NEAR_GAME_OVER" if focusPiece and isInDanger()
@@ -517,7 +506,7 @@ func lockPiece(piece:Piece):
 				item_pickedup.emit(pickup.loc_id)
 				
 	if pickedUpItem:
-		sfx_itemPickup.play()
+		SoundManager.play("itempickup")
 	deletePiece(piece)
 	boardIsFresh = false
 	
@@ -550,7 +539,7 @@ func getFullRows() -> Array[int]:
 		for i in fullRows:
 			var line:int = _linemappings.get(BOUNDS.end.y - i - 1, 0) 
 			isMissingLineCheck = _missinglines.get(line, false)
-		(sfx_lineClearCheck if isMissingLineCheck else sfx_lineClear).play()
+		SoundManager.play("lineclear_check" if isMissingLineCheck else "lineclear")
 	return fullRows
 
 func isRowClearing(row:int) -> bool:
@@ -732,13 +721,13 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 		if areCellsOpen(translatedCells) and not getCollidingPiece(translatedCells, piece):
 			piece.setCells(cells)
 			piece.move(dir)
-			sfx_rotate.play()
+			SoundManager.play("rotate")
 			if dir.x != 0:
-				sfx_move.play()
+				SoundManager.play("move")
 			elif dir.y != 0:
-				sfx_moveDown.play()
+				SoundManager.play("move_down")
 			return
-	sfx_rotateFail.play()
+	SoundManager.play("rotate_fail")
 
 func _on_Piece_ghost_cells_requested(_piece:Piece, _ghost:GhostPiece):
 	updateAllGhosts()			

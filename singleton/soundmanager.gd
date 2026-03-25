@@ -1,7 +1,7 @@
 extends Node
 
 func play(trackName:String, soundType:String = "sfx"):
-	var targetPlayer = get_node_or_null(trackName) as AudioStreamPlayer
+	var targetPlayer = get_node_or_null(soundType+"/"+trackName) as AudioStreamPlayer
 	var resName = "res://audio/{soundType}/{trackName}.wav".format({soundType=soundType, trackName=trackName})
 	if targetPlayer:
 		targetPlayer.play()
