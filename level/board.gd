@@ -720,7 +720,7 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 		var translatedCells := getTranslatedCells(cells, piece.currentPosition + dir)
 		if areCellsOpen(translatedCells) and not getCollidingPiece(translatedCells, piece):
 			piece.setCells(cells)
-			piece.move(dir)
+			piece.move(dir, true)
 			SoundManager.play("rotate")
 			if dir.x != 0:
 				SoundManager.play("move")
