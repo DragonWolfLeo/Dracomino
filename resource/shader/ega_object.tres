@@ -1,0 +1,6 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://ftvia48v2ph6"]
+
+[ext_resource type="Shader" uid="uid://bnjtwqjp8ne81" path="res://screen/ega_object.gdshader" id="1_vv8hf"]
+
+[resource]
+shader = ExtResource("1_vv8hf")

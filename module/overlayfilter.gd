@@ -1,4 +1,4 @@
-extends ColorRect
+extends CanvasItem
 
 @export var debugSignalKey:String = ""
 @export var startEnabled:bool = false
