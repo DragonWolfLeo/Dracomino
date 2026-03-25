@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://gov6o57aw668"]
+[gd_scene load_steps=20 format=3 uid="uid://gov6o57aw668"]
 
 [ext_resource type="Script" uid="uid://cj7q6qijx22yq" path="res://singleton/soundmanager.gd" id="1_u1q4g"]
 [ext_resource type="AudioStream" uid="uid://0ovedth7jefi" path="res://assets/audio/sfx/rotate.wav" id="2_tb4q0"]
@@ -12,6 +12,7 @@
 [ext_resource type="AudioStream" uid="uid://cugjh8x7j36ro" path="res://assets/audio/sfx/lineclear_check.wav" id="10_rsogl"]
 [ext_resource type="AudioStream" uid="uid://cr48vjhdfp8xq" path="res://assets/audio/sfx/lineclear.wav" id="11_id3fu"]
 [ext_resource type="AudioStream" uid="uid://ca4ufssu283db" path="res://assets/audio/sfx/gameover.wav" id="12_pmnmq"]
+[ext_resource type="AudioStream" uid="uid://ck6v4k8cd4csd" path="res://assets/audio/sfx/trap.wav" id="13_j5l5k"]
 [ext_resource type="AudioStream" uid="uid://b52pnfu4o26vk" path="res://assets/audio/voice/congratulations.wav" id="13_rjk6y"]
 [ext_resource type="AudioStream" uid="uid://bup2j6vprmdye" path="res://assets/audio/voice/incredible.wav" id="14_j5l5k"]
 [ext_resource type="AudioStream" uid="uid://dvo67m5460o56" path="res://assets/audio/voice/wow.wav" id="15_rsogl"]
@@ -89,6 +90,10 @@ bus = &"Sfx"
 [node name="gameover" type="AudioStreamPlayer" parent="sfx"]
 stream = ExtResource("12_pmnmq")
 volume_db = -6.5
+bus = &"Sfx"
+
+[node name="trap" type="AudioStreamPlayer" parent="sfx"]
+stream = ExtResource("13_j5l5k")
 bus = &"Sfx"
 
 [node name="voice" type="Node" parent="."]

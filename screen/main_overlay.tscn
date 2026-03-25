@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://bufsjxsve02l3"]
+[gd_scene load_steps=7 format=3 uid="uid://bufsjxsve02l3"]
 
 [ext_resource type="Shader" uid="uid://cc45hk356mhko" path="res://resource/shader/ega.gdshader" id="1_4gjj1"]
 [ext_resource type="Script" uid="uid://dvj4uugycseke" path="res://module/overlayfilter.gd" id="2_pwtad"]
 [ext_resource type="Shader" uid="uid://pn15pak7pnld" path="res://resource/shader/invert.gdshader" id="3_xy513"]
+[ext_resource type="Script" uid="uid://3hyxsaj4myy1" path="res://module/play_sound_on_visible.gd" id="4_pwtad"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_wule5"]
 shader = ExtResource("1_4gjj1")
@@ -43,3 +44,7 @@ debugSignalKey = "overlay_invert"
 
 [node name="BackBufferCopy" type="BackBufferCopy" parent="InvertFilter"]
 copy_mode = 2
+
+[node name="PlaySoundOnVisible" type="Node2D" parent="InvertFilter"]
+script = ExtResource("4_pwtad")
+soundName = "trap"

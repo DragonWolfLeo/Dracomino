@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://ckv6tnuoxlxgw"]
+[gd_scene load_steps=18 format=3 uid="uid://ckv6tnuoxlxgw"]
 
 [ext_resource type="Shader" uid="uid://bqohxdob6tubs" path="res://resource/shader/crystal.gdshader" id="1_qjtf7"]
 [ext_resource type="Script" uid="uid://dvj4uugycseke" path="res://module/overlayfilter.gd" id="2_5coou"]
@@ -8,6 +8,7 @@
 [ext_resource type="Material" uid="uid://ftvia48v2ph6" path="res://resource/shader/ega_object.tres" id="6_5uhy6"]
 [ext_resource type="FontFile" uid="uid://brbxrenwotboe" path="res://resource/font/Galindo-Regular.ttf" id="7_5uhy6"]
 [ext_resource type="Texture2D" uid="uid://63qdysrsk0xu" path="res://assets/art/crystalfragment_1.png" id="8_5uhy6"]
+[ext_resource type="Script" uid="uid://3hyxsaj4myy1" path="res://module/play_sound_on_visible.gd" id="9_ogaaw"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_m1ejn"]
 shader = ExtResource("1_qjtf7")
@@ -131,6 +132,10 @@ debugSignalKey = "overlay_crystal"
 [node name="BackBufferCopy" type="BackBufferCopy" parent="CrystalFilter"]
 copy_mode = 2
 
+[node name="PlaySoundOnVisible" type="Node2D" parent="CrystalFilter"]
+script = ExtResource("9_ogaaw")
+soundName = "trap"
+
 [node name="PixelFilter" type="ColorRect" parent="."]
 material = SubResource("ShaderMaterial_jjnvi")
 anchors_preset = 15
@@ -144,6 +149,10 @@ debugSignalKey = "overlay_pixel"
 
 [node name="BackBufferCopy" type="BackBufferCopy" parent="PixelFilter"]
 copy_mode = 2
+
+[node name="PlaySoundOnVisible" type="Node2D" parent="PixelFilter"]
+script = ExtResource("9_ogaaw")
+soundName = "trap"
 
 [node name="FractureFilter" type="ColorRect" parent="."]
 material = SubResource("ShaderMaterial_w0fxs")
@@ -159,6 +168,10 @@ debugSignalKey = "overlay_fracture"
 [node name="BackBufferCopy" type="BackBufferCopy" parent="FractureFilter"]
 copy_mode = 2
 
+[node name="PlaySoundOnVisible" type="Node2D" parent="FractureFilter"]
+script = ExtResource("9_ogaaw")
+soundName = "trap"
+
 [node name="WaterFilter" type="ColorRect" parent="."]
 texture_filter = 1
 material = SubResource("ShaderMaterial_gx2q7")
@@ -173,6 +186,10 @@ debugSignalKey = "overlay_water"
 
 [node name="BackBufferCopy" type="BackBufferCopy" parent="WaterFilter"]
 copy_mode = 2
+
+[node name="PlaySoundOnVisible" type="Node2D" parent="WaterFilter"]
+script = ExtResource("9_ogaaw")
+soundName = "trap"
 
 [node name="WellDoneFilter" type="Control" parent="."]
 layout_mode = 3
@@ -273,3 +290,8 @@ autoplay = "wave"
 
 [node name="BackBufferCopy" type="BackBufferCopy" parent="WellDoneFilter"]
 copy_mode = 2
+
+[node name="PlaySoundOnVisible" type="Node2D" parent="WellDoneFilter"]
+script = ExtResource("9_ogaaw")
+soundName = "welldone"
+soundType = "voice"
