@@ -200,7 +200,7 @@ func upgradeFeatures(generatedVersion:String = "0.0.0"): ## Add new features to 
 
 	if upgradeResult.retrofitted.size():
 		# TODO: This is an important message and probably should be forced to last longer
-		notification_signal.emit("Retrofitted {items} into your game!".format({items=" and ".join(upgradeResult.retrofitted)}), Color.YELLOW_GREEN, false)
+		notification_signal.emit("Retrofitted {items} into your game!".format({items=" and ".join(upgradeResult.retrofitted)}), CONSTANTS.COLOR.SPECIAL, false)
 		
 
 #===== Events =====
@@ -344,16 +344,16 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 
 func _on_deathlink(source: String, cause: String, json: Dictionary):
 	if not cause: cause = "Died."
-	notification_signal.emit("{source}: {cause}".format({source=source, cause=cause}), Color.RED, true)
+	notification_signal.emit("{source}: {cause}".format({source=source, cause=cause}), CONSTANTS.COLOR.DEATH, true)
 
 func _on_obtained_item(item: NetworkItem):
 	if not isJustConnected:
 		var color = (
-			Color.GOLD if item.is_prog() and (item.flags & AP.ItemClassification.USEFUL)
-			else Color.PURPLE if item.is_prog()
-			else Color.TOMATO if item.flags & AP.ItemClassification.TRAP
-			else Color.ROYAL_BLUE if item.flags & AP.ItemClassification.USEFUL
-			else Color.SKY_BLUE
+			CONSTANTS.COLOR.PROGUSEFUL if item.is_prog() and (item.flags & AP.ItemClassification.USEFUL)
+			else CONSTANTS.COLOR.PROGRESSION if item.is_prog()
+			else CONSTANTS.COLOR.TRAP if item.flags & AP.ItemClassification.TRAP
+			else CONSTANTS.COLOR.USEFUL if item.flags & AP.ItemClassification.USEFUL
+			else CONSTANTS.COLOR.FILLER
 		)
 		if item.is_local():
 			notification_signal.emit("You found your {item}!".format({item=item.get_name()}), color, false)
@@ -509,5 +509,5 @@ func _on_Board_deathlink_earned(deathContext:DracominoUtil.DeathContext) -> void
 		# Pick a template and generate a deathlink message
 		var msg = DracominoUtil.generateDeathlinkMessage(deathContext.category, contextTags, formatValues) 
 		Archipelago.conn.send_deathlink.call_deferred(msg)
-		notification_signal.emit(msg, Color.RED, true)
+		notification_signal.emit(msg, CONSTANTS.COLOR.DEATH, true)
 		print(msg, deathContext.category, ": ", contextTags)

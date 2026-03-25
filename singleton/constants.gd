@@ -5,6 +5,16 @@ var MANA_TO_ENERGY_RATIO:float = 1e6
 var MANA_PER_BLOCK:float = 4
 var ENERGY_LINK_SHARE:float = 0.5
 
+# Colors
+class COLOR:
+	static var PROGUSEFUL =  Color8(0xFF, 0xAA, 0x00)
+	static var PROGRESSION = Color8(0xAA, 0x55, 0xAA)
+	static var USEFUL =      Color8(0x55, 0x55, 0xFF)
+	static var FILLER =      Color8(0x55, 0xAA, 0xFF)
+	static var TRAP =        Color8(0xFF, 0x55, 0x00)
+	static var DEATH =       Color8(0xFF, 0x00, 0x00)
+	static var SPECIAL =     Color8(0x55, 0xAA, 0x00)
+
 # Item + Location Data
 class Data:
 	var id:int
