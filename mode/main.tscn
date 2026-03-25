@@ -1,60 +1,17 @@
-[gd_scene load_steps=31 format=3 uid="uid://dq05pcnj58yp0"]
+[gd_scene load_steps=20 format=3 uid="uid://dq05pcnj58yp0"]
 
 [ext_resource type="PackedScene" uid="uid://boraki5ygsa0g" path="res://level/board.tscn" id="1_q3k4m"]
 [ext_resource type="Script" uid="uid://c5jgcsxvnygnn" path="res://mode/main.gd" id="1_svssi"]
 [ext_resource type="Script" uid="uid://daewoikmtskpi" path="res://dracomino_ap/dracomino_handler.gd" id="2_gpyk6"]
 [ext_resource type="Script" uid="uid://dutbiv2hgugwn" path="res://module/piecestorage.gd" id="4_q3k4m"]
-[ext_resource type="Shader" uid="uid://dobuvt43qhvwi" path="res://resource/shader/waterwave.gdshader" id="5_gpyk6"]
+[ext_resource type="PackedScene" uid="uid://ckv6tnuoxlxgw" path="res://screen/level_overlay.tscn" id="5_gpyk6"]
 [ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="5_kwn67"]
-[ext_resource type="Shader" uid="uid://cc45hk356mhko" path="res://resource/shader/ega.gdshader" id="5_m1ejn"]
 [ext_resource type="PackedScene" uid="uid://c7613bp0awts" path="res://dracomino_ap/dracomino_client.tscn" id="5_svssi"]
-[ext_resource type="Script" uid="uid://dvj4uugycseke" path="res://module/overlayfilter.gd" id="6_d6dmn"]
-[ext_resource type="Shader" uid="uid://jo62bd4fm34j" path="res://resource/shader/pixel.gdshader" id="6_gpyk6"]
 [ext_resource type="FontFile" uid="uid://c8dwaeydyfv6j" path="res://resource/font/PressStart2P-Regular.ttf" id="6_svssi"]
-[ext_resource type="Shader" uid="uid://38rkwlxs4jwj" path="res://resource/shader/fracture.gdshader" id="8_jjnvi"]
-[ext_resource type="Shader" uid="uid://pn15pak7pnld" path="res://resource/shader/invert.gdshader" id="9_d6dmn"]
-[ext_resource type="Shader" uid="uid://bqohxdob6tubs" path="res://resource/shader/crystal.gdshader" id="9_yivgv"]
+[ext_resource type="PackedScene" uid="uid://bufsjxsve02l3" path="res://screen/main_overlay.tscn" id="9_gx2q7"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q3k4m"]
 bg_color = Color(0.0562916, 0.0562916, 0.0562916, 1)
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_m1ejn"]
-shader = ExtResource("9_yivgv")
-shader_parameter/color = Color(0, 0, 0, 1)
-shader_parameter/scale = 0.6
-shader_parameter/speed = 0.04
-shader_parameter/disp = Vector2(0, 0)
-shader_parameter/tint_strength = Vector3(0.195, 0.105, 0.165)
-shader_parameter/edgeshine = 0.3
-shader_parameter/refraction = 0.1
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_jjnvi"]
-shader = ExtResource("6_gpyk6")
-shader_parameter/pixelScale = 8.0
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_w0fxs"]
-shader = ExtResource("8_jjnvi")
-shader_parameter/color = Color(0, 0, 0, 1)
-shader_parameter/scale = 0.6
-shader_parameter/speed = 0.00999998
-shader_parameter/wobblespeed = 0.2
-shader_parameter/wobblestrength = 0.21
-shader_parameter/shakespeed = 0.3
-shader_parameter/shakestrength = 0.9
-shader_parameter/disp = Vector2(0, 0)
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_gx2q7"]
-shader = ExtResource("5_gpyk6")
-shader_parameter/water_color = Color(0, 0, 0.333333, 1)
-shader_parameter/watersurface_color = Color(0.333333, 0.666667, 0.666667, 1)
-shader_parameter/watersurface_height = 0.115
-shader_parameter/wave_strength = 0.004
-shader_parameter/wave_frequency = 50.0
-shader_parameter/cycle = 16.0
-shader_parameter/distortion_strength = 0.05
-shader_parameter/water_height = 0.3
-shader_parameter/reflection_shear = 0.0
-shader_parameter/reflection_strength = 0.155
 
 [sub_resource type="Theme" id="Theme_d5o15"]
 default_font = ExtResource("5_kwn67")
@@ -138,12 +95,6 @@ Button/styles/hover = SubResource("StyleBoxFlat_gpyk6")
 Button/styles/normal = SubResource("StyleBoxFlat_svssi")
 Button/styles/pressed = SubResource("StyleBoxFlat_gx2q7")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_wule5"]
-shader = ExtResource("5_m1ejn")
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ckgpy"]
-shader = ExtResource("9_d6dmn")
-
 [node name="Main" type="Control"]
 process_mode = 3
 layout_mode = 3
@@ -205,64 +156,7 @@ slotAbilityName = "Hold Slot"
 emptyFill = true
 useNumberedSlots = true
 
-[node name="LevelOverlay" type="CanvasLayer" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport"]
-
-[node name="CrystalFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay"]
-material = SubResource("ShaderMaterial_m1ejn")
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-script = ExtResource("6_d6dmn")
-debugSignalKey = "overlay_crystal"
-
-[node name="BackBufferCopy" type="BackBufferCopy" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay/CrystalFilter"]
-copy_mode = 2
-
-[node name="PixelFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay"]
-material = SubResource("ShaderMaterial_jjnvi")
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-script = ExtResource("6_d6dmn")
-debugSignalKey = "overlay_pixel"
-
-[node name="BackBufferCopy" type="BackBufferCopy" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay/PixelFilter"]
-copy_mode = 2
-
-[node name="FractureFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay"]
-material = SubResource("ShaderMaterial_w0fxs")
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-script = ExtResource("6_d6dmn")
-debugSignalKey = "overlay_fracture"
-
-[node name="BackBufferCopy" type="BackBufferCopy" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay/FractureFilter"]
-copy_mode = 2
-
-[node name="WaterFilter" type="ColorRect" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay"]
-texture_filter = 1
-material = SubResource("ShaderMaterial_gx2q7")
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-script = ExtResource("6_d6dmn")
-debugSignalKey = "overlay_water"
-
-[node name="BackBufferCopy" type="BackBufferCopy" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/LevelOverlay/WaterFilter"]
-copy_mode = 2
+[node name="LevelOverlay" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport" instance=ExtResource("5_gpyk6")]
 
 [node name="MarginContainer" type="MarginContainer" parent="MainSplit/HBoxContainer/LevelContainer"]
 layout_mode = 2
@@ -393,39 +287,7 @@ process_mode = 3
 custom_minimum_size = Vector2(340, 0)
 layout_mode = 2
 
-[node name="MainOverlay" type="CanvasLayer" parent="."]
-
-[node name="EGAFilter" type="ColorRect" parent="MainOverlay"]
-visible = false
-z_index = 100
-material = SubResource("ShaderMaterial_wule5")
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-script = ExtResource("6_d6dmn")
-debugSignalKey = "overlay_ega"
-
-[node name="BackBufferCopy" type="BackBufferCopy" parent="MainOverlay/EGAFilter"]
-copy_mode = 2
-
-[node name="InvertFilter" type="ColorRect" parent="MainOverlay"]
-visible = false
-texture_filter = 1
-material = SubResource("ShaderMaterial_ckgpy")
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-script = ExtResource("6_d6dmn")
-debugSignalKey = "overlay_invert"
-
-[node name="BackBufferCopy" type="BackBufferCopy" parent="MainOverlay/InvertFilter"]
-copy_mode = 2
+[node name="MainOverlay" parent="." instance=ExtResource("9_gx2q7")]
 
 [connection signal="activeAbilities_updated" from="DracominoHandler" to="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/PreviewStorage" method="_on_DracominoHandler_active_abilities_updated"]
 [connection signal="activeAbilities_updated" from="DracominoHandler" to="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/HoldStorage" method="_on_DracominoHandler_active_abilities_updated"]

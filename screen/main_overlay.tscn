@@ -1,0 +1,45 @@
+[gd_scene load_steps=6 format=3 uid="uid://bufsjxsve02l3"]
+
+[ext_resource type="Shader" uid="uid://cc45hk356mhko" path="res://resource/shader/ega.gdshader" id="1_4gjj1"]
+[ext_resource type="Script" uid="uid://dvj4uugycseke" path="res://module/overlayfilter.gd" id="2_pwtad"]
+[ext_resource type="Shader" uid="uid://pn15pak7pnld" path="res://resource/shader/invert.gdshader" id="3_xy513"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wule5"]
+shader = ExtResource("1_4gjj1")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ckgpy"]
+shader = ExtResource("3_xy513")
+
+[node name="MainOverlay" type="CanvasLayer"]
+
+[node name="EGAFilter" type="ColorRect" parent="."]
+visible = false
+z_index = 100
+material = SubResource("ShaderMaterial_wule5")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_pwtad")
+debugSignalKey = "overlay_ega"
+
+[node name="BackBufferCopy" type="BackBufferCopy" parent="EGAFilter"]
+copy_mode = 2
+
+[node name="InvertFilter" type="ColorRect" parent="."]
+visible = false
+texture_filter = 1
+material = SubResource("ShaderMaterial_ckgpy")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_pwtad")
+debugSignalKey = "overlay_invert"
+
+[node name="BackBufferCopy" type="BackBufferCopy" parent="InvertFilter"]
+copy_mode = 2
