@@ -2,7 +2,7 @@ extends Node
 
 func play(trackName:String, soundType:String = "sfx"):
 	var targetPlayer = get_node_or_null(soundType+"/"+trackName) as AudioStreamPlayer
-	var resName = "res://audio/{soundType}/{trackName}.wav".format({soundType=soundType, trackName=trackName})
+	var resName = "res://assets/audio/{soundType}/{trackName}.wav".format({soundType=soundType, trackName=trackName})
 	if targetPlayer:
 		targetPlayer.play()
 	elif ResourceLoader.exists(resName):
