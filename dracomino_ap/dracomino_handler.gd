@@ -1,8 +1,5 @@
 class_name DracominoHandler extends Node
 
-static var activeAbilities:Dictionary[String, int] = {} ## Static variable. Could probably be put somewhere neater
-static var randomizeOrientations:bool = false ## Static variable. Could probably be put somewhere neater
-
 var collectedItems:Array[StateItem] = []
 var missingLocations:Dictionary[int, bool] = {}
 var checkedLocations:Dictionary[int, bool] = {}
@@ -31,6 +28,7 @@ var slotContextHash:int:
 		slotContextHash_updated.emit(slotContextHash)
 var energyLinkEnabled:bool = false ## Static variable. Could probably be put somewhere neater
 var storedMana:float = 0 ## The amount of mana saved. Doesn't do anything yet
+var seedFlagHolder:FlagHolder
 
 var isJustConnected:bool = false
 var VERSION_WARNING_DIALOG_SCENE:PackedScene = load("res://ui/versionwarning_dialog.tscn")
@@ -44,7 +42,6 @@ signal missingLocations_updated(locs:Dictionary[int, bool]) # TODO: This isn't a
 signal missingLines_updated(locs:Dictionary[int, bool])
 signal notification_signal(notif:String, color:Color, force:bool)
 signal missingPickupCoordinates_updated(map:Dictionary[Vector2i, int])
-signal activeAbilities_updated(abilities:Dictionary[String, int])
 signal piecesLeft_updated(total:int)
 signal goal_updated(goalnum:int)
 signal slotContextHash_updated(ctx:int)
@@ -81,6 +78,9 @@ func _ready() -> void:
 	Archipelago.remove_location.connect(_on_remove_location)
 	SignalBus.getSignal("energyLink_enabled").connect(set.bind("energyLinkEnabled", true))
 	SignalBus.getSignal("energyLink_disabled").connect(set.bind("energyLinkEnabled", false))
+	
+	# Create flag holder
+	resetSeedFlagHolder()
 
 #===== Functions =====
 func reset():
@@ -101,14 +101,18 @@ func newSeedReset():
 	missingLines.clear()
 	checkedLocations.clear()
 	collectedAbilities.clear()
-	activeAbilities.clear()
 	allLineLocations.clear()
 	missingPickups.clear()
-	activeAbilities_updated.emit(activeAbilities)
 	hintedRotateAbilities.clear()
+	resetSeedFlagHolder()
 	# Reset when everything is loaded
 	await started
-	SignalBus.getSignal("restartGame").emit() 
+	SignalBus.getSignal("restartGame").emit()
+
+func resetSeedFlagHolder():
+	if seedFlagHolder: seedFlagHolder.queue_free()
+	seedFlagHolder = FlagHolder.new(FlagHolder.PRIORITY.WORLD)
+	add_child(seedFlagHolder)
 
 func getNextPiece() -> Dictionary:
 	var numItems := collectedItems.size()
@@ -193,9 +197,8 @@ func upgradeFeatures(generatedVersion:String = "0.0.0"): ## Add new features to 
 			var item := CONSTANTS.ITEMS[id] if id != null else null
 			if item:
 				collectedAbilities[item.id] = 1
-				if activeAbilities.get(item.prettyName, 0) < collectedAbilities[item.id]:
-					activeAbilities[item.prettyName] = collectedAbilities[item.id]
-					activeAbilities_updated.emit(activeAbilities)
+				if not seedFlagHolder.isFlagSet(item.internalName):
+					seedFlagHolder.count(item.internalName, "collected", 1)
 					upgradeResult.retrofitted.append(item.prettyName)
 
 	if upgradeResult.retrofitted.size():
@@ -220,7 +223,11 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		else "energyLink_disabled"
 	).emit()
 	#
-	randomizeOrientations = conn.slot_data.get("randomize_orientations", false)
+	var randomizeOrientations = conn.slot_data.get("randomize_orientations", false)
+	if randomizeOrientations:
+		seedFlagHolder.setFlag("randomize_orientations")
+	else:
+		seedFlagHolder.clearFlag("randomize_orientations")
 	conn.deathlink.connect(_on_deathlink)
 	conn.obtained_item.connect(_on_obtained_item)
 	conn.set_hint_notify(_on_on_hint_update)
@@ -386,10 +393,13 @@ func _on_obtained_item(item: NetworkItem):
 				collectedAbilities[item.id] = 1
 			var prettyName = CONSTANTS.ITEMS[item.id].prettyName
 
-			# Check if abilities have changed
-			if activeAbilities.get(prettyName, 0) < collectedAbilities[item.id]:
-				activeAbilities[prettyName] = collectedAbilities[item.id]
-				activeAbilities_updated.emit(activeAbilities)
+			# Add flag for ability
+			seedFlagHolder.count(CONSTANTS.ITEMS[item.id].internalName, "collected", collectedAbilities[item.id])
+
+			# Keep track of rotate abilities collected
+			if CONSTANTS.ITEMS[item.id].tags.get("rotate"):
+				seedFlagHolder.count("rotate", CONSTANTS.ITEMS[item.id].internalName, 1)
+
 		elif CONSTANTS.ITEMS[item.id].tags.get("shape"):
 			SignalBus.getSignal("newPieceObtained").emit.call_deferred()
 			piecesLeft_updated.emit.call_deferred(countPieces(currentIndex))
@@ -486,7 +496,7 @@ func _on_Board_deathlink_earned(deathContext:DracominoUtil.DeathContext) -> void
 				game = itemctx.gameName,
 			})
 			# Add context for having no rotate
-			if _canUseDeathContext_NO_ROTATE and not (activeAbilities.get("Rotate Clockwise", 0) or activeAbilities.get("Rotate Counterclockwise", 0)):
+			if _canUseDeathContext_NO_ROTATE and not FlagManager.isFlagSet("rotate"):
 				contextTags.append("NO_ROTATE")
 				if hintedRotateAbilities.size():
 					var _hintedRotateAbilities_array:Array[StateItem] = hintedRotateAbilities.values()

@@ -355,10 +355,10 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 		if collidingPieces.size():
 			match movementType:
 				Piece.MOVEMENT.HORIZONTAL: 
-					if not DracominoHandler.activeAbilities.get("Horizontal Shove", 0):
+					if not FlagManager.isFlagSet("horizontal_shove"):
 						blocked = true
 				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
-					if not DracominoHandler.activeAbilities.get("Vertical Shove", 0):
+					if not FlagManager.isFlagSet("vertical_shove"):
 						blocked = true
 			if not blocked:
 				for collidingPiece:Piece in collidingPieces:
@@ -381,7 +381,7 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 				lockPiece(piece)
 				SoundManager.play("harddrop")
 			Piece.MOVEMENT.SOFT_DROP:
-				if DracominoHandler.activeAbilities.get("Lock Delay", 0):
+				if FlagManager.isFlagSet("lock_delay"):
 					piece.lockDelayed = true
 				else:
 					lockPiece(piece)
@@ -650,7 +650,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		elif event.is_action_pressed("hold"):
-			if DracominoHandler.activeAbilities.get("Hold Slot", 0):
+			if FlagManager.isFlagSet("hold_slot"):
 				hold()
 				get_viewport().set_input_as_handled()
 				return
@@ -680,11 +680,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	
 	# Stuff that requires an active piece
 	if event.is_action_pressed("hardDrop") and Input.is_action_just_pressed("hardDrop"): # Double check to ignore events from slight axis movement
-		if DracominoHandler.activeAbilities.get("Hard Drop", 0):
+		if FlagManager.isFlagSet("hard_drop"):
 			focusPiece.hardDrop()
 		elif (
 			ALLOW_GRAVITY_DROP 
-			and DracominoHandler.activeAbilities.get("Gravity", 0)
+			and FlagManager.isFlagSet("gravity")
 			and activePieces.size() < MAX_PIECES
 			and (countNonlockedPieces() > 1 or (previewStorage and previewStorage.getNumStored()))
 		):
@@ -703,7 +703,7 @@ func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:
 
 func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 	var dirs:Array[Vector2i] = [Vector2i.ZERO]
-	if DracominoHandler.activeAbilities.get("Kick", 0):
+	if FlagManager.isFlagSet("kick"):
 		# Add more directions to push when kick is active
 		dirs.append_array([
 			Vector2i.DOWN,

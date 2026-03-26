@@ -128,14 +128,14 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("rotateClockwise"):
-		if DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
+		if FlagManager.isFlagSet("rotate_clockwise"):
 			rotateClockwise()
-		elif USE_ALT_ROTATE and DracominoHandler.activeAbilities.get("Rotate Counterclockwise", 0):
+		elif USE_ALT_ROTATE and FlagManager.isFlagSet("rotate_counterclockwise"):
 			rotateCounterclockwise()
 	elif event.is_action_pressed("rotateCounterclockwise"):
-		if DracominoHandler.activeAbilities.get("Rotate Counterclockwise", 0):
+		if FlagManager.isFlagSet("rotate_counterclockwise"):
 			rotateCounterclockwise()
-		elif USE_ALT_ROTATE and DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
+		elif USE_ALT_ROTATE and FlagManager.isFlagSet("rotate_clockwise"):
 			rotateClockwise()
 	elif event.is_action_pressed("moveLeft") and Input.is_action_just_pressed("moveLeft"):
 		horizontalTimer.start(HORIZONTAL_WAIT_TIME)
@@ -147,7 +147,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		movement_requested.emit(self, Vector2i.RIGHT, MOVEMENT.HORIZONTAL)
 		get_viewport().set_input_as_handled()
 		return
-	elif event.is_action_pressed("moveDown") and Input.is_action_just_pressed("moveDown") and DracominoHandler.activeAbilities.get("Soft Drop", 0):
+	elif event.is_action_pressed("moveDown") and Input.is_action_just_pressed("moveDown") and FlagManager.isFlagSet("soft_drop"):
 		softDropTimer.start(SOFT_DROP_WAIT_TIME)
 		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP_LOCK)
 		# Avoid falling too soon
@@ -160,7 +160,7 @@ func makeActive():
 	process_mode = Node.PROCESS_MODE_INHERIT
 	set_process_unhandled_input(isFocus)
 	show()
-	if DracominoHandler.activeAbilities.get("Ghost Piece", 0) and ghost:
+	if FlagManager.isFlagSet("ghost_piece") and ghost:
 		ghost.show()
 	# Avoid falling too soon
 	gravityTimer.start()
@@ -182,7 +182,7 @@ func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null) -> void
 			ghost = GHOSTPIECE_SCENE.instantiate()
 			add_child(ghost)
 		localCells = pieceDefinition.tiles.duplicate()
-		if DracominoHandler.randomizeOrientations:
+		if FlagManager.isFlagSet("randomize_orientations"):
 			match orientation:
 				1: rotateClockwise(true)
 				2: rotate180(true)
@@ -290,7 +290,7 @@ func _on_HorizontalTimer_timeout():
 
 func _on_SoftDropTimer_timeout():
 	if not isFocus: return
-	if Input.is_action_pressed("moveDown") and DracominoHandler.activeAbilities.get("Soft Drop", 0):
+	if Input.is_action_pressed("moveDown") and FlagManager.isFlagSet("soft_drop"):
 		softDropTimer.start(SOFT_DROP_REPEAT_WAIT_TIME)
 		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP_LOCK if lockDelayed else MOVEMENT.SOFT_DROP)
 		# Avoid falling too soon
@@ -300,7 +300,7 @@ func _on_SoftDropTimer_timeout():
 		lockDelayed = false
 
 func _on_GravityTimer_timeout():
-	if moveLock or DracominoHandler.activeAbilities.get("Gravity", 0) or not isFocus:
+	if moveLock or FlagManager.isFlagSet("gravity") or not isFocus:
 		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.HARD_DROP if playHardDropSound else MOVEMENT.GRAVITY)
 
 func _setCurrentPosition(value:Vector2i):

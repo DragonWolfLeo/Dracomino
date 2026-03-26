@@ -7,7 +7,9 @@ class_name PieceStorage extends Node
 		storageSlots = value
 		storageSlots_updated.emit()
 
-@export var slotAbilityName:String
+@export var slotAbilityName:String:
+	set(value):
+		slotAbilityName = value.to_snake_case()
 @export var emptyFill:bool = false
 @export var useNumberedSlots:bool = false
 
@@ -42,6 +44,9 @@ func _ready() -> void:
 	if emptyFill:
 		for i:int in range(storageSlots):
 			pushEmpty()
+
+	# Connect to flag signal
+	SignalBus.getSignal("stateflag_changed", slotAbilityName).connect(_on_stateflag_changed)
 
 func pushPiece(piece:Piece, ignoreLimit:bool = false, index:int = -1) -> Piece:
 	var popped:Piece = null
@@ -176,8 +181,9 @@ func cycleDown():
 		storageSlots_updated.emit()
 
 # === Events ===
-func _on_DracominoHandler_active_abilities_updated(abilities: Dictionary[String, int]) -> void:
-	storageSlots = abilities.get(slotAbilityName, 0)
+func _on_stateflag_changed() -> void:
+	var value = FlagManager.getFlagValue(slotAbilityName)
+	storageSlots = int(value) if value is int or value is float else 0
 	if targetControl:
 		targetControl.visible = storageSlots > 0
 
