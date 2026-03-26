@@ -38,6 +38,8 @@ func _ready() -> void:
 
 	_on_SubViewportContainer_resized.call_deferred()
 
+	SignalBus.getSignal("give_focus_to_main").connect(grab_focus)
+
 #==== Functions ====
 func applyState() -> void:
 	if centerLabel == null: return
@@ -75,6 +77,8 @@ func _on_focus_entered():
 		state = STATE.NORMAL
 
 func _on_focus_exited():
+	await get_tree().process_frame
+	if has_focus(): return # Takes focus back when clicking on container
 	if state != STATE.GAMEOVER:
 		state = STATE.PAUSED
 
@@ -86,7 +90,8 @@ func _on_window_focus_exited():
 	set_process_input(false)
 	if not Config.getSetting("allowUnfocusedInputs", false):
 		set_process_unhandled_input(false)
-	_on_focus_exited()
+	if state != STATE.GAMEOVER:
+		state = STATE.PAUSED
 
 func _on_Board_game_over_earned() -> void:
 	state = STATE.GAMEOVER
@@ -109,6 +114,8 @@ func _input(event: InputEvent) -> void:
 						if state == STATE.GAMEOVER:
 							accept_event()
 							SignalBus.getSignal("restartGame").emit()
+	if event.is_action_pressed("ui_focus_next") or event.is_action_pressed("ui_focus_prev"):
+		SignalBus.getSignal("give_focus_to_client").emit()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("restart"):
