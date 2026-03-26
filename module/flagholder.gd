@@ -18,6 +18,7 @@ static var PRIORITY:Dictionary[StringName, float] = {
 
 ### Variables
 @export var priority:float = 0
+@export var defaultThreshold:int = 1
 var stateFlags:Dictionary:
 	set(value):
 		stateflags_aboutToDirty.emit(stateFlags.merged(value).keys())
@@ -235,7 +236,7 @@ func count(countSetId:String, key = null, weight = null, add := false):
 	
 	# Check if the set exists
 	if !stateFlags.has(countSetId):
-		stateFlags[countSetId] = {threshold = 100}
+		stateFlags[countSetId] = {threshold = defaultThreshold}
 	var countSet = stateFlags[countSetId]
 	if countSet is not Dictionary:
 		printerr("Error! Count is conflicting with flag ", countSetId)
