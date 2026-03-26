@@ -192,6 +192,12 @@ func getFlagValue(flag:String):
 		getTotalCountAmount(flag) if f is Dictionary
 		else f
 	)
+	
+func getIntFlagValue(flag:String) -> int:
+	var result:Variant = getFlagValue(flag)
+	if result is int or result is float:
+		return int(result)
+	return 0
 
 func getTotalCountAmount(flag:String) -> int:
 	flag = flag.to_lower()

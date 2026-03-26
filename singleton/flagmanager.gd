@@ -146,7 +146,7 @@ func _isFlagSet_basic(flag:String) -> bool:
 
 	return false
 	
-func getFlagValue(flag:String):
+func getFlagValue(flag:String) -> Variant:
 	var result = null
 	var priority:float = 0.0
 	for fh in flagHolders:
@@ -157,6 +157,12 @@ func getFlagValue(flag:String):
 			result = value
 			priority = fh.priority
 	return result
+
+func getIntFlagValue(flag:String) -> int:
+	var result:Variant = getFlagValue(flag)
+	if result is int or result is float:
+		return int(result)
+	return 0
 
 func getTotalCountAmount(flag:String) -> int:
 	var amount:int = 0

@@ -182,8 +182,7 @@ func cycleDown():
 
 # === Events ===
 func _on_stateflag_changed() -> void:
-	var value = FlagManager.getFlagValue(slotAbilityName)
-	storageSlots = int(value) if value is int or value is float else 0
+	storageSlots = FlagManager.getIntFlagValue(slotAbilityName)
 	if targetControl:
 		targetControl.visible = storageSlots > 0
 
