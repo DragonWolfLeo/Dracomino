@@ -1,7 +1,6 @@
 extends Control
 
 @onready var centerLabel:Label = %CenterLabel
-@onready var levelContainer:Control = %LevelContainer
 @onready var notificationLabel:Label = %NotificationLabel
 @onready var linesLabel:Label = %LinesLabel
 @onready var piecesLabel:Label = %PiecesLabel
@@ -105,8 +104,8 @@ func _input(event: InputEvent) -> void:
 		if mouseEvent.is_pressed():
 			match mouseEvent.button_index:
 				MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT:
-					var localEvent = levelContainer.make_input_local(event)
-					if !levelContainer.get_rect().has_point(localEvent.position):
+					var localEvent = make_input_local(event)
+					if get_rect().has_point(localEvent.position):
 						_on_focus_exited()
 					else:
 						grab_focus()
@@ -193,4 +192,7 @@ func _on_BtnChangelog_pressed() -> void:
 	_changelogWindow.popup_exclusive_centered(self)
 
 func _on_DracominoHandler_started() -> void:
+	grab_focus()
+
+func _on_MainViewportContainer_focus_entered() -> void:
 	grab_focus()
