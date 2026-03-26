@@ -79,7 +79,7 @@ func setFlag(flag:String, value = null, temp:bool = false):
 		value = arr[1]
 		flag = arr[0]
 
-	assert(flag == flag.to_snake_case(), "Setting flag name that is not snake case: %s"%flag) # Enforce snake case
+	assert(flag == flag.to_lower(), "Setting flag name that is not lower case: %s"%flag) # Enforce snake case
 
 	# Default to 1
 	if value == null: value = 1
