@@ -122,6 +122,7 @@ func clearTempFlag(flag:String):
 		HANDLERS.MAIN.flagHolder.clearFlag(flag, true)
 
 func isFlagSet(flag:String) -> bool:
+	assert(flag == flag.to_snake_case(), "Checking for flag name that is not snake case: %s"%flag) # Enforce snake case
 	if flag.is_empty(): return false
 	
 	# Check if there's operators present and evaluate those instead
