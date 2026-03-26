@@ -64,6 +64,9 @@ func _init(_priority:float = 0.0) -> void:
 func _enter_tree() -> void:
 	FlagManager.registerMonitoredFlagHolder(self)
 
+func _exit_tree() -> void:
+	monitoring = false
+
 ### Functions ###
 func resetStateFlags():
 	stateFlags.clear()
@@ -202,12 +205,15 @@ func getIntFlagValue(flag:String) -> int:
 func getTotalCountAmount(flag:String) -> int:
 	flag = flag.to_lower()
 	var f = stateFlags.get(flag)
-	if f and f is Dictionary:
-		# Count the total
-		var total:int = 0
-		for v in f.values():
-			total += v
-		return total - f.threshold # Subtracted because it counts the threshold itself
+	if f:
+		if f is Dictionary:
+			# Count the total
+			var total:int = 0
+			for v in f.values():
+				total += v
+			return total - f.threshold # Subtracted because it counts the threshold itself
+		else:
+			return getIntFlagValue(flag)
 	return 0
 	
 func count(countSetId:String, key = null, weight = null, add := false):
