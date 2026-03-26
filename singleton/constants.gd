@@ -19,11 +19,13 @@ class COLOR:
 class Data:
 	var id:int
 	var prettyName:StringName
+	var internalName:StringName
 	var tags:Dictionary[StringName, bool]
 	func _init(arr=[]):
 		arr.resize(3)
 		id = arr[0] as int
 		prettyName = arr[1] as StringName
+		internalName = prettyName.to_snake_case()
 		for tag in arr[2] as Array:
 			tags[tag as StringName] = true
 
