@@ -67,9 +67,7 @@ signal linesCleared_updated(num:int)
 signal game_over_earned()
 signal game_started()
 signal pieces_requested(callback:Callable, num:int)
-signal piece_spawned(piece:Piece)
 signal item_pickedup(loc_id:int)
-signal rowClearAnimation_finished()
 signal deathlink_earned(deathContext:DracominoUtil.DeathContext)
 signal activePieces_changed()
 
@@ -237,7 +235,6 @@ func spawnPiece(piece:Piece):
 			else:
 				placeAboveOtherPieces(piece)
 				sortActivePieces()
-			piece_spawned.emit(piece)
 
 func deletePiece(piece:Piece): ## Remove a piece and immediately update activePieces
 	if piece.focus_lost.is_connected(_on_Piece_focus_lost):

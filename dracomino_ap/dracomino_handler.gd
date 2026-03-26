@@ -38,7 +38,6 @@ var _canUseDeathContext_NO_ROTATE:bool = false ## For death context
 var _energySendBuffer:int = 0 ## Energy to send to server when reconnecting
 
 signal lineMappings_updated(mappings:Dictionary[int, int])
-signal missingLocations_updated(locs:Dictionary[int, bool]) # TODO: This isn't actually used for anything?
 signal missingLines_updated(locs:Dictionary[int, bool])
 signal notification_signal(notif:String, color:Color, force:bool)
 signal missingPickupCoordinates_updated(map:Dictionary[Vector2i, int])
@@ -329,7 +328,6 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 
 	# Send new state to board
 	if _missingLocations_changed:
-		missingLocations_updated.emit(missingLocations)
 		missingLines_updated.emit(missingLines)
 		missingPickupCoordinates_updated.emit(missingPickupCoordinates)
 
@@ -424,7 +422,6 @@ func _on_remove_location(loc_id:int):
 	missingLocations.erase(loc_id)
 	if changed:
 		checkedLocations[loc_id] = true
-		missingLocations_updated.emit(missingLocations)
 		if id_to_line.has(loc_id):
 			missingLines[id_to_line[loc_id]] = false
 			missingLines_updated.emit(missingLines)
