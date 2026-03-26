@@ -1,5 +1,6 @@
 Version 0.2.4 (dev-beta3)
  - Fix wrong amount of energy being sent
+ - Reset lock delay when rotating
 
 Version 0.2.4 (dev-beta2)
  - Tweak line clear animation
