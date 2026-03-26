@@ -9,10 +9,6 @@ extends Control
 
 var _timer:SceneTreeTimer
 var _queuedNotifications:Array[Dictionary]
-var _goal:int=0
-var _line:int=0
-var _piecesStoredInPreview:int=0
-var _piecesLeft:int=0
 
 enum STATE {
 	NORMAL,
@@ -38,6 +34,9 @@ func _ready() -> void:
 	_on_SubViewportContainer_resized.call_deferred()
 
 	SignalBus.getSignal("give_focus_to_main").connect(grab_focus)
+	SignalBus.getSignal("stateflag_changed", "goal").connect(updateLineClearedLabel, CONNECT_DEFERRED)
+	SignalBus.getSignal("stateflag_changed", "lines_cleared").connect(updateLineClearedLabel, CONNECT_DEFERRED)
+	SignalBus.getSignal("stateflag_changed", "shapes_left").connect(_on_shapes_left_changed, CONNECT_DEFERRED)
 
 #==== Functions ====
 func applyState() -> void:
@@ -68,7 +67,10 @@ func showNotification(notif:String, color:Color) -> void:
 
 func updateLineClearedLabel():
 	if linesLabel:
-		linesLabel.text = "Lines: {num} / {goal}".format({num=_line,goal=_goal})
+		linesLabel.text = "Lines: {num} / {goal}".format({
+			num=FlagManager.getIntFlagValue("lines_cleared"),
+			goal=FlagManager.getIntFlagValue("goal")
+		})
 
 #==== Events =====
 func _on_focus_entered():
@@ -162,18 +164,9 @@ func _on_timer_timeout():
 		notificationLabel.hide()
 		_timer = null
 
-func _on_Board_lines_cleared_updated(num: int = _line) -> void:
-	_line = num
-	updateLineClearedLabel()
-
-func _on_DracominoState_pieces_left_updated(total:int = _piecesLeft) -> void:
-	_piecesLeft = total
+func _on_shapes_left_changed() -> void:
 	if piecesLabel:
-		piecesLabel.text = "Pieces Left: {total}".format({total=_piecesLeft+_piecesStoredInPreview})
-
-func _on_DracominoState_goal_updated(goalnum:int) -> void:
-	_goal = goalnum
-	updateLineClearedLabel()
+		piecesLabel.text = "Pieces Left: {total}".format({total=FlagManager.getTotalCountAmount("shapes_left")})
 
 func _on_SubViewportContainer_resized() -> void:
 	await get_tree().process_frame
@@ -182,10 +175,6 @@ func _on_SubViewportContainer_resized() -> void:
 		var levelNativeHeight = (Board.BOUNDS.size.y + 6) * 16 # TODO: Move this magic number (tile size)
 		var scaleMultiplier:int = max(1, floor(rect.size.y / levelNativeHeight))
 		level.scale = Vector2(scaleMultiplier, scaleMultiplier)
-
-func _on_PreviewStorage_num_stored_changed(num:int) -> void:
-	_piecesStoredInPreview = num
-	_on_DracominoState_pieces_left_updated()
 
 func _on_BtnChangelog_pressed() -> void:
 	var _changelogWindow:Window = CHANGELOG_WINDOW_SCENE.instantiate() as Window

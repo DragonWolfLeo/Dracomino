@@ -48,7 +48,9 @@ var itemPickups:Dictionary[Vector2i, ItemPickupContext] = {}
 var linesCleared:int = 0:
 	set(value):
 		linesCleared = value
+		if flagHolder: flagHolder.setFlag("lines_cleared", linesCleared)
 		linesCleared_updated.emit(linesCleared)
+var flagHolder:FlagHolder
 
 var _lastHeldPieceContext:DracominoHandler.StateItem ## For deathlink message context; TODO: Obsolete
 
@@ -115,6 +117,7 @@ static func mergeCells(destination:Array[Vector2i], cells:Array[Vector2i]) -> vo
 
 #===== Virtuals ======
 func _ready():
+	resetFlagHolder()
 	masterCoin.visible = false # Master coin is just a reference for the rest of the coins and should be hidden
 	inputTimer = ActivityTimer.new(); add_child(inputTimer)
 	inputTimer.afk_threshold = 10.0
@@ -125,7 +128,7 @@ func _ready():
 	SignalBus.getSignal("restartGame").connect(resetGame)
 	SignalBus.getSignal("deathOnRestart_enabled").connect(set.bind("sendDeathOnRestart", true))
 	SignalBus.getSignal("deathOnRestart_disabled").connect(set.bind("sendDeathOnRestart", false))
-	SignalBus.getSignal("newPieceObtained").connect(_on_newPieceObtained)
+	SignalBus.getSignal("stateflag_changed", "shapes").connect(_on_newPieceObtained)
 	activePieces_changed.connect(_on_activePieces_changed)
 
 	# Make line numbers labels
@@ -139,6 +142,11 @@ func _ready():
 
 
 #===== Functions ======
+func resetFlagHolder():
+	if flagHolder: flagHolder.queue_free()
+	flagHolder = FlagHolder.new(FlagHolder.PRIORITY.LEVEL)
+	add_child(flagHolder)
+
 func getFocusPiece() -> Piece:
 	for piece in activePieces:
 		if piece.isFocus:
@@ -479,6 +487,7 @@ func resetGame():
 	random.state = randomSaveState
 	rotate_random.state = rotate_randomSaveState
 	clearingChunks.clear()
+	resetFlagHolder()
 
 	# Clear board
 	activatedTileHandler.clear()

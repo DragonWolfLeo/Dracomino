@@ -12,9 +12,15 @@ class_name PieceStorage extends Node
 		slotAbilityName = value.to_snake_case()
 @export var emptyFill:bool = false
 @export var useNumberedSlots:bool = false
+@export var addToPieceTotal:bool = false:
+	set(value):
+		if addToPieceTotal == value: return
+		addToPieceTotal = value
+		if flagHolder: flagHolder.monitoring = addToPieceTotal
 
 @onready var PIECEPREVIEW_SCENE:PackedScene = load("res://object/piecepreview.tscn")
 @onready var EMPTYPREVIEW_SCENE:PackedScene = load("res://object/emptypreview.tscn")
+var flagHolder:FlagHolder
 
 static var INPUT_MAPPINGS:Dictionary = {
 	"slot1":  "1",
@@ -39,7 +45,12 @@ func _ready() -> void:
 	if targetControl:
 		targetControl.hide()
 
+	flagHolder = FlagHolder.new(FlagHolder.PRIORITY.LEVEL)
+	flagHolder.monitoring = addToPieceTotal
+	add_child(flagHolder)
+
 	numStored_changed.connect(_updatePreviews.unbind(1))
+	numStored_changed.connect(func(num:int): flagHolder.count("shapes_left", "stored", num))
 	storageSlots_updated.connect(_updatePreviews)
 	if emptyFill:
 		for i:int in range(storageSlots):
@@ -47,6 +58,13 @@ func _ready() -> void:
 
 	# Connect to flag signal
 	SignalBus.getSignal("stateflag_changed", slotAbilityName).connect(_on_stateflag_changed)
+
+func _on_numStored_changed(num:int):
+	# Update shapes stored
+	for preview:PiecePreview in storage:
+		if not preview.piece:
+			num -= 1
+	flagHolder.count("shapes_left", "stored", num)
 
 func pushPiece(piece:Piece, ignoreLimit:bool = false, index:int = -1) -> Piece:
 	var popped:Piece = null

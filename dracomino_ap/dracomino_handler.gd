@@ -20,6 +20,8 @@ var goal:int = -1:
 		if goal == value: return
 		goal = value
 		goal_updated.emit(goal)
+		if seedFlagHolder:
+			seedFlagHolder.setFlag("goal", value)
 var slotContextHash:int:
 	set(value):
 		if slotContextHash == value:
@@ -84,6 +86,7 @@ func _ready() -> void:
 #===== Functions =====
 func reset():
 	currentIndex = 0
+	seedFlagHolder.count("shapes_left", "subtracted", 0)
 	gotLines.clear()
 	lineMappings.clear()
 	# Fill visible line mappings
@@ -120,22 +123,13 @@ func getNextPiece() -> Dictionary:
 		var item := CONSTANTS.ITEMS[stateItem.id]
 		if item and item.tags.get("shape"):
 			currentIndex += 1
-			piecesLeft_updated.emit.call_deferred(countPieces(currentIndex))
+			seedFlagHolder.count("shapes_left", "subtracted", -1, true)
 			return {
 				name = item.prettyName,
 				stateItem = stateItem,
 			}
 		currentIndex += 1
 	return {}
-	piecesLeft_updated.emit.call_deferred(0)
-
-func countPieces(from:int = 0) -> int:
-	var total:int = 0
-	for i in range(from, collectedItems.size()):
-		var item := CONSTANTS.ITEMS[collectedItems[i].id]
-		if item and item.tags.get("shape"):
-			total += 1
-	return total
 
 func sendLocation(loc_id:int):
 	# Send the location
@@ -148,7 +142,6 @@ func sendLocation(loc_id:int):
 		print("Will send ", CONSTANTS.LOCATIONS[loc_id].prettyName, " to server when reconnected.")
 	
 	missingLocations[loc_id] = false
-	missingLocations_updated.emit(missingLocations)
 	checkedLocations[loc_id] = true
 
 func sendLine(lineIndex:int):
@@ -371,6 +364,8 @@ func _on_obtained_item(item: NetworkItem):
 	if item.id in CONSTANTS.ITEMS:
 		# Detect shape streaks
 		if CONSTANTS.ITEMS[item.id].tags.get("shape"):
+			seedFlagHolder.count("shapes_left", "collected", 1, true)
+			seedFlagHolder.count("shapes", CONSTANTS.ITEMS[item.id].internalName, 1, true)
 			var streak:Streak
 			# Get last shape in collectedItems and get its streak object if the same as this one 
 			var index:int = collectedItems.size() - 2 # Get the one right before the one we just added
@@ -397,10 +392,6 @@ func _on_obtained_item(item: NetworkItem):
 			# Keep track of rotate abilities collected
 			if CONSTANTS.ITEMS[item.id].tags.get("rotate"):
 				seedFlagHolder.count("rotate", CONSTANTS.ITEMS[item.id].internalName, 1)
-
-		elif CONSTANTS.ITEMS[item.id].tags.get("shape"):
-			SignalBus.getSignal("newPieceObtained").emit.call_deferred()
-			piecesLeft_updated.emit.call_deferred(countPieces(currentIndex))
 	else:
 		print("Obtained invalid item: id: {id}; name: {name}; You may be running an outdated version of the client!"
 			.format({id=item.id,name=item.get_name()})
@@ -480,7 +471,7 @@ func _on_Board_deathlink_earned(deathContext:DracominoUtil.DeathContext) -> void
 		var formatValues = {
 			player = Archipelago.conn.get_player_name(),
 			boardheight = str(Board.BOUNDS.size.y),
-			totalpieces = str(countPieces(0)),
+			totalpieces = str(FlagManager.getTotalCountAmount("shapes")),
 		}
 		formatValues.merge(deathContext.formatValues, true)
 		var contextTags = deathContext.contextTags.duplicate()
