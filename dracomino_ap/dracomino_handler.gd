@@ -456,6 +456,14 @@ func _on_Board_lines_cleared(lines:Array) -> void:
 		lineMappings[Board.BOUNDS.size.y-1] += 1 
 
 	lineMappings_updated.emit(lineMappings)
+	
+	# Send mana/energy
+	var manaEarned:float = lines.size() * Board.BOUNDS.size.x * CONSTANTS.MANA_PER_BLOCK
+	var sharedMana:float = 0.0
+	if energyLinkEnabled:
+		sharedMana = manaEarned * CONSTANTS.ENERGY_LINK_SHARE
+		sendEnergy(round(sharedMana * CONSTANTS.MANA_TO_ENERGY_RATIO))
+	storedMana += manaEarned - sharedMana
 
 func _on_Board_item_pickedup(loc_id) -> void:
 	print("Picked up ", CONSTANTS.LOCATIONS[loc_id].prettyName)
@@ -468,12 +476,7 @@ func _on_Board_lines_cleared_updated(num:int) -> void:
 	if not victory and goal > 0 and num >= goal:
 		sendVictory()
 	# Send mana/energy
-	var manaEarned:float = num * Board.BOUNDS.size.x * CONSTANTS.MANA_PER_BLOCK
-	var sharedMana:float = 0.0
-	if energyLinkEnabled:
-		sharedMana = manaEarned * CONSTANTS.ENERGY_LINK_SHARE
-		sendEnergy(round(sharedMana * CONSTANTS.MANA_TO_ENERGY_RATIO))
-	storedMana += manaEarned - sharedMana
+	sendEnergy()
 
 func _on_Board_deathlink_earned(deathContext:DracominoUtil.DeathContext) -> void:
 	if Archipelago.conn:
