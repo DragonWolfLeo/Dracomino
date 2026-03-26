@@ -1,12 +1,12 @@
 [gd_scene load_steps=9 format=3 uid="uid://c7613bp0awts"]
 
-[ext_resource type="Script" uid="uid://ctx0wt81itx32" path="res://godot_ap/ui/console_window_container.gd" id="1_bn7tn"]
+[ext_resource type="Script" uid="uid://bdt3egg4vj746" path="res://dracomino_ap/dracomino_console_window_container.gd" id="1_vsama"]
 [ext_resource type="Script" uid="uid://coc8hh7uywptt" path="res://dracomino_ap/dracomino_aphelper.gd" id="2_prof0"]
 [ext_resource type="PackedScene" uid="uid://dhya6ucgf72i8" path="res://godot_ap/ui/hints_tab.tscn" id="3_prof0"]
 [ext_resource type="PackedScene" uid="uid://c1pyfyn3ax5u2" path="res://dracomino_ap/dracomino_console_tab.tscn" id="3_vsama"]
 [ext_resource type="PackedScene" uid="uid://dp2yir3r1061y" path="res://godot_ap/ui/settings_tab.tscn" id="4_vsama"]
-[ext_resource type="Script" uid="uid://cfbgk8vq58w0h" path="res://dracomino_ap/option_toggle_button.gd" id="7_s3ubo"]
-[ext_resource type="Script" uid="uid://dhw5qwfoet8gm" path="res://dracomino_ap/signal_toggle_button.gd" id="7_vsama"]
+[ext_resource type="Script" path="res://dracomino_ap/option_toggle_button.gd" id="7_s3ubo"]
+[ext_resource type="Script" path="res://dracomino_ap/signal_toggle_button.gd" id="7_vsama"]
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_1wnfu"]
 
@@ -18,7 +18,7 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-script = ExtResource("1_bn7tn")
+script = ExtResource("1_vsama")
 
 [node name="DracominoAPHelper" type="Node" parent="."]
 script = ExtResource("2_prof0")
@@ -26,7 +26,6 @@ script = ExtResource("2_prof0")
 [node name="Tabs" type="TabContainer" parent="."]
 layout_mode = 2
 current_tab = 0
-tab_focus_mode = 0
 
 [node name="Console" parent="Tabs" instance=ExtResource("3_vsama")]
 layout_mode = 2
@@ -267,6 +266,24 @@ layout_mode = 2
 text = "Well Done!"
 script = ExtResource("7_vsama")
 signalKey = "overlay_welldone"
+
+[node name="Bounds" type="Control" parent="."]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="FocusExit" type="Control" parent="Bounds"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 160.0
+offset_bottom = 160.0
+grow_horizontal = 0
+grow_vertical = 0
+focus_mode = 2
+mouse_filter = 2
 
 [connection signal="update_theme" from="Tabs/Settings/Margin/Tabs/Theme" to="DracominoAPHelper" method="_on_Theme_update_theme"]
 

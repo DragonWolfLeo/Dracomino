@@ -119,6 +119,11 @@ func _ready() -> void:
 
 	_sfxSliderBeingDragged = false
 
+	# Select IP box on loading
+	var ipbox:LineEdit = get_parent().find_child("IP_Box")
+	if ipbox is LineEdit and ipbox.is_visible_in_tree():
+		ipbox.grab_focus()
+
 #===== Events =====
 func _on_Theme_update_theme(theme_res:Theme) -> void:
 	var parent:Node = get_parent()
