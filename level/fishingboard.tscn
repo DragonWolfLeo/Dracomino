@@ -1,0 +1,40 @@
+[gd_scene load_steps=2 format=3 uid="uid://rd6em7cjqrum"]
+
+[ext_resource type="Texture2D" uid="uid://eotnw3aft54o" path="res://assets/art/fishing_background.png" id="1_qovn8"]
+
+[node name="FishingBoard" type="Node2D"]
+
+[node name="Background" type="Node2D" parent="."]
+
+[node name="Fishing" type="Sprite2D" parent="Background"]
+position = Vector2(128, 72)
+texture = ExtResource("1_qovn8")
+region_enabled = true
+region_rect = Rect2(0, 0, 256, 144)
+
+[node name="Fishing2" type="Sprite2D" parent="Background"]
+position = Vector2(128, 320)
+texture = ExtResource("1_qovn8")
+region_enabled = true
+region_rect = Rect2(0, 224, 256, 64)
+
+[node name="Fishing3" type="Sprite2D" parent="Background"]
+position = Vector2(128, 168)
+texture = ExtResource("1_qovn8")
+region_enabled = true
+region_rect = Rect2(0, 160, 256, 48)
+
+[node name="Fishing4" type="Sprite2D" parent="Background"]
+position = Vector2(128, 216)
+texture = ExtResource("1_qovn8")
+region_enabled = true
+region_rect = Rect2(0, 160, 256, 48)
+
+[node name="Fishing5" type="Sprite2D" parent="Background"]
+position = Vector2(128, 264)
+texture = ExtResource("1_qovn8")
+region_enabled = true
+region_rect = Rect2(0, 160, 256, 48)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(128, 192)

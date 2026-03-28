@@ -58,6 +58,3 @@ func _ready() -> void:
 
 func close() -> void:
 	get_window().close_requested.emit()
-
-func _on_APButton_pressed() -> void:
-	visible = not visible

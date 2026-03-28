@@ -11,7 +11,7 @@ shader = ExtResource("1_4gjj1")
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ckgpy"]
 shader = ExtResource("3_xy513")
 
-[node name="MainOverlay" type="CanvasLayer"]
+[node name="GameOverlay" type="CanvasLayer"]
 
 [node name="EGAFilter" type="ColorRect" parent="."]
 visible = false

@@ -67,7 +67,6 @@ tile_set = SubResource("TileSet_m3cj1")
 [node name="Camera2D" type="Camera2D" parent="."]
 process_mode = 3
 position = Vector2(80, 160)
-offset = Vector2(0.25, 0.25)
 
 [node name="LineNumberBar" type="Node2D" parent="."]
 position = Vector2(-28.3333, 0)

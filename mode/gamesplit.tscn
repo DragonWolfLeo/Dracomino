@@ -1,0 +1,138 @@
+[gd_scene load_steps=10 format=3 uid="uid://dq05pcnj58yp0"]
+
+[ext_resource type="PackedScene" uid="uid://c5lm3ikyfckvp" path="res://mode/main.tscn" id="1_qcctl"]
+[ext_resource type="Script" uid="uid://b51dfig7vuw2p" path="res://ui/buttonbar.gd" id="2_ihwrx"]
+[ext_resource type="PackedScene" uid="uid://c7613bp0awts" path="res://dracomino_ap/dracomino_client.tscn" id="3_ygsa4"]
+[ext_resource type="PackedScene" uid="uid://bufsjxsve02l3" path="res://screen/game_overlay.tscn" id="4_8ai7d"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q3k4m"]
+bg_color = Color(0.0562916, 0.0562916, 0.0562916, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gpyk6"]
+content_margin_left = 4.0
+content_margin_top = 2.0
+content_margin_right = 4.0
+content_margin_bottom = 2.0
+bg_color = Color(0.436422, 0.672116, 0.773563, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.00146531, 0.112594, 0.137529, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+shadow_size = 1
+shadow_offset = Vector2(1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_svssi"]
+content_margin_left = 4.0
+content_margin_top = 2.0
+content_margin_right = 4.0
+content_margin_bottom = 2.0
+bg_color = Color(0.186976, 0.658807, 0.804138, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.00146531, 0.112594, 0.137529, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+shadow_size = 1
+shadow_offset = Vector2(1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gx2q7"]
+content_margin_left = 4.0
+content_margin_top = 2.0
+content_margin_right = 4.0
+content_margin_bottom = 2.0
+bg_color = Color(0.525081, 0.745393, 0.841889, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.00146531, 0.112594, 0.137529, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+shadow_size = 1
+shadow_offset = Vector2(1, 1)
+
+[sub_resource type="Theme" id="Theme_gpyk6"]
+Button/colors/font_color = Color(0, 0, 0, 1)
+Button/colors/font_hover_color = Color(0, 0, 0, 1)
+Button/colors/font_pressed_color = Color(0, 0, 0, 1)
+Button/styles/hover = SubResource("StyleBoxFlat_gpyk6")
+Button/styles/normal = SubResource("StyleBoxFlat_svssi")
+Button/styles/pressed = SubResource("StyleBoxFlat_gx2q7")
+
+[node name="GameSplit" type="HSplitContainer"]
+process_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/split_bar_background = SubResource("StyleBoxFlat_q3k4m")
+split_offset = 900
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="MainContainer" type="PanelContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+
+[node name="Main" parent="HBoxContainer/MainContainer" instance=ExtResource("1_qcctl")]
+layout_mode = 2
+
+[node name="ButtonBarContainer" type="MarginContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="ButtonBar" type="VBoxContainer" parent="HBoxContainer/ButtonBarContainer"]
+layout_mode = 2
+theme = SubResource("Theme_gpyk6")
+script = ExtResource("2_ihwrx")
+
+[node name="Btn_AP" type="Button" parent="HBoxContainer/ButtonBarContainer/ButtonBar"]
+layout_mode = 2
+size_flags_vertical = 0
+focus_mode = 0
+text = "Archipelago"
+
+[node name="Btn_Changelog" type="Button" parent="HBoxContainer/ButtonBarContainer/ButtonBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 2
+focus_mode = 0
+text = "Changelog"
+
+[node name="Btn_Restart" type="Button" parent="HBoxContainer/ButtonBarContainer/ButtonBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 9
+focus_mode = 0
+text = "Restart"
+
+[node name="Btn_Quit" type="Button" parent="HBoxContainer/ButtonBarContainer/ButtonBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 9
+focus_mode = 0
+text = "Quit"
+
+[node name="DracominoClient" parent="." instance=ExtResource("3_ygsa4")]
+process_mode = 3
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+
+[node name="GameOverlay" parent="." instance=ExtResource("4_8ai7d")]
+
+[connection signal="pressed" from="HBoxContainer/ButtonBarContainer/ButtonBar/Btn_AP" to="DracominoClient" method="_on_APButton_pressed"]

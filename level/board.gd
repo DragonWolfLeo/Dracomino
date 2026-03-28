@@ -757,9 +757,6 @@ func _on_newPieceObtained():
 	fillPreview()
 	requestPiece()
 
-func _on_Btn_Restart_pressed() -> void:
-	resetGame()
-
 func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemappings) -> void:
 	_linemappings = lineMappings
 	_mappedpickups.clear()

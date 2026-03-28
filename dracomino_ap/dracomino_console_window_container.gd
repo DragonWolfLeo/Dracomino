@@ -33,3 +33,6 @@ func _ready() -> void:
 func _on_give_focus_to_client():
 	var validFocus:Control = focusEntrance.find_next_valid_focus()
 	if validFocus: validFocus.grab_focus()
+
+func _on_APButton_pressed() -> void:
+	visible = not visible

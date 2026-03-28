@@ -1,11 +1,7 @@
-extends Control
+extends SubViewportContainer
 
 @onready var centerLabel:Label = %CenterLabel
 @onready var notificationLabel:Label = %NotificationLabel
-@onready var linesLabel:Label = %LinesLabel
-@onready var piecesLabel:Label = %PiecesLabel
-@onready var level:Board = %Board
-@onready var btnQuit:Button = %Btn_Quit
 
 var _timer:SceneTreeTimer
 var _queuedNotifications:Array[Dictionary]
@@ -16,13 +12,11 @@ enum STATE {
 	GAMEOVER,
 }
 var state:int: set = _set_state
-var CHANGELOG_WINDOW_SCENE:PackedScene = load("res://ui/changelog_window.tscn")
 var DRACOMINO_NOTIFICATION_TIME:float = 5.0
 var DRACOMINO_NOTIFICATION_TIME_SHORT:float = 1.0
 
 #==== Virtuals ====
 func _ready() -> void:
-	btnQuit.disabled = Config.isWeb
 	notificationLabel.text = ""
 	notificationLabel.hide()
 	focus_entered.connect(_on_focus_entered)
@@ -31,12 +25,7 @@ func _ready() -> void:
 	get_window().focus_exited.connect(_on_window_focus_exited)
 	state = STATE.PAUSED
 
-	_on_SubViewportContainer_resized.call_deferred()
-
 	SignalBus.getSignal("give_focus_to_main").connect(grab_focus)
-	SignalBus.getSignal("stateflag_changed", "goal").connect(updateLineClearedLabel, CONNECT_DEFERRED)
-	SignalBus.getSignal("stateflag_changed", "lines_cleared").connect(updateLineClearedLabel, CONNECT_DEFERRED)
-	SignalBus.getSignal("stateflag_changed", "shapes_left").connect(_on_shapes_left_changed, CONNECT_DEFERRED)
 
 #==== Functions ====
 func applyState() -> void:
@@ -64,13 +53,6 @@ func showNotification(notif:String, color:Color) -> void:
 		notificationLabel.label_settings.font_color = color
 		_timer = get_tree().create_timer(DRACOMINO_NOTIFICATION_TIME_SHORT if _queuedNotifications.size() else DRACOMINO_NOTIFICATION_TIME, false)
 		_timer.timeout.connect(_on_timer_timeout)
-
-func updateLineClearedLabel():
-	if linesLabel:
-		linesLabel.text = "Lines: {num} / {goal}".format({
-			num=FlagManager.getIntFlagValue("lines_cleared"),
-			goal=FlagManager.getIntFlagValue("goal")
-		})
 
 #==== Events =====
 func _on_focus_entered():
@@ -118,7 +100,6 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_focus_next") or event.is_action_pressed("ui_focus_prev"):
 		SignalBus.getSignal("give_focus_to_client").emit()
 
-func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("restart"):
 		SignalBus.getSignal("restartGame").emit()
 		accept_event()
@@ -143,10 +124,7 @@ func _set_state(value:int) -> void:
 	state = value
 	applyState()
 
-func _on_Btn_Quit_pressed() -> void:
-	get_tree().quit()
-
-func _on_DracominoState_notification_signal(notif:String, color:Color, force:bool = false) -> void:
+func _on_DracominoHandler_notification_signal(notif:String, color:Color, force:bool = false) -> void:
 	if _timer and not force:
 		_timer.time_left = min(DRACOMINO_NOTIFICATION_TIME_SHORT, _timer.time_left)
 		_queuedNotifications.append({
@@ -164,24 +142,8 @@ func _on_timer_timeout():
 		notificationLabel.hide()
 		_timer = null
 
-func _on_shapes_left_changed() -> void:
-	if piecesLabel:
-		piecesLabel.text = "Pieces Left: {total}".format({total=FlagManager.getTotalCountAmount("shapes_left")})
-
-func _on_SubViewportContainer_resized() -> void:
-	await get_tree().process_frame
-	if level:
-		var rect = level.get_viewport_rect()
-		var levelNativeHeight = (Board.BOUNDS.size.y + 6) * 16 # TODO: Move this magic number (tile size)
-		var scaleMultiplier:int = max(1, floor(rect.size.y / levelNativeHeight))
-		level.scale = Vector2(scaleMultiplier, scaleMultiplier)
-
-func _on_BtnChangelog_pressed() -> void:
-	var _changelogWindow:Window = CHANGELOG_WINDOW_SCENE.instantiate() as Window
-	_changelogWindow.popup_exclusive_centered(self)
-
 func _on_DracominoHandler_started() -> void:
 	grab_focus()
 
-func _on_MainViewportContainer_focus_entered() -> void:
+func _on_ModeViewportContainer_focus_entered() -> void:
 	grab_focus()
