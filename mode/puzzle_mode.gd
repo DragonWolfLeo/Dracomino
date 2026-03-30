@@ -1,4 +1,4 @@
-extends Control
+extends Mode
 
 @onready var linesLabel:Label = %LinesLabel
 @onready var piecesLabel:Label = %PiecesLabel

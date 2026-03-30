@@ -189,7 +189,7 @@ func checkForEvent():
 	if bufferedCutscenes.size():
 		var popped:StringName = bufferedCutscenes.pop_front()
 		if popped:
-			SignalBus.getSignal("set_mode", popped).emit()
+			SignalBus.getSignal("mode_set_requested", popped).emit()
 			return
 	
 	requestPiece()

@@ -1,7 +1,10 @@
 extends SubViewportContainer
 
+signal mode_set_requested(modeName:StringName)
+
 @onready var centerLabel:Label = %CenterLabel
 @onready var notificationLabel:Label = %NotificationLabel
+@onready var puzzleMode:Mode = %PuzzleMode
 
 var _timer:SceneTreeTimer
 var _queuedNotifications:Array[Dictionary]
@@ -16,6 +19,9 @@ var DRACOMINO_NOTIFICATION_TIME:float = 5.0
 var DRACOMINO_NOTIFICATION_TIME_SHORT:float = 1.0
 
 #==== Virtuals ====
+func _init() -> void:
+	SignalBus.registerSignalDistributor(mode_set_requested, "mode_set_requested")
+	
 func _ready() -> void:
 	notificationLabel.text = ""
 	notificationLabel.hide()
@@ -26,6 +32,11 @@ func _ready() -> void:
 	state = STATE.PAUSED
 
 	SignalBus.getSignal("give_focus_to_main").connect(grab_focus)
+	for child in $SubViewport.get_children():
+		if child is Mode:
+			(child as Mode).mode_enabled.connect(setMode.bind(child as Mode))
+
+	setMode()
 
 #==== Functions ====
 func applyState() -> void:
@@ -53,6 +64,21 @@ func showNotification(notif:String, color:Color) -> void:
 		notificationLabel.label_settings.font_color = color
 		_timer = get_tree().create_timer(DRACOMINO_NOTIFICATION_TIME_SHORT if _queuedNotifications.size() else DRACOMINO_NOTIFICATION_TIME, false)
 		_timer.timeout.connect(_on_timer_timeout)
+
+func setMode(mode:Control = null):
+	if not mode:
+		mode = puzzleMode
+	if mode.get_parent() != $SubViewport:
+		printerr("Mode must be a parent of Main/SubViewport")
+		mode = puzzleMode
+	
+	for child in $SubViewport.get_children():
+		if child is Mode:
+			child.visible = mode == child
+			child.set_process(mode == child)
+			child.set_process_input(mode == child)
+			child.set_process_unhandled_input(mode == child)
+			child.process_mode = PROCESS_MODE_PAUSABLE if mode == child else PROCESS_MODE_DISABLED
 
 #==== Events =====
 func _on_focus_entered():
@@ -143,7 +169,5 @@ func _on_timer_timeout():
 		_timer = null
 
 func _on_DracominoHandler_started() -> void:
-	grab_focus()
-
-func _on_ModeViewportContainer_focus_entered() -> void:
+	setMode()
 	grab_focus()

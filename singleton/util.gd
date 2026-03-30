@@ -77,3 +77,8 @@ class DeathContext:
 		for tag in _contextTags:
 			addContext(tag)
 		return self
+
+static func getParentMode(node:Node) -> Mode:
+	while node and not node is Mode:
+		node = node.get_parent()
+	return node

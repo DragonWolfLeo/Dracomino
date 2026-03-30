@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://bda3r5r6j4txl"]
+
+[ext_resource type="TileSet" uid="uid://bik73l7fn0v3b" path="res://resource/tileset/dracomino_piece.tres" id="1_0bny8"]
+[ext_resource type="Script" uid="uid://8yp0shgfkiwb" path="res://object/fishpiece.gd" id="2_0bny8"]
+
+[node name="FishPiece" type="TileMapLayer"]
+tile_set = ExtResource("1_0bny8")
+occlusion_enabled = false
+navigation_enabled = false
+script = ExtResource("2_0bny8")
