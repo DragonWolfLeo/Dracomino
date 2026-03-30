@@ -132,13 +132,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("rotateClockwise"):
 		if FlagManager.isFlagSet("rotate_clockwise"):
 			rotateClockwise()
+			get_viewport().set_input_as_handled()
 		elif USE_ALT_ROTATE and FlagManager.isFlagSet("rotate_counterclockwise"):
 			rotateCounterclockwise()
+			get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("rotateCounterclockwise"):
 		if FlagManager.isFlagSet("rotate_counterclockwise"):
 			rotateCounterclockwise()
+			get_viewport().set_input_as_handled()
 		elif USE_ALT_ROTATE and FlagManager.isFlagSet("rotate_clockwise"):
 			rotateClockwise()
+			get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("moveLeft") and Input.is_action_just_pressed("moveLeft"):
 		horizontalTimer.start(HORIZONTAL_WAIT_TIME)
 		movement_requested.emit(self, Vector2i.LEFT, MOVEMENT.HORIZONTAL)
