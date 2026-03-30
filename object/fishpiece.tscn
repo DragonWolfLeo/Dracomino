@@ -3,8 +3,12 @@
 [ext_resource type="TileSet" uid="uid://bik73l7fn0v3b" path="res://resource/tileset/dracomino_piece.tres" id="1_0bny8"]
 [ext_resource type="Script" uid="uid://8yp0shgfkiwb" path="res://object/fishpiece.gd" id="2_0bny8"]
 
-[node name="FishPiece" type="TileMapLayer"]
+[node name="FishPiece" type="CharacterBody2D"]
+collision_mask = 6
+floor_constant_speed = true
+script = ExtResource("2_0bny8")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
 tile_set = ExtResource("1_0bny8")
 occlusion_enabled = false
 navigation_enabled = false
-script = ExtResource("2_0bny8")

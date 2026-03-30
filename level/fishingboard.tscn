@@ -61,7 +61,7 @@ offset_bottom = 320.0
 [node name="Boundaries" type="Node2D" parent="."]
 
 [node name="RightBoundary" type="StaticBody2D" parent="Boundaries"]
-position = Vector2(32, 0)
+position = Vector2(48, 0)
 collision_layer = 4
 collision_mask = 0
 
@@ -69,7 +69,7 @@ collision_mask = 0
 shape = SubResource("WorldBoundaryShape2D_qnlj5")
 
 [node name="LeftBoundary" type="StaticBody2D" parent="Boundaries"]
-position = Vector2(224, 0)
+position = Vector2(208, 0)
 collision_layer = 4
 collision_mask = 0
 
