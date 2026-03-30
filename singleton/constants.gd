@@ -122,7 +122,7 @@ class LocationData extends Data: pass
 
 @onready var ITEM_NAME_TO_ID:Dictionary[StringName, int] = ITEMS.values().reduce(
 	func(acc:Dictionary[StringName, int], itemData:ItemData):
-		acc[itemData.prettyName] = itemData.id
+		acc[itemData.internalName] = itemData.id
 		return acc,
 	{} as Dictionary[StringName, int]
 )

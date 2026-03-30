@@ -208,12 +208,12 @@ func upgradeFeatures(generatedVersion:String = "0.0.0"): ## Add new features to 
 	}
 	if UserData.versionIsOlderThan(generatedVersion, "0.2.2"):
 		var RETROFITTED_ABILITIES:Array[StringName] = [
-			"Kick",
-			"Vertical Shove",
-			"Lock Delay",
+			"kick",
+			"vertical_shove",
+			"lock_delay",
 		]
-		for abilityName:StringName in RETROFITTED_ABILITIES:
-			var id:Variant = CONSTANTS.ITEM_NAME_TO_ID.get(abilityName)
+		for internalName:StringName in RETROFITTED_ABILITIES:
+			var id:Variant = CONSTANTS.ITEM_NAME_TO_ID.get(internalName)
 			var item := CONSTANTS.ITEMS[id] if id != null else null
 			if item:
 				collectedAbilities[item.id] = 1
