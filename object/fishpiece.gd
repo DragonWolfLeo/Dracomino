@@ -10,11 +10,11 @@ var piece:Piece:
 		piece.tree_exiting.connect(queue_free)
 
 var direction:Vector2 = Vector2.RIGHT
-var speed_min:float = 10
-var speed_max:float = 40
+var SPEED_MIN:float = 5
+var SPEED_MAX:float = 20
 var speed:float
-var collisionWait_min:float = 0.5
-var collisionWait_max:float = 2
+var COLLISION_WAIT_MIN:float = 0.5
+var COLLISION_WAIT_MAX:float = 2
 var collisionWait:float
 var time:float
 var waveFrequency:float = 5
@@ -26,8 +26,8 @@ var waveAmplitude:float = 3
 func _ready() -> void:
 	# Set initial speed and direction
 	direction = Vector2.RIGHT if randf() > 0.5 else Vector2.LEFT
-	speed = randf_range(speed_min, speed_max)
-	collisionWait = randf_range(collisionWait_min, collisionWait_max)
+	speed = randf_range(SPEED_MIN, SPEED_MAX)
+	collisionWait = randf_range(COLLISION_WAIT_MIN, COLLISION_WAIT_MAX)
 
 	await get_tree().process_frame
 	# Copy tile collision into the collision body
