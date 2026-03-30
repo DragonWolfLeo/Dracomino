@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://c5lm3ikyfckvp"]
+[gd_scene load_steps=16 format=3 uid="uid://c5lm3ikyfckvp"]
 
 [ext_resource type="Script" uid="uid://c5jgcsxvnygnn" path="res://mode/main.gd" id="1_gx2q7"]
 [ext_resource type="FontFile" uid="uid://c8dwaeydyfv6j" path="res://resource/font/PressStart2P-Regular.ttf" id="2_jjnvi"]
@@ -6,7 +6,6 @@
 [ext_resource type="Script" uid="uid://daewoikmtskpi" path="res://dracomino_ap/dracomino_handler.gd" id="4_d6dmn"]
 [ext_resource type="Script" uid="uid://b5b036m1pgdbu" path="res://mode/puzzle_mode.gd" id="5_m1ejn"]
 [ext_resource type="PackedScene" uid="uid://ckv6tnuoxlxgw" path="res://screen/level_overlay.tscn" id="6_w0fxs"]
-[ext_resource type="Script" uid="uid://dcg8fgw3xw0em" path="res://module/autoresize.gd" id="7_ckgpy"]
 [ext_resource type="PackedScene" uid="uid://boraki5ygsa0g" path="res://level/board.tscn" id="8_wule5"]
 [ext_resource type="Script" uid="uid://dutbiv2hgugwn" path="res://module/piecestorage.gd" id="9_3joyb"]
 [ext_resource type="PackedScene" uid="uid://rd6em7cjqrum" path="res://level/fishingboard.tscn" id="10_jc8m0"]
@@ -126,23 +125,20 @@ render_target_update_mode = 4
 
 [node name="LevelOverlay" parent="SubViewport/PuzzleMode/SubViewportContainer/SubViewport" instance=ExtResource("6_w0fxs")]
 
-[node name="AutoResize" type="Node2D" parent="SubViewport/PuzzleMode/SubViewportContainer/SubViewport"]
-script = ExtResource("7_ckgpy")
-
-[node name="Board" parent="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/AutoResize" node_paths=PackedStringArray("previewStorage", "holdStorage") instance=ExtResource("8_wule5")]
+[node name="Board" parent="SubViewport/PuzzleMode/SubViewportContainer/SubViewport" node_paths=PackedStringArray("previewStorage", "holdStorage") instance=ExtResource("8_wule5")]
 unique_name_in_owner = true
 previewStorage = NodePath("PreviewStorage")
 holdStorage = NodePath("HoldStorage")
 
-[node name="PreviewStorage" type="Node" parent="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/AutoResize/Board" node_paths=PackedStringArray("targetControl")]
+[node name="PreviewStorage" type="Node" parent="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" node_paths=PackedStringArray("targetControl")]
 script = ExtResource("9_3joyb")
-targetControl = NodePath("../../../../../PreviewContainer/ScrollContainer/PreviewBar")
+targetControl = NodePath("../../../../PreviewContainer/ScrollContainer/PreviewBar")
 slotAbilityName = "Next Piece Slot"
 addToPieceTotal = true
 
-[node name="HoldStorage" type="Node" parent="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/AutoResize/Board" node_paths=PackedStringArray("targetControl")]
+[node name="HoldStorage" type="Node" parent="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" node_paths=PackedStringArray("targetControl")]
 script = ExtResource("9_3joyb")
-targetControl = NodePath("../../../../../HoldContainer/ScrollContainer/HoldBar")
+targetControl = NodePath("../../../../HoldContainer/ScrollContainer/HoldBar")
 slotAbilityName = "Hold Slot"
 emptyFill = true
 useNumberedSlots = true
@@ -264,11 +260,8 @@ canvas_item_default_texture_filter = 3
 size = Vector2i(960, 540)
 render_target_update_mode = 0
 
-[node name="AutoResize" type="Node2D" parent="SubViewport/FishingMode/SubViewportContainer/SubViewport"]
-script = ExtResource("7_ckgpy")
-
-[node name="FishingBoard" parent="SubViewport/FishingMode/SubViewportContainer/SubViewport/AutoResize" node_paths=PackedStringArray("board") instance=ExtResource("10_jc8m0")]
-board = NodePath("../../../../../PuzzleMode/SubViewportContainer/SubViewport/AutoResize/Board")
+[node name="FishingBoard" parent="SubViewport/FishingMode/SubViewportContainer/SubViewport" node_paths=PackedStringArray("board") instance=ExtResource("10_jc8m0")]
+board = NodePath("../../../../PuzzleMode/SubViewportContainer/SubViewport/Board")
 
 [node name="DialogueMode" type="Control" parent="SubViewport"]
 unique_name_in_owner = true
@@ -286,19 +279,19 @@ mouse_filter = 1
 script = ExtResource("10_jjnvi")
 modeName = &"dialogue"
 
-[connection signal="lineMappings_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/AutoResize/Board" method="_on_DracominoState_line_mappings_updated"]
-[connection signal="missingLines_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/AutoResize/Board" method="_on_DracominoState_missing_lines_updated"]
-[connection signal="missingPickupCoordinates_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/AutoResize/Board" method="_on_DracominoState_missing_pickup_coordinates_updated"]
+[connection signal="lineMappings_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_line_mappings_updated"]
+[connection signal="missingLines_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_lines_updated"]
+[connection signal="missingPickupCoordinates_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_pickup_coordinates_updated"]
 [connection signal="notification_signal" from="SubViewport/DracominoHandler" to="." method="_on_DracominoHandler_notification_signal"]
-[connection signal="slotContextHash_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/AutoResize/Board" method="_on_DracominoState_slot_context_hash_updated"]
+[connection signal="slotContextHash_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_slot_context_hash_updated"]
 [connection signal="started" from="SubViewport/DracominoHandler" to="." method="_on_DracominoHandler_started"]
 [connection signal="resized" from="SubViewport/PuzzleMode/SubViewportContainer" to="SubViewport/PuzzleMode" method="_on_SubViewportContainer_resized"]
-[connection signal="deathlink_earned" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/AutoResize/Board" to="SubViewport/DracominoHandler" method="_on_Board_deathlink_earned"]
-[connection signal="game_over_earned" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/AutoResize/Board" to="." method="_on_Board_game_over_earned"]
-[connection signal="game_started" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/AutoResize/Board" to="." method="_on_Board_game_started"]
-[connection signal="game_started" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/AutoResize/Board" to="SubViewport/DracominoHandler" method="_on_Board_game_started"]
-[connection signal="item_pickedup" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/AutoResize/Board" to="SubViewport/DracominoHandler" method="_on_Board_item_pickedup"]
-[connection signal="linesCleared_updated" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/AutoResize/Board" to="SubViewport/DracominoHandler" method="_on_Board_lines_cleared_updated"]
-[connection signal="lines_cleared" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/AutoResize/Board" to="SubViewport/DracominoHandler" method="_on_Board_lines_cleared"]
-[connection signal="pieces_requested" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/AutoResize/Board" to="SubViewport/DracominoHandler" method="_on_Board_pieces_requested"]
+[connection signal="deathlink_earned" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_deathlink_earned"]
+[connection signal="game_over_earned" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_game_over_earned"]
+[connection signal="game_started" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_game_started"]
+[connection signal="game_started" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_game_started"]
+[connection signal="item_pickedup" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_item_pickedup"]
+[connection signal="linesCleared_updated" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_lines_cleared_updated"]
+[connection signal="lines_cleared" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_lines_cleared"]
+[connection signal="pieces_requested" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_pieces_requested"]
 [connection signal="resized" from="SubViewport/FishingMode/SubViewportContainer" to="SubViewport/PuzzleMode" method="_on_SubViewportContainer_resized"]

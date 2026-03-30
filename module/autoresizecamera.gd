@@ -1,4 +1,4 @@
-extends Node2D
+extends Camera2D
 
 @export var heightThreshold:float = (Board.BOUNDS.size.y + 6) * 16
 var masterControl:Control
@@ -17,4 +17,4 @@ func _on_resized() -> void:
 	await get_tree().process_frame
 	var rect = get_viewport_rect()
 	var scaleMultiplier:int = max(1, floor(rect.size.y / heightThreshold))
-	scale = Vector2(scaleMultiplier, scaleMultiplier)
+	zoom = Vector2(scaleMultiplier, scaleMultiplier)

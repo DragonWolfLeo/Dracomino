@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://rd6em7cjqrum"]
+[gd_scene load_steps=7 format=3 uid="uid://rd6em7cjqrum"]
 
 [ext_resource type="Script" uid="uid://c4627h5p2mc32" path="res://level/fishingboard.gd" id="1_qnlj5"]
 [ext_resource type="Texture2D" uid="uid://eotnw3aft54o" path="res://assets/art/fishing_background.png" id="1_qovn8"]
+[ext_resource type="Script" uid="uid://dcg8fgw3xw0em" path="res://module/autoresizecamera.gd" id="3_6egt2"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_qnlj5"]
 normal = Vector2(1, 0)
@@ -48,6 +49,7 @@ region_rect = Rect2(0, 160, 256, 48)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(128, 192)
+script = ExtResource("3_6egt2")
 
 [node name="Marker2D" type="Marker2D" parent="."]
 position = Vector2(43, 113)
