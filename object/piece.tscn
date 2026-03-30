@@ -5,6 +5,9 @@
 
 [node name="Piece" type="TileMapLayer"]
 tile_set = ExtResource("1_ls4uy")
+occlusion_enabled = false
+collision_enabled = false
+navigation_enabled = false
 script = ExtResource("1_k13et")
 
 [node name="GravityTimer" type="Timer" parent="."]

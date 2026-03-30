@@ -33,6 +33,9 @@ render_target_update_mode = 4
 [node name="TileMapLayer" type="TileMapLayer" parent="SubViewportContainer/SubViewport"]
 position = Vector2(72, 60)
 tile_set = ExtResource("2_3udnl")
+occlusion_enabled = false
+collision_enabled = false
+navigation_enabled = false
 
 [node name="Camera2D" type="Camera2D" parent="SubViewportContainer/SubViewport/TileMapLayer"]
 scale = Vector2(0.333333, 0.333333)
