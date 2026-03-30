@@ -38,6 +38,7 @@ var VERSION_WARNING_DIALOG_SCENE:PackedScene = load("res://ui/versionwarning_dia
 var LINE_THRESHOLD_FOR_NO_ROTATE_DEATH_CONTEXT:int = 8 ## For death context
 var _canUseDeathContext_NO_ROTATE:bool = false ## For death context
 var _energySendBuffer:int = 0 ## Energy to send to server when reconnecting
+var _effectBuffer:Array[StateItem] = [] ## Next traps to apply to next pieces
 
 signal lineMappings_updated(mappings:Dictionary[int, int])
 signal missingLines_updated(locs:Dictionary[int, bool])
@@ -57,16 +58,24 @@ class StateItem:
 	var gameName:String = "game"
 	var isLocal:bool = true
 	var streak:Streak = null
+	var data:CONSTANTS.ItemData:
+		get:
+			return CONSTANTS.ITEMS.get(id)
 	static func fromNetworkItem(netItem:NetworkItem) -> StateItem:
 		var si := StateItem.new()
 		si.id = netItem.id
 		si.loc_id = netItem.loc_id
 		si.sender_id = netItem.src_player_id
+		si.isLocal = netItem.src_player_id == 0 or netItem.is_local()
 		if Archipelago.conn:
-			si.isLocal = netItem.src_player_id == 0 or netItem.is_local()
 			si.senderName = Archipelago.conn.get_player_name(netItem.src_player_id)
 			si.locationName = Archipelago.conn.get_gamedata_for_player(netItem.src_player_id).get_loc_name(netItem.loc_id)
 			si.gameName = Archipelago.conn.get_game_for_player(netItem.src_player_id)
+		return si
+
+	static func fromId(_id:int) -> StateItem:
+		var si := StateItem.new()
+		si.id = _id
 		return si
 
 class Streak:
@@ -118,16 +127,35 @@ func resetSeedFlagHolder():
 
 func getNextPiece() -> Dictionary:
 	var numItems := collectedItems.size()
+	var effects = {}
+	# Apply any effects from the trap buffer first
+	for fx:StateItem in _effectBuffer.duplicate():
+		var item := CONSTANTS.ITEMS[fx.id]
+		match item.type:
+			"cutscene", "modifier", "effect":
+				if not effects.get(item.type):
+					effects[item.type] = item.internalName
+					_effectBuffer.erase(fx)
+
+	# Iterate through all items
 	while currentIndex < numItems:
 		var stateItem := collectedItems[currentIndex]
 		var item := CONSTANTS.ITEMS[stateItem.id]
-		if item and item.tags.get("shape"):
-			currentIndex += 1
-			seedFlagHolder.count("shapes_left", "subtracted", -1, true)
-			return {
-				name = item.prettyName,
-				stateItem = stateItem,
-			}
+		if item:
+			match item.type:
+				"shape":
+					currentIndex += 1
+					seedFlagHolder.count("shapes_left", "subtracted", -1, true)
+					return {
+						name = item.prettyName,
+						stateItem = stateItem,
+						effects = effects,
+					}
+				"cutscene", "modifier", "effect":
+					if effects.get(item.type):
+						_effectBuffer.append(stateItem)
+					else:
+						effects[item.type] = item.internalName
 		currentIndex += 1
 	return {}
 
@@ -197,6 +225,44 @@ func upgradeFeatures(generatedVersion:String = "0.0.0"): ## Add new features to 
 		# TODO: This is an important message and probably should be forced to last longer
 		notification_signal.emit("Retrofitted {items} into your game!".format({items=" and ".join(upgradeResult.retrofitted)}), CONSTANTS.COLOR.SPECIAL, false)
 		
+func getItem(item:StateItem):
+	if not item: return
+	collectedItems.append(item)
+	if item.data:
+		# Detect shape streaks
+		if item.data.tags.get("shape"):
+			seedFlagHolder.count("shapes_left", "collected", 1, true)
+			seedFlagHolder.count("shapes", item.data.internalName, 1, true)
+			var streak:Streak
+			# Get last shape in collectedItems and get its streak object if the same as this one 
+			var index:int = collectedItems.size() - 2 # Get the one right before the one we just added
+			while index >= 0 and collectedItems[index]:
+				if collectedItems[index].id in CONSTANTS.ITEMS and CONSTANTS.ITEMS[collectedItems[index].id].tags.get("shape"):
+					if collectedItems[index].id == item.id:
+						streak = collectedItems[index].streak
+					break
+				index -= 1
+			if not streak: streak = Streak.new()
+			streak.size += 1
+			item.streak = streak
+		# Register collected ability
+		if item.data.tags.get("ability"):
+			if collectedAbilities.has(item.id):
+				collectedAbilities[item.id] += 1
+			else:
+				collectedAbilities[item.id] = 1
+			var prettyName = item.data.prettyName
+
+			# Add flag for ability
+			seedFlagHolder.count(item.data.internalName, "collected", collectedAbilities[item.id])
+
+			# Keep track of rotate abilities collected
+			if item.data.tags.get("rotate"):
+				seedFlagHolder.count("rotate", item.data.internalName, 1)
+	else:
+		print("Obtained invalid item: id: {id}; name: {name}; You may be running an outdated version of the client!"
+			.format({id=item.id,name=item.get_name()})
+		)
 
 #===== Events =====
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
@@ -360,42 +426,8 @@ func _on_obtained_item(item: NetworkItem):
 				.format({source=Archipelago.conn.get_player_name(item.src_player_id), item=item.get_name()}), color, false
 			)
 	var si:StateItem = StateItem.fromNetworkItem(item)
-	collectedItems.append(si)
-	if item.id in CONSTANTS.ITEMS:
-		# Detect shape streaks
-		if CONSTANTS.ITEMS[item.id].tags.get("shape"):
-			seedFlagHolder.count("shapes_left", "collected", 1, true)
-			seedFlagHolder.count("shapes", CONSTANTS.ITEMS[item.id].internalName, 1, true)
-			var streak:Streak
-			# Get last shape in collectedItems and get its streak object if the same as this one 
-			var index:int = collectedItems.size() - 2 # Get the one right before the one we just added
-			while index >= 0 and collectedItems[index]:
-				if collectedItems[index].id in CONSTANTS.ITEMS and CONSTANTS.ITEMS[collectedItems[index].id].tags.get("shape"):
-					if collectedItems[index].id == si.id:
-						streak = collectedItems[index].streak
-					break
-				index -= 1
-			if not streak: streak = Streak.new()
-			streak.size += 1
-			si.streak = streak
-		# Register collected ability
-		if CONSTANTS.ITEMS[item.id].tags.get("ability"):
-			if collectedAbilities.has(item.id):
-				collectedAbilities[item.id] += 1
-			else:
-				collectedAbilities[item.id] = 1
-			var prettyName = CONSTANTS.ITEMS[item.id].prettyName
+	getItem(si)
 
-			# Add flag for ability
-			seedFlagHolder.count(CONSTANTS.ITEMS[item.id].internalName, "collected", collectedAbilities[item.id])
-
-			# Keep track of rotate abilities collected
-			if CONSTANTS.ITEMS[item.id].tags.get("rotate"):
-				seedFlagHolder.count("rotate", CONSTANTS.ITEMS[item.id].internalName, 1)
-	else:
-		print("Obtained invalid item: id: {id}; name: {name}; You may be running an outdated version of the client!"
-			.format({id=item.id,name=item.get_name()})
-		)
 func _on_on_hint_update(hints: Array[NetworkHint]):
 	if hints.size():
 		print("Got hints! ", hints.map(func(hint:NetworkHint): return hint.as_plain_string()))
@@ -424,7 +456,7 @@ func _on_Board_pieces_requested(callback:Callable, num:int) -> void:
 	for i:int in range(num):
 		var nextPiece:Dictionary = getNextPiece()
 		if nextPiece:
-			callback.call(nextPiece.get("name", ""), nextPiece.get("stateItem"))
+			callback.call(nextPiece.get("name", ""), nextPiece.get("stateItem"), nextPiece.get("effects", {}))
 		else:
 			print("Outta pieces!")
 			break;

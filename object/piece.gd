@@ -89,6 +89,8 @@ var origin:Vector2i
 var id:int
 var prettyName:String = "Piece"
 var context:DracominoHandler.StateItem = null
+var cutscene:StringName = ""
+var modifier:StringName = ""
 var moveLock:bool = false: ## Prevent moving this anymore
 	set(value):
 		moveLock = value
@@ -172,7 +174,7 @@ func makeLimbo():
 	set_process_unhandled_input(false)
 	hide()
 
-func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null) -> void:
+func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects:Dictionary = {}) -> void:
 	prettyName = pieceName
 	pieceDefinition = PIECES.get(pieceName)
 	id = Board.random.randi_range(0, TOTAL_NUMBER_OF_COLORS - 1)
@@ -194,6 +196,9 @@ func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null) -> void
 		origin = pieceDefinition.offset
 		context = pieceContext
 		canRotate = pieceDefinition.canRotate
+		cutscene = effects.get("cutscene", "")
+		modifier = effects.get("modifier", "")
+		# TODO: Do something fo effect too
 	else:
 		printerr("Piece.setPiece:", pieceName, " does not exist!")
 		queue_free()

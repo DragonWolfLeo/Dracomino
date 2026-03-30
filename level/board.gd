@@ -51,6 +51,7 @@ var linesCleared:int = 0:
 		if flagHolder: flagHolder.setFlag("lines_cleared", linesCleared)
 		linesCleared_updated.emit(linesCleared)
 var flagHolder:FlagHolder
+var bufferedCutscenes:Array[StringName] = []
 
 var _lastHeldPieceContext:DracominoHandler.StateItem ## For deathlink message context; TODO: Obsolete
 
@@ -181,13 +182,26 @@ func processClearingChunk(chunk:ClearingChunk) -> void:
 			pushDownRows(chunk)
 			lines_cleared.emit([chunk.mappedLine])
 			if not clearingChunks.size():
-				requestPiece()
+				checkForEvent()
 	)
 
+func checkForEvent():
+	if bufferedCutscenes.size():
+		var popped:StringName = bufferedCutscenes.pop_front()
+		if popped:
+			SignalBus.getSignal("set_mode", popped).emit()
+			return
+	
+	requestPiece()
+
 func requestPiece(allowMultiplePieces:bool = false):
-	if isGameOver: return
-	if activePieces.size() > MAX_PIECES or (countNonlockedPieces() and not allowMultiplePieces) or isTopRowFull():
-		# Don't spawn a piece if max is reached, if multiple pieces disallowed, or top row is full
+	if (
+		isGameOver # Obviously don't make pieces when game over'd
+		or bufferedCutscenes.size() # No making pieces when cutscenes need to start
+		or activePieces.size() > MAX_PIECES # No making pieces when the max is reached
+		or (countNonlockedPieces() and not allowMultiplePieces) # No making multiple pieces if disallowed
+		or isTopRowFull() # No making piece when top row is full
+	):
 		return
 	fillPreview(2) # Generate one extra because we're gonna use it, and another so gravity drop can work
 	var poppedPiece:Piece
@@ -212,12 +226,12 @@ func fillPreview(buffer:int = 0): ## This functions usually leads into createPie
 
 	pieces_requested.emit(createPiece, availableSpace)
 
-func createPiece(pieceName:StringName = "", pieceContext:DracominoHandler.StateItem = null) -> void:
+func createPiece(pieceName:StringName = "", pieceContext:DracominoHandler.StateItem = null, effects:Dictionary = {}) -> void:
 	if pieceName.is_empty():
 		return
 
 	var piece:Piece = PIECE_SCENE.instantiate()
-	piece.setPiece(pieceName, pieceContext)
+	piece.setPiece(pieceName, pieceContext, effects)
 	add_child(piece)
 	game_started.connect(piece.queue_free)
 	
@@ -488,6 +502,7 @@ func resetGame():
 	rotate_random.state = rotate_randomSaveState
 	clearingChunks.clear()
 	resetFlagHolder()
+	bufferedCutscenes.clear()
 
 	# Clear board
 	activatedTileHandler.clear()
@@ -510,9 +525,11 @@ func lockPiece(piece:Piece):
 					pickup.node.queue_free()
 					pickup.node = null
 				item_pickedup.emit(pickup.loc_id)
-				
 	if pickedUpItem:
 		SoundManager.play("itempickup")
+	
+	if piece.cutscene:
+		bufferedCutscenes.append(piece.cutscene)
 	deletePiece(piece)
 	boardIsFresh = false
 	
@@ -524,6 +541,8 @@ func lockPiece(piece:Piece):
 				var chunk := ClearingChunk.new(row)
 				clearingChunks.append(chunk)
 				processClearingChunk(chunk)
+		else:
+			checkForEvent()
 
 func getFullRows() -> Array[int]:
 	var fullRows:Array[int] = []
