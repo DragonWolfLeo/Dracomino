@@ -185,7 +185,7 @@ func processClearingChunk(chunk:ClearingChunk) -> void:
 			pushDownRows(chunk)
 			lines_cleared.emit([chunk.mappedLine])
 			if not clearingChunks.size():
-				checkForEvent()
+				requestPiece()
 	)
 
 func checkForEvent():
@@ -194,17 +194,19 @@ func checkForEvent():
 		if popped:
 			SignalBus.getSignal("mode_set_requested", popped).emit()
 			return
-	
-	requestPiece()
 
 func requestPiece(allowMultiplePieces:bool = false):
 	if (
 		isGameOver # Obviously don't make pieces when game over'd
-		or bufferedCutscenes.size() # No making pieces when cutscenes need to start
 		or activePieces.size() > MAX_PIECES # No making pieces when the max is reached
 		or (countNonlockedPieces() and not allowMultiplePieces) # No making multiple pieces if disallowed
 		or isTopRowFull() # No making piece when top row is full
 	):
+		return
+	if bufferedCutscenes.size():
+		if clearingChunks.size():
+			return
+		checkForEvent()
 		return
 	fillPreview(2) # Generate one extra because we're gonna use it, and another so gravity drop can work
 	var poppedPiece:Piece
@@ -533,7 +535,6 @@ func lockPiece(piece:Piece):
 	
 	if piece.cutscene:
 		bufferedCutscenes.append(piece.cutscene)
-	deletePiece(piece)
 	boardIsFresh = false
 	
 	if not isGameOver:
@@ -544,8 +545,8 @@ func lockPiece(piece:Piece):
 				var chunk := ClearingChunk.new(row)
 				clearingChunks.append(chunk)
 				processClearingChunk(chunk)
-		else:
-			checkForEvent()
+				
+	deletePiece(piece)
 
 func getFullRows() -> Array[int]:
 	var fullRows:Array[int] = []
@@ -838,4 +839,13 @@ func _on_activePieces_changed():
 				a -= OPACITY_REDUCTION_PER_GHOST
 
 func _on_mode_enabled():
-	checkForEvent()
+	requestPiece()
+
+func _on_FishingBoard_piece_selected(piece:Piece) -> void:
+	if previewStorage:
+		var popped = previewStorage.popPieceByPiece(piece)
+		if popped:
+			print("Fished up a %s"%piece.prettyName)
+			spawnPiece(popped)
+			return
+	requestPiece()

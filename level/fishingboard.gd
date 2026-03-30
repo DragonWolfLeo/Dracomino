@@ -1,5 +1,7 @@
 extends Node2D
 
+signal piece_selected(piece:Piece)
+
 @onready var FISHPIECE_SCENE:PackedScene = load("res://object/fishpiece.tscn")
 @onready var BOUNDS:Rect2 = $SpawnRect.get_rect()
 
@@ -19,6 +21,10 @@ func _enter_tree() -> void:
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_accept") and fishes.size() == 0:
 		spawnFishes()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("moveUp"):
+		submitPiece(fishes.back().piece)
+		get_viewport().set_input_as_handled()
 
 # === Functions ===
 func spawnFish(piece:Piece):
@@ -36,7 +42,6 @@ func spawnFish(piece:Piece):
 	add_child(fishPiece)
 
 func spawnFishes():
-	print("spawning fishes")
 	for fish in fishes:
 		fish.queue_free()
 	fishes.clear()
@@ -47,14 +52,17 @@ func spawnFishes():
 			spawnFish(preview.piece)
 			if fishes.size() >= fishLimit:
 				break
-		print("filled pond with %s fishes"%fishes.size())
 		if fishes.size() == 0:
 			quitFishing()
 	else:
 		printerr("FishingBoard.spawnFishes error: board needs previewStorage for this to work!")
 
 func quitFishing():
-	pass
+	SignalBus.getSignal("mode_set_requested", "puzzle").emit()
+
+func submitPiece(piece:Piece):
+	piece_selected.emit(piece)
+	SignalBus.getSignal("mode_set_requested", "puzzle").emit()
 
 # === Events ===
 func _on_mode_enabled():

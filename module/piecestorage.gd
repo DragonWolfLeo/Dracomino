@@ -134,6 +134,11 @@ func popPiece(index:int = -1, swap:bool = false) -> Piece:
 			return piece
 	return null
 
+func popPieceByPiece(piece:Piece) -> Piece:
+	for i in storage.size():
+		if storage[i].piece == piece:
+			return popPiece(i)
+	return null
 
 func getPreviewAtIndex(index:int = 0) -> PiecePreview:
 	if index >= 0 and index < storage.size():

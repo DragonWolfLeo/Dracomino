@@ -295,3 +295,4 @@ modeName = &"dialogue"
 [connection signal="lines_cleared" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_lines_cleared"]
 [connection signal="pieces_requested" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_pieces_requested"]
 [connection signal="resized" from="SubViewport/FishingMode/SubViewportContainer" to="SubViewport/PuzzleMode" method="_on_SubViewportContainer_resized"]
+[connection signal="piece_selected" from="SubViewport/FishingMode/SubViewportContainer/SubViewport/FishingBoard" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_FishingBoard_piece_selected"]
