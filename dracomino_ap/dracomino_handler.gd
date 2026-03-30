@@ -76,6 +76,12 @@ class StateItem:
 	static func fromId(_id:int) -> StateItem:
 		var si := StateItem.new()
 		si.id = _id
+		si.gameName = "Dracomino"
+		si.locationName = "Debug Command"
+		return si
+
+	static func fromInternalName(internalName:StringName) -> StateItem:
+		var si := StateItem.fromId(CONSTANTS.ITEM_NAME_TO_ID.get(internalName, 0))
 		return si
 
 class Streak:
@@ -127,14 +133,14 @@ func resetSeedFlagHolder():
 
 func getNextPiece() -> Dictionary:
 	var numItems := collectedItems.size()
-	var effects = {}
+	var effects:Dictionary[StringName, StateItem] = {}
 	# Apply any effects from the trap buffer first
 	for fx:StateItem in _effectBuffer.duplicate():
 		var item := CONSTANTS.ITEMS[fx.id]
 		match item.type:
 			"cutscene", "modifier", "effect":
 				if not effects.get(item.type):
-					effects[item.type] = item.internalName
+					effects[item.type] = fx
 					_effectBuffer.erase(fx)
 
 	# Iterate through all items
@@ -155,7 +161,7 @@ func getNextPiece() -> Dictionary:
 					if effects.get(item.type):
 						_effectBuffer.append(stateItem)
 					else:
-						effects[item.type] = item.internalName
+						effects[item.type] = stateItem
 		currentIndex += 1
 	return {}
 

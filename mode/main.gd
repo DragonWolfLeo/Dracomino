@@ -172,3 +172,15 @@ func _on_timer_timeout():
 func _on_DracominoHandler_started() -> void:
 	setMode()
 	grab_focus()
+
+
+func _on_Board_effect_activated(item: DracominoHandler.StateItem) -> void:
+	var formatValues:Dictionary = {
+		itemName = item.data.prettyName if item.data else &"Unknown Effect",
+		senderName = item.senderName,
+		gameName = item.gameName,
+	}
+	if item.isLocal:
+		showNotification("Triggered your own {itemName}!".format(formatValues), CONSTANTS.COLOR.TRAP)
+	else:
+		showNotification("Triggered {itemName} from {senderName}'s {gameName}!".format(formatValues), CONSTANTS.COLOR.TRAP)

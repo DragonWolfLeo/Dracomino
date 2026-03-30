@@ -51,7 +51,7 @@ var linesCleared:int = 0:
 		if flagHolder: flagHolder.setFlag("lines_cleared", linesCleared)
 		linesCleared_updated.emit(linesCleared)
 var flagHolder:FlagHolder
-var bufferedCutscenes:Array[StringName] = []
+var bufferedCutscenes:Array[DracominoHandler.StateItem] = []
 
 var _lastHeldPieceContext:DracominoHandler.StateItem ## For deathlink message context; TODO: Obsolete
 
@@ -73,6 +73,7 @@ signal pieces_requested(callback:Callable, num:int)
 signal item_pickedup(loc_id:int)
 signal deathlink_earned(deathContext:DracominoUtil.DeathContext)
 signal activePieces_changed()
+signal effect_activated(item:DracominoHandler.StateItem)
 
 class ItemPickupContext:
 	var node:Node2D
@@ -190,9 +191,11 @@ func processClearingChunk(chunk:ClearingChunk) -> void:
 
 func checkForEvent():
 	if bufferedCutscenes.size():
-		var popped:StringName = bufferedCutscenes.pop_front()
-		if popped:
-			SignalBus.getSignal("mode_set_requested", popped).emit()
+		var popped:DracominoHandler.StateItem = bufferedCutscenes.pop_front() as DracominoHandler.StateItem
+		if popped.data:
+			SignalBus.getSignal("mode_set_requested", popped.data.internalName).emit()
+			SoundManager.play("trap")
+			effect_activated.emit(popped)
 			return
 
 func requestPiece(allowMultiplePieces:bool = false):
@@ -545,7 +548,7 @@ func lockPiece(piece:Piece):
 				var chunk := ClearingChunk.new(row)
 				clearingChunks.append(chunk)
 				processClearingChunk(chunk)
-				
+
 	deletePiece(piece)
 
 func getFullRows() -> Array[int]:

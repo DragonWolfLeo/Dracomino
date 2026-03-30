@@ -290,6 +290,7 @@ modeName = &"dialogue"
 [connection signal="started" from="SubViewport/DracominoHandler" to="." method="_on_DracominoHandler_started"]
 [connection signal="resized" from="SubViewport/PuzzleMode/SubViewportContainer" to="SubViewport/PuzzleMode" method="_on_SubViewportContainer_resized"]
 [connection signal="deathlink_earned" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_deathlink_earned"]
+[connection signal="effect_activated" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_effect_activated"]
 [connection signal="game_over_earned" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_game_over_earned"]
 [connection signal="game_started" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_game_started"]
 [connection signal="game_started" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_game_started"]
