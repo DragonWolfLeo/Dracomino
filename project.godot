@@ -309,6 +309,7 @@ scrollDown={
 
 2d_physics/layer_1="Tile"
 2d_physics/layer_2="Locked Tile"
+2d_physics/layer_3="Boundary"
 
 [rendering]
 
