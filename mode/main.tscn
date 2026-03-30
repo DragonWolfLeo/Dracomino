@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://c5lm3ikyfckvp"]
+[gd_scene load_steps=17 format=3 uid="uid://c5lm3ikyfckvp"]
 
 [ext_resource type="Script" uid="uid://c5jgcsxvnygnn" path="res://mode/main.gd" id="1_gx2q7"]
 [ext_resource type="FontFile" uid="uid://c8dwaeydyfv6j" path="res://resource/font/PressStart2P-Regular.ttf" id="2_jjnvi"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://daewoikmtskpi" path="res://dracomino_ap/dracomino_handler.gd" id="4_d6dmn"]
 [ext_resource type="Script" uid="uid://b5b036m1pgdbu" path="res://mode/puzzle_mode.gd" id="5_m1ejn"]
 [ext_resource type="PackedScene" uid="uid://ckv6tnuoxlxgw" path="res://screen/level_overlay.tscn" id="6_w0fxs"]
+[ext_resource type="Script" uid="uid://c5w663oymc2oy" path="res://module/hide_with_mode.gd" id="8_jjnvi"]
 [ext_resource type="PackedScene" uid="uid://boraki5ygsa0g" path="res://level/board.tscn" id="8_wule5"]
 [ext_resource type="Script" uid="uid://dutbiv2hgugwn" path="res://module/piecestorage.gd" id="9_3joyb"]
 [ext_resource type="PackedScene" uid="uid://rd6em7cjqrum" path="res://level/fishingboard.tscn" id="10_jc8m0"]
@@ -89,6 +90,9 @@ label_settings = SubResource("LabelSettings_svssi")
 horizontal_alignment = 1
 autowrap_mode = 2
 
+[node name="LevelOverlay" parent="SubViewport" instance=ExtResource("6_w0fxs")]
+process_mode = 1
+
 [node name="DracominoHandler" type="Node" parent="SubViewport"]
 script = ExtResource("4_d6dmn")
 
@@ -107,6 +111,92 @@ mouse_filter = 1
 script = ExtResource("5_m1ejn")
 modeName = &"puzzle"
 
+[node name="PuzzleHUD" type="CanvasLayer" parent="SubViewport/PuzzleMode"]
+layer = 2
+script = ExtResource("8_jjnvi")
+
+[node name="HoldContainer" type="MarginContainer" parent="SubViewport/PuzzleMode/PuzzleHUD"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 16
+
+[node name="ScrollContainer" type="ScrollContainer" parent="SubViewport/PuzzleMode/PuzzleHUD/HoldContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+horizontal_scroll_mode = 0
+
+[node name="HoldBar" type="VBoxContainer" parent="SubViewport/PuzzleMode/PuzzleHUD/HoldContainer/ScrollContainer"]
+layout_mode = 2
+
+[node name="HoldLabel" type="Label" parent="SubViewport/PuzzleMode/PuzzleHUD/HoldContainer/ScrollContainer/HoldBar"]
+layout_mode = 2
+text = "Hold"
+label_settings = SubResource("LabelSettings_gpyk6")
+horizontal_alignment = 1
+
+[node name="PreviewContainer" type="MarginContainer" parent="SubViewport/PuzzleMode/PuzzleHUD"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 16
+
+[node name="ScrollContainer" type="ScrollContainer" parent="SubViewport/PuzzleMode/PuzzleHUD/PreviewContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+horizontal_scroll_mode = 0
+
+[node name="PreviewBar" type="VBoxContainer" parent="SubViewport/PuzzleMode/PuzzleHUD/PreviewContainer/ScrollContainer"]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 10
+
+[node name="PreviewLabel" type="Label" parent="SubViewport/PuzzleMode/PuzzleHUD/PreviewContainer/ScrollContainer/PreviewBar"]
+layout_mode = 2
+text = "Next"
+label_settings = SubResource("LabelSettings_gpyk6")
+horizontal_alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="SubViewport/PuzzleMode/PuzzleHUD"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_bottom = 30
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SubViewport/PuzzleMode/PuzzleHUD/MarginContainer"]
+layout_mode = 2
+theme = SubResource("Theme_d5o15")
+
+[node name="LinesLabel" type="Label" parent="SubViewport/PuzzleMode/PuzzleHUD/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+text = "Lines: 0"
+label_settings = SubResource("LabelSettings_rni7d")
+horizontal_alignment = 1
+
+[node name="PiecesLabel" type="Label" parent="SubViewport/PuzzleMode/PuzzleHUD/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 2
+theme = SubResource("Theme_d5o15")
+text = "Pieces Left: 0"
+label_settings = SubResource("LabelSettings_rni7d")
+horizontal_alignment = 1
+
 [node name="SubViewportContainer" type="SubViewportContainer" parent="SubViewport/PuzzleMode"]
 layout_mode = 1
 anchors_preset = 15
@@ -123,8 +213,6 @@ canvas_item_default_texture_filter = 3
 size = Vector2i(960, 540)
 render_target_update_mode = 4
 
-[node name="LevelOverlay" parent="SubViewport/PuzzleMode/SubViewportContainer/SubViewport" instance=ExtResource("6_w0fxs")]
-
 [node name="Board" parent="SubViewport/PuzzleMode/SubViewportContainer/SubViewport" node_paths=PackedStringArray("previewStorage", "holdStorage") instance=ExtResource("8_wule5")]
 unique_name_in_owner = true
 previewStorage = NodePath("PreviewStorage")
@@ -132,101 +220,16 @@ holdStorage = NodePath("HoldStorage")
 
 [node name="PreviewStorage" type="Node" parent="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" node_paths=PackedStringArray("targetControl")]
 script = ExtResource("9_3joyb")
-targetControl = NodePath("../../../../PreviewContainer/ScrollContainer/PreviewBar")
+targetControl = NodePath("../../../../PuzzleHUD/PreviewContainer/ScrollContainer/PreviewBar")
 slotAbilityName = "Next Piece Slot"
 addToPieceTotal = true
 
 [node name="HoldStorage" type="Node" parent="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" node_paths=PackedStringArray("targetControl")]
 script = ExtResource("9_3joyb")
-targetControl = NodePath("../../../../HoldContainer/ScrollContainer/HoldBar")
+targetControl = NodePath("../../../../PuzzleHUD/HoldContainer/ScrollContainer/HoldBar")
 slotAbilityName = "Hold Slot"
 emptyFill = true
 useNumberedSlots = true
-
-[node name="HoldContainer" type="MarginContainer" parent="SubViewport/PuzzleMode"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 16
-
-[node name="ScrollContainer" type="ScrollContainer" parent="SubViewport/PuzzleMode/HoldContainer"]
-layout_mode = 2
-size_flags_horizontal = 0
-horizontal_scroll_mode = 0
-
-[node name="HoldBar" type="VBoxContainer" parent="SubViewport/PuzzleMode/HoldContainer/ScrollContainer"]
-layout_mode = 2
-
-[node name="HoldLabel" type="Label" parent="SubViewport/PuzzleMode/HoldContainer/ScrollContainer/HoldBar"]
-layout_mode = 2
-text = "Hold"
-label_settings = SubResource("LabelSettings_gpyk6")
-horizontal_alignment = 1
-
-[node name="PreviewContainer" type="MarginContainer" parent="SubViewport/PuzzleMode"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 16
-
-[node name="ScrollContainer" type="ScrollContainer" parent="SubViewport/PuzzleMode/PreviewContainer"]
-layout_mode = 2
-size_flags_horizontal = 8
-horizontal_scroll_mode = 0
-
-[node name="PreviewBar" type="VBoxContainer" parent="SubViewport/PuzzleMode/PreviewContainer/ScrollContainer"]
-clip_contents = true
-layout_mode = 2
-size_flags_horizontal = 10
-
-[node name="PreviewLabel" type="Label" parent="SubViewport/PuzzleMode/PreviewContainer/ScrollContainer/PreviewBar"]
-layout_mode = 2
-text = "Next"
-label_settings = SubResource("LabelSettings_gpyk6")
-horizontal_alignment = 1
-
-[node name="MarginContainer" type="MarginContainer" parent="SubViewport/PuzzleMode"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_top = 30
-theme_override_constants/margin_bottom = 30
-
-[node name="VBoxContainer" type="VBoxContainer" parent="SubViewport/PuzzleMode/MarginContainer"]
-layout_mode = 2
-theme = SubResource("Theme_d5o15")
-
-[node name="LinesLabel" type="Label" parent="SubViewport/PuzzleMode/MarginContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 0
-text = "Lines: 0"
-label_settings = SubResource("LabelSettings_rni7d")
-horizontal_alignment = 1
-
-[node name="PiecesLabel" type="Label" parent="SubViewport/PuzzleMode/MarginContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 2
-theme = SubResource("Theme_d5o15")
-text = "Pieces Left: 0"
-label_settings = SubResource("LabelSettings_rni7d")
-horizontal_alignment = 1
 
 [node name="FishingMode" type="Control" parent="SubViewport"]
 unique_name_in_owner = true
