@@ -106,6 +106,7 @@ func _on_Board_game_over_earned() -> void:
 	state = STATE.GAMEOVER
 
 func _on_Board_game_started() -> void:
+	setMode()
 	state = STATE.NORMAL
 
 func _input(event: InputEvent) -> void:
