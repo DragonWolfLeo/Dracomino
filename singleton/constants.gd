@@ -17,75 +17,105 @@ class COLOR:
 
 # Item + Location Data
 class Data:
+	static var OBJECT_TYPES:PackedStringArray = [
+		"shape",
+		"ability",
+		"cutscene",
+		"modifier",
+		"effect",
+		"line_clear",
+		"item_pickup",
+	]
 	var id:int
 	var prettyName:StringName
 	var internalName:StringName
 	var tags:Dictionary[StringName, bool]
+	var type:StringName
 	func _init(arr=[]):
-		arr.resize(3)
+		arr.resize(4)
 		id = arr[0] as int
 		prettyName = arr[1] as StringName
-		internalName = prettyName.to_snake_case()
-		for tag in arr[2] as Array:
+		internalName = (arr[2] if arr[2] else prettyName.to_snake_case()) as StringName
+		for tag in arr[3] as Array:
 			tags[tag as StringName] = true
+		for tag in OBJECT_TYPES:
+			if tags.get(tag, false):
+				type = tag
+				break
 
 class ItemData extends Data: pass
 class LocationData extends Data: pass
 
 @onready var ITEMS:Dictionary[int, ItemData] = [
 	# Abilities (1-100)
-	[1,   "Gravity",                  [ "useful", "trap", "ability", "classic", "drop" ] ],
-	[2,   "Soft Drop",                [ "useful", "ability", "classic", "drop" ] ],
-	[3,   "Hard Drop",                [ "useful", "ability", "classic", "drop" ] ],
-	[4,   "Rotate Clockwise",         [ "progression", "useful", "ability", "classic", "rotate" ] ],
-	[5,   "Rotate Counterclockwise",  [ "progression", "useful", "ability", "classic", "rotate" ] ],
-	[6,   "Ghost Piece",              [ "useful", "ability", "classic" ] ],
-	[7,   "Kick",                     [ "useful", "ability", "classic" ] ],
-	[8,   "Vertical Shove",           [ "useful", "ability" ] ],
-	[9,   "Horizontal Shove",         [ "useful", "trap", "ability" ] ],
-	[10,  "Lock Delay",             [ "useful", "ability", "classic" ] ],
+	[1,   "Gravity",                  "gravity",                    [ "useful", "trap", "ability", "classic", "drop" ] ],
+	[2,   "Soft Drop",                "soft_drop",                  [ "useful", "ability", "classic", "drop" ] ],
+	[3,   "Hard Drop",                "hard_drop",                  [ "useful", "ability", "classic", "drop" ] ],
+	[4,   "Rotate Clockwise",         "rotate_clockwise",           [ "progression", "useful", "ability", "classic", "rotate" ] ],
+	[5,   "Rotate Counterclockwise",  "rotate_counterclockwise",    [ "progression", "useful", "ability", "classic", "rotate" ] ],
+	[6,   "Ghost Piece",              "ghost_piece",                [ "useful", "ability", "classic" ] ],
+	[7,   "Kick",                     "kick",                       [ "useful", "ability", "classic" ] ],
+	[8,   "Vertical Shove",           "vertical_shove",             [ "useful", "ability" ] ],
+	[9,   "Horizontal Shove",         "horizontal_shove",           [ "useful", "trap", "ability" ] ],
+	[10,  "Lock Delay",               "lock_delay",                 [ "useful", "ability", "classic" ] ],
 
 	# Progressive Items (101-200)
-	[101, "Next Piece Slot",          [ "useful", "ability", "progressive" ] ],
-	[102, "Hold Slot",                [ "useful", "ability", "progressive" ] ],
+	[101, "Next Piece Slot",          "next_piece_slot",            [ "useful", "ability", "progressive" ] ],
+	[102, "Hold Slot",                "hold_slot",                  [ "useful", "ability", "progressive" ] ],
 	
 	# Traps Items (201-300)
-	[201, "UNIMPLEMENTED TRAP",       [ "trap" ] ],
+	[201, "Tutorial",                 "tutorial",                   [ "trap", "useful", "once", "cutscene" ] ],
+	[202, "Time to Fish!",            "fishing",                    [ "trap", "cutscene" ] ],
+	[203, "Egg",                      "egg",                        [ "trap", "shape" ] ],
+	[204, "Curse",                    "enchantment_curse",          [ "trap", "modifier" ] ],
+	[205, "Legendary Enchantment",    "enchantment_legendary",      [ "trap", "modifier" ] ],
+	[206, "Epic Enchantment",         "enchantment_epic",           [ "trap", "modifier" ] ],
+	[207, "Rare Enchantment",         "enchantment_rare",           [ "trap", "modifier", "uncommon" ] ],
+	[208, "Medium Rare Enchantment",  "enchantment_mediumrare",     [ "trap", "modifier", "very_rare" ] ],
+	[209, "Well Done!",               "enchantment_welldone",       [ "trap", "cutscene", "rare" ] ],
+	[210, "Crystal Trap",             "crystal_trap",               [ "trap", "effect", "rare" ] ],
+	[211, "Invert Colors Trap",       "invertcolors_trap",          [ "trap", "effect", "rare" ] ],
+	[212, "Water Trap",               "water_trap",                 [ "trap", "effect" ] ],
+	[213, "Pixellation Trap",         "pixellation_trap",           [ "trap", "effect" ] ],
+	[214, "Fracture Trap",            "fracture_trap",              [ "trap", "effect" ] ],
+	[215, "Zoom Trap",                "zoom_trap",                  [ "trap", "effect" ] ],
+	[216, "Impatience Trap",          "impatience_trap",            [ "trap", "effect" ] ],
+	[217, "Commitment Trap",          "commitment_trap",            [ "trap", "effect", "rare" ] ],
 	
 	# Shapes (301-)                                                                     Last two values are poor height, safe height
-	[301, "Monomino",       [ "progression_skip_balancing", "shape", "monomino" ],                                             1, 1],
+	[301, "Monomino",       "", [ "progression_skip_balancing", "shape", "monomino" ],                                             1, 1],
 
-	[302, "Domino",         [ "progression_skip_balancing", "shape", "domino" ],                                               1, 2],
+	[302, "Domino",         "", [ "progression_skip_balancing", "shape", "domino" ],                                               1, 2],
 
-	[303, "I Tromino",      [ "progression_skip_balancing", "shape", "tromino" ],                                              1, 3],
-	[304, "L Tromino",      [ "progression_skip_balancing", "shape", "tromino", "has_corner_gap" ],                            1, 2],
+	[303, "I Tromino",      "", [ "progression_skip_balancing", "shape", "tromino" ],                                              1, 3],
+	[304, "L Tromino",      "", [ "progression_skip_balancing", "shape", "tromino", "has_corner_gap" ],                            1, 2],
 
-	[305, "I Tetromino",    [ "progression_skip_balancing", "shape", "tetromino" ],                                            1, 4],
-	[306, "O Tetromino",    [ "progression_skip_balancing", "shape", "tetromino" ],                                            2, 2],
-	[307, "T Tetromino",    [ "progression_skip_balancing", "shape", "tetromino", "has_corner_gap" ],                          1, 3],
-	[308, "J Tetromino",    [ "progression_skip_balancing", "shape", "tetromino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
-	[309, "L Tetromino",    [ "progression_skip_balancing", "shape", "tetromino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
-	[310, "S Tetromino",    [ "progression_skip_balancing", "shape", "tetromino", "has_corner_gap" ],                          1, 2],
-	[311, "Z Tetromino",    [ "progression_skip_balancing", "shape", "tetromino", "has_corner_gap" ],                          1, 2],
+	[305, "I Tetromino",    "", [ "progression_skip_balancing", "shape", "tetromino" ],                                            1, 4],
+	[306, "O Tetromino",    "", [ "progression_skip_balancing", "shape", "tetromino" ],                                            2, 2],
+	[307, "T Tetromino",    "", [ "progression_skip_balancing", "shape", "tetromino", "has_corner_gap" ],                          1, 3],
+	[308, "J Tetromino",    "", [ "progression_skip_balancing", "shape", "tetromino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[309, "L Tetromino",    "", [ "progression_skip_balancing", "shape", "tetromino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[310, "S Tetromino",    "", [ "progression_skip_balancing", "shape", "tetromino", "has_corner_gap" ],                          1, 2],
+	[311, "Z Tetromino",    "", [ "progression_skip_balancing", "shape", "tetromino", "has_corner_gap" ],                          1, 2],
 
-	[312, "I Pentomino",    [ "progression_skip_balancing", "shape", "pentomino" ],                                            1, 5],
-	[313, "U Pentomino",    [ "progression_skip_balancing", "shape", "pentomino", "has_second_tile_gap" ],                     2, 3],
-	[314, "T Pentomino",    [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   2, 3],
-	[315, "X Pentomino",    [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap" ],                          2, 2],
-	[316, "V Pentomino",    [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
-	[317, "W Pentomino",    [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   2, 3],
-	[318, "L Pentomino",    [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 4],
-	[319, "J Pentomino",    [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 4],
-	[320, "S Pentomino",    [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
-	[321, "Z Pentomino",    [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
-	[322, "F Pentomino",    [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
-	[323, "F' Pentomino",   [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
-	[324, "N Pentomino",    [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
-	[325, "N' Pentomino",   [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
-	[326, "P Pentomino",    [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap" ],                          2, 3],
-	[327, "Q Pentomino",    [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap" ],                          2, 3],
-	[328, "Y Pentomino",    [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
-	[329, "Y' Pentomino",   [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[312, "I Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino" ],                                            1, 5],
+	[313, "U Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_second_tile_gap" ],                     2, 3],
+	[314, "T Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   2, 3],
+	[315, "X Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap" ],                          2, 2],
+	[316, "V Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[317, "W Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   2, 3],
+	[318, "L Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 4],
+	[319, "J Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 4],
+	[320, "S Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[321, "Z Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[322, "F Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[323, "F' Pentomino",   "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[324, "N Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[325, "N' Pentomino",   "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[326, "P Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap" ],                          2, 3],
+	[327, "Q Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap" ],                          2, 3],
+	[328, "Y Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[329, "Y' Pentomino",   "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
 ].reduce(_generateDataTable.bind(ItemData.new), {} as Dictionary[int, ItemData])
 
 @onready var LOCATIONS:Dictionary[int, LocationData] = (_generateLocationConstants().reduce(_generateDataTable.bind(LocationData.new), {} as Dictionary[int, LocationData]))
@@ -240,9 +270,9 @@ var CONTEXT_TAGS:Dictionary[StringName, Dictionary] = {
 static func _generateLocationConstants() -> Array:
 	var arr = []
 	for i in range(1,1001):
-		arr.append([i,        "Line %s Cleared"%i, [ "line_clear" ]])
+		arr.append([i,        "Line %s Cleared"%i, "", [ "line_clear" ]])
 	for i in range(1,10001):
-		arr.append([i + 10000, "Coin %s"%i, [ "item_pickup" ]])
+		arr.append([i + 10000, "Coin %s"%i, "", [ "item_pickup" ]])
 	return arr
 
 static func _generateDataTable(dict:Dictionary, arr:Array, new_fn:Callable) -> Dictionary:
