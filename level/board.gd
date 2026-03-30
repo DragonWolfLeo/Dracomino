@@ -131,6 +131,9 @@ func _ready():
 	SignalBus.getSignal("deathOnRestart_disabled").connect(set.bind("sendDeathOnRestart", false))
 	SignalBus.getSignal("stateflag_changed", "shapes").connect(_on_newPieceObtained)
 	activePieces_changed.connect(_on_activePieces_changed)
+	var mode:Mode = DracominoUtil.getParentMode(self)
+	if mode:
+		mode.mode_enabled.connect(_on_mode_enabled)
 
 	# Make line numbers labels
 	for i:int in range(BOUNDS.end.y):
@@ -833,3 +836,6 @@ func _on_activePieces_changed():
 			piece.ghost.modulate.a = clamp(a, 0.0, 1.0)
 			if not piece.isFocus and not piece.moveLock:
 				a -= OPACITY_REDUCTION_PER_GHOST
+
+func _on_mode_enabled():
+	checkForEvent()
