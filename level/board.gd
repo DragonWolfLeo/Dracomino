@@ -52,6 +52,7 @@ var linesCleared:int = 0:
 		linesCleared_updated.emit(linesCleared)
 var flagHolder:FlagHolder
 var bufferedCutscenes:Array[DracominoHandler.StateItem] = []
+var deferredCutscenes:Array[DracominoHandler.StateItem] = [] ## Cutscenes saved for when you restart because it wasn't a good time
 
 var _lastHeldPieceContext:DracominoHandler.StateItem ## For deathlink message context; TODO: Obsolete
 
@@ -193,10 +194,15 @@ func checkForEvent():
 	if bufferedCutscenes.size():
 		var popped:DracominoHandler.StateItem = bufferedCutscenes.pop_front() as DracominoHandler.StateItem
 		if popped.data:
-			SignalBus.getSignal("mode_set_requested", popped.data.internalName).emit()
-			SoundManager.play("trap")
-			effect_activated.emit(popped)
+			if DracominoUtil.canRunCutscene(popped):
+				SignalBus.getSignal("mode_set_requested", popped.data.internalName).emit()
+				SoundManager.play("trap")
+				effect_activated.emit(popped)
+			else:
+				deferredCutscenes.append(popped)
+				checkForEvent()
 			return
+	requestPiece()
 
 func requestPiece(allowMultiplePieces:bool = false):
 	if (
@@ -511,6 +517,8 @@ func resetGame():
 	clearingChunks.clear()
 	resetFlagHolder()
 	bufferedCutscenes.clear()
+	bufferedCutscenes.append_array(deferredCutscenes)
+	deferredCutscenes.clear()
 
 	# Clear board
 	activatedTileHandler.clear()

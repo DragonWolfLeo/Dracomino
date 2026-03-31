@@ -7,6 +7,7 @@ enum {
 }
 
 signal piece_caught(piece:Piece)
+signal nothing_caught()
 
 @onready var staminaBar:ProgressBar = %FishingStaminaBar
 @onready var fishingHook:FishingHook = %FishingHook
@@ -75,6 +76,8 @@ func retrieve():
 	fishingHook.hooked = null
 	if hooked and hooked.piece:
 		piece_caught.emit(hooked.piece)
+	else:
+		nothing_caught.emit()
 	reset()
 
 func startCharge():

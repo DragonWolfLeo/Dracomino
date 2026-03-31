@@ -178,4 +178,5 @@ script = ExtResource("8_3ssn3")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WaterPhysics"]
 shape = SubResource("WorldBoundaryShape2D_3ssn3")
 
+[connection signal="nothing_caught" from="FishingMini" to="." method="_on_FishingMini_nothing_caught"]
 [connection signal="piece_caught" from="FishingMini" to="." method="_on_FishingMini_piece_caught"]

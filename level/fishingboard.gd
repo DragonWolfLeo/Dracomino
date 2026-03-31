@@ -50,7 +50,7 @@ func spawnFishes():
 			if fishes.size() >= fishLimit:
 				break
 		if fishes.size() == 0:
-			quitFishing()
+			quitFishing.call_deferred()
 	else:
 		printerr("FishingBoard.spawnFishes error: board needs previewStorage for this to work!")
 
@@ -67,3 +67,8 @@ func _on_mode_enabled():
 
 func _on_FishingMini_piece_caught(piece: Piece) -> void:
 	submitPiece(piece)
+
+func _on_FishingMini_nothing_caught() -> void:
+	# In case we somehow trigger the minigame without fish, get out so we're not trapped here
+	if fishes.size() == 0:
+		quitFishing()
