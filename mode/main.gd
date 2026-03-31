@@ -96,8 +96,8 @@ func _on_window_focus_entered():
 	set_process_unhandled_input(true)
 
 func _on_window_focus_exited():
-	set_process_input(false)
 	if not Config.getSetting("allowUnfocusedInputs", false):
+		set_process_input(false)
 		set_process_unhandled_input(false)
 	if state != STATE.GAMEOVER:
 		state = STATE.PAUSED
