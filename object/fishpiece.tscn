@@ -11,4 +11,5 @@ script = ExtResource("2_0bny8")
 [node name="TileMapLayer" type="TileMapLayer" parent="."]
 tile_set = ExtResource("1_0bny8")
 occlusion_enabled = false
+collision_enabled = false
 navigation_enabled = false

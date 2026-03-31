@@ -63,3 +63,10 @@ func renderPiece():
 			tileMapLayer.set_cell(pos, 0, Vector2i(piece.id, Board.ACTIVE_TILE_ATLAS_ROW))
 	else:
 		printerr("FishPiece.renderPiece: tileMapLayer is null for some reason")
+
+func beHooked():
+	# Disable further collisions
+	for child in get_children():
+		if child is CollisionPolygon2D:
+			(child as CollisionPolygon2D).disabled = true
+	set_physics_process(false)

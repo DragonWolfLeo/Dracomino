@@ -22,9 +22,6 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_accept") and fishes.size() == 0:
 		spawnFishes()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("moveUp"):
-		submitPiece(fishes.back().piece)
-		get_viewport().set_input_as_handled()
 
 # === Functions ===
 func spawnFish(piece:Piece):
@@ -67,3 +64,6 @@ func submitPiece(piece:Piece):
 # === Events ===
 func _on_mode_enabled():
 	spawnFishes()
+
+func _on_FishingMini_piece_caught(piece: Piece) -> void:
+	submitPiece(piece)

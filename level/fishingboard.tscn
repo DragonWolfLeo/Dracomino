@@ -1,8 +1,13 @@
-[gd_scene load_steps=7 format=3 uid="uid://rd6em7cjqrum"]
+[gd_scene load_steps=16 format=3 uid="uid://rd6em7cjqrum"]
 
 [ext_resource type="Script" uid="uid://c4627h5p2mc32" path="res://level/fishingboard.gd" id="1_qnlj5"]
 [ext_resource type="Texture2D" uid="uid://eotnw3aft54o" path="res://assets/art/fishing_background.png" id="1_qovn8"]
 [ext_resource type="Script" uid="uid://dcg8fgw3xw0em" path="res://module/autoresizecamera.gd" id="3_6egt2"]
+[ext_resource type="Texture2D" uid="uid://culgysr6fc5e" path="res://assets/art/fishing_mini.png" id="4_4n6dk"]
+[ext_resource type="Script" uid="uid://btanuiodywx0o" path="res://object/fishing_mini.gd" id="5_wbdmp"]
+[ext_resource type="Script" uid="uid://b5035lwuakuk6" path="res://object/fishinghook.gd" id="6_bxpri"]
+[ext_resource type="Texture2D" uid="uid://q066lml0xce8" path="res://assets/art/fishing_hook.png" id="6_tlecd"]
+[ext_resource type="Script" uid="uid://dcctffml07onr" path="res://object/water_physics.gd" id="8_3ssn3"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_qnlj5"]
 normal = Vector2(1, 0)
@@ -11,6 +16,20 @@ normal = Vector2(1, 0)
 normal = Vector2(-1, 0)
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_4n6dk"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wbdmp"]
+bg_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tlecd"]
+bg_color = Color(1, 0.666667, 0, 1)
+border_width_bottom = 1
+border_color = Color(1, 0.333333, 0.333333, 1)
+corner_detail = 1
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tlecd"]
+size = Vector2(6, 6)
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_3ssn3"]
 
 [node name="FishingBoard" type="Node2D"]
 script = ExtResource("1_qnlj5")
@@ -51,9 +70,6 @@ region_rect = Rect2(0, 160, 256, 48)
 position = Vector2(128, 192)
 script = ExtResource("3_6egt2")
 
-[node name="Marker2D" type="Marker2D" parent="."]
-position = Vector2(43, 113)
-
 [node name="SpawnRect" type="ReferenceRect" parent="."]
 offset_left = 80.0
 offset_top = 160.0
@@ -62,17 +78,33 @@ offset_bottom = 320.0
 
 [node name="Boundaries" type="Node2D" parent="."]
 
-[node name="RightBoundary" type="StaticBody2D" parent="Boundaries"]
+[node name="RightFishBoundary" type="StaticBody2D" parent="Boundaries"]
 position = Vector2(48, 0)
 collision_layer = 4
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/RightFishBoundary"]
+shape = SubResource("WorldBoundaryShape2D_qnlj5")
+
+[node name="LeftFishBoundary" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(208, 0)
+collision_layer = 4
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/LeftFishBoundary"]
+shape = SubResource("WorldBoundaryShape2D_6egt2")
+
+[node name="RightBoundary" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(16, 0)
+collision_layer = 16
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/RightBoundary"]
 shape = SubResource("WorldBoundaryShape2D_qnlj5")
 
 [node name="LeftBoundary" type="StaticBody2D" parent="Boundaries"]
-position = Vector2(208, 0)
-collision_layer = 4
+position = Vector2(240, 0)
+collision_layer = 16
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/LeftBoundary"]
@@ -80,8 +112,70 @@ shape = SubResource("WorldBoundaryShape2D_6egt2")
 
 [node name="Bottom Boundary" type="StaticBody2D" parent="Boundaries"]
 position = Vector2(128, 352)
-collision_layer = 4
+collision_layer = 16
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/Bottom Boundary"]
 shape = SubResource("WorldBoundaryShape2D_4n6dk")
+
+[node name="FishingMini" type="Sprite2D" parent="."]
+position = Vector2(21, 105)
+texture = ExtResource("4_4n6dk")
+hframes = 3
+script = ExtResource("5_wbdmp")
+
+[node name="FishingRodMarker_Idle" type="Marker2D" parent="FishingMini"]
+unique_name_in_owner = true
+position = Vector2(15, -5)
+
+[node name="FishingRodMarker_Charge" type="Marker2D" parent="FishingMini"]
+unique_name_in_owner = true
+position = Vector2(-14, -11)
+
+[node name="FishingStaminaBar" type="ProgressBar" parent="FishingMini"]
+unique_name_in_owner = true
+offset_left = -16.0
+offset_top = -20.0
+offset_right = 16.0
+offset_bottom = -16.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_wbdmp")
+theme_override_styles/fill = SubResource("StyleBoxFlat_tlecd")
+max_value = 1.0
+value = 0.5
+show_percentage = false
+
+[node name="FishingHook" type="CharacterBody2D" parent="FishingMini"]
+unique_name_in_owner = true
+position = Vector2(15, 7)
+collision_layer = 8
+collision_mask = 19
+motion_mode = 1
+script = ExtResource("6_bxpri")
+
+[node name="FishingHookSprite" type="Sprite2D" parent="FishingMini/FishingHook"]
+texture = ExtResource("6_tlecd")
+offset = Vector2(0, 3)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FishingMini/FishingHook"]
+position = Vector2(0, 1)
+shape = SubResource("RectangleShape2D_tlecd")
+
+[node name="FishingLine" type="Line2D" parent="FishingMini"]
+unique_name_in_owner = true
+points = PackedVector2Array(15, 5, 15, -5)
+width = 1.0
+
+[node name="WaterPhysics" type="Area2D" parent="."]
+position = Vector2(0, 124)
+collision_layer = 0
+collision_mask = 8
+gravity = 200.0
+linear_damp_space_override = 1
+linear_damp = 50.0
+script = ExtResource("8_3ssn3")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WaterPhysics"]
+shape = SubResource("WorldBoundaryShape2D_3ssn3")
+
+[connection signal="piece_caught" from="FishingMini" to="." method="_on_FishingMini_piece_caught"]
