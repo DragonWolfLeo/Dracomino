@@ -1,8 +1,8 @@
 // Tutorial:
 [State Tutorial]
-Mini (happy): Hello! Thanks so much for coming!
+Mini (happy): Hello! I'm here to help!
 [if explained_done]
-Mini: Need my help again? I'm always happy to talk Dracominos, coins, magic, and fresh fish with you! What would you like to know?
+Mini: You're back! I'm always happy to talk Dracominos, coins, magic, and fresh fish with you! What would you like to know?
 [SetWorldFlag mentioned_freshfish]
 [if not explained_done]
 Mini: You must've come here to get my help. I'm happy to teach you about Dracominos!
@@ -228,7 +228,7 @@ Mini: I know it may not seem like it, but you're doing a great job! Keep it up, 
 [if explained_dracominos]
 Mini: And thanks for being such a good listener. I'm happy to meet someone so eager to know us and help us with our goal!
 [if not tutorial]
-Mini: Oh! And if you ever want my help again, press the F1 button! I love helping!
+Mini: Oh! And if you ever want my help again, press the F1 button! I'm always happy to help!
 [always]
 [SetWorldFlag tutorial]
 [End]
