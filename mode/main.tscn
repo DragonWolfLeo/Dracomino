@@ -1,7 +1,7 @@
-[gd_scene load_steps=17 format=3 uid="uid://c5lm3ikyfckvp"]
+[gd_scene load_steps=15 format=3 uid="uid://c5lm3ikyfckvp"]
 
 [ext_resource type="Script" uid="uid://c5jgcsxvnygnn" path="res://mode/main.gd" id="1_gx2q7"]
-[ext_resource type="FontFile" uid="uid://c8dwaeydyfv6j" path="res://resource/font/PressStart2P-Regular.ttf" id="2_jjnvi"]
+[ext_resource type="PackedScene" uid="uid://txbrdml6vs6n" path="res://screen/ui.tscn" id="2_yivgv"]
 [ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="3_yivgv"]
 [ext_resource type="Script" uid="uid://daewoikmtskpi" path="res://dracomino_ap/dracomino_handler.gd" id="4_d6dmn"]
 [ext_resource type="Script" uid="uid://b5b036m1pgdbu" path="res://mode/puzzle_mode.gd" id="5_m1ejn"]
@@ -12,19 +12,12 @@
 [ext_resource type="PackedScene" uid="uid://rd6em7cjqrum" path="res://level/fishingboard.tscn" id="10_jc8m0"]
 [ext_resource type="Script" uid="uid://uaf4h6orb4o4" path="res://mode/mode.gd" id="10_jjnvi"]
 
-[sub_resource type="LabelSettings" id="LabelSettings_q3k4m"]
-font = ExtResource("2_jjnvi")
-font_size = 24
+[sub_resource type="LabelSettings" id="LabelSettings_gpyk6"]
+font = ExtResource("3_yivgv")
 
 [sub_resource type="Theme" id="Theme_d5o15"]
 default_font = ExtResource("3_yivgv")
 default_font_size = 12
-
-[sub_resource type="LabelSettings" id="LabelSettings_svssi"]
-font_color = Color(1, 1, 0, 1)
-
-[sub_resource type="LabelSettings" id="LabelSettings_gpyk6"]
-font = ExtResource("3_yivgv")
 
 [sub_resource type="LabelSettings" id="LabelSettings_rni7d"]
 font_size = 20
@@ -50,45 +43,12 @@ script = ExtResource("1_gx2q7")
 [node name="SubViewport" type="SubViewport" parent="."]
 handle_input_locally = false
 snap_2d_transforms_to_pixel = true
+canvas_item_default_texture_filter = 3
 size = Vector2i(960, 540)
 render_target_update_mode = 4
 
-[node name="ModeUI" type="CanvasLayer" parent="SubViewport"]
-layer = 2
-
-[node name="CenterContainer" type="CenterContainer" parent="SubViewport/ModeUI"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="CenterLabel" type="Label" parent="SubViewport/ModeUI/CenterContainer"]
+[node name="UI" parent="SubViewport" instance=ExtResource("2_yivgv")]
 unique_name_in_owner = true
-layout_mode = 2
-text = "GAME
-OVER"
-label_settings = SubResource("LabelSettings_q3k4m")
-
-[node name="NotificationMargin" type="MarginContainer" parent="SubViewport/ModeUI"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme = SubResource("Theme_d5o15")
-theme_override_constants/margin_top = 30
-theme_override_constants/margin_bottom = 30
-
-[node name="NotificationLabel" type="Label" parent="SubViewport/ModeUI/NotificationMargin"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(20, 0)
-layout_mode = 2
-size_flags_vertical = 8
-text = "Notification Text"
-label_settings = SubResource("LabelSettings_svssi")
-horizontal_alignment = 1
-autowrap_mode = 2
 
 [node name="LevelOverlay" parent="SubViewport" instance=ExtResource("6_w0fxs")]
 process_mode = 1
@@ -285,13 +245,12 @@ modeName = &"dialogue"
 [connection signal="lineMappings_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_line_mappings_updated"]
 [connection signal="missingLines_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_lines_updated"]
 [connection signal="missingPickupCoordinates_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_pickup_coordinates_updated"]
-[connection signal="notification_signal" from="SubViewport/DracominoHandler" to="." method="_on_DracominoHandler_notification_signal"]
+[connection signal="notification_signal" from="SubViewport/DracominoHandler" to="SubViewport/UI" method="_on_DracominoHandler_notification_signal"]
 [connection signal="slotContextHash_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_slot_context_hash_updated"]
 [connection signal="started" from="SubViewport/DracominoHandler" to="." method="_on_DracominoHandler_started"]
 [connection signal="resized" from="SubViewport/PuzzleMode/SubViewportContainer" to="SubViewport/PuzzleMode" method="_on_SubViewportContainer_resized"]
 [connection signal="deathlink_earned" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_deathlink_earned"]
-[connection signal="effect_activated" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_effect_activated"]
-[connection signal="game_over_earned" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_game_over_earned"]
+[connection signal="effect_activated" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/UI" method="_on_Board_effect_activated"]
 [connection signal="game_started" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_game_started"]
 [connection signal="game_started" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_game_started"]
 [connection signal="item_pickedup" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_item_pickedup"]

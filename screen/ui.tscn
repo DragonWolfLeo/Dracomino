@@ -1,0 +1,135 @@
+[gd_scene load_steps=12 format=3 uid="uid://txbrdml6vs6n"]
+
+[ext_resource type="Script" uid="uid://dg0isqrradwjk" path="res://screen/ui.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://boh0wdpbpqmkj" path="res://screen/dialogueinterface.tscn" id="2"]
+[ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="2_obcwv"]
+[ext_resource type="FontFile" uid="uid://c8dwaeydyfv6j" path="res://resource/font/PressStart2P-Regular.ttf" id="6_bo1jx"]
+[ext_resource type="PackedScene" uid="uid://07hk2ncr2p3i" path="res://screen/debugconsole.tscn" id="6_om6cd"]
+[ext_resource type="PackedScene" uid="uid://3jevvou6slg2" path="res://screen/overlay.tscn" id="7_bo1jx"]
+[ext_resource type="Script" uid="uid://ddtmdf2fmgdeu" path="res://resource/dialogue_highlighter.gd" id="7_wf7rf"]
+
+[sub_resource type="Theme" id="Theme_gycre"]
+default_font = ExtResource("2_obcwv")
+default_font_size = 12
+
+[sub_resource type="LabelSettings" id="LabelSettings_pa1oa"]
+font_color = Color(1, 1, 0, 1)
+
+[sub_resource type="SyntaxHighlighter" id="SyntaxHighlighter_8wtnh"]
+script = ExtResource("7_wf7rf")
+metadata/_custom_type_script = "uid://ddtmdf2fmgdeu"
+
+[sub_resource type="LabelSettings" id="LabelSettings_ay4pc"]
+font = ExtResource("6_bo1jx")
+font_size = 24
+outline_size = 12
+outline_color = Color(0, 0, 0, 1)
+
+[node name="UI" type="CanvasLayer"]
+layer = 2
+script = ExtResource("1")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+layer = 6
+
+[node name="NotificationMargin" type="MarginContainer" parent="HUD"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = SubResource("Theme_gycre")
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_bottom = 30
+
+[node name="NotificationLabel" type="Label" parent="HUD/NotificationMargin"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+size_flags_vertical = 8
+text = "Notification Text"
+label_settings = SubResource("LabelSettings_pa1oa")
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="DialogueScreen" type="CanvasLayer" parent="."]
+layer = 4
+visible = false
+
+[node name="DialogueInterface" parent="DialogueScreen" instance=ExtResource("2")]
+
+[node name="DebugScreen" type="CanvasLayer" parent="."]
+layer = 100
+visible = false
+
+[node name="DebugConsole" parent="DebugScreen" instance=ExtResource("6_om6cd")]
+
+[node name="DialogueEditWindow" type="ConfirmationDialog" parent="."]
+title = "Dialogue"
+initial_position = 1
+size = Vector2i(960, 480)
+exclusive = false
+max_size = Vector2i(1280, 720)
+keep_title_visible = false
+ok_button_text = "Load"
+dialog_hide_on_ok = false
+cancel_button_text = "Close"
+
+[node name="DialogueEdit" type="CodeEdit" parent="DialogueEditWindow"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -49.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "[State]
+Mini(cute): This is a window for previewing dialogue script.
+You(happy): So cool!
+[End]"
+wrap_mode = 1
+caret_blink = true
+syntax_highlighter = SubResource("SyntaxHighlighter_8wtnh")
+highlight_all_occurrences = true
+gutters_draw_line_numbers = true
+delimiter_strings = Array[String]([])
+auto_brace_completion_enabled = true
+auto_brace_completion_pairs = {
+"(": ")",
+"[": "]",
+"{": "}"
+}
+
+[node name="Overlay" parent="." instance=ExtResource("7_bo1jx")]
+visible = false
+
+[node name="PauseScreen" type="CanvasLayer" parent="."]
+layer = 5
+visible = false
+
+[node name="PauseScreen" type="CenterContainer" parent="PauseScreen"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="CenterLabel" type="Label" parent="PauseScreen/PauseScreen"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "GAME
+OVER"
+label_settings = SubResource("LabelSettings_ay4pc")
+
+[connection signal="finished" from="DialogueScreen/DialogueInterface" to="." method="_on_DialogueInterface_finished"]
+[connection signal="started" from="DialogueScreen/DialogueInterface" to="." method="_on_DialogueInterface_started"]
+[connection signal="screen_closed" from="DebugScreen/DebugConsole" to="." method="_on_DebugScreen_screen_closed"]
+[connection signal="canceled" from="DialogueEditWindow" to="." method="_on_DialogueEditWindow_canceled"]
+[connection signal="confirmed" from="DialogueEditWindow" to="." method="_on_DialogueEditScreen_confirmed"]
+[connection signal="window_input" from="DialogueEditWindow" to="." method="_on_DialogueEditWindow_window_input"]
+[connection signal="hidden" from="DialogueEditWindow/DialogueEdit" to="." method="_on_DialogueEdit_hidden"]
+[connection signal="visibility_changed" from="DialogueEditWindow/DialogueEdit" to="." method="_on_DialogueEdit_visibility_changed"]

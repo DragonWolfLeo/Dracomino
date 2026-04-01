@@ -1,0 +1,259 @@
+// Tutorial:
+[State Tutorial]
+Mini (happy): Hello! Thanks so much for coming!
+[if explained_done]
+Mini: Need my help again? I'm always happy to talk Dracominos, coins, magic, and fresh fish with you! What would you like to know?
+[SetWorldFlag mentioned_freshfish]
+[if not explained_done]
+Mini: You must've come here to get my help. I'm happy to teach you about Dracominos!
+Mini: **Show image Dracominos** These are Dracominos. They're colorful blocks made of pure magic!
+
+// Set some memory
+[if not hold_slot]
+[SetWorldFlag prev_no_hold]
+
+[if not rotate]
+[SetWorldFlag prev_no_rotate]
+
+[if not gravity]
+[SetWorldFlag prev_no_gravity]
+
+[if not soft_drop]
+[SetWorldFlag prev_no_softdrop]
+
+[if not hard_drop]
+[SetWorldFlag prev_no_harddrop]
+
+[always]
+[NextState]
+
+[State Tutorial_Contents]
+// Auto sections; Set flags to disable
+[Jump Tutorial_Move if not explained_move]
+[Jump Tutorial_JustGot_Gravity if gravity+prev_no_gravity]
+[Jump Tutorial_JustGot_SoftDrop if soft_drop+prev_no_softdrop] // Keep before Hard Drop
+[Jump Tutorial_JustGot_HardDrop if hard_drop+prev_no_harddrop]
+[Jump Tutorial_Hold if hold_slot not if explained_hold]
+[Jump Tutorial_Rotate if rotate not if explained_rotate]
+[Jump Tutorial_Coins if not explained_coins]
+[Jump Tutorial_Done if not explained_done]
+
+// Actual choices that will show once jumps are spent
+[Choice Dracominos] You: What are Dracominos?
+[Choice Tutorial_Move] You: How do I move Dracominos?
+[Choice Tutorial_Hold] You: How do I hold Dracominos for later?
+[Choice Tutorial_Rotate] You: How do I rotate Dracominos?
+[Choice Tutorial_Coins] You: How do I collect coins?
+[Choice Tutorial_DoneForReal] You: That's all for now
+
+// === Gravity + Soft Drop + Hard Drop Explanations ===
+[Response Tutorial_JustGot_Gravity]
+Mini: Aaaaa! What happened?! The pieces are falling!
+Mini: They fall pretty slow, though. But still, now our moves are on a time limit!
+[if soft_drop not hard_drop]
+Mini: Not only that, but if you press the {UP} button, you'll let go of your Dracomino, and another will appear. You may want to be careful about pressing that button.
+Mini: Though, it could allow for some advanced moves, like, if you wanted one piece to go under another. You can quickly slide a piece under another while it's still falling.
+[always]
+[ClearWorldFlag prev_no_gravity]
+
+[Response Tutorial_JustGot_SoftDrop]
+Mini: Hey! {DOWN} button now does a thing! It makes things go down!
+[if hard_drop not prev_no_harddrop]
+Mini: So no more needing to press {UP} to go down. Man, that was so confusing.
+Mini: Though, {UP} makes things go down a lot faster than pressing {DOWN}. What's up with that?
+[always]
+[ClearWorldFlag prev_no_softdrop]
+
+[Response Tutorial_JustGot_HardDrop]
+Mini: Guess what! The {UP} button [if not gravity] now does a thing! Pressing it [always] makes Dracominos fall down fast!
+[if gravity not soft_drop]
+Mini: So, no more having to wait for pieces to featherfall their way down.
+Mini: I don't know, why {UP} though. There's a {DOWN} button. Why doesn't it do anything?!
+[always]
+Mini: This is so useful. We can place Dracominos down so quickly! But I don't know why it has to be the {UP} button.
+[ClearWorldFlag prev_no_harddrop]
+
+[Response Tutorial_Move]
+[if explained_move]
+Mini: Oh! If you're wondering about the exact controls, the WASD keys and arrow keys both work.
+Mini: And if you're on a controller, it's the D-Pad or the left analog stick. Not the right analog stick. That's used for something entirely different.
+[always]
+Mini: You can move Dracominos around using the [if not soft_drop]{LEFT} and {RIGHT} [if soft_drop]{LEFT}, {RIGHT}, and {DOWN} [always]buttons.
+[if gravity]
+Mini: They take a while to fall down. [if hard_drop] If you want them to fall down really, really fast, press the {UP} button! [if soft_drop not hard_drop] So press {DOWN} to push it down faster!
+[if gravity+hard_drop not soft_drop]
+Mini: I don't know why {DOWN} doesn't do that. It's kinda confusing. But just remember: Go up to go down!
+[if gravity+hard_drop+soft_drop]
+Mini: And if you need a medium speed, you can press the {DOWN} button. I don't know why there's two buttons to go down, and why {UP} goes down even more than {DOWN}.
+Mini: I guess think of it like... If you want to hit the ground harder, you would jump up first before falling. Yeah, that kinda makes sense.
+[if gravity+soft_drop not hard_drop]
+Mini: But try not to press the {UP} button. Another Dracomino will fall, but we can only hold one at a time.
+Mini: When you have multiple pieces falling at once, it makes things very difficult.
+[if gravity not soft_drop/hard_drop]
+Mini: You can press the {UP} button to make another one appear. But you wanna be careful about that, because too many is a lot to handle.
+Mini: Though it makes things go a little faster to drop a bunch at once.
+[if hard_drop not gravity]
+Mini: However, pressing the {UP} button doesn't go up! Instead you'll slam the Dracomino down to the ground. Very hard!
+[if hard_drop]
+Mini: You can't break a Dracomino by slamming it though. They're very, very, very sturdy!
+Mini: If you wish to "break" a Dracomino into magic crystals, you have to line up a bunch from wall to wall. [if soft_drop+rotate] Don't leave any gaps either! [if not rotate] Which is very difficult. So just focus on getting coins.
+[if hard_drop not soft_drop/gravity]
+Mini: Don't leave any gaps either! [if not rotate] Well, try your best anyway. [always] Because once you cover a hole, you'll have to fill the line on top of it to open back up.
+[if hard_drop+gravity not soft_drop]
+Mini: Also, be careful about slamming a Dracomino over an edge. Because then you'll have to wait for the Dracomino to slowly fall to fill it. It's such a huge waste of time.
+[always]
+[SetWorldFlag explained_move]
+
+// === Hold ===
+[Response Tutorial_Hold]
+[Jump Tutorial_JustGotHold if hold_slot+prev_no_hold]
+[Jump Tutorial_HasHold if hold_slot]
+[Jump Tutorial_NoHold]
+
+[Response Tutorial_JustGotHold]
+[if explained_no_hold]
+Mini: Hey! Remember before, when you asked about how to hold Dracominos for later? We can do that now!
+[else]
+Mini: Hey! Good news! We can now hold on to Dracominos to use them whenever we want!
+[always]
+[ClearWorldFlag explained_no_hold]
+[Jump Tutorial_HasHold]
+
+[Response Tutorial_HasHold]
+Mini: [if not explained_done] Oh! Also, if [else] If [always] you end up in a situation where you get a piece at the wrong time, you can hold it for later. Just press the {HOLD} button. Store as many as you can carry!
+[if explained_hold]
+Mini: On a keyboard, the Shift and Space keys both do this. On a controller, it's the right shoulder.
+[always]
+Mini: Then press {HOLD} again to take it back out. You can also use the number keys to take out just the one you need. Or use the right stick if you're on a controller.
+Mini: But be warned: once you take out of storage again, you can't put it back! So only take it out when you're sure you need it. Or if your current piece is that bad.
+Mini: Well... no Dracomino is bad. Every single one of them is important! Do your best to find a place for each one!
+[SetWorldFlag explained_hold]
+[ClearWorldFlag prev_no_hold]
+
+[Response Tutorial_NoHold]
+Mini: Holding Dracominos? There's nowhere to put them though...
+Mini: Once you get a Dracomino, you have to find a place for it. [if rotate] Make sure you clear some lines with it!
+[if not rotate]
+Mini: Which is tricky though... You'll just have to be smart about where they go. I'm not very good at it.
+[always]
+[SetWorldFlag explained_no_hold]
+
+// === Rotate explanations ===
+[Response Tutorial_Rotate]
+[Jump Tutorial_JustGotRotate if rotate+prev_no_rotate]
+[Jump Tutorial_HasRotate if rotate]
+[Jump Tutorial_NoRotate]
+
+[Response Tutorial_JustGotRotate]
+Mini: Oh! I got something new to tell you! We just got the ability to rotate Dracominos!
+[if explained_no_rotate]
+Mini: I remember you were having a lot of trouble with this before. Clearing lines was so difficult.
+[else]
+Mini: You've been trying so hard to clear lines without it. I appreciate the dedication you put into helping us! But no longer do you have to take it so tough.
+[always]
+[ClearWorldFlag explained_no_rotate]
+[Jump Tutorial_HasRotate]
+
+[Response Tutorial_HasRotate]
+Mini: To turn a Dracomino, press the {ROTATE} button. This way, you can fit them in better places without leaving gaps. This allows us to form full lines of Dracominos.
+[if explained_rotate]
+Mini: Q and E can be used to rotate if you're using WASD to move. Z and X are also an option if you move with the arrow keys.
+Mini: As for the controller... I guess it depends on which controller you have, because they all have different buttons!
+Mini: Just press whatever symbols are on the right and bottom of the right side.
+[if prev_no_rotate]
+Mini: And just so you know, [b]you were never expected to make lines without rotating pieces[/b]. Some people are really curious about that kind of thing. But anyway...
+[always]
+Mini: Build up as many lines as you can! Dracominos are compressed magic. When you put them in a line, they'll burst into magic crystals, which are much easier for us to use.
+Mini: We need to collect as much magic as we can! And grab the coins while you're at it, too!
+[SetWorldFlag explained_rotate]
+[ClearWorldFlag prev_no_rotate]
+
+[Response Tutorial_NoRotate]
+Mini: Rotating Dracominos? I don't think that's possible.
+Mini: With no way to turn Dracominos, you have to be very careful about where you put them.
+Mini: You might be able to manage to clear a few lines, but [b]you're better off going for coins[/b]. Hopefully we'll get a useful ability from it.
+Mini: Don't worry about lining up Dracominos for now. I think later on, we'll discover a way to rotate.
+Mini: But as it is, making lines is like fishing without a fishing rod. Sure, it's possible. But if you wait and actually get the proper tool, you'll save so much time and effort.
+[SetWorldFlag explained_no_rotate]
+
+
+// === Coin explanations ===
+[Response Tutorial_Coins]
+[if not explained_coins]
+Mini: Oh that reminds me of the next thing: Coins!
+Mini: Dragon coins are spread out all over the place. They're filled with magical draconic energy! Because they belonged to dragons first!
+[if explained_coins]
+Mini: To collect coins, place a Dracomino right on it! That way, you'll knock it down so I could reach it.
+Mini: Some of them are up really high, so you'll have to stack Dracominos to reach them. [b]Don't be too afraid to tower up to collect coins[/b].
+Mini: But be careful! If you build too high, the Dracominos will all topple, and you may hurt yourself. I don't want to see you get hurt...
+Mini: And also [b]don't worry about towering to fill lines[/b]! That's kinda crazy. I would never make you do that!
+Mini: Once you grab some coins, hand them over to me!
+[always]
+Mini: When I touch a coin, I'm able to extract that energy, and out comes Dracominos!
+Mini (think): ...Or other items. Like abilities, which are very useful. But also some not very useful things.
+Mini: Or even weirder things like swords, potions, keys, collectibles, and traps. And then some other person takes it.
+Mini: I don't mind though. I like making people happy with the random stuff I get from time to time. All I need are the coins and Dracominos.
+Mini (cute): With more Dracominos, we could reach further! Which means getting more coins! And then more Dracominos! It's a fun cycle!
+[SetWorldFlag explained_coins]
+
+// === Done ===
+[Response Tutorial_Done]
+Mini: And that it for my lesson! Now you can help me and my partner with our goal of collecting as much gold and mana as we can!
+Mini: Before we get back to it, do you have any questions?
+[SetWorldFlag explained_done]
+
+[Response Dracominos]
+Mini: Oh... Still confused about Dracominos? I guess... I'm not quite sure myself.
+Mini: I at least know they're magic blocks. Like, hardened magic materialized into a physical shape.
+Mini: I don't understand how I'm able to create them. Even my partner is stumped, and they're the magic expert.
+Mini: But the way they said it, my ability helps us move magic around by taking it from things, so we could use it for our needs.
+Mini: For everyone else, it's hard to drain the magic from coins. Well, not [i]hard[/i] but rather, slow and boring.
+Mini: But somehow I'm able to just pull it out, and it turns into a colorful block. Still, there's not much we can do with it in this state because the magic is trapped inside.
+Mini: Dracominos are like nuts. Magical, square nuts, with a very hard shell. But once you crack it open, you get the yummy insides!
+Mini: Though it's not as easy as it sounds. Dracominos are very tough, like adamantite. You can't break them with brute force.
+Mini: Well... actually, you can break them if hit hard enough. Like, very, very hard. I mean... of course it's hard! I just compared it to adamantite!
+Mini: And if you do manage to break it that way, it just turns into aether... which is... uh... proto-magic? I dunno. I wish Meg were here to explain the magic stuff.
+Mini: Aether has the potential to be anything. But it's hard to work with. I don't even know where to begin messing with that stuff.
+Mini: But my partner can use aether to shape it back into Dracominos. So at the very least, nothing goes to waste.
+Mini: Anyway, to make better use of Dracominos, you have to line them up to get them to burst into mana crystals. [i]These[/i] are what we can use.
+Mini: Mana can be used for magic stuff! Like spells, or enchanting.
+Mini: While I'm not good at magic, it's still very important to dragons. We'd get sick if we didn't get enough of the stuff.
+Mini: Anyway... I explained Dracominos and magic the best I can. We're working for an important goal, so we need as much magic as we can get. Coins, too!
+[SetWorldFlag explained_dracominos]
+
+[Response Tutorial_DoneForReal]
+Mini: Allrighty! Best of luck on converting the Dracominos for us! [if rotate]I appreciate your help tons!
+[if explained_no_rotate not rotate]
+Mini: I know it may not seem like it, but you're doing a great job! Keep it up, but go at your own pace.
+[if explained_dracominos]
+Mini: And thanks for being such a good listener. I'm happy to meet someone so eager to know us and help us with our goal!
+[if not tutorial]
+Mini: Oh! And if you ever want my help again, press the F1 button! I love helping!
+[always]
+[SetWorldFlag tutorial]
+[End]
+
+[State LogicTutorial]
+: In Dracomino, the locations you're expected to reach depends on the Rotate ability and the total amount of blocks your pieces make up.
+: Line clears are [b]not in logic until you have the ability to rotate[/b].
+: In a solo game, you can expect to find Rotate at a coin location in your first 20 lines.
+: For line clears, the number of lines you can fill with your blocks is the number of lines in logic.
+** Example - 8 rows of lines representing available blocks. 8 lines worth of blocks make 8 lines in logic **
+: The option [b]Line Clear Leniency[/b] will require additional lines worth of blocks for a line clear location to be in logic, making the requirement less strict.
+** Example - 10 rows of lines representing available blocks. 2 of those lines represent leniency. 10 lines worth of blocks makes 8 lines in logic **
+: The logic may seem strict at first, especially dealing with imperfect placement of various shapes, but it's actually lenient.
+: Stacking pieces can allow you to reach lines higher. You can reach above 10 lines above par with this method.
+** Example - A 2-wide column extends up 15 lines. On top of it, 2 lines are filled. The bottom 5 lines are filled with ghost blocks, representing 5 lines worth of blocks are used **
+: Even though this is possible, [b]it's not part of logic at all[/b]. Players are not expected to do this.
+: The point: this demonstrates that if players can reach over 10 lines above par, then [b]reaching par isn't a problem[/b].
+: Additionally, the option [b]Max Stacking Height does [i]not[/i] affect line clear locations[/b]. This options is purely for coin locations.
+: For coin locations, the coins are in logic when you have enough blocks to form a column of a certain width.
+: Before you have Rotate, the coins in logic can be reached with a 4-wide column up to Max Stacking Height.
+** Example - A 4-wide column extends up 15 lines, representing 60 blocks are required for it to be in logic. **
+: When you have Rotate, the coins in logic can be reached with a 2-wide column up to Max Stacking Height.
+** Example - A 2-wide column extends up 15 lines, representing 30 blocks are required for it to be in logic. **
+: The option [b]Max Stacking Height[/b] determines how high you may need to stack to reach coins.
+** Example - 5 rows of lines are filled. On top, a 2-wide column extends 10 lines representing a max stacking height of 10. A total 70 blocks are required for this coin to be in logic. **
+: Lowering Max Stacking Height will increase the number of blocks needed for coins to be in logic, making the game less strict.
+** Example - 14 rows of lines are filled. On top, a 2-wide column extends 1 line, representing a max stacking height of 1. A total of 142 blocks are required for this coin to be in logic **
+

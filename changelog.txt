@@ -1,6 +1,7 @@
 Version 0.3.0 (traps-alpha3)
  - Add Well Done!
  - Add Time for Fishing!
+ - Add Tutorial
 
 Version 0.2.4 (dev-beta3)
  - Fix wrong amount of energy being sent

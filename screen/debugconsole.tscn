@@ -1,0 +1,67 @@
+[gd_scene load_steps=4 format=3 uid="uid://07hk2ncr2p3i"]
+
+[ext_resource type="Script" uid="uid://c1dvitghmc21s" path="res://screen/debugconsole.gd" id="1_rgwl8"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_orusc"]
+content_margin_left = 8.0
+content_margin_top = 2.0
+content_margin_right = 8.0
+content_margin_bottom = 2.0
+bg_color = Color(0.158472, 0.158472, 0.158472, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_orusc"]
+outline_size = 1
+outline_color = Color(0, 0, 0, 1)
+shadow_color = Color(0, 0, 0, 0.4)
+
+[node name="DebugConsole" type="Control"]
+texture_filter = 6
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 1
+script = ExtResource("1_rgwl8")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="HintLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_styles/normal = SubResource("StyleBoxFlat_orusc")
+text = "Hint"
+label_settings = SubResource("LabelSettings_orusc")
+
+[node name="SuggestionContainer" type="HFlowContainer" parent="VBoxContainer"]
+clip_contents = true
+layout_mode = 2
+
+[node name="Button" type="Button" parent="VBoxContainer/SuggestionContainer"]
+layout_mode = 2
+text = "Suggestion 1"
+
+[node name="Button2" type="Button" parent="VBoxContainer/SuggestionContainer"]
+layout_mode = 2
+text = "Suggestion 2"
+
+[node name="Button3" type="Button" parent="VBoxContainer/SuggestionContainer"]
+layout_mode = 2
+text = "Suggestion 3"
+
+[node name="PanelContainer" type="PanelContainer" parent="VBoxContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="VBoxContainer/PanelContainer"]
+layout_mode = 2
+placeholder_text = "Type command."
+caret_blink = true

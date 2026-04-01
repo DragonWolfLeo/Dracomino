@@ -65,22 +65,23 @@ class LocationData extends Data: pass
 	
 	# Traps Items (201-300)
 	[201, "Tutorial",                 "tutorial",                   [ "trap", "useful", "once", "cutscene" ] ],
-	[202, "Time to Fish!",            "fishing",                    [ "trap", "cutscene" ] ],
-	[203, "Egg",                      "egg",                        [ "trap", "shape" ] ],
-	[204, "Curse",                    "enchantment_curse",          [ "trap", "modifier" ] ],
-	[205, "Legendary Enchantment",    "enchantment_legendary",      [ "trap", "modifier" ] ],
-	[206, "Epic Enchantment",         "enchantment_epic",           [ "trap", "modifier" ] ],
-	[207, "Rare Enchantment",         "enchantment_rare",           [ "trap", "modifier", "uncommon" ] ],
-	[208, "Medium Rare Enchantment",  "enchantment_mediumrare",     [ "trap", "modifier", "very_rare" ] ],
-	[209, "Well Done!",               "enchantment_welldone",       [ "trap", "cutscene", "rare" ] ],
-	[210, "Crystal Trap",             "crystal_trap",               [ "trap", "effect", "rare" ] ],
-	[211, "Invert Colors Trap",       "invertcolors_trap",          [ "trap", "effect", "rare" ] ],
-	[212, "Water Trap",               "water_trap",                 [ "trap", "effect" ] ],
-	[213, "Pixellation Trap",         "pixellation_trap",           [ "trap", "effect" ] ],
-	[214, "Fracture Trap",            "fracture_trap",              [ "trap", "effect" ] ],
-	[215, "Zoom Trap",                "zoom_trap",                  [ "trap", "effect" ] ],
-	[216, "Impatience Trap",          "impatience_trap",            [ "trap", "effect" ] ],
-	[217, "Commitment Trap",          "commitment_trap",            [ "trap", "effect", "rare" ] ],
+	[202, "Logic Tutorial",           "logic_tutorial",             [ "trap", "useful", "once", "cutscene" ] ],
+	[203, "Time to Fish!",            "fishing",                    [ "trap", "cutscene" ] ],
+	[204, "Egg",                      "egg",                        [ "trap", "shape" ] ],
+	[205, "Curse",                    "enchantment_curse",          [ "trap", "modifier" ] ],
+	[206, "Legendary Enchantment",    "enchantment_legendary",      [ "trap", "modifier" ] ],
+	[207, "Epic Enchantment",         "enchantment_epic",           [ "trap", "modifier" ] ],
+	[208, "Rare Enchantment",         "enchantment_rare",           [ "trap", "modifier", "uncommon" ] ],
+	[209, "Medium Rare Enchantment",  "enchantment_mediumrare",     [ "trap", "modifier", "very_rare" ] ],
+	[210, "Well Done!",               "enchantment_welldone",       [ "trap", "cutscene", "rare" ] ],
+	[211, "Crystal Trap",             "crystal_trap",               [ "trap", "effect", "rare" ] ],
+	[212, "Invert Colors Trap",       "invertcolors_trap",          [ "trap", "effect", "rare" ] ],
+	[213, "Water Trap",               "water_trap",                 [ "trap", "effect" ] ],
+	[214, "Pixellation Trap",         "pixellation_trap",           [ "trap", "effect" ] ],
+	[215, "Fracture Trap",            "fracture_trap",              [ "trap", "effect" ] ],
+	[216, "Zoom Trap",                "zoom_trap",                  [ "trap", "effect" ] ],
+	[217, "Impatience Trap",          "impatience_trap",            [ "trap", "effect" ] ],
+	[218, "Commitment Trap",          "commitment_trap",            [ "trap", "effect", "rare" ] ],
 	
 	# Shapes (301-)                                                                     Last two values are poor height, safe height
 	[301, "Monomino",       "", [ "progression_skip_balancing", "shape", "monomino" ],                                             1, 1],
@@ -279,3 +280,22 @@ static func _generateDataTable(dict:Dictionary, arr:Array, new_fn:Callable) -> D
 	var data:Data = new_fn.call(arr)
 	dict[data.id] = data
 	return dict
+
+	
+# Storage space for mods to use if they want to facilitate compatibility stuff
+var CUSTOM_DATA:Dictionary = {}
+
+### Constants
+func _IconLabel(id:String, label:String="") -> String:
+	return "[img]res://assets/art/emoji/{id}.png[/img]{label}".format({
+		id = id,
+		label = "[b]"+label+"[/b]" if label.length() else "",
+	})
+var	DIALOGUE_FORMAT_TEMPLATE = {
+	heart = _IconLabel("heart"),
+	coin = _IconLabel("coin"),
+	mana = _IconLabel("mana"),
+	COIN = _IconLabel("coin","Coin"),
+	MANA = _IconLabel("mana","Mana"),
+}
+

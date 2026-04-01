@@ -39,7 +39,14 @@ static var SET_TILE_ATLAS_ROW:int = 1
 var activePieces:Array[Piece] = []
 
 var clearingChunks:Array[ClearingChunk] = []
-var isGameOver:bool = false
+var isGameOver:bool = false:
+	set(value):
+		isGameOver = value
+		if flagHolder:
+			if value:
+				flagHolder.setFlag("gameover")
+			else:
+				flagHolder.clearFlag("gameover")
 var sendDeathOnRestart:bool = false
 var boardIsFresh:bool = true
 var hasOfflineDeath:bool = false
@@ -131,7 +138,7 @@ func _ready():
 	SignalBus.getSignal("restartGame").connect(resetGame)
 	SignalBus.getSignal("deathOnRestart_enabled").connect(set.bind("sendDeathOnRestart", true))
 	SignalBus.getSignal("deathOnRestart_disabled").connect(set.bind("sendDeathOnRestart", false))
-	SignalBus.getSignal("stateflag_changed", "shapes").connect(_on_newPieceObtained)
+	SignalBus.getSignal("stateflag_changed", "shapes").connect(_on_newPieceObtained, CONNECT_DEFERRED)
 	activePieces_changed.connect(_on_activePieces_changed)
 	var mode:Mode = DracominoUtil.getParentMode(self)
 	if mode:
@@ -151,6 +158,7 @@ func _ready():
 func resetFlagHolder():
 	if flagHolder: flagHolder.queue_free()
 	flagHolder = FlagHolder.new(FlagHolder.PRIORITY.LEVEL)
+	FlagManager.HANDLERS.LEVEL.setAsFlagHolder(flagHolder)
 	add_child(flagHolder)
 
 func getFocusPiece() -> Piece:

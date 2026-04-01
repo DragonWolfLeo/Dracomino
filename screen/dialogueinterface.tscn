@@ -1,0 +1,126 @@
+[gd_scene load_steps=5 format=3 uid="uid://boh0wdpbpqmkj"]
+
+[ext_resource type="Theme" uid="uid://cf3iwfpvnpy25" path="res://resource/style/dialoguebox.tres" id="1_b7xun"]
+[ext_resource type="Script" uid="uid://bqpp45p3p23n6" path="res://screen/dialogueinterface.gd" id="2_kj61x"]
+[ext_resource type="PackedScene" uid="uid://c6eii6ycdb123" path="res://ui/dialogueportrait/Mini.tscn" id="3_48uob"]
+[ext_resource type="PackedScene" uid="uid://x3o7m2cjwxgc" path="res://ui/choicelabel.tscn" id="4"]
+
+[node name="DialogueInterface" type="Control"]
+texture_filter = 2
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 1
+mouse_force_pass_scroll_events = false
+theme = ExtResource("1_b7xun")
+script = ExtResource("2_kj61x")
+
+[node name="DialogueGroup" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -168.0
+offset_right = -16.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="DialoguePanel" type="Panel" parent="DialogueGroup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="DialogueContainer" type="VBoxContainer" parent="DialogueGroup/DialoguePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 9.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="NameLabel" type="Label" parent="DialogueGroup/DialoguePanel/DialogueContainer"]
+visible = false
+layout_mode = 2
+text = "Character Name"
+
+[node name="NoNameSpacer" type="Control" parent="DialogueGroup/DialoguePanel/DialogueContainer"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="DialogueLabel" type="RichTextLabel" parent="DialogueGroup/DialoguePanel/DialogueContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+bbcode_enabled = true
+text = "Test dialogue
+Another line"
+visible_characters_behavior = 1
+
+[node name="PortraitContainer" type="Control" parent="DialogueGroup/DialoguePanel"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 0
+mouse_filter = 2
+
+[node name="Mini" parent="DialogueGroup/DialoguePanel/PortraitContainer" instance=ExtResource("3_48uob")]
+
+[node name="PortraitContainerRight" type="Control" parent="DialogueGroup/DialoguePanel"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+grow_horizontal = 0
+scale = Vector2(-1, 1)
+mouse_filter = 2
+
+[node name="Mini" parent="DialogueGroup/DialoguePanel/PortraitContainerRight" instance=ExtResource("3_48uob")]
+
+[node name="ChoiceContainer" type="VBoxContainer" parent="DialogueGroup"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -456.0
+offset_top = -145.0
+offset_right = -24.0
+offset_bottom = -136.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_constants/separation = 2
+alignment = 2
+
+[node name="ChoiceLabel" parent="DialogueGroup/ChoiceContainer" instance=ExtResource("4")]
+layout_mode = 2
+
+[node name="ChoiceLabel2" parent="DialogueGroup/ChoiceContainer" instance=ExtResource("4")]
+layout_mode = 2
+text = "Multiple lines
+Multiple lines"
+
+[node name="ChoiceLabel3" parent="DialogueGroup/ChoiceContainer" instance=ExtResource("4")]
+layout_mode = 2
+text = "Choice with a lot of text that should break onto another line"
+
+[node name="ChoiceLabel4" parent="DialogueGroup/ChoiceContainer" instance=ExtResource("4")]
+layout_mode = 2
+
+[node name="PanelDelayTimer" type="Timer" parent="."]
+wait_time = 0.3
+one_shot = true

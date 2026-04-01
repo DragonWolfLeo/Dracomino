@@ -29,6 +29,8 @@ Game="*res://singleton/game.gd"
 SignalBus="*res://singleton/signalbus.gd"
 FlagManager="*res://singleton/flagmanager.gd"
 UserData="*res://singleton/userdata.gd"
+DracominoCommandManager="*res://singleton/commandmanager.gd"
+DialogueManager="*res://singleton/dialoguemanager.gd"
 SoundManager="*res://singleton/soundmanager.tscn"
 Archipelago="*res://godot_ap/autoloads/archipelago.tscn"
 
@@ -228,6 +230,11 @@ back={
 debug={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":96,"key_label":0,"unicode":96,"location":0,"echo":false,"script":null)
+]
+}
+help={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":4194332,"physical_keycode":0,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
 ]
 }
 edit={

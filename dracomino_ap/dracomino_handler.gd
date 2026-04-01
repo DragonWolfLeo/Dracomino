@@ -129,6 +129,7 @@ func newSeedReset():
 func resetSeedFlagHolder():
 	if seedFlagHolder: seedFlagHolder.queue_free()
 	seedFlagHolder = FlagHolder.new(FlagHolder.PRIORITY.WORLD)
+	FlagManager.HANDLERS.WORLD.setAsFlagHolder(seedFlagHolder)
 	add_child(seedFlagHolder)
 
 func getNextPiece() -> Dictionary:

@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://c6eii6ycdb123"]
+
+[ext_resource type="Texture2D" uid="uid://cow6qkci3y2hn" path="res://assets/art/dialogueportrait/mini.png" id="1_6u7xj"]
+
+[node name="Mini" type="Sprite2D"]
+texture_filter = 1
+position = Vector2(0, -128)
+scale = Vector2(4, 4)
+texture = ExtResource("1_6u7xj")
+centered = false

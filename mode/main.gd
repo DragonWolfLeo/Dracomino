@@ -1,78 +1,93 @@
 extends SubViewportContainer
 
-signal mode_set_requested(modeName:StringName)
-
-@onready var centerLabel:Label = %CenterLabel
-@onready var notificationLabel:Label = %NotificationLabel
+@onready var ui:UI = %UI
 @onready var puzzleMode:Mode = %PuzzleMode
+@onready var subviewport:SubViewport = $SubViewport
 
-var _timer:SceneTreeTimer
-var _queuedNotifications:Array[Dictionary]
 
-enum STATE {
-	NORMAL,
-	PAUSED,
-	GAMEOVER,
-}
-var state:int: set = _set_state
-var DRACOMINO_NOTIFICATION_TIME:float = 5.0
-var DRACOMINO_NOTIFICATION_TIME_SHORT:float = 1.0
+var _mode_set_requested_signalholder:SignalBus.SignalHolder
+
+var state:int
+var flagHolder:FlagHolder
+var currentFocus:Control:
+	set(value):
+		if currentFocus == value: return
+		currentFocus = value
+		focus_mode = Control.FOCUS_NONE if currentFocus else FOCUS_CLICK
+		if not currentFocus:
+			grab_focus()
 
 #==== Virtuals ====
 func _init() -> void:
-	SignalBus.registerSignalDistributor(mode_set_requested, "mode_set_requested")
+	_mode_set_requested_signalholder = SignalBus.SignalHolder.new()
+	SignalBus.registerSignalDistributor(_mode_set_requested_signalholder.triggered, "mode_set_requested")
 	
 func _ready() -> void:
-	notificationLabel.text = ""
-	notificationLabel.hide()
+	flagHolder = FlagHolder.new(FlagHolder.PRIORITY.MAIN)
+	flagHolder.tree_entered.connect(FlagManager.HANDLERS.MAIN.setAsFlagHolder.bind(flagHolder))
+	add_child(flagHolder)
+
+	subviewport.gui_focus_changed.connect(_on_gui_focus_changed)
+
 	focus_entered.connect(_on_focus_entered)
-	focus_exited.connect(_on_focus_exited)
+	focus_exited.connect(_on_deferred_focus_exited, CONNECT_DEFERRED)
 	get_window().focus_entered.connect(_on_window_focus_entered)
 	get_window().focus_exited.connect(_on_window_focus_exited)
-	state = STATE.PAUSED
 
-	SignalBus.getSignal("give_focus_to_main").connect(grab_focus)
-	for child in $SubViewport.get_children():
+	SignalBus.getSignal("give_focus_to_main").connect(giveFocusToMain)
+	for child in subviewport.get_children():
 		if child is Mode:
 			(child as Mode).mode_enabled.connect(setMode.bind(child as Mode))
 
 	setMode()
 
+	FlagManager.count("game_focus", "default", 1) # If one thing removes from this count, then be considered unfocused
+
+func _gui_input(event: InputEvent) -> void:
+	if event.is_action_pressed("restart"):
+		SignalBus.getSignal("restartGame").emit()
+		accept_event()
+		return
+
+	if event is InputEventMouseButton:
+		var mouseEvent:InputEventMouseButton = event as InputEventMouseButton
+		if mouseEvent.is_pressed():
+			match mouseEvent.button_index:
+				MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT:
+					if FlagManager.isFlagSet("gameover"):
+						giveFocusToMain()
+						accept_event()
+						SignalBus.getSignal("restartGame").emit()
+						
+func _input(event: InputEvent) -> void:
+	if not thisOrChildrenHasFocus():
+		return
+	# Allow regaining control if setting allows unfocused inputs
+	if (
+		event.is_action_pressed("start")
+		and Config.getSetting("allowUnfocusedInputs", false)
+		and not FlagManager.isFlagSet("game_focus")
+	):
+		FlagManager.count("game_focus", "window_focus_lost", 0)
+		if FlagManager.isFlagSet("game_focus"):
+			accept_event()
+
+	# Give focus to client when pressing tab
+	if event.is_action_pressed("ui_focus_next") or event.is_action_pressed("ui_focus_prev"):
+		SignalBus.getSignal("give_focus_to_client").emit()
+		accept_event()
+		return
+
 #==== Functions ====
-func applyState() -> void:
-	if centerLabel == null: return
-	match state:
-		STATE.NORMAL:
-			get_tree().paused = false
-			centerLabel.hide()
-		STATE.PAUSED:
-			get_tree().paused = true
-			centerLabel.text = "PAUSED"
-			centerLabel.show()
-		STATE.GAMEOVER:
-			get_tree().paused = true
-			centerLabel.text = "GAME OVER"
-			centerLabel.show()
-
-func showNotification(notif:String, color:Color) -> void:
-	if _timer and _timer.timeout.is_connected(_on_timer_timeout):
-		_timer.timeout.disconnect(_on_timer_timeout)
-		_timer = null
-	if notificationLabel:
-		notificationLabel.show()
-		notificationLabel.text = notif
-		notificationLabel.label_settings.font_color = color
-		_timer = get_tree().create_timer(DRACOMINO_NOTIFICATION_TIME_SHORT if _queuedNotifications.size() else DRACOMINO_NOTIFICATION_TIME, false)
-		_timer.timeout.connect(_on_timer_timeout)
-
 func setMode(mode:Control = null):
 	if not mode:
 		mode = puzzleMode
-	if mode.get_parent() != $SubViewport:
+	if mode.get_parent() != subviewport:
 		printerr("Mode must be a parent of Main/SubViewport")
 		mode = puzzleMode
-	
-	for child in $SubViewport.get_children():
+	if not subviewport:
+		return
+	for child in subviewport.get_children():
 		if child is Mode:
 			child.visible = mode == child
 			child.set_process(mode == child)
@@ -80,107 +95,74 @@ func setMode(mode:Control = null):
 			child.set_process_unhandled_input(mode == child)
 			child.process_mode = PROCESS_MODE_PAUSABLE if mode == child else PROCESS_MODE_DISABLED
 
+func thisOrChildrenHasFocus() -> bool:
+	if has_focus():
+		return true
+	if focusIsExternal():
+		return false
+	if currentFocus and currentFocus.has_focus():
+		return true
+	return false
+
+func focusIsExternal() -> bool:
+	return get_viewport().gui_get_focus_owner() != null
+
+func giveFocusToMain():
+	if currentFocus:
+		focus_mode = Control.FOCUS_NONE
+		currentFocus.grab_focus()
+	else:
+		focus_mode = Control.FOCUS_CLICK
+		grab_focus()
+
 #==== Events =====
 func _on_focus_entered():
-	if state != STATE.GAMEOVER:
-		state = STATE.NORMAL
+	FlagManager.count("game_focus", "main_focus_lost", 0)
+	giveFocusToMain()
 
-func _on_focus_exited():
-	await get_tree().process_frame
-	if has_focus(): return # Takes focus back when clicking on container
-	if state != STATE.GAMEOVER:
-		state = STATE.PAUSED
+func _on_deferred_focus_exited():
+	if thisOrChildrenHasFocus():
+		FlagManager.count("game_focus", "main_focus_lost", 0)
+	else:
+		FlagManager.count("game_focus", "main_focus_lost", -1)
 
 func _on_window_focus_entered():
+	FlagManager.count("game_focus", "window_focus_lost", 0)
 	set_process_input(true)
 	set_process_unhandled_input(true)
 
 func _on_window_focus_exited():
+	FlagManager.count("game_focus", "window_focus_lost", -1)
 	if not Config.getSetting("allowUnfocusedInputs", false):
 		set_process_input(false)
 		set_process_unhandled_input(false)
-	if state != STATE.GAMEOVER:
-		state = STATE.PAUSED
 
-func _on_Board_game_over_earned() -> void:
-	state = STATE.GAMEOVER
+func _on_gui_focus_changed(node: Control):
+	if currentFocus:
+		# Probably redundant cleanup
+		if currentFocus.focus_exited.is_connected(_on_deferred_currentFocus_focus_exited):
+			currentFocus.focus_exited.disconnect(_on_deferred_currentFocus_focus_exited)
+	currentFocus = node
+	set_process_input(true) # For some reason this stops processing input. Not sure why it does
+	FlagManager.count("game_focus", "main_focus_lost", 0)
+	node.focus_exited.connect(_on_deferred_currentFocus_focus_exited, CONNECT_ONE_SHOT | CONNECT_DEFERRED)
+
+func _on_deferred_currentFocus_focus_exited():
+	var newFocus:Control = subviewport.gui_get_focus_owner()
+	if not newFocus:
+		# Check if the focus is outside main
+		newFocus = get_viewport().gui_get_focus_owner()
+		if not newFocus:
+			# Clear the focus if the focus is released entirely
+			currentFocus = null
+		else:
+			# Focus is outside main, so set state to not_focused and try to grab click focus
+			FlagManager.count("game_focus", "main_focus_lost", -1)
+			focus_mode = Control.FOCUS_CLICK
 
 func _on_Board_game_started() -> void:
 	setMode()
-	state = STATE.NORMAL
-
-func _input(event: InputEvent) -> void:
-	if event is InputEventMouseButton:
-		var mouseEvent:InputEventMouseButton = event as InputEventMouseButton
-		if mouseEvent.is_pressed():
-			match mouseEvent.button_index:
-				MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT:
-					var localEvent = make_input_local(event)
-					if get_rect().has_point(localEvent.position):
-						_on_focus_exited()
-					else:
-						grab_focus()
-						_on_focus_entered()
-						if state == STATE.GAMEOVER:
-							accept_event()
-							SignalBus.getSignal("restartGame").emit()
-	if event.is_action_pressed("ui_focus_next") or event.is_action_pressed("ui_focus_prev"):
-		SignalBus.getSignal("give_focus_to_client").emit()
-
-	if event.is_action_pressed("restart"):
-		SignalBus.getSignal("restartGame").emit()
-		accept_event()
-		return
-	match state:
-		STATE.NORMAL:
-			if event.is_action_pressed("start"):
-				accept_event()
-				state = STATE.PAUSED
-		STATE.PAUSED:
-			if event.is_action_pressed("start"):
-				accept_event()
-				state = STATE.NORMAL
-		STATE.GAMEOVER:
-			if event.is_action_pressed("start") or event.is_action_pressed("ui_accept"):
-				accept_event()
-				SignalBus.getSignal("restartGame").emit()
-
-func _set_state(value:int) -> void:
-	if state == value:
-		return
-	state = value
-	applyState()
-
-func _on_DracominoHandler_notification_signal(notif:String, color:Color, force:bool = false) -> void:
-	if _timer and not force:
-		_timer.time_left = min(DRACOMINO_NOTIFICATION_TIME_SHORT, _timer.time_left)
-		_queuedNotifications.append({
-			notif = notif,
-			color = color,
-		})
-	else:
-		showNotification(notif, color)
-		
-func _on_timer_timeout():
-	if _queuedNotifications.size():
-		var qn:Dictionary = _queuedNotifications.pop_front()
-		showNotification(qn.notif, qn.color)
-	else:
-		notificationLabel.hide()
-		_timer = null
 
 func _on_DracominoHandler_started() -> void:
 	setMode()
 	grab_focus()
-
-
-func _on_Board_effect_activated(item: DracominoHandler.StateItem) -> void:
-	var formatValues:Dictionary = {
-		itemName = item.data.prettyName if item.data else &"Unknown Effect",
-		senderName = item.senderName,
-		gameName = item.gameName,
-	}
-	if item.isLocal:
-		showNotification("Triggered your own {itemName}!".format(formatValues), CONSTANTS.COLOR.TRAP)
-	else:
-		showNotification("Triggered {itemName} from {senderName}'s {gameName}!".format(formatValues), CONSTANTS.COLOR.TRAP)
