@@ -29,9 +29,10 @@ func _ready() -> void:
 
 	# Set up grabbing focus on signal
 	SignalBus.getSignal("give_focus_to_client").connect(_on_give_focus_to_client)
+	focus_entered.connect(_on_give_focus_to_client)
 
 func _on_give_focus_to_client():
-	var validFocus:Control = focusEntrance.find_next_valid_focus()
+	var validFocus:Control = find_next_valid_focus()
 	if validFocus: validFocus.grab_focus()
 
 func _on_APButton_pressed() -> void:

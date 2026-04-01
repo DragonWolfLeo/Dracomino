@@ -5,8 +5,8 @@
 [ext_resource type="PackedScene" uid="uid://dhya6ucgf72i8" path="res://godot_ap/ui/hints_tab.tscn" id="3_prof0"]
 [ext_resource type="PackedScene" uid="uid://c1pyfyn3ax5u2" path="res://dracomino_ap/dracomino_console_tab.tscn" id="3_vsama"]
 [ext_resource type="PackedScene" uid="uid://dp2yir3r1061y" path="res://godot_ap/ui/settings_tab.tscn" id="4_vsama"]
-[ext_resource type="Script" path="res://dracomino_ap/option_toggle_button.gd" id="7_s3ubo"]
-[ext_resource type="Script" path="res://dracomino_ap/signal_toggle_button.gd" id="7_vsama"]
+[ext_resource type="Script" uid="uid://cfbgk8vq58w0h" path="res://dracomino_ap/option_toggle_button.gd" id="7_s3ubo"]
+[ext_resource type="Script" uid="uid://dhw5qwfoet8gm" path="res://dracomino_ap/signal_toggle_button.gd" id="7_vsama"]
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_1wnfu"]
 
@@ -18,6 +18,7 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+focus_mode = 1
 script = ExtResource("1_vsama")
 
 [node name="DracominoAPHelper" type="Node" parent="."]
@@ -25,6 +26,7 @@ script = ExtResource("2_prof0")
 
 [node name="Tabs" type="TabContainer" parent="."]
 layout_mode = 2
+mouse_filter = 2
 current_tab = 0
 
 [node name="Console" parent="Tabs" instance=ExtResource("3_vsama")]
@@ -32,11 +34,19 @@ layout_mode = 2
 
 [node name="Hints" parent="Tabs" instance=ExtResource("3_prof0")]
 layout_mode = 2
+mouse_filter = 2
 
 [node name="Settings" parent="Tabs" instance=ExtResource("4_vsama")]
 visible = false
 layout_mode = 2
+mouse_filter = 2
 metadata/_tab_index = 2
+
+[node name="Margin" parent="Tabs/Settings" index="0"]
+mouse_filter = 2
+
+[node name="Tabs" parent="Tabs/Settings/Margin" index="0"]
+mouse_filter = 2
 
 [node name="DarkTheme" parent="Tabs/Settings/Margin/Tabs/Theme/Row/Col1" index="0"]
 button_group = SubResource("ButtonGroup_1wnfu")
@@ -47,10 +57,12 @@ button_group = SubResource("ButtonGroup_1wnfu")
 [node name="Game" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs" index="2"]
 visible = false
 layout_mode = 2
+mouse_filter = 2
 metadata/_tab_index = 1
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Tabs/Settings/Margin/Tabs/Game"]
 layout_mode = 2
+mouse_filter = 2
 
 [node name="Btn_DeathLink" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
 layout_mode = 2

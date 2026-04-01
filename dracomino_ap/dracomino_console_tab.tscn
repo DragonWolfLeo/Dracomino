@@ -31,6 +31,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 theme_override_constants/margin_left = 0
 theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 0
@@ -39,6 +40,7 @@ metadata/_tab_index = 0
 
 [node name="Console" type="VBoxContainer" parent="." node_paths=PackedStringArray("console_cont", "console", "typing_bar", "margin")]
 layout_mode = 2
+mouse_filter = 2
 theme_override_constants/separation = 0
 script = ExtResource("1_1q0y7")
 console_cont = NodePath("ConsoleBox")
@@ -66,9 +68,11 @@ theme_override_constants/separation = -1
 clip_contents = true
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
 
 [node name="Margins" type="MarginContainer" parent="Console/ConnectBox/Row/Box"]
 layout_mode = 2
+mouse_filter = 2
 theme_override_constants/margin_left = 5
 theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 5
@@ -76,9 +80,11 @@ theme_override_constants/margin_bottom = 5
 
 [node name="VBox" type="VBoxContainer" parent="Console/ConnectBox/Row/Box/Margins"]
 layout_mode = 2
+mouse_filter = 2
 
 [node name="Content" type="GridContainer" parent="Console/ConnectBox/Row/Box/Margins/VBox"]
 layout_mode = 2
+mouse_filter = 2
 theme_override_constants/v_separation = 8
 columns = 2
 script = ExtResource("5_snpev")
@@ -131,6 +137,7 @@ script = ExtResource("6_qturd")
 
 [node name="HBox" type="HBoxContainer" parent="Console/ConnectBox/Row/Box/Margins/VBox/Content"]
 layout_mode = 2
+mouse_filter = 2
 
 [node name="ShowPwd" type="CheckBox" parent="Console/ConnectBox/Row/Box/Margins/VBox/Content/HBox"]
 layout_mode = 2
@@ -155,6 +162,7 @@ script = ExtResource("6_qturd")
 
 [node name="_nil" type="Control" parent="Console/ConnectBox/Row/Box/Margins/VBox/Content"]
 layout_mode = 2
+mouse_filter = 2
 
 [node name="ErrorLabel" type="Label" parent="Console/ConnectBox/Row/Box/Margins/VBox/Content"]
 layout_mode = 2
@@ -162,6 +170,7 @@ label_settings = SubResource("LabelSettings_snpev")
 
 [node name="ButtonRow" type="HBoxContainer" parent="Console"]
 layout_mode = 2
+mouse_filter = 2
 
 [node name="ConnectBtn" type="Button" parent="Console/ButtonRow"]
 layout_mode = 2
@@ -179,6 +188,7 @@ text = "Disconnect"
 [node name="ConsoleBox" type="MarginContainer" parent="Console"]
 layout_mode = 2
 size_flags_vertical = 3
+mouse_filter = 2
 theme_override_constants/margin_left = 0
 theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 0
@@ -186,6 +196,7 @@ theme_override_constants/margin_bottom = 0
 
 [node name="ConsoleMargin" type="MarginContainer" parent="Console/ConsoleBox"]
 layout_mode = 2
+mouse_filter = 2
 theme_override_constants/margin_left = 0
 theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 0
@@ -193,10 +204,12 @@ theme_override_constants/margin_bottom = 0
 
 [node name="ConsoleBG" type="PanelContainer" parent="Console/ConsoleBox/ConsoleMargin"]
 layout_mode = 2
+mouse_filter = 2
 theme_type_variation = &"Console_BG"
 
 [node name="Row" type="HBoxContainer" parent="Console/ConsoleBox/ConsoleMargin/ConsoleBG"]
 layout_mode = 2
+mouse_filter = 2
 
 [node name="Console" parent="Console/ConsoleBox/ConsoleMargin/ConsoleBG/Row" instance=ExtResource("2_g5swp")]
 layout_mode = 2
@@ -204,8 +217,18 @@ focus_next = NodePath("../../../../../TypingBar")
 focus_previous = NodePath("../../../../../ButtonRow/DisconnectBtn")
 scroll_to_bottom_on_new_message = true
 
+[node name="PanelContainer" parent="Console/ConsoleBox/ConsoleMargin/ConsoleBG/Row/Console" index="0"]
+mouse_filter = 2
+
+[node name="ScrollContainer" parent="Console/ConsoleBox/ConsoleMargin/ConsoleBG/Row/Console/PanelContainer" index="0"]
+mouse_filter = 2
+
+[node name="PartsContainer" parent="Console/ConsoleBox/ConsoleMargin/ConsoleBG/Row/Console/PanelContainer/ScrollContainer" index="0"]
+mouse_filter = 2
+
 [node name="ConsoleOutline" type="PanelContainer" parent="Console/ConsoleBox/ConsoleMargin" node_paths=PackedStringArray("console")]
 layout_mode = 2
+mouse_filter = 2
 theme_type_variation = &"Console_BG"
 theme_override_styles/panel = SubResource("StyleBoxFlat_fb0jm")
 script = ExtResource("6_cya21")
@@ -221,3 +244,5 @@ caret_blink = true
 
 [connection signal="pressed" from="Console/ButtonRow/ConnectBtn" to="Console/ConnectBox/Row/Box/Margins/VBox/Content" method="try_connection"]
 [connection signal="pressed" from="Console/ButtonRow/DisconnectBtn" to="Console/ConnectBox/Row/Box/Margins/VBox/Content" method="kill_connection"]
+
+[editable path="Console/ConsoleBox/ConsoleMargin/ConsoleBG/Row/Console"]
