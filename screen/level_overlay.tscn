@@ -117,6 +117,7 @@ _data = {
 }
 
 [node name="LevelOverlay" type="CanvasLayer"]
+process_mode = 3
 
 [node name="CrystalFilter" type="ColorRect" parent="."]
 material = SubResource("ShaderMaterial_m1ejn")
