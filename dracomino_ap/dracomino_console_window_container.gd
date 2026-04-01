@@ -32,6 +32,8 @@ func _ready() -> void:
 	focus_entered.connect(_on_give_focus_to_client)
 
 func _on_give_focus_to_client():
+	if not is_visible_in_tree():
+		return
 	var validFocus:Control = find_next_valid_focus()
 	if validFocus: validFocus.grab_focus()
 
