@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://cbff01j4j7q15"
-path="res://.godot/imported/Krub-Bold.ttf-b7b8351d16d41a830ab153334eb9dfb7.fontdata"
+uid="uid://bae7bms4iig3b"
+path="res://.godot/imported/ChakraPetch-Italic.ttf-21a37a357258f44c33206e896f4aa1f9.fontdata"
 
 [deps]
 
-source_file="res://resource/font/Krub-Bold.ttf"
-dest_files=["res://.godot/imported/Krub-Bold.ttf-b7b8351d16d41a830ab153334eb9dfb7.fontdata"]
+source_file="res://resource/font/ChakraPetch-Italic.ttf"
+dest_files=["res://.godot/imported/ChakraPetch-Italic.ttf-21a37a357258f44c33206e896f4aa1f9.fontdata"]
 
 [params]
 
