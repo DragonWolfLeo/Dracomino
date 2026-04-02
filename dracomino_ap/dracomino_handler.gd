@@ -258,18 +258,27 @@ func giveItemCommand(option:String): ## Give you an item using the debug console
 	if item and item.data:
 		notification_signal.emit("Giving item from debug console: %s"%item.data.prettyName, CONSTANTS.COLOR.SPECIAL, true)
 		giveItem(item)
+	else:
+		notification_signal.emit("Failed to give item: %s"%option, CONSTANTS.COLOR.ERROR, true)
 
 func triggerEffectCommand(option:String): ## Triggers an effect immediately
 	var item:StateItem = resolveItem(option)
 	if item and item.data:
+		var success:bool = false
 		match item.data.type:
 			"on_lock", "on_spawn":
-				effectHandler.triggerEffectImmediately(item)
+				success = effectHandler.triggerEffectImmediately(item)
 			"modifier": pass
 			_:
-				printerr("DracominoHandler.triggerEffectCommand: %s is not an effect"%item.data.prettyName)
+				var msg:String = "%s is not an effect"%item.data.prettyName
+				printerr("DracominoHandler.triggerEffectCommand: ", msg)
+				notification_signal.emit("Trigger effect failed: "+msg, CONSTANTS.COLOR.ERROR, true)
 				return
-		notification_signal.emit("Triggering effect: %s"%item.data.prettyName, CONSTANTS.COLOR.SPECIAL, true)
+		if success:
+			notification_signal.emit("Triggering effect: %s"%item.data.prettyName, CONSTANTS.COLOR.SPECIAL, true)
+		else:
+			notification_signal.emit("Trigger effect failed: %s does not meet conditions"%item.data.prettyName, CONSTANTS.COLOR.ERROR, true)
+
 
 func giveItem(item:StateItem):
 	if not item: return

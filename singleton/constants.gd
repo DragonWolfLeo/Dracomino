@@ -14,6 +14,7 @@ class COLOR:
 	static var TRAP =        Color8(0xFF, 0x55, 0x00)
 	static var DEATH =       Color8(0xFF, 0x00, 0x00)
 	static var SPECIAL =     Color8(0x55, 0xAA, 0x00)
+	static var ERROR =       Color8(0xFF, 0x55, 0x00)
 
 # Item + Location Data
 class Data:
