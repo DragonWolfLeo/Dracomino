@@ -31,6 +31,7 @@ var slotContextHash:int:
 var energyLinkEnabled:bool = false ## Static variable. Could probably be put somewhere neater
 var storedMana:float = 0 ## The amount of mana saved. Doesn't do anything yet
 var seedFlagHolder:FlagHolder
+var effectHandler:EffectHandler
 
 var isJustConnected:bool = false
 var VERSION_WARNING_DIALOG_SCENE:PackedScene = load("res://ui/versionwarning_dialog.tscn")
@@ -97,6 +98,9 @@ func _ready() -> void:
 	
 	# Create flag holder
 	resetSeedFlagHolder()
+
+	# Set up effect handler
+	effectHandler = EffectHandler.new()
 
 	# Add Dracomino specific commands
 	DracominoCommandManager.addCommand("GETITEM", giveItemCommand).setArgHint("name")
@@ -260,7 +264,7 @@ func triggerEffectCommand(option:String): ## Triggers an effect immediately
 	if item and item.data:
 		match item.data.type:
 			"on_lock", "on_spawn":
-				SignalBus.getSignal("mode_set_requested", item.data.internalName).emit()
+				effectHandler.triggerEffectImmediately(item)
 			"modifier": pass
 			_:
 				printerr("DracominoHandler.triggerEffectCommand: %s is not an effect"%item.data.prettyName)

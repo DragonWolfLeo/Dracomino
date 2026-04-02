@@ -16,11 +16,14 @@ class Effect:
 	func setTrapSound(enabled:bool = true) -> Effect:
 		playTrapSound = enabled
 		return self
+	func noTrapSound() -> Effect:
+		playTrapSound = false
+		return self
 
 var EFFECTS:Dictionary[StringName, Effect] = {
-	tutorial = Effect.new(_NOOP),
-	logic_tutorial = Effect.new(_NOOP),
-	fishing = Effect.new(setMode.bind("fishing")).setCanTriggerFn(func(): return FlagManager.getTotalCountAmount("shapes_left") >= 2),
+	tutorial = Effect.new(_loadDialogue.bind("tutorial")).noTrapSound(),
+	logic_tutorial = Effect.new(_loadDialogue.bind("tutorial_logic")).noTrapSound(),
+	fishing = Effect.new(_setMode.bind("fishing")).setCanTriggerFn(func(): return FlagManager.getTotalCountAmount("shapes_left") >= 2),
 	egg = Effect.new(_NOOP),
 	welldone = Effect.new(_NOOP),
 	crystal_trap = Effect.new(_NOOP),
@@ -33,9 +36,12 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 	commitment_trap = Effect.new(_NOOP),
 }
 
-# === Static functions ===
-static func setMode(modeName:StringName):
+# === Private functions ===
+func _setMode(modeName:StringName):
 	SignalBus.getSignal("mode_set_requested", modeName).emit()
+
+func _loadDialogue(dialogue:Variant):
+	DialogueManager.loadDialogue(dialogue)
 
 #  === Functions ===
 func hasEffectsBuffered() -> bool:
@@ -47,11 +53,15 @@ func on_board_reset() -> void:
 	bufferedEffects.append_array(deferredEffects)
 	deferredEffects.clear()
 
+func fullClear() -> void: ## To be used when loading a new seed
+	bufferedEffects.clear()
+	deferredEffects.clear()
+
 func bufferEffect(stateItem:DracominoHandler.StateItem) -> void:
 	if stateItem and not bufferedEffects.has(stateItem):
 		bufferedEffects.append(stateItem)
 
-func tryToTriggerNextEffect() -> DracominoHandler.StateItem: ## true = success, false = failure
+func tryToTriggerNextEffect() -> DracominoHandler.StateItem: ## Returns triggered state item on success
 	if bufferedEffects.size():
 		var popped:DracominoHandler.StateItem = bufferedEffects.pop_front() as DracominoHandler.StateItem
 		if popped and popped.data:
@@ -66,3 +76,14 @@ func tryToTriggerNextEffect() -> DracominoHandler.StateItem: ## true = success, 
 					deferredEffects.append(popped)
 					return tryToTriggerNextEffect()
 	return null
+
+func triggerEffectImmediately(stateItem:DracominoHandler.StateItem) -> bool: ## Returns true on success
+	if stateItem and stateItem.data:
+		var fx:Effect = EFFECTS.get(stateItem.data.internalName)
+		if fx:
+			if fx.canTriggerFn.call():
+				fx.triggerFn.call()
+				if fx.playTrapSound:
+					SoundManager.play("trap")
+				return true
+	return false
