@@ -120,6 +120,8 @@ func retrieve():
 	reset(false)
 
 func startCharge():
+	if frame == CHARGE_FRAME:
+		return
 	if tween: tween.kill()
 	frame = CHARGE_FRAME
 	casted = false
