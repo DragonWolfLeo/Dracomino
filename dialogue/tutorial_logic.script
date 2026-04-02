@@ -11,7 +11,7 @@
 // ** Example - A 2-wide column extends up 15 lines. On top of it, 2 lines are filled. The bottom 5 lines are filled with ghost blocks, representing 5 lines worth of blocks are used **
 : Even though this is possible, [b]it's not part of logic at all[/b]. Players are not expected to do this.
 : The point: this demonstrates that if players can reach over 10 lines above par, then [b]reaching par isn't a problem[/b].
-: Additionally, the option [b]Max Stacking Height does [i]not[/i] affect line clear locations[/b]. This options is purely for coin locations.
+: Additionally, the option [b]Max Stacking Height does [i]not[/i] affect line clear locations[/b]. This option is purely for coin locations.
 : [Emit progress_tutorial_logic] For coin locations, the coins are in logic when you have enough blocks to form a column of a certain width.
 : [Emit progress_tutorial_logic] Before you have Rotate, the coins in logic can be reached with a 4-wide column up to Max Stacking Height.
 // ** Example - A 4-wide column extends up 15 lines, representing 60 blocks are required for it to be in logic. **
