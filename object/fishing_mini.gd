@@ -29,6 +29,7 @@ var RESET_DURATION:float = 0.3
 var FISHGET_DURATION:float = 3.0
 
 var tween:Tween
+var fishReelTween:Tween
 var fishCaughtTween:Tween:
 	set(value):
 		fishCaughtTween = value
@@ -94,7 +95,7 @@ func retrieve():
 	fishingHook.hooked = null
 	if hooked and hooked.piece:
 		if fishCaughtTween: fishCaughtTween.kill()
-		fishCaughtTween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		fishCaughtTween = hooked.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 		fishCaughtTween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD).set_parallel()
 		fishCaughtTween.tween_property(hooked, "position", camera.position if camera else position, 1.5).from_current()
 		fishCaughtTween.tween_property(hooked, "scale", Vector2(4,4), 1.5).from_current()
@@ -103,7 +104,6 @@ func retrieve():
 		fishCaughtTween.tween_property(hooked, "rotation_degrees", 0, 0.15).from(15).set_ease(Tween.EASE_IN)
 		fishCaughtTween.tween_property(hooked, "rotation_degrees", -30, 0.15).from(0).set_ease(Tween.EASE_OUT)
 		fishCaughtTween.tween_property(hooked, "rotation_degrees", 0, 0.25).from(-30).set_ease(Tween.EASE_IN_OUT)
-		hooked.tree_exiting.connect(fishCaughtTween.kill)
 		hooked.z_index = 3
 		SoundManager.play("fishget")
 		DialogueManager.showNotification("You just caught a {name}!".format({name = hooked.piece.prettyName}))
@@ -137,6 +137,15 @@ func startReel():
 	frame = CHARGE_FRAME
 	tween = create_tween()
 	tween.tween_method(reel, 1.0, 0.0, REEL_DURATION).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	
+	if fishingHook.hooked:
+		var hooked:FishPiece = fishingHook.hooked
+		if fishReelTween: fishReelTween.kill()
+		fishReelTween = hooked.create_tween().set_trans(Tween.TRANS_QUAD)
+		fishReelTween.tween_property(hooked, "rotation_degrees", 10, 0.1).from_current().set_ease(Tween.EASE_IN)
+		fishReelTween.tween_property(hooked, "rotation_degrees", 0, 0.05).from(10).set_ease(Tween.EASE_IN)
+		fishReelTween.tween_property(hooked, "rotation_degrees", -10, 0.05).from(0).set_ease(Tween.EASE_OUT)
+		fishReelTween.tween_property(hooked, "rotation_degrees", 0, 0.1).from(-10).set_ease(Tween.EASE_IN_OUT)
 
 func reel(amount:float):
 	fishingHook.velocity += fishingHook.position.direction_to(fishingRodMarker_idle.position) * REEL_ACCELERATION * amount
