@@ -244,6 +244,7 @@ func _on_dialogue_started():
 
 func _on_dialogue_ended():
 	Overlay.hideImage()
+	Overlay.hideCutscene()
 	var tween = create_tween()
 	tween.tween_property(self, "modulate", Color(1,1,1,0), 0.05).from_current()
 	await tween.finished
