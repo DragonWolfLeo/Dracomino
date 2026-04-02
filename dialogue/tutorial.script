@@ -233,27 +233,4 @@ Mini: Oh! And if you ever want my help again, press the F1 button! I'm always ha
 [SetWorldFlag tutorial]
 [End]
 
-[State LogicTutorial]
-: In Dracomino, the locations you're expected to reach depends on the Rotate ability and the total amount of blocks your pieces make up.
-: Line clears are [b]not in logic until you have the ability to rotate[/b].
-: In a solo game, you can expect to find Rotate at a coin location in your first 20 lines.
-: For line clears, the number of lines you can fill with your blocks is the number of lines in logic.
-** Example - 8 rows of lines representing available blocks. 8 lines worth of blocks make 8 lines in logic **
-: The option [b]Line Clear Leniency[/b] will require additional lines worth of blocks for a line clear location to be in logic, making the requirement less strict.
-** Example - 10 rows of lines representing available blocks. 2 of those lines represent leniency. 10 lines worth of blocks makes 8 lines in logic **
-: The logic may seem strict at first, especially dealing with imperfect placement of various shapes, but it's actually lenient.
-: Stacking pieces can allow you to reach lines higher. You can reach above 10 lines above par with this method.
-** Example - A 2-wide column extends up 15 lines. On top of it, 2 lines are filled. The bottom 5 lines are filled with ghost blocks, representing 5 lines worth of blocks are used **
-: Even though this is possible, [b]it's not part of logic at all[/b]. Players are not expected to do this.
-: The point: this demonstrates that if players can reach over 10 lines above par, then [b]reaching par isn't a problem[/b].
-: Additionally, the option [b]Max Stacking Height does [i]not[/i] affect line clear locations[/b]. This options is purely for coin locations.
-: For coin locations, the coins are in logic when you have enough blocks to form a column of a certain width.
-: Before you have Rotate, the coins in logic can be reached with a 4-wide column up to Max Stacking Height.
-** Example - A 4-wide column extends up 15 lines, representing 60 blocks are required for it to be in logic. **
-: When you have Rotate, the coins in logic can be reached with a 2-wide column up to Max Stacking Height.
-** Example - A 2-wide column extends up 15 lines, representing 30 blocks are required for it to be in logic. **
-: The option [b]Max Stacking Height[/b] determines how high you may need to stack to reach coins.
-** Example - 5 rows of lines are filled. On top, a 2-wide column extends 10 lines representing a max stacking height of 10. A total 70 blocks are required for this coin to be in logic. **
-: Lowering Max Stacking Height will increase the number of blocks needed for coins to be in logic, making the game less strict.
-** Example - 14 rows of lines are filled. On top, a 2-wide column extends 1 line, representing a max stacking height of 1. A total of 142 blocks are required for this coin to be in logic **
 

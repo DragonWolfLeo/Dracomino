@@ -35,7 +35,7 @@ func _on_btnTutorial_pressed() -> void:
 
 func _on_btnLogic_pressed() -> void:
 	if not DialogueManager.dialogue:
-		DialogueManager.loadDialogue(load("res://dialogue/tutorial.script"), "LogicTutorial")
+		DialogueManager.loadDialogue(load("res://dialogue/tutorial_logic.script"))
 
 func _on_btnRestart_pressed() -> void:
 	SignalBus.getSignal("restartGame").emit()
