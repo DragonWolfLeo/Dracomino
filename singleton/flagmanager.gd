@@ -181,10 +181,12 @@ func count(countSetId:String, key = null, weight = null, add := false):
 func _on_stateflags_aboutToDirty(flags, source:FlagHolder):
 	var flagWasSet = {}
 	var flagPrevValue = {}
+	var flagTotalCount = {}
 	# Store previous state of to-become-dirty flags
 	for flag in flags:
 		flagWasSet[flag] = _isFlagSet_basic(flag)
 		flagPrevValue[flag] = getFlagValue(flag)
+		flagTotalCount[flag] = getTotalCountAmount(flag)
 	await source.stateflags_dirty
 	# Emit registeredSignals for what actually happened
 	for flag in flags:
@@ -194,5 +196,5 @@ func _on_stateflags_aboutToDirty(flags, source:FlagHolder):
 		elif flagWasSet[flag]:
 			stateflag_cleared.emit(flag)
 		
-		if flagPrevValue[flag] != getFlagValue(flag):
+		if flagPrevValue[flag] != getFlagValue(flag) or flagTotalCount[flag] != getTotalCountAmount(flag):
 			stateflag_changed.emit(flag)
