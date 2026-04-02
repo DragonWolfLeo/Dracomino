@@ -62,6 +62,8 @@ func bufferEffect(stateItem:DracominoHandler.StateItem) -> void:
 		bufferedEffects.append(stateItem)
 
 func tryToTriggerNextEffect() -> DracominoHandler.StateItem: ## Returns triggered state item on success
+	if FlagManager.isFlagSet("gameover"):
+		return null
 	if bufferedEffects.size():
 		var popped:DracominoHandler.StateItem = bufferedEffects.pop_front() as DracominoHandler.StateItem
 		if popped and popped.data:
@@ -78,6 +80,8 @@ func tryToTriggerNextEffect() -> DracominoHandler.StateItem: ## Returns triggere
 	return null
 
 func triggerEffectImmediately(stateItem:DracominoHandler.StateItem) -> bool: ## Returns true on success
+	if FlagManager.isFlagSet("gameover"):
+		return false
 	if stateItem and stateItem.data:
 		var fx:Effect = EFFECTS.get(stateItem.data.internalName)
 		if fx:
