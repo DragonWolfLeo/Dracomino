@@ -13,10 +13,11 @@ shadow_size = 6
 shadow_offset = Vector2(2, 4)
 
 [node name="Overlay" type="CanvasLayer"]
-layer = 3
+layer = 4
 script = ExtResource("1_8fhn2")
 
 [node name="Faders" type="CanvasLayer" parent="."]
+layer = 5
 
 [node name="Black" type="ColorRect" parent="Faders"]
 visible = false
@@ -90,6 +91,6 @@ mouse_filter = 2
 color = Color(0.262745, 0.262745, 0.262745, 1)
 
 [node name="CutsceneContainer" type="CanvasLayer" parent="."]
-layer = 0
+layer = 3
 
 [connection signal="gui_input" from="FocusMask" to="." method="_on_focus_mask_gui_input"]

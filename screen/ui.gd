@@ -2,7 +2,6 @@ class_name UI extends CanvasLayer
 
 signal state_changed(state)
 
-@onready var hud = $HUD
 @onready var pauseScreen = $PauseScreen
 @onready var dialogueScreen = $DialogueScreen
 @onready var debugScreen = $DebugScreen
@@ -24,7 +23,6 @@ var DRACOMINO_NOTIFICATION_TIME:float = 5.0
 var DRACOMINO_NOTIFICATION_TIME_SHORT:float = 1.0
 
 @onready var allowedScreens = {
-	hud: STATES.NORMAL | STATES.PAUSE | STATES.GAMEOVER | STATES.NOT_FOCUSED,
 	pauseScreen: STATES.PAUSE | STATES.GAMEOVER | STATES.NOT_FOCUSED,
 	dialogueScreen: STATES.DIALOGUE,
 	debugScreen: STATES.DEBUG,
