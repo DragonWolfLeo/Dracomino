@@ -126,7 +126,7 @@ Mini: On a keyboard, the Shift and Space keys both do this. On a controller, it'
 [always]
 Mini: Then press {HOLD} again to take it back out. You can also use the number keys to take out just the one you need. Or use the right stick if you're on a controller.
 Mini: But be warned: once you take out of storage again, you can't put it back! So only take it out when you're sure you need it. Or if your current piece is that bad.
-Mini: Well... no Dracomino is bad. Every single one of them is important! Do your best to find a place for each one!
+Mini: Oh... Pardon me. There's no such thing as a bad Dracomino. All Dracominos are important, and we need every single one of them! Do your best to find a place for each one!
 [SetWorldFlag explained_hold]
 [ClearWorldFlag prev_no_hold]
 
