@@ -118,11 +118,12 @@ collision_mask = 0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/Bottom Boundary"]
 shape = SubResource("WorldBoundaryShape2D_4n6dk")
 
-[node name="FishingMini" type="Sprite2D" parent="."]
+[node name="FishingMini" type="Sprite2D" parent="." node_paths=PackedStringArray("camera")]
 position = Vector2(21, 105)
 texture = ExtResource("4_4n6dk")
 hframes = 3
 script = ExtResource("5_wbdmp")
+camera = NodePath("../Camera2D")
 
 [node name="FishingRodMarker_Idle" type="Marker2D" parent="FishingMini"]
 unique_name_in_owner = true

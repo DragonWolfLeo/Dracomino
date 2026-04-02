@@ -19,6 +19,8 @@ var collisionWait:float
 var time:float
 var waveFrequency:float = 5
 var waveAmplitude:float = 3
+var setupCompleted:bool = false
+var tileMapOffset:Vector2
 
 @onready var tileMapLayer:TileMapLayer = $TileMapLayer
 
@@ -31,19 +33,22 @@ func _ready() -> void:
 
 	await get_tree().process_frame
 	# Copy tile collision into the collision body
-	var cells = tileMapLayer.get_used_cells()
-	for cell in cells:
+	var cells:Array[Vector2i] = tileMapLayer.get_used_cells()
+	for cell:Vector2i in cells:
 		var data:TileData = tileMapLayer.get_cell_tile_data(cell) 
 		var points:PackedVector2Array = data.get_collision_polygon_points(0, 0) 
 		var collisionShape = CollisionPolygon2D.new()  
 		collisionShape.polygon = points
 		
-		collisionShape.position = tileMapLayer.map_to_local(cell)
+		collisionShape.position = tileMapLayer.map_to_local(cell) + tileMapLayer.position
 		add_child(collisionShape)
+	
+	setupCompleted = true
 
 func _physics_process(delta: float) -> void:
+	# if not setupCompleted: return
 	time += delta
-	tileMapLayer.position.y = waveAmplitude*sin(time*waveFrequency)
+	tileMapLayer.position.y = waveAmplitude*sin(time*waveFrequency) + tileMapOffset.y
 	var col := move_and_collide(direction*speed*delta)
 	if col:
 		set_physics_process(false)
@@ -61,6 +66,10 @@ func renderPiece():
 	if tileMapLayer:
 		for pos:Vector2i in piece.localCells:
 			tileMapLayer.set_cell(pos, 0, Vector2i(piece.id, Board.ACTIVE_TILE_ATLAS_ROW))
+		# Center piece
+		var rect:Rect2 = Rect2(tileMapLayer.get_used_rect())
+		tileMapOffset = -rect.get_center() * Vector2(tileMapLayer.tile_set.tile_size)
+		tileMapLayer.position += tileMapOffset
 	else:
 		printerr("FishPiece.renderPiece: tileMapLayer is null for some reason")
 

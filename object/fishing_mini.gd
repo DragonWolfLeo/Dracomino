@@ -9,6 +9,8 @@ enum {
 signal piece_caught(piece:Piece)
 signal nothing_caught()
 
+@export var camera:Node2D
+
 @onready var staminaBar:ProgressBar = %FishingStaminaBar
 @onready var fishingHook:FishingHook = %FishingHook
 @onready var fishingRodMarker_idle:Marker2D = %FishingRodMarker_Idle
@@ -24,8 +26,13 @@ var REEL_ACCELERATION:float = 20
 var REEL_DURATION:float = 3.0
 var CHARGE_DURATION:float = 1.5
 var RESET_DURATION:float = 0.3
+var FISHGET_DURATION:float = 3.0
 
 var tween:Tween
+var fishCaughtTween:Tween:
+	set(value):
+		fishCaughtTween = value
+		set_process_input(fishCaughtTween == null)
 var currentCharge:float = 0.0:
 	set(value):
 		currentCharge = value
@@ -69,6 +76,7 @@ func _process(delta: float) -> void:
 # === Functions ===
 func reset(immediate:bool = true):
 	if tween: tween.kill()
+	if fishCaughtTween: fishCaughtTween.kill()
 	staminaBar.hide()
 	staminaBar.value = 0
 	casted = false
@@ -85,7 +93,28 @@ func retrieve():
 	var hooked:FishPiece = fishingHook.hooked
 	fishingHook.hooked = null
 	if hooked and hooked.piece:
-		piece_caught.emit(hooked.piece)
+		if fishCaughtTween: fishCaughtTween.kill()
+		fishCaughtTween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		fishCaughtTween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD).set_parallel()
+		fishCaughtTween.tween_property(hooked, "position", camera.position if camera else position, 1.5).from_current()
+		fishCaughtTween.tween_property(hooked, "scale", Vector2(4,4), 1.5).from_current()
+		fishCaughtTween.set_parallel(false)
+		fishCaughtTween.tween_property(hooked, "rotation_degrees", 15, 0.2).from_current().set_ease(Tween.EASE_IN)
+		fishCaughtTween.tween_property(hooked, "rotation_degrees", 0, 0.15).from(15).set_ease(Tween.EASE_IN)
+		fishCaughtTween.tween_property(hooked, "rotation_degrees", -30, 0.15).from(0).set_ease(Tween.EASE_OUT)
+		fishCaughtTween.tween_property(hooked, "rotation_degrees", 0, 0.25).from(-30).set_ease(Tween.EASE_IN_OUT)
+		hooked.tree_exiting.connect(fishCaughtTween.kill)
+		hooked.z_index = 3
+		SoundManager.play("fishget")
+		DialogueManager.showNotification("You just caught a {name}!".format({name = hooked.piece.prettyName}))
+		await DialogueManager.dialogue_ended
+		fishCaughtTween.kill()
+		fishCaughtTween = null
+		# Since we waited, check again the fish is still there
+		if hooked:
+			piece_caught.emit(hooked.piece)
+		else:
+			nothing_caught.emit()
 	else:
 		nothing_caught.emit()
 	reset(false)
