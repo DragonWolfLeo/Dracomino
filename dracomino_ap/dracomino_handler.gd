@@ -98,6 +98,10 @@ func _ready() -> void:
 	# Create flag holder
 	resetSeedFlagHolder()
 
+	# Add Dracomino specific commands
+	DracominoCommandManager.addCommand("GETITEM", giveItemCommand).setArgHint("name")
+	DracominoCommandManager.addCommand("TRIGGEREFFECT", triggerEffectCommand).setArgHint("name")
+
 #===== Functions =====
 func reset():
 	currentIndex = 0
@@ -231,8 +235,40 @@ func upgradeFeatures(generatedVersion:String = "0.0.0"): ## Add new features to 
 	if upgradeResult.retrofitted.size():
 		# TODO: This is an important message and probably should be forced to last longer
 		notification_signal.emit("Retrofitted {items} into your game!".format({items=" and ".join(upgradeResult.retrofitted)}), CONSTANTS.COLOR.SPECIAL, false)
-		
-func getItem(item:StateItem):
+
+func resolveItem(option:String) -> StateItem:
+	var item:StateItem
+	if CONSTANTS.ITEM_NAME_TO_ID.has(option):
+		return StateItem.fromInternalName(option)
+
+	option = option.to_lower()
+	for id in CONSTANTS.ITEMS:
+		if CONSTANTS.ITEMS[id].prettyName.to_lower() == option:
+			return StateItem.fromId(id)
+
+	printerr("DracominoHandler.resolveItem: could not resolve item \"%s\""%option)
+	return null
+
+func giveItemCommand(option:String): ## Give you an item using the debug console
+	var item:StateItem = resolveItem(option)
+	if item and item.data:
+		notification_signal.emit("Giving item from debug console: %s"%item.data.prettyName, CONSTANTS.COLOR.SPECIAL, true)
+		giveItem(item)
+
+func triggerEffectCommand(option:String): ## Triggers an effect immediately
+	var item:StateItem = resolveItem(option)
+	if item and item.data:
+		match item.data.type:
+			"cutscene":
+				SignalBus.getSignal("mode_set_requested", item.data.internalName).emit()
+			"modifier": pass
+			"effect": pass
+			_:
+				printerr("DracominoHandler.triggerEffectCommand: %s is not an effect"%item.data.prettyName)
+				return
+		notification_signal.emit("Triggering effect: %s"%item.data.prettyName, CONSTANTS.COLOR.SPECIAL, true)
+
+func giveItem(item:StateItem):
 	if not item: return
 	collectedItems.append(item)
 	if item.data:
@@ -433,7 +469,7 @@ func _on_obtained_item(item: NetworkItem):
 				.format({source=Archipelago.conn.get_player_name(item.src_player_id), item=item.get_name()}), color, false
 			)
 	var si:StateItem = StateItem.fromNetworkItem(item)
-	getItem(si)
+	giveItem(si)
 
 func _on_on_hint_update(hints: Array[NetworkHint]):
 	if hints.size():
