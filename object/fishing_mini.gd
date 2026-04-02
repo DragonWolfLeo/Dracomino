@@ -95,11 +95,13 @@ func retrieve():
 	var hooked:FishPiece = fishingHook.hooked
 	fishingHook.hooked = null
 	if hooked and hooked.piece:
+		# Make the fishpiece zoom to the center of the screen
 		if fishCaughtTween: fishCaughtTween.kill()
 		fishCaughtTween = hooked.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 		fishCaughtTween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD).set_parallel()
 		fishCaughtTween.tween_property(hooked, "position", camera.position if camera else position, 1.5).from_current()
 		fishCaughtTween.tween_property(hooked, "scale", Vector2(4,4), 1.5).from_current()
+		fishCaughtTween.tween_property(hooked, "rotation_degrees", 0, 1.5).from_current()
 		fishCaughtTween.set_parallel(false)
 		fishCaughtTween.tween_property(hooked, "rotation_degrees", 15, 0.2).from_current().set_ease(Tween.EASE_IN)
 		fishCaughtTween.tween_property(hooked, "rotation_degrees", 0, 0.15).from(15).set_ease(Tween.EASE_IN)
@@ -143,10 +145,10 @@ func startReel():
 		var hooked:FishPiece = fishingHook.hooked
 		# Apply a random force at a random direction anywhere from up clockwise to down+left
 		var force:Vector2 = Vector2.from_angle(randf_range(-PI/2, PI*3/4)) * randf() * hooked.speed
-		# force = Vector2.from_angle(randf_range(0, 2*PI)) * 5
 		var resistTween:Tween = hooked.create_tween()
 		resistTween.tween_method(resist.bind(force), 1.0, 0.0, RESIST_DURATION).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_QUAD)
 
+		# Wiggle when you reel
 		if fishReelTween: fishReelTween.kill()
 		fishReelTween = hooked.create_tween().set_trans(Tween.TRANS_QUAD)
 		fishReelTween.tween_property(hooked, "rotation_degrees", 10, 0.1).from_current().set_ease(Tween.EASE_IN)
