@@ -24,6 +24,7 @@ var RETRIEVE_DIST_SQ:float = 50*50
 var THROW_VELOCITY:Vector2 = Vector2(150, -150)
 var REEL_ACCELERATION:float = 20
 var REEL_DURATION:float = 3.0
+var RESIST_DURATION:float = 2.5
 var CHARGE_DURATION:float = 1.5
 var RESET_DURATION:float = 0.3
 var FISHGET_DURATION:float = 3.0
@@ -140,15 +141,28 @@ func startReel():
 	
 	if fishingHook.hooked:
 		var hooked:FishPiece = fishingHook.hooked
+		# Apply a random force at a random direction anywhere from up clockwise to down+left
+		var force:Vector2 = Vector2.from_angle(randf_range(-PI/2, PI*3/4)) * randf() * hooked.speed
+		# force = Vector2.from_angle(randf_range(0, 2*PI)) * 5
+		var resistTween:Tween = hooked.create_tween()
+		resistTween.tween_method(resist.bind(force), 1.0, 0.0, RESIST_DURATION).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_QUAD)
+
 		if fishReelTween: fishReelTween.kill()
 		fishReelTween = hooked.create_tween().set_trans(Tween.TRANS_QUAD)
 		fishReelTween.tween_property(hooked, "rotation_degrees", 10, 0.1).from_current().set_ease(Tween.EASE_IN)
+		fishReelTween.tween_property(hooked, "rotation_degrees", 0, 0.05).from(10).set_ease(Tween.EASE_IN)
+		fishReelTween.tween_property(hooked, "rotation_degrees", -10, 0.05).from(0).set_ease(Tween.EASE_OUT)
+		fishReelTween.tween_property(hooked, "rotation_degrees", 0, 0.05).from(-10).set_ease(Tween.EASE_IN)
+		fishReelTween.tween_property(hooked, "rotation_degrees", 10, 0.05).from(0).set_ease(Tween.EASE_IN)
 		fishReelTween.tween_property(hooked, "rotation_degrees", 0, 0.05).from(10).set_ease(Tween.EASE_IN)
 		fishReelTween.tween_property(hooked, "rotation_degrees", -10, 0.05).from(0).set_ease(Tween.EASE_OUT)
 		fishReelTween.tween_property(hooked, "rotation_degrees", 0, 0.1).from(-10).set_ease(Tween.EASE_IN_OUT)
 
 func reel(amount:float):
 	fishingHook.velocity += fishingHook.position.direction_to(fishingRodMarker_idle.position) * REEL_ACCELERATION * amount
+
+func resist(amount:float, force:Vector2):
+	fishingHook.velocity += force * amount
 
 func stopReel():
 	if tween: tween.kill()
