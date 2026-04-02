@@ -89,7 +89,8 @@ var origin:Vector2i
 var id:int
 var prettyName:String = "Piece"
 var context:DracominoHandler.StateItem = null
-var cutscene:DracominoHandler.StateItem = null
+var onLockEffect:DracominoHandler.StateItem = null
+var onSpawnEffect:DracominoHandler.StateItem = null
 var modifier:DracominoHandler.StateItem = null
 var moveLock:bool = false: ## Prevent moving this anymore
 	set(value):
@@ -200,9 +201,9 @@ func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects
 		origin = pieceDefinition.offset
 		context = pieceContext
 		canRotate = pieceDefinition.canRotate
-		cutscene = effects.get("cutscene")
+		onLockEffect = effects.get("on_lock")
+		onSpawnEffect = effects.get("on_spawn")
 		modifier = effects.get("modifier")
-		# TODO: Do something fo effect too
 	else:
 		printerr("Piece.setPiece:", pieceName, " does not exist!")
 		queue_free()

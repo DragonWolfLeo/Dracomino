@@ -58,8 +58,7 @@ var linesCleared:int = 0:
 		if flagHolder: flagHolder.setFlag("lines_cleared", linesCleared)
 		linesCleared_updated.emit(linesCleared)
 var flagHolder:FlagHolder
-var bufferedCutscenes:Array[DracominoHandler.StateItem] = []
-var deferredCutscenes:Array[DracominoHandler.StateItem] = [] ## Cutscenes saved for when you restart because it wasn't a good time
+var effectHandler:EffectHandler
 
 var _lastHeldPieceContext:DracominoHandler.StateItem ## For deathlink message context; TODO: Obsolete
 
@@ -127,11 +126,18 @@ static func mergeCells(destination:Array[Vector2i], cells:Array[Vector2i]) -> vo
 
 #===== Virtuals ======
 func _ready():
+	# Set up flag holder
 	resetFlagHolder()
-	masterCoin.visible = false # Master coin is just a reference for the rest of the coins and should be hidden
+	# Set up effect handler
+	effectHandler = EffectHandler.new()
+	add_child(effectHandler)
+	 # Master coin is just a reference for the rest of the coins and should be hidden 
+	masterCoin.visible = false
+	# Set up input timers
 	inputTimer = ActivityTimer.new(); add_child(inputTimer)
 	inputTimer.afk_threshold = 10.0
 	pieceTimer = ActivityTimer.new(); add_child(pieceTimer)
+	#
 	game_started.emit.call_deferred()
 	
 	Archipelago.connected.connect(_on_connected)
@@ -199,17 +205,9 @@ func processClearingChunk(chunk:ClearingChunk) -> void:
 	)
 
 func checkForEvent():
-	if bufferedCutscenes.size():
-		var popped:DracominoHandler.StateItem = bufferedCutscenes.pop_front() as DracominoHandler.StateItem
-		if popped.data:
-			if DracominoUtil.canRunCutscene(popped):
-				SignalBus.getSignal("mode_set_requested", popped.data.internalName).emit()
-				SoundManager.play("trap")
-				effect_activated.emit(popped)
-			else:
-				deferredCutscenes.append(popped)
-				checkForEvent()
-			return
+	var nextEffect = effectHandler.tryToTriggerNextEffect()
+	if nextEffect:
+		effect_activated.emit(nextEffect)
 	requestPiece()
 
 func requestPiece(allowMultiplePieces:bool = false):
@@ -220,7 +218,7 @@ func requestPiece(allowMultiplePieces:bool = false):
 		or isTopRowFull() # No making piece when top row is full
 	):
 		return
-	if bufferedCutscenes.size():
+	if effectHandler.bufferedEffects.size():
 		if clearingChunks.size():
 			return
 		checkForEvent()
@@ -524,9 +522,7 @@ func resetGame():
 	rotate_random.state = rotate_randomSaveState
 	clearingChunks.clear()
 	resetFlagHolder()
-	bufferedCutscenes.clear()
-	bufferedCutscenes.append_array(deferredCutscenes)
-	deferredCutscenes.clear()
+	effectHandler.on_board_reset()
 
 	# Clear board
 	activatedTileHandler.clear()
@@ -552,8 +548,7 @@ func lockPiece(piece:Piece):
 	if pickedUpItem:
 		SoundManager.play("itempickup")
 	
-	if piece.cutscene:
-		bufferedCutscenes.append(piece.cutscene)
+	effectHandler.bufferedEffects.append(piece.onLockEffect)
 	boardIsFresh = false
 	
 	if not isGameOver:

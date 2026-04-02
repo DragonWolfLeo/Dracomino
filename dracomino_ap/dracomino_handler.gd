@@ -143,7 +143,7 @@ func getNextPiece() -> Dictionary:
 	for fx:StateItem in _effectBuffer.duplicate():
 		var item := CONSTANTS.ITEMS[fx.id]
 		match item.type:
-			"cutscene", "modifier", "effect":
+			"on_lock", "modifier", "on_spawn":
 				if not effects.get(item.type):
 					effects[item.type] = fx
 					_effectBuffer.erase(fx)
@@ -162,7 +162,7 @@ func getNextPiece() -> Dictionary:
 						stateItem = stateItem,
 						effects = effects,
 					}
-				"cutscene", "modifier", "effect":
+				"on_lock", "modifier", "on_spawn":
 					if effects.get(item.type):
 						_effectBuffer.append(stateItem)
 					else:
@@ -259,10 +259,9 @@ func triggerEffectCommand(option:String): ## Triggers an effect immediately
 	var item:StateItem = resolveItem(option)
 	if item and item.data:
 		match item.data.type:
-			"cutscene":
+			"on_lock", "on_spawn":
 				SignalBus.getSignal("mode_set_requested", item.data.internalName).emit()
 			"modifier": pass
-			"effect": pass
 			_:
 				printerr("DracominoHandler.triggerEffectCommand: %s is not an effect"%item.data.prettyName)
 				return

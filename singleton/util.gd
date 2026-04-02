@@ -82,10 +82,3 @@ static func getParentMode(node:Node) -> Mode:
 	while node and not node is Mode:
 		node = node.get_parent()
 	return node
-
-static func canRunCutscene(cutsceneItem:DracominoHandler.StateItem) -> bool:
-	if cutsceneItem.data:
-		match cutsceneItem.data.internalName:
-			"fishing": return FlagManager.getTotalCountAmount("shapes_left") >= 2
-			_: return true
-	return false
