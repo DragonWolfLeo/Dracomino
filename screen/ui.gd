@@ -1,4 +1,4 @@
-class_name UI extends CanvasLayer
+class_name UI extends Node
 
 signal state_changed(state)
 
@@ -7,7 +7,6 @@ signal state_changed(state)
 @onready var debugScreen = $DebugScreen
 @onready var dialogueEditWindow:ConfirmationDialog = $DialogueEditWindow
 @onready var dialogueEdit:CodeEdit = $DialogueEditWindow/DialogueEdit
-@onready var notificationLabel:Label = %NotificationLabel
 @onready var centerLabel:Label = %CenterLabel
 
 enum STATES {
@@ -18,9 +17,9 @@ enum STATES {
 	DIALOGUE_EDIT = 1 << 4,
 	GAMEOVER = 1 << 5,
 	NOT_FOCUSED = 1 << 6,
+
+	NOTIFICATION_PAUSE = PAUSE | GAMEOVER | NOT_FOCUSED | DEBUG | DIALOGUE_EDIT
 }
-var DRACOMINO_NOTIFICATION_TIME:float = 5.0
-var DRACOMINO_NOTIFICATION_TIME_SHORT:float = 1.0
 
 @onready var allowedScreens = {
 	pauseScreen: STATES.PAUSE | STATES.GAMEOVER | STATES.NOT_FOCUSED,
@@ -31,12 +30,7 @@ var DRACOMINO_NOTIFICATION_TIME_SHORT:float = 1.0
 
 var state:int = 0: set = changeState
 
-var _timer:SceneTreeTimer
-var _queuedNotifications:Array[Dictionary]
-
 func _ready():
-	notificationLabel.text = ""
-	notificationLabel.hide()
 	changeState(STATES.NORMAL)
 	SignalBus.getSignal("stateflag_set", "gameover").connect(bitsetState.bind(STATES.GAMEOVER))
 	SignalBus.getSignal("stateflag_cleared", "gameover").connect(bitclearState.bind(STATES.GAMEOVER))
@@ -61,7 +55,7 @@ func changeState(_state: int):
 	if _state == state: return
 	state = _state # Set this here to avoid race conditions
 	for screen:Node in allowedScreens.keys():
-		if allowedScreens[screen] & _state:
+		if allowedScreens[screen] & state:
 			if screen is Window:
 				var window:Window = screen as Window
 				if not window.visible: window.popup()
@@ -70,31 +64,26 @@ func changeState(_state: int):
 			if screen.has_method("hide"): screen.hide()
 	
 	# Control the pausing here
-	get_tree().paused = not bool(_state & STATES.NORMAL)
+	get_tree().paused = not bool(state & STATES.NORMAL)
+
+	# Set flag for a form of pausing just for notification layer
+	if state & STATES.NOTIFICATION_PAUSE:
+		FlagManager.setFlag("notification_pause")
+	else:
+		FlagManager.clearFlag("notification_pause")
 
 	# Set pause screen message
-	if _state & STATES.NOT_FOCUSED:
+	if state & STATES.NOT_FOCUSED:
 		centerLabel.text = "FOCUS LOST"
-	elif _state & STATES.GAMEOVER:
+	elif state & STATES.GAMEOVER:
 		centerLabel.text = "GAME OVER"
 	else:
 		centerLabel.text = "PAUSED"
 
 	state_changed.emit(state)
 
-func showNotification(notif:String, color:Color) -> void:
-	if _timer and _timer.timeout.is_connected(_on_timer_timeout):
-		_timer.timeout.disconnect(_on_timer_timeout)
-		_timer = null
-	if notificationLabel:
-		notificationLabel.show()
-		notificationLabel.text = notif
-		notificationLabel.label_settings.font_color = color
-		_timer = get_tree().create_timer(DRACOMINO_NOTIFICATION_TIME_SHORT if _queuedNotifications.size() else DRACOMINO_NOTIFICATION_TIME, false)
-		_timer.timeout.connect(_on_timer_timeout)
-
 # === Events ===
-func _input(event):
+func _unhandled_input(event):
 	# Regular commands
 	if state & STATES.NORMAL:
 		if event.is_action_pressed("start"):
@@ -185,32 +174,3 @@ func _on_DialogueEdit_hidden() -> void:
 func _on_DialogueEditWindow_window_input(event:InputEvent) -> void:
 	if event.is_action_pressed("edit"):
 		bitclearState(STATES.DIALOGUE_EDIT)
-
-func _on_DracominoHandler_notification_signal(notif:String, color:Color, force:bool = false) -> void:
-	if _timer and not force:
-		_timer.time_left = min(DRACOMINO_NOTIFICATION_TIME_SHORT, _timer.time_left)
-		_queuedNotifications.append({
-			notif = notif,
-			color = color,
-		})
-	else:
-		showNotification(notif, color)
-
-func _on_timer_timeout():
-	if _queuedNotifications.size():
-		var qn:Dictionary = _queuedNotifications.pop_front()
-		showNotification(qn.notif, qn.color)
-	else:
-		notificationLabel.hide()
-		_timer = null
-
-func _on_Board_effect_activated(item: DracominoHandler.StateItem) -> void:
-	var formatValues:Dictionary = {
-		itemName = item.data.prettyName if item.data else &"Unknown Effect",
-		senderName = item.senderName,
-		gameName = item.gameName,
-	}
-	if item.isLocal:
-		showNotification("Triggered your own {itemName}!".format(formatValues), CONSTANTS.COLOR.TRAP)
-	else:
-		showNotification("Triggered {itemName} from {senderName}'s {gameName}!".format(formatValues), CONSTANTS.COLOR.TRAP)

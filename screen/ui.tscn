@@ -1,19 +1,10 @@
-[gd_scene load_steps=12 format=3 uid="uid://txbrdml6vs6n"]
+[gd_scene load_steps=8 format=3 uid="uid://txbrdml6vs6n"]
 
 [ext_resource type="Script" uid="uid://dg0isqrradwjk" path="res://screen/ui.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://boh0wdpbpqmkj" path="res://screen/dialogueinterface.tscn" id="2"]
-[ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="2_obcwv"]
 [ext_resource type="FontFile" uid="uid://c8dwaeydyfv6j" path="res://resource/font/PressStart2P-Regular.ttf" id="6_bo1jx"]
 [ext_resource type="PackedScene" uid="uid://07hk2ncr2p3i" path="res://screen/debugconsole.tscn" id="6_om6cd"]
-[ext_resource type="PackedScene" uid="uid://3jevvou6slg2" path="res://screen/overlay.tscn" id="7_bo1jx"]
 [ext_resource type="Script" uid="uid://ddtmdf2fmgdeu" path="res://resource/dialogue_highlighter.gd" id="7_wf7rf"]
-
-[sub_resource type="Theme" id="Theme_gycre"]
-default_font = ExtResource("2_obcwv")
-default_font_size = 12
-
-[sub_resource type="LabelSettings" id="LabelSettings_pa1oa"]
-font_color = Color(1, 1, 0, 1)
 
 [sub_resource type="SyntaxHighlighter" id="SyntaxHighlighter_8wtnh"]
 script = ExtResource("7_wf7rf")
@@ -25,33 +16,8 @@ font_size = 24
 outline_size = 12
 outline_color = Color(0, 0, 0, 1)
 
-[node name="UI" type="CanvasLayer"]
-layer = 2
+[node name="UI" type="Node"]
 script = ExtResource("1")
-
-[node name="HUD" type="CanvasLayer" parent="."]
-layer = 7
-
-[node name="NotificationMargin" type="MarginContainer" parent="HUD"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme = SubResource("Theme_gycre")
-theme_override_constants/margin_top = 30
-theme_override_constants/margin_bottom = 30
-
-[node name="NotificationLabel" type="Label" parent="HUD/NotificationMargin"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(20, 0)
-layout_mode = 2
-size_flags_vertical = 8
-text = "Notification Text"
-label_settings = SubResource("LabelSettings_pa1oa")
-horizontal_alignment = 1
-autowrap_mode = 2
 
 [node name="DialogueScreen" type="CanvasLayer" parent="."]
 layer = 6
@@ -102,9 +68,6 @@ auto_brace_completion_pairs = {
 "[": "]",
 "{": "}"
 }
-
-[node name="Overlay" parent="." instance=ExtResource("7_bo1jx")]
-visible = false
 
 [node name="PauseScreen" type="CanvasLayer" parent="."]
 layer = 7

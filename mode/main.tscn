@@ -1,10 +1,12 @@
-[gd_scene load_steps=15 format=3 uid="uid://c5lm3ikyfckvp"]
+[gd_scene load_steps=17 format=3 uid="uid://c5lm3ikyfckvp"]
 
 [ext_resource type="Script" uid="uid://c5jgcsxvnygnn" path="res://mode/main.gd" id="1_gx2q7"]
 [ext_resource type="PackedScene" uid="uid://txbrdml6vs6n" path="res://screen/ui.tscn" id="2_yivgv"]
 [ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="3_yivgv"]
 [ext_resource type="Script" uid="uid://daewoikmtskpi" path="res://dracomino_ap/dracomino_handler.gd" id="4_d6dmn"]
+[ext_resource type="PackedScene" uid="uid://0ung6f7krjet" path="res://screen/notificationlayer.tscn" id="5_d6dmn"]
 [ext_resource type="Script" uid="uid://b5b036m1pgdbu" path="res://mode/puzzle_mode.gd" id="5_m1ejn"]
+[ext_resource type="PackedScene" uid="uid://3jevvou6slg2" path="res://screen/overlay.tscn" id="5_yivgv"]
 [ext_resource type="PackedScene" uid="uid://ckv6tnuoxlxgw" path="res://screen/level_overlay.tscn" id="6_w0fxs"]
 [ext_resource type="Script" uid="uid://c5w663oymc2oy" path="res://module/hide_with_mode.gd" id="8_jjnvi"]
 [ext_resource type="PackedScene" uid="uid://boraki5ygsa0g" path="res://level/board.tscn" id="8_wule5"]
@@ -47,14 +49,20 @@ canvas_item_default_texture_filter = 3
 size = Vector2i(960, 540)
 render_target_update_mode = 4
 
+[node name="DracominoHandler" type="Node" parent="SubViewport"]
+script = ExtResource("4_d6dmn")
+
 [node name="UI" parent="SubViewport" instance=ExtResource("2_yivgv")]
 unique_name_in_owner = true
 
+[node name="NotificationLayer" parent="SubViewport" instance=ExtResource("5_d6dmn")]
+process_mode = 3
+
+[node name="Overlay" parent="SubViewport" instance=ExtResource("5_yivgv")]
+visible = false
+
 [node name="LevelOverlay" parent="SubViewport" instance=ExtResource("6_w0fxs")]
 process_mode = 1
-
-[node name="DracominoHandler" type="Node" parent="SubViewport"]
-script = ExtResource("4_d6dmn")
 
 [node name="PuzzleMode" type="Control" parent="SubViewport"]
 unique_name_in_owner = true
@@ -245,12 +253,12 @@ modeName = &"dialogue"
 [connection signal="lineMappings_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_line_mappings_updated"]
 [connection signal="missingLines_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_lines_updated"]
 [connection signal="missingPickupCoordinates_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_pickup_coordinates_updated"]
-[connection signal="notification_signal" from="SubViewport/DracominoHandler" to="SubViewport/UI" method="_on_DracominoHandler_notification_signal"]
+[connection signal="notification_signal" from="SubViewport/DracominoHandler" to="SubViewport/NotificationLayer" method="_on_DracominoHandler_notification_signal"]
 [connection signal="slotContextHash_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_slot_context_hash_updated"]
 [connection signal="started" from="SubViewport/DracominoHandler" to="." method="_on_DracominoHandler_started"]
 [connection signal="resized" from="SubViewport/PuzzleMode/SubViewportContainer" to="SubViewport/PuzzleMode" method="_on_SubViewportContainer_resized"]
 [connection signal="deathlink_earned" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_deathlink_earned"]
-[connection signal="effect_activated" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/UI" method="_on_Board_effect_activated"]
+[connection signal="effect_activated" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/NotificationLayer" method="_on_Board_effect_activated"]
 [connection signal="game_started" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_game_started"]
 [connection signal="game_started" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_game_started"]
 [connection signal="item_pickedup" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_item_pickedup"]
