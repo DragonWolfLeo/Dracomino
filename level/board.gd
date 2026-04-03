@@ -235,6 +235,7 @@ func requestPiece(allowMultiplePieces:bool = false):
 			game = poppedPiece.context.gameName,
 		}))
 		spawnPiece(poppedPiece)
+		effectHandler.tryToTriggerEffect(poppedPiece.onSpawnEffect)
 
 func fillPreview(buffer:int = 0): ## This functions usually leads into createPiece being called, if there's pieces available
 	if isGameOver: return
@@ -561,6 +562,8 @@ func lockPiece(piece:Piece):
 				processClearingChunk(chunk)
 
 	deletePiece(piece)
+
+	SignalBus.getSignal("effect_duration_down").emit() # Used to count down effect duration
 
 func getFullRows() -> Array[int]:
 	var fullRows:Array[int] = []

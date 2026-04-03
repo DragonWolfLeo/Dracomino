@@ -91,6 +91,5 @@ mouse_filter = 2
 color = Color(0.262745, 0.262745, 0.262745, 1)
 
 [node name="CutsceneContainer" type="CanvasLayer" parent="."]
-layer = 3
 
 [connection signal="gui_input" from="FocusMask" to="." method="_on_focus_mask_gui_input"]

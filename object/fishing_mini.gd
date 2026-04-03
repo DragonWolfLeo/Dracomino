@@ -95,6 +95,7 @@ func retrieve():
 	var hooked:FishPiece = fishingHook.hooked
 	fishingHook.hooked = null
 	if hooked and hooked.piece:
+		SignalBus.getSignal("effect_duration_down").emit()
 		# Make the fishpiece zoom to the center of the screen
 		if fishCaughtTween: fishCaughtTween.kill()
 		fishCaughtTween = hooked.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)

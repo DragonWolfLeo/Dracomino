@@ -102,6 +102,7 @@ func _ready() -> void:
 
 	# Set up effect handler
 	effectHandler = EffectHandler.new()
+	add_child(effectHandler)
 
 	# Add Dracomino specific commands
 	DracominoCommandManager.addCommand("GETITEM", giveItemCommand).setArgHint("name")
@@ -118,6 +119,8 @@ func reset():
 		lineMappings[i] = i
 
 	lineMappings_updated.emit(lineMappings)
+
+	effectHandler.on_board_reset()
 
 func newSeedReset():
 	print("Resetting everything because new seed!")
