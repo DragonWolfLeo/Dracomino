@@ -7,7 +7,7 @@ var _NOOP:Callable = func(): pass
 class Effect:
 	var triggerFn:Callable
 	var canTriggerFn:Callable = func(): return true
-	var playTrapSound:bool = true
+	var playTrapSound:bool = false
 	func _init(_triggerFn:Callable) -> void:
 		triggerFn = _triggerFn
 	func setCanTriggerFn(fn:Callable) -> Effect:
@@ -21,10 +21,9 @@ class Effect:
 		return self
 
 var EFFECTS:Dictionary[StringName, Effect] = {
-	tutorial = Effect.new(_loadDialogue.bind("tutorial")).noTrapSound(),
-	logic_tutorial = Effect.new(_loadDialogue.bind("tutorial_logic")).noTrapSound(),
+	tutorial = Effect.new(_loadDialogue.bind("tutorial")),
+	logic_tutorial = Effect.new(_loadDialogue.bind("tutorial_logic")),
 	fishing = Effect.new(_setMode.bind("fishing")).setCanTriggerFn(func(): return FlagManager.getTotalCountAmount("shapes_left") >= 2),
-	egg = Effect.new(_NOOP),
 	welldone = Effect.new(_NOOP),
 	crystal_trap = Effect.new(_NOOP),
 	invertcolors_trap = Effect.new(_NOOP),
@@ -69,14 +68,17 @@ func tryToTriggerNextEffect() -> DracominoHandler.StateItem: ## Returns triggere
 		if popped and popped.data:
 			var fx:Effect = EFFECTS.get(popped.data.internalName)
 			if fx:
-				if fx.canTriggerFn.call():
+				if popped.used:
+					return tryToTriggerNextEffect()
+				elif fx.canTriggerFn.call():
 					fx.triggerFn.call()
 					if fx.playTrapSound:
 						SoundManager.play("trap")
+					popped.used = true
 					return popped
 				else:
 					deferredEffects.append(popped)
-					return tryToTriggerNextEffect()
+			return tryToTriggerNextEffect()
 	return null
 
 func triggerEffectImmediately(stateItem:DracominoHandler.StateItem) -> bool: ## Returns true on success

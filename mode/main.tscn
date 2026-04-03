@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://c5lm3ikyfckvp"]
+[gd_scene load_steps=18 format=3 uid="uid://c5lm3ikyfckvp"]
 
 [ext_resource type="Script" uid="uid://c5jgcsxvnygnn" path="res://mode/main.gd" id="1_gx2q7"]
 [ext_resource type="PackedScene" uid="uid://txbrdml6vs6n" path="res://screen/ui.tscn" id="2_yivgv"]
@@ -13,6 +13,7 @@
 [ext_resource type="Script" uid="uid://dutbiv2hgugwn" path="res://module/piecestorage.gd" id="9_3joyb"]
 [ext_resource type="PackedScene" uid="uid://rd6em7cjqrum" path="res://level/fishingboard.tscn" id="10_jc8m0"]
 [ext_resource type="Script" uid="uid://uaf4h6orb4o4" path="res://mode/mode.gd" id="10_jjnvi"]
+[ext_resource type="Script" uid="uid://3hyxsaj4myy1" path="res://module/play_sound_on_visible.gd" id="14_m1ejn"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_gpyk6"]
 font = ExtResource("3_yivgv")
@@ -233,6 +234,10 @@ render_target_update_mode = 0
 
 [node name="FishingBoard" parent="SubViewport/FishingMode/SubViewportContainer/SubViewport" node_paths=PackedStringArray("board") instance=ExtResource("10_jc8m0")]
 board = NodePath("../../../../PuzzleMode/SubViewportContainer/SubViewport/Board")
+
+[node name="PlaySoundOnVisible" type="Node2D" parent="SubViewport/FishingMode"]
+script = ExtResource("14_m1ejn")
+soundName = "trap"
 
 [node name="DialogueMode" type="Control" parent="SubViewport"]
 unique_name_in_owner = true

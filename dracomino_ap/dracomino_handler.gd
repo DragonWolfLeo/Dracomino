@@ -59,6 +59,7 @@ class StateItem:
 	var gameName:String = "game"
 	var isLocal:bool = true
 	var streak:Streak = null
+	var used:bool = false ## Set to true when used as an effect, to prevent using again
 	var data:CONSTANTS.ItemData:
 		get:
 			return CONSTANTS.ITEMS.get(id)
