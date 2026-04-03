@@ -1,13 +1,15 @@
 extends CanvasItem
 
-@export var debugSignalKey:String = ""
-@export var startEnabled:bool = false
+@export var flag:String = ""
 
 func _ready() -> void:
-	if debugSignalKey.length():
-		visible = startEnabled;
-		SignalBus.getSignal(debugSignalKey+"_enabled").connect(_on_enabledSignal)
-		SignalBus.getSignal(debugSignalKey+"_disabled").connect(_on_disabledSignal)
+	var backbuffercopy := BackBufferCopy.new()
+	backbuffercopy.copy_mode = BackBufferCopy.COPY_MODE_VIEWPORT
+	add_child(backbuffercopy)
+	if flag.length():
+		visible = FlagManager.isFlagSet(flag);
+		SignalBus.getSignal("stateflag_set", flag).connect(_on_enabledSignal)
+		SignalBus.getSignal("stateflag_cleared", flag).connect(_on_disabledSignal)
 
 func _on_enabledSignal():
 	show()

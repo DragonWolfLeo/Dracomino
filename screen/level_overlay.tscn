@@ -127,10 +127,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("2_5coou")
-debugSignalKey = "overlay_crystal"
-
-[node name="BackBufferCopy" type="BackBufferCopy" parent="CrystalFilter"]
-copy_mode = 2
+flag = "overlay_crystal"
 
 [node name="PlaySoundOnVisible" type="Node2D" parent="CrystalFilter"]
 script = ExtResource("9_ogaaw")
@@ -145,10 +142,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("2_5coou")
-debugSignalKey = "overlay_pixel"
-
-[node name="BackBufferCopy" type="BackBufferCopy" parent="PixelFilter"]
-copy_mode = 2
+flag = "overlay_pixel"
 
 [node name="PlaySoundOnVisible" type="Node2D" parent="PixelFilter"]
 script = ExtResource("9_ogaaw")
@@ -163,10 +157,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("2_5coou")
-debugSignalKey = "overlay_fracture"
-
-[node name="BackBufferCopy" type="BackBufferCopy" parent="FractureFilter"]
-copy_mode = 2
+flag = "overlay_fracture"
 
 [node name="PlaySoundOnVisible" type="Node2D" parent="FractureFilter"]
 script = ExtResource("9_ogaaw")
@@ -182,10 +173,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("2_5coou")
-debugSignalKey = "overlay_water"
-
-[node name="BackBufferCopy" type="BackBufferCopy" parent="WaterFilter"]
-copy_mode = 2
+flag = "overlay_water"
 
 [node name="PlaySoundOnVisible" type="Node2D" parent="WaterFilter"]
 script = ExtResource("9_ogaaw")
@@ -201,7 +189,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("2_5coou")
-debugSignalKey = "overlay_welldone"
+flag = "overlay_welldone"
 
 [node name="RichTextLabel" type="RichTextLabel" parent="WellDoneFilter"]
 material = ExtResource("6_5uhy6")
@@ -288,9 +276,6 @@ libraries = {
 &"": SubResource("AnimationLibrary_jm7pi")
 }
 autoplay = "wave"
-
-[node name="BackBufferCopy" type="BackBufferCopy" parent="WellDoneFilter"]
-copy_mode = 2
 
 [node name="PlaySoundOnVisible" type="Node2D" parent="WellDoneFilter"]
 script = ExtResource("9_ogaaw")

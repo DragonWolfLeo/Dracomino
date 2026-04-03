@@ -24,10 +24,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("2_pwtad")
-debugSignalKey = "overlay_ega"
-
-[node name="BackBufferCopy" type="BackBufferCopy" parent="EGAFilter"]
-copy_mode = 2
+flag = "overlay_ega"
 
 [node name="InvertFilter" type="ColorRect" parent="."]
 visible = false
@@ -40,10 +37,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("2_pwtad")
-debugSignalKey = "overlay_invert"
-
-[node name="BackBufferCopy" type="BackBufferCopy" parent="InvertFilter"]
-copy_mode = 2
+flag = "overlay_invert"
 
 [node name="PlaySoundOnVisible" type="Node2D" parent="InvertFilter"]
 script = ExtResource("4_pwtad")

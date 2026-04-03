@@ -6,7 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://c1pyfyn3ax5u2" path="res://dracomino_ap/dracomino_console_tab.tscn" id="3_vsama"]
 [ext_resource type="PackedScene" uid="uid://dp2yir3r1061y" path="res://godot_ap/ui/settings_tab.tscn" id="4_vsama"]
 [ext_resource type="Script" uid="uid://cfbgk8vq58w0h" path="res://dracomino_ap/option_toggle_button.gd" id="7_s3ubo"]
-[ext_resource type="Script" uid="uid://dhw5qwfoet8gm" path="res://dracomino_ap/signal_toggle_button.gd" id="7_vsama"]
+[ext_resource type="Script" uid="uid://bi07x0bnmtu8d" path="res://dracomino_ap/flag_toggle_button.gd" id="8_s3ubo"]
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_1wnfu"]
 
@@ -240,44 +240,50 @@ optionKey = "debug"
 [node name="Btn_EGAFilter" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
 layout_mode = 2
 text = "Enforce 6-bit Palette"
-script = ExtResource("7_vsama")
-signalKey = "overlay_ega"
+script = ExtResource("8_s3ubo")
+flag = "overlay_ega"
 
 [node name="Btn_PixelFilter" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
 layout_mode = 2
 text = "Pixellation Filter"
-script = ExtResource("7_vsama")
-signalKey = "overlay_pixel"
+script = ExtResource("8_s3ubo")
+flag = "overlay_pixel"
+debugOnly = true
 
 [node name="Btn_CrystalFilter" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
 layout_mode = 2
 text = "Crystal Filter"
-script = ExtResource("7_vsama")
-signalKey = "overlay_crystal"
+script = ExtResource("8_s3ubo")
+flag = "overlay_crystal"
+debugOnly = true
 
 [node name="Btn_FractureFilter" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
 layout_mode = 2
 text = "Fracture Filter"
-script = ExtResource("7_vsama")
-signalKey = "overlay_fracture"
+script = ExtResource("8_s3ubo")
+flag = "overlay_fracture"
+debugOnly = true
 
 [node name="Btn_WaterFilter" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
 layout_mode = 2
 text = "Water Filter"
-script = ExtResource("7_vsama")
-signalKey = "overlay_water"
+script = ExtResource("8_s3ubo")
+flag = "overlay_water"
+debugOnly = true
 
 [node name="Btn_InvertFilter" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
 layout_mode = 2
 text = "Invert Filter"
-script = ExtResource("7_vsama")
-signalKey = "overlay_invert"
+script = ExtResource("8_s3ubo")
+flag = "overlay_invert"
+debugOnly = true
 
 [node name="Btn_WellDoneOverlay" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
 layout_mode = 2
 text = "Well Done!"
-script = ExtResource("7_vsama")
-signalKey = "overlay_welldone"
+script = ExtResource("8_s3ubo")
+flag = "overlay_welldone"
+debugOnly = true
 
 [node name="Bounds" type="Control" parent="."]
 layout_mode = 2
