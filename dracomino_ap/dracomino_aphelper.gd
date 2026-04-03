@@ -64,11 +64,6 @@ func _ready() -> void:
 		SignalBus.getSignal("energyLink_enabled").connect(btn_energyLink.set_pressed_no_signal.bind(true))
 		SignalBus.getSignal("energyLink_disabled").connect(btn_energyLink.set_pressed_no_signal.bind(false))
 
-	# Unfocused inputs toggle
-	btn_allowUnfocusedInputs = get_parent().find_child("Btn_AllowUnfocusedInputs")
-	if btn_allowUnfocusedInputs:
-		btn_allowUnfocusedInputs.set_pressed_no_signal(Config.getSetting("allowUnfocusedInputs", false))
-		btn_allowUnfocusedInputs.toggled.connect(_on_btn_allowUnfocusedInputs_toggled)
 	# Gravity slider
 	slider_gravityAmt = get_parent().find_child("HSlider_GravityAmt")
 	if slider_gravityAmt:
@@ -169,9 +164,6 @@ func _on_optionBtn_deathLinkGroup_item_selected(index:int):
 
 func _on_lineEdit_deathLinkGroup_text_submitted(new_text:String):
 	Config.changeSetting("deathLinkGroup_custom", new_text)
-
-func _on_btn_allowUnfocusedInputs_toggled(toggled_on:bool):
-	Config.changeSetting("allowUnfocusedInputs", toggled_on)
 
 func _on_slider_gravityAmt_value_changed(value:float) -> void:
 	Config.changeSetting("gravity", value)
