@@ -3,6 +3,7 @@ extends SubViewportContainer
 @onready var ui:UI = %UI
 @onready var puzzleMode:Mode = %PuzzleMode
 @onready var subviewport:SubViewport = $SubViewport
+@onready var effectDurationTicker:Timer = %EffectDurationTicker
 
 
 var _mode_set_requested_signalholder:SignalBus.SignalHolder
@@ -42,6 +43,8 @@ func _ready() -> void:
 	setMode()
 
 	FlagManager.count("game_focus", "default", 1) # If one thing removes from this count, then be considered unfocused
+
+	effectDurationTicker.timeout.connect(_on_effectDurationTicker_timeout)
 
 func _gui_input(event: InputEvent) -> void:
 	if event.is_action_pressed("restart"):
@@ -166,3 +169,7 @@ func _on_Board_game_started() -> void:
 func _on_DracominoHandler_started() -> void:
 	setMode()
 	grab_focus()
+
+func _on_effectDurationTicker_timeout() -> void:
+	effectDurationTicker.start()
+	SignalBus.getSignal("effect_duration_down").emit()

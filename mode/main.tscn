@@ -255,6 +255,12 @@ mouse_filter = 1
 script = ExtResource("10_jjnvi")
 modeName = &"dialogue"
 
+[node name="EffectDurationTicker" type="Timer" parent="."]
+unique_name_in_owner = true
+process_mode = 1
+wait_time = 5.0
+autostart = true
+
 [connection signal="lineMappings_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_line_mappings_updated"]
 [connection signal="missingLines_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_lines_updated"]
 [connection signal="missingPickupCoordinates_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_pickup_coordinates_updated"]
