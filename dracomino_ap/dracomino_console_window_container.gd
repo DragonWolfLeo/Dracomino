@@ -31,6 +31,10 @@ func _ready() -> void:
 	SignalBus.getSignal("give_focus_to_client").connect(_on_give_focus_to_client)
 	focus_entered.connect(_on_give_focus_to_client)
 
+	# Disable processing when window is not focused
+	get_window().focus_entered.connect(set.bind("process_mode", PROCESS_MODE_ALWAYS))
+	get_window().focus_exited.connect(set.bind("process_mode", PROCESS_MODE_DISABLED))
+
 func _on_give_focus_to_client():
 	if not is_visible_in_tree():
 		return
