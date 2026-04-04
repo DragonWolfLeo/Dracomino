@@ -1,30 +1,20 @@
 // Tutorial:
 [State Tutorial]
+// Skip to fishing tutorial if fishing
+[GotoState FishingTutorial if fishing]
+
+[Jump SecondTime if explained_done]
+[Jump FirstTime]
+
+[Response FirstTime]
 Mini (happy): Hello! I'm here to help!
-[if explained_done]
-Mini: You're back! I'm always happy to talk Dracominos, coins, magic, and fresh fish with you! What would you like to know?
-[SetWorldFlag mentioned_freshfish]
-[if not explained_done]
 Mini: You must've come here to get my help. I'm happy to teach you about Dracominos!
 Mini: **Show image Dracominos** These are Dracominos. They're colorful blocks made of pure magic!
+[NextState]
 
-// Set some memory
-[if not hold_slot]
-[SetWorldFlag prev_no_hold]
-
-[if not rotate]
-[SetWorldFlag prev_no_rotate]
-
-[if not gravity]
-[SetWorldFlag prev_no_gravity]
-
-[if not soft_drop]
-[SetWorldFlag prev_no_softdrop]
-
-[if not hard_drop]
-[SetWorldFlag prev_no_harddrop]
-
-[always]
+[Response SecondTime]
+Mini: You're back! I'm always happy to talk Dracominos, coins, magic, and fresh fish with you! What would you like to know?
+[SetWorldFlag mentioned_freshfish]
 [NextState]
 
 [State Tutorial_Contents]
@@ -48,7 +38,7 @@ Mini: **Show image Dracominos** These are Dracominos. They're colorful blocks ma
 
 // === Gravity + Soft Drop + Hard Drop Explanations ===
 [Response Tutorial_JustGot_Gravity]
-Mini: Aaaaa! What happened?! The pieces are falling!
+Mini: [shake rate=30 level=10 connected=false][font size=28] Aaaaa! What happened?! The pieces are falling!
 Mini: They fall pretty slow, though. But still, now our moves are on a time limit!
 [if soft_drop not hard_drop]
 Mini: Not only that, but if you press the {UP} button, you'll let go of your Dracomino, and another will appear. You may want to be careful about pressing that button.
@@ -74,6 +64,11 @@ Mini: This is so useful. We can place Dracominos down so quickly! But I don't kn
 [ClearWorldFlag prev_no_harddrop]
 
 [Response Tutorial_Move]
+// Set memory
+[if not gravity][SetWorldFlag prev_no_gravity]
+[if not soft_drop][SetWorldFlag prev_no_softdrop]
+[if not hard_drop][SetWorldFlag prev_no_harddrop]
+//
 [if explained_move]
 Mini: Oh! If you're wondering about the exact controls, the WASD keys and arrow keys both work.
 Mini: And if you're on a controller, it's the D-Pad or the left analog stick. Not the right analog stick. That's used for something entirely different.
@@ -106,6 +101,7 @@ Mini: Also, be careful about slamming a Dracomino over an edge. Because then you
 
 // === Hold ===
 [Response Tutorial_Hold]
+[if not hold_slot][SetWorldFlag prev_no_hold]
 [Jump Tutorial_JustGotHold if hold_slot+prev_no_hold]
 [Jump Tutorial_HasHold if hold_slot]
 [Jump Tutorial_NoHold]
@@ -140,6 +136,7 @@ Mini: Which is tricky though... You'll just have to be smart about where they go
 
 // === Rotate explanations ===
 [Response Tutorial_Rotate]
+[if not rotate][SetWorldFlag prev_no_rotate]
 [Jump Tutorial_JustGotRotate if rotate+prev_no_rotate]
 [Jump Tutorial_HasRotate if rotate]
 [Jump Tutorial_NoRotate]
@@ -234,3 +231,26 @@ Mini: Oh! And if you ever want my help again, press the F1 button! I'm always ha
 [End]
 
 
+[State FishingTutorial]
+Mini: Hey there! You caught me in the middle of fishing.
+Mini: Some of our Dracominos fell into the river, so we need to catch them. Good thing I'm an experienced fisher!
+Mini: Hey, do you want me to teach you how to fish? It's really fun, and easy!
+
+[Choice Yes] You: Yes
+[Choice No] You: No
+
+[Response Yes]
+Mini: [wave]Awesome!!![/wave]
+Mini: First, you'd need a fishing rod, like this one I have here.
+Mini: For fishing, you'll only need one button. So pick your favorite button to cast your rod! Hold it down to charge your cast. The longer you charge, the further you throw the hook.
+Mini: Next, let the hook sink into the water so it could come into contact with a fish. Press any button to pull the hook closer to you.
+Mini: Once you hooked a yummy fish, pull it in!
+Mini: Some fish will try to get away. If you shake the rod too much, the fish will go faster, so don't do that. You ideally want to pull for a couple seconds at a time before tugging again.
+Mini: Once you get the fish close to you, pull again, and you'll catch it!
+Mini: From that point, you can then make a tasty meal out of your fresh fish! Or you can sell it to get some coins. This is what I do. More coins means more Dracominos!
+[End]
+
+[Response No]
+Mini: Oh...
+Mini: Well, that's okay. If you ever want fresh fish, I'd be happy to sell some to you!
+[End]
