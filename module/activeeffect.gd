@@ -12,9 +12,9 @@ static func instantiateEffect(flag:String, duration:int = 10) -> ActiveEffect:
 
 # === Virtuals ===
 func _ready() -> void:
-	SignalBus.getSignal("effect_duration_down").connect(_on_piece_locked, CONNECT_DEFERRED)
+	SignalBus.getSignal("effect_duration_down").connect(_on_effect_duration_down, CONNECT_DEFERRED)
 
-func _on_piece_locked() -> void:
+func _on_effect_duration_down() -> void:
 	durationLeft -= 1
 	if durationLeft <= 0:
 		queue_free()
