@@ -574,11 +574,11 @@ func proceedDialogue(repeatStateIfNoProgress:bool = false) -> void:
 
 	# Run queued navtags and return if any
 	if queuedNavtags.size():
-		for nt in queuedNavtags:
-			if activateNavTag(nt):
-				queuedNavtags.clear()
-				return
+		var _queuedNavtags = queuedNavtags.duplicate()
 		queuedNavtags.clear()
+		for nt in _queuedNavtags:
+			if activateNavTag(nt):
+				return
 	
 	var state:DialogueState = activeResponse if activeResponse else states[statePosition]
 	
