@@ -25,10 +25,10 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 	logic_tutorial = Effect.new(_loadDialogue.bind("tutorial_logic")).setCanTriggerFn(_canLoadNewDialogue),
 	fishing = Effect.new(_setMode.bind("fishing")).setCanTriggerFn(func(): return FlagManager.getTotalCountAmount("shapes_left") >= 2),
 	welldone = Effect.new(_activateEffect.bind("overlay_welldone", 3)),
-	crystal_trap = Effect.new(_activateEffect.bind("overlay_crystal", 5)),
+	crystal_trap = Effect.new(_activateEffect.bind("overlay_crystal", 4)),
 	invertcolors_trap = Effect.new(_activateEffect.bind("overlay_invert")),
 	water_trap = Effect.new(_activateEffect.bind("overlay_water")),
-	pixellation_trap = Effect.new(_activateEffect.bind("overlay_pixel")),
+	pixellation_trap = Effect.new(_activateEffect.bind("overlay_pixel", 6)),
 	fracture_trap = Effect.new(_activateEffect.bind("overlay_fracture")),
 	zoom_trap = Effect.new(_activateEffect.bind("effect_zoom", 2)),
 	impatience_trap = Effect.new(SignalBus.getSignal("effect_impatience").emit),
@@ -46,7 +46,7 @@ func _loadDialogue(dialogue:Variant) -> void:
 func _canLoadNewDialogue() -> bool:
 	return DialogueManager.dialogue == null
 
-func _activateEffect(flag:String, duration:int = 10) -> void:
+func _activateEffect(flag:String, duration:int = 8) -> void:
 	var ae:ActiveEffect = ActiveEffect.instantiateEffect(flag, duration)
 	add_child(ae)
 
