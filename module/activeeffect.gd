@@ -13,6 +13,9 @@ var durationLeft:int = -1:
 			if sig.is_connected(_on_effect_duration_down):
 				sig.disconnect(_on_effect_duration_down)
 
+var _cooldownTimer:SceneTreeTimer
+var EFFECT_DURATION_TICK_COOLDOWN:float = 2.0
+
 # === Static functions ===
 static func instantiateEffect(flag:String, duration:int = -1) -> ActiveEffect:
 	var ae := ActiveEffect.new()
@@ -23,6 +26,11 @@ static func instantiateEffect(flag:String, duration:int = -1) -> ActiveEffect:
 
 # === Events ===
 func _on_effect_duration_down() -> void:
+	if _cooldownTimer:
+		return
 	durationLeft -= 1
 	if durationLeft <= 0:
 		queue_free()
+	else:
+		_cooldownTimer = get_tree().create_timer(EFFECT_DURATION_TICK_COOLDOWN, true)
+		_cooldownTimer.timeout.connect(set.bind("_cooldownTimer", null))
