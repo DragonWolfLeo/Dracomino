@@ -21,8 +21,8 @@ class Effect:
 		return self
 
 var EFFECTS:Dictionary[StringName, Effect] = {
-	tutorial = Effect.new(_loadDialogue.bind("tutorial")),
-	logic_tutorial = Effect.new(_loadDialogue.bind("tutorial_logic")),
+	tutorial = Effect.new(_loadDialogue.bind("tutorial")).setCanTriggerFn(_canLoadNewDialogue),
+	logic_tutorial = Effect.new(_loadDialogue.bind("tutorial_logic")).setCanTriggerFn(_canLoadNewDialogue),
 	fishing = Effect.new(_setMode.bind("fishing")).setCanTriggerFn(func(): return FlagManager.getTotalCountAmount("shapes_left") >= 2),
 	welldone = Effect.new(_activateEffect.bind("overlay_welldone", 3)),
 	crystal_trap = Effect.new(_activateEffect.bind("overlay_crystal", 5)),
@@ -37,14 +37,16 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 }
 
 # === Private functions ===
-func _setMode(modeName:StringName):
+func _setMode(modeName:StringName) -> void:
 	SignalBus.getSignal("mode_set_requested", modeName).emit()
-	FlagManager.HANDLERS.LEVEL.setFlag("committed")
 
-func _loadDialogue(dialogue:Variant):
+func _loadDialogue(dialogue:Variant) -> void:
 	DialogueManager.loadDialogue(dialogue)
 
-func _activateEffect(flag:String, duration:int = 10):
+func _canLoadNewDialogue() -> bool:
+	return DialogueManager.dialogue == null
+
+func _activateEffect(flag:String, duration:int = 10) -> void:
 	var ae:ActiveEffect = ActiveEffect.instantiateEffect(flag, duration)
 	add_child(ae)
 
