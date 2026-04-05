@@ -104,7 +104,7 @@ func retrieve():
 		fishCaughtTween.tween_property(hooked, "scale", Vector2(4,4), 1.5).from_current()
 		fishCaughtTween.tween_property(hooked, "rotation_degrees", 0, 1.5).from_current()
 		fishCaughtTween.set_parallel(false)
-		fishCaughtTween.tween_property(hooked, "rotation_degrees", 15, 0.2).from_current().set_ease(Tween.EASE_IN)
+		fishCaughtTween.tween_property(hooked, "rotation_degrees", 15, 0.2).from(0).set_ease(Tween.EASE_IN)
 		fishCaughtTween.tween_property(hooked, "rotation_degrees", 0, 0.15).from(15).set_ease(Tween.EASE_IN)
 		fishCaughtTween.tween_property(hooked, "rotation_degrees", -30, 0.15).from(0).set_ease(Tween.EASE_OUT)
 		fishCaughtTween.tween_property(hooked, "rotation_degrees", 0, 0.25).from(-30).set_ease(Tween.EASE_IN_OUT)
