@@ -133,6 +133,9 @@ flag = "overlay_crystal"
 script = ExtResource("9_ogaaw")
 soundName = "trap"
 
+[node name="BackBufferCopy" type="BackBufferCopy" parent="CrystalFilter"]
+copy_mode = 2
+
 [node name="PixelFilter" type="ColorRect" parent="."]
 material = SubResource("ShaderMaterial_jjnvi")
 anchors_preset = 15
@@ -147,6 +150,9 @@ flag = "overlay_pixel"
 [node name="PlaySoundOnVisible" type="Node2D" parent="PixelFilter"]
 script = ExtResource("9_ogaaw")
 soundName = "trap"
+
+[node name="BackBufferCopy" type="BackBufferCopy" parent="PixelFilter"]
+copy_mode = 2
 
 [node name="FractureFilter" type="ColorRect" parent="."]
 material = SubResource("ShaderMaterial_w0fxs")
@@ -163,6 +169,9 @@ flag = "overlay_fracture"
 script = ExtResource("9_ogaaw")
 soundName = "trap"
 
+[node name="BackBufferCopy" type="BackBufferCopy" parent="FractureFilter"]
+copy_mode = 2
+
 [node name="WaterFilter" type="ColorRect" parent="."]
 texture_filter = 1
 material = SubResource("ShaderMaterial_gx2q7")
@@ -178,6 +187,9 @@ flag = "overlay_water"
 [node name="PlaySoundOnVisible" type="Node2D" parent="WaterFilter"]
 script = ExtResource("9_ogaaw")
 soundName = "trap"
+
+[node name="BackBufferCopy" type="BackBufferCopy" parent="WaterFilter"]
+copy_mode = 2
 
 [node name="WellDoneFilter" type="Control" parent="."]
 process_mode = 3
@@ -281,3 +293,6 @@ autoplay = "wave"
 script = ExtResource("9_ogaaw")
 soundName = "welldone"
 soundType = "voice"
+
+[node name="BackBufferCopy" type="BackBufferCopy" parent="WellDoneFilter"]
+copy_mode = 2

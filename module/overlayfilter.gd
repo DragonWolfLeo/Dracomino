@@ -3,9 +3,6 @@ extends CanvasItem
 @export var flag:String = ""
 
 func _ready() -> void:
-	var backbuffercopy := BackBufferCopy.new()
-	backbuffercopy.copy_mode = BackBufferCopy.COPY_MODE_VIEWPORT
-	add_child(backbuffercopy)
 	if flag.length():
 		visible = FlagManager.isFlagSet(flag);
 		SignalBus.getSignal("stateflag_set", flag).connect(_on_enabledSignal)
