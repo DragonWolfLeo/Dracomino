@@ -17,6 +17,7 @@ var currentFocus:Control:
 		focus_mode = Control.FOCUS_NONE if currentFocus else FOCUS_CLICK
 		if not currentFocus:
 			grab_focus()
+var activeModes:Array[Control] = []
 
 #==== Virtuals ====
 func _init() -> void:
@@ -40,7 +41,7 @@ func _ready() -> void:
 		if child is Mode:
 			(child as Mode).mode_enabled.connect(setMode.bind(child as Mode))
 
-	setMode()
+	setMode(puzzleMode)
 
 	FlagManager.count("game_focus", "default", 1) # If one thing removes from this count, then be considered unfocused
 
@@ -83,11 +84,20 @@ func _input(event: InputEvent) -> void:
 
 #==== Functions ====
 func setMode(mode:Control = null):
+	if mode == puzzleMode:
+		activeModes.clear()
+	elif mode and not activeModes.has(mode):
+		activeModes.push_front(mode)
+	
+	mode = null
+	for candidate in activeModes:
+		if candidate.get_parent() == subviewport:
+			mode = candidate
+			break
+	
 	if not mode:
 		mode = puzzleMode
-	if mode.get_parent() != subviewport:
-		printerr("Mode must be a parent of Main/SubViewport")
-		mode = puzzleMode
+
 	if not subviewport:
 		return
 	for child in subviewport.get_children():
@@ -97,6 +107,10 @@ func setMode(mode:Control = null):
 			child.set_process_input(mode == child)
 			child.set_process_unhandled_input(mode == child)
 			child.process_mode = PROCESS_MODE_PAUSABLE if mode == child else PROCESS_MODE_DISABLED
+
+func unsetMode(mode:Control):
+	activeModes.erase(mode)
+	setMode()
 
 func thisOrChildrenHasFocus() -> bool:
 	if has_focus():
@@ -164,10 +178,10 @@ func _on_deferred_currentFocus_focus_exited():
 			focus_mode = Control.FOCUS_CLICK
 
 func _on_Board_game_started() -> void:
-	setMode()
+	setMode(puzzleMode)
 
 func _on_DracominoHandler_started() -> void:
-	setMode()
+	setMode(puzzleMode)
 	grab_focus()
 
 func _on_effectDurationTicker_timeout() -> void:

@@ -59,7 +59,7 @@ func quitFishing():
 
 func submitPiece(piece:Piece):
 	piece_selected.emit(piece)
-	SignalBus.getSignal("mode_set_requested", "puzzle").emit()
+	quitFishing()
 
 # === Events ===
 func _on_mode_enabled():
