@@ -32,7 +32,7 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 	fracture_trap = Effect.new(_activateEffect.bind("overlay_fracture")),
 	zoom_trap = Effect.new(_activateEffect.bind("effect_zoom", 2)),
 	impatience_trap = Effect.new(SignalBus.getSignal("effect_impatience").emit),
-	commitment_trap = Effect.new(FlagManager.HANDLERS.LEVEL.setFlag.bind("committed")),
+	commitment_trap = Effect.new(_activateEffect.bind("committed", -1)),
 	noop = Effect.new(_NOOP),
 }
 
