@@ -146,16 +146,6 @@ func resetSeedFlagHolder():
 
 func getNextPiece() -> Dictionary:
 	var numItems := collectedItems.size()
-	var effects:Dictionary[StringName, StateItem] = {}
-	# Apply any effects from the trap buffer first
-	for fx:StateItem in _effectBuffer.duplicate():
-		var item := CONSTANTS.ITEMS[fx.id]
-		match item.type:
-			"on_lock", "modifier", "on_spawn":
-				if not effects.get(item.type):
-					effects[item.type] = fx
-					_effectBuffer.erase(fx)
-
 	# Iterate through all items
 	while currentIndex < numItems:
 		var stateItem := collectedItems[currentIndex]
@@ -163,6 +153,15 @@ func getNextPiece() -> Dictionary:
 		if item:
 			match item.type:
 				"shape":
+					# Apply any effects from the effect buffer first
+					var effects:Dictionary[StringName, StateItem] = {}
+					for fx:StateItem in _effectBuffer.duplicate():
+						var fx_item := CONSTANTS.ITEMS[fx.id]
+						match fx_item.type:
+							"on_lock", "modifier", "on_spawn":
+								if not effects.get(fx_item.type):
+									effects[fx_item.type] = fx
+									_effectBuffer.erase(fx)
 					currentIndex += 1
 					seedFlagHolder.count("shapes_left", "subtracted", -1, true)
 					return {
@@ -171,10 +170,7 @@ func getNextPiece() -> Dictionary:
 						effects = effects,
 					}
 				"on_lock", "modifier", "on_spawn":
-					if effects.get(item.type):
-						_effectBuffer.append(stateItem)
-					else:
-						effects[item.type] = stateItem
+					_effectBuffer.append(stateItem)
 		currentIndex += 1
 	return {}
 
