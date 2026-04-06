@@ -91,6 +91,20 @@ func getEffectObject(stateItem:DracominoHandler.StateItem) -> Effect:
 		return EFFECTS.get(stateItem.data.internalName)
 	return null
 
+func canTriggerAnyBufferedEvent() -> bool:
+	var ret:bool = false
+	for stateItem in bufferedEffects:
+		var fx:Effect = getEffectObject(stateItem)
+		if fx and fx.canTriggerFn.call() and not stateItem.used:
+			return true
+	return ret
+
+func willBlockRequestPiece(stateItem:DracominoHandler.StateItem) -> bool:
+	if stateItem == null or stateItem.used:
+		return false
+	var fx:Effect = getEffectObject(stateItem)
+	return fx and fx.canTriggerFn.call() and fx.blockRequestPiece
+
 func tryToTriggerNextEffect() -> DracominoHandler.StateItem: ## Returns triggered state item on success
 	if FlagManager.isFlagSet("gameover"):
 		return null
@@ -110,20 +124,6 @@ func tryToTriggerNextEffect() -> DracominoHandler.StateItem: ## Returns triggere
 				deferredEffects.append(popped)
 		return tryToTriggerNextEffect()
 	return null
-
-func canTriggerAnyBufferedEvent() -> bool:
-	var ret:bool = false
-	for stateItem in bufferedEffects:
-		var fx:Effect = getEffectObject(stateItem)
-		if fx and fx.canTriggerFn.call() and not stateItem.used:
-			return true
-	return ret
-
-func willBlockRequestPiece(stateItem:DracominoHandler.StateItem) -> bool:
-	if stateItem == null or stateItem.used:
-		return false
-	var fx:Effect = getEffectObject(stateItem)
-	return fx and fx.canTriggerFn.call() and fx.blockRequestPiece
 
 func tryToTriggerEffect(stateItem:DracominoHandler.StateItem) -> bool: ## Returns true on success
 	if FlagManager.isFlagSet("gameover"):
