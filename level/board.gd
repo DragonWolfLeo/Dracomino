@@ -505,6 +505,9 @@ func resetGame():
 			itemPickups[k].node = null
 		itemPickups.erase(k)
 
+	# Clear effects and queue
+	effectHandler.on_board_reset()
+
 	# Delete current pieces
 	for piece in activePieces:
 		deletePiece(piece)
@@ -523,7 +526,6 @@ func resetGame():
 	rotate_random.state = rotate_randomSaveState
 	clearingChunks.clear()
 	resetFlagHolder()
-	effectHandler.on_board_reset()
 
 	# Clear board
 	activatedTileHandler.clear()
