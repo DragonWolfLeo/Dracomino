@@ -207,7 +207,8 @@ func processClearingChunk(chunk:ClearingChunk) -> void:
 
 func checkForEvent():
 	var nextEffect = effectHandler.tryToTriggerNextEffect()
-	requestPiece()
+	if not effectHandler.willBlockRequestPiece(nextEffect, true):
+		requestPiece()
 
 func requestPiece(allowMultiplePieces:bool = false):
 	if (
@@ -217,7 +218,7 @@ func requestPiece(allowMultiplePieces:bool = false):
 		or isTopRowFull() # No making pieces when top row is full
 	):
 		return
-	if effectHandler.canTriggerAnyBufferedEvent():
+	if effectHandler.hasValidBufferedEvent():
 		if clearingChunks.size():
 			return
 		checkForEvent()

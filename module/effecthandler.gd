@@ -93,16 +93,19 @@ func getEffectObject(stateItem:DracominoHandler.StateItem) -> Effect:
 		return EFFECTS.get(stateItem.data.internalName)
 	return null
 
-func canTriggerAnyBufferedEvent() -> bool:
+func hasValidBufferedEvent() -> bool:
+	return getNextValidBufferedEffect() != null
+
+func getNextValidBufferedEffect() -> DracominoHandler.StateItem:
 	var ret:bool = false
 	for stateItem in bufferedEffects:
 		var fx:Effect = getEffectObject(stateItem)
 		if fx and fx.canTriggerFn.call() and not stateItem.used:
-			return true
-	return ret
+			return stateItem
+	return null
 
-func willBlockRequestPiece(stateItem:DracominoHandler.StateItem) -> bool:
-	if stateItem == null or stateItem.used:
+func willBlockRequestPiece(stateItem:DracominoHandler.StateItem, ignoreUsed:bool = false) -> bool:
+	if stateItem == null or (stateItem.used and not ignoreUsed):
 		return false
 	var fx:Effect = getEffectObject(stateItem)
 	return fx and fx.canTriggerFn.call() and fx.blockRequestPiece
