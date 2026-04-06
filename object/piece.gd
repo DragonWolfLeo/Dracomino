@@ -115,7 +115,7 @@ var isFocus:bool: ## Decides whether or not piece listens to inputs
 		if isFocus == value: return
 		isFocus = value
 		set_process_unhandled_input(value)
-		focus_lost.emit()
+		if not value: focus_lost.emit()
 
 static var GHOSTPIECE_SCENE:PackedScene = load("res://object/ghostpiece.tscn")
 
