@@ -1,7 +1,7 @@
 // Tutorial:
 [State Tutorial]
 // Skip to fishing tutorial if fishing
-[GotoState FishingTutorial if fishing]
+[GotoState FishingTutorial if mode=fishing]
 
 [Jump SecondTime if explained_done]
 [Jump FirstTime]
