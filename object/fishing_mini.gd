@@ -28,6 +28,7 @@ var RESIST_DURATION:float = 2.5
 var CHARGE_DURATION:float = 1.5
 var RESET_DURATION:float = 0.3
 var FISHGET_DURATION:float = 3.0
+var FISH_STRENGTH_DAMPEN:float = 0.95
 
 var tween:Tween
 var fishReelTween:Tween
@@ -139,7 +140,7 @@ func setCharge(value:float):
 func startReel():
 	if tween: tween.kill()
 	frame = CHARGE_FRAME
-	tween = create_tween()
+	tween = create_tween().set_parallel()
 	tween.tween_method(reel, 1.0, 0.0, REEL_DURATION).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 	
 	if fishingHook.hooked:
@@ -148,6 +149,8 @@ func startReel():
 		var force:Vector2 = Vector2.from_angle(randf_range(-PI/2, PI*3/4)) * randf() * hooked.speed
 		var resistTween:Tween = hooked.create_tween()
 		resistTween.tween_method(resist.bind(force), 1.0, 0.0, RESIST_DURATION).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_QUAD)
+		if hooked.speed > hooked.SPEED_MIN:
+			tween.tween_callback(_lowerHookedFishSpeed).set_delay(0.8)
 
 		# Wiggle when you reel
 		if fishReelTween: fishReelTween.kill()
@@ -160,6 +163,10 @@ func startReel():
 		fishReelTween.tween_property(hooked, "rotation_degrees", 0, 0.05).from(10).set_ease(Tween.EASE_IN)
 		fishReelTween.tween_property(hooked, "rotation_degrees", -10, 0.05).from(0).set_ease(Tween.EASE_OUT)
 		fishReelTween.tween_property(hooked, "rotation_degrees", 0, 0.1).from(-10).set_ease(Tween.EASE_IN_OUT)
+
+func _lowerHookedFishSpeed():
+	if fishingHook.hooked:
+		fishingHook.hooked.speed *= FISH_STRENGTH_DAMPEN
 
 func reel(amount:float):
 	fishingHook.velocity += fishingHook.position.direction_to(fishingRodMarker_idle.position) * REEL_ACCELERATION * amount
