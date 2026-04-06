@@ -284,36 +284,42 @@ func giveItem(item:StateItem):
 	if not item: return
 	collectedItems.append(item)
 	if item.data:
-		# Detect shape streaks
-		if item.data.tags.get("shape"):
-			seedFlagHolder.count("shapes_left", "collected", 1, true)
-			seedFlagHolder.count("shapes", item.data.internalName, 1, true)
-			var streak:Streak
-			# Get last shape in collectedItems and get its streak object if the same as this one 
-			var index:int = collectedItems.size() - 2 # Get the one right before the one we just added
-			while index >= 0 and collectedItems[index]:
-				if collectedItems[index].id in CONSTANTS.ITEMS and CONSTANTS.ITEMS[collectedItems[index].id].tags.get("shape"):
-					if collectedItems[index].id == item.id:
-						streak = collectedItems[index].streak
-					break
-				index -= 1
-			if not streak: streak = Streak.new()
-			streak.size += 1
-			item.streak = streak
-		# Register collected ability
-		if item.data.tags.get("ability"):
-			if collectedAbilities.has(item.id):
-				collectedAbilities[item.id] += 1
-			else:
-				collectedAbilities[item.id] = 1
-			var prettyName = item.data.prettyName
+		match item.data.type:
+			# Detect shape streaks
+			"shape":
+				seedFlagHolder.count("shapes_left", "collected", 1, true)
+				seedFlagHolder.count("shapes", item.data.internalName, 1, true)
+				var streak:Streak
+				# Get last shape in collectedItems and get its streak object if the same as this one 
+				var index:int = collectedItems.size() - 2 # Get the one right before the one we just added
+				while index >= 0 and collectedItems[index]:
+					if collectedItems[index].id in CONSTANTS.ITEMS and CONSTANTS.ITEMS[collectedItems[index].id].tags.get("shape"):
+						if collectedItems[index].id == item.id:
+							streak = collectedItems[index].streak
+						break
+					index -= 1
+				if not streak: streak = Streak.new()
+				streak.size += 1
+				item.streak = streak
+			# Register collected ability
+			"ability":
+				if collectedAbilities.has(item.id):
+					collectedAbilities[item.id] += 1
+				else:
+					collectedAbilities[item.id] = 1
+				var prettyName = item.data.prettyName
 
-			# Add flag for ability
-			seedFlagHolder.count(item.data.internalName, "collected", collectedAbilities[item.id])
+				# Add flag for ability
+				seedFlagHolder.count(item.data.internalName, "collected", collectedAbilities[item.id])
 
-			# Keep track of rotate abilities collected
-			if item.data.tags.get("rotate"):
-				seedFlagHolder.count("rotate", item.data.internalName, 1)
+				# Keep track of rotate abilities collected
+				if item.data.tags.get("rotate"):
+					seedFlagHolder.count("rotate", item.data.internalName, 1)
+			# Trigger effects
+			"on_lock", "on_spawn":
+				if not isJustConnected:
+					effectHandler.tryToTriggerEffect(item, false)
+
 	else:
 		print("Obtained invalid item: id: {id}; name: {name}; You may be running an outdated version of the client!"
 			.format({id=item.id,name=item.get_name()})

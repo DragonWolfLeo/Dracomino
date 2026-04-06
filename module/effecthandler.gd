@@ -119,7 +119,7 @@ func tryToTriggerNextEffect(context:Array[StringName] = []) -> DracominoHandler.
 		return nextEffect
 	return null
 
-func tryToTriggerEffect(stateItem:DracominoHandler.StateItem, context:Array[StringName] = []) -> bool: ## Returns true on success
+func tryToTriggerEffect(stateItem:DracominoHandler.StateItem, bufferOnFailure:bool = true, context:Array[StringName] = []) -> bool: ## Returns true on success
 	if FlagManager.isFlagSet("gameover"):
 		return false
 	if stateItem:
@@ -132,7 +132,7 @@ func tryToTriggerEffect(stateItem:DracominoHandler.StateItem, context:Array[Stri
 				stateItem.used = true
 				effect_activated.emit(stateItem)
 				return true
-			else:
+			elif bufferOnFailure:
 				bufferedEffects.append(stateItem)
 	return false
 
