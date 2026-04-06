@@ -4,6 +4,8 @@ var bufferedEffects:Array[DracominoHandler.StateItem] = []
 var deferredEffects:Array[DracominoHandler.StateItem] = [] ## Cutscenes saved for when you restart because it wasn't a good time
 var _NOOP:Callable = func(): pass
 
+signal effect_activated(item:DracominoHandler.StateItem)
+
 class Effect:
 	var triggerFn:Callable
 	var canTriggerFn:Callable = func(): return true
@@ -119,6 +121,7 @@ func tryToTriggerNextEffect() -> DracominoHandler.StateItem: ## Returns triggere
 				if fx.playTrapSound:
 					SoundManager.play("trap")
 				popped.used = true
+				effect_activated.emit(popped)
 				return popped
 			else:
 				deferredEffects.append(popped)
@@ -138,6 +141,7 @@ func tryToTriggerEffect(stateItem:DracominoHandler.StateItem) -> bool: ## Return
 				if fx.playTrapSound:
 					SoundManager.play("trap")
 				stateItem.used = true
+				effect_activated.emit(stateItem)
 				return true
 			else:
 				bufferedEffects.append(stateItem)
@@ -152,5 +156,6 @@ func triggerEffectImmediately(stateItem:DracominoHandler.StateItem) -> bool: ## 
 			fx.triggerFn.call()
 			if fx.playTrapSound:
 				SoundManager.play("trap")
+			effect_activated.emit(stateItem)
 			return true
 	return false

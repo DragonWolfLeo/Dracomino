@@ -80,7 +80,7 @@ signal pieces_requested(callback:Callable, num:int)
 signal item_pickedup(loc_id:int)
 signal deathlink_earned(deathContext:DracominoUtil.DeathContext)
 signal activePieces_changed()
-signal effect_activated(item:DracominoHandler.StateItem)
+signal effect_activated(item:DracominoHandler.StateItem) ## Relayed from EffectHandler
 
 class ItemPickupContext:
 	var node:Node2D
@@ -131,6 +131,7 @@ func _ready():
 	# Set up effect handler
 	effectHandler = EffectHandler.new()
 	add_child(effectHandler)
+	effectHandler.effect_activated.connect(effect_activated.emit)
 	 # Master coin is just a reference for the rest of the coins and should be hidden 
 	masterCoin.visible = false
 	# Set up input timers
@@ -206,8 +207,6 @@ func processClearingChunk(chunk:ClearingChunk) -> void:
 
 func checkForEvent():
 	var nextEffect = effectHandler.tryToTriggerNextEffect()
-	if nextEffect:
-		effect_activated.emit(nextEffect)
 	requestPiece()
 
 func requestPiece(allowMultiplePieces:bool = false):
