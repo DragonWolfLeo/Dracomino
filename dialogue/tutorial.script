@@ -230,17 +230,18 @@ Mini: Oh! And if you ever want my help again, press the F1 button! I'm always ha
 [SetWorldFlag tutorial]
 [End]
 
-
+// === The fishing tutorial part ===
 [State FishingTutorial]
 Mini: Hey there! You caught me in the middle of fishing.
 Mini: Some of our Dracominos fell into the river, so we need to catch them. Good thing I'm an experienced fisher!
 Mini: Hey, do you want me to teach you how to fish? It's really fun, and easy!
 
 [Choice Yes] You: Yes
-[Choice No] You: No
+[Choice No if not explained_fishing] You: No
+[Choice No_ExplainedAlready if explained_fishing] You: No
 
 [Response Yes]
-Mini: [wave]Awesome!!![/wave]
+Mini: [wave]Awesome!!![/wave] [if explained_fishing]I'll explain it as many times as you want!
 Mini: First, you'd need a fishing rod, like this one I have here.
 Mini: For fishing, you'll only need one button. So pick your favorite button to cast your rod! Hold it down to charge your cast. The longer you charge, the further you throw the hook.
 Mini: Next, let the hook sink into the water so it could come into contact with a fish. Press any button to pull the hook closer to you.
@@ -248,9 +249,23 @@ Mini: Once you hooked a yummy fish, pull it in!
 Mini: Some fish will try to get away. If you shake the rod too much, the fish will go faster, so don't do that. You ideally want to pull for a couple seconds at a time before tugging again.
 Mini: Once you get the fish close to you, pull again, and you'll catch it!
 Mini: From that point, you can then make a tasty meal out of your fresh fish! Or you can sell it to get some coins. This is what I do. More coins means more Dracominos!
+[SetWorldFlag explained_fishing]
+[if not tutorial]
+Mini: I hope that was helpful. If you need me again, press the F1 button! I'm always happy to help!
+[always]
+[SetWorldFlag tutorial]
 [End]
 
 [Response No]
 Mini: Oh...
 Mini: Well, that's okay. If you ever want fresh fish, I'd be happy to sell some to you!
+[if not tutorial]
+Mini: And also, if you ever change your mind, press the F1 button! I'll happily teach you how to fish!
+[always]
+[SetWorldFlag tutorial]
+[End]
+
+[Response No_ExplainedAlready]
+Mini: Oh, right. I already taught you! Hehe.
+Mini: Well, if you ever want a refresher, you know who to go to!
 [End]
