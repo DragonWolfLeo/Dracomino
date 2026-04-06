@@ -67,6 +67,8 @@ var _missinglines:Dictionary[int, bool] = {}
 var _missingpickups:Dictionary[Vector2i, int] = {}
 var _mappedpickups:Dictionary[Vector2i, ItemPickupContext] = {}
 
+var _waitingForPieceToGetOutOfTopRow:Piece = null
+
 static var random:RandomNumberGenerator = RandomNumberGenerator.new()
 static var randomSaveState:int = random.state
 static var rotate_random:RandomNumberGenerator = RandomNumberGenerator.new()
@@ -406,6 +408,7 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 		if not blocked:
 			piece.move(direction)
 			tryToMakePiecesCollible()
+			checkIfWaitingToChooseNewFocusPiece()
 			match movementType:
 				Piece.MOVEMENT.HORIZONTAL:
 					SoundManager.play("move")
@@ -434,6 +437,19 @@ func tryToMakePiecesCollible() -> void: ## Check if all noncollible pieces are i
 	for piece:Piece in activePieces:
 		if not piece.collidible and getCollidingPiece(piece.globalCells, piece) == null:
 			piece.collidible = true
+
+func checkIfWaitingToChooseNewFocusPiece() -> void: ## Wait for a dropped piece to get out the way before spawning a new one
+	if not _waitingForPieceToGetOutOfTopRow:
+		return
+	for piece:Piece in activePieces:
+		if isPieceOnTopRow(piece):
+			return
+	if is_instance_valid(_waitingForPieceToGetOutOfTopRow):
+		chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(_waitingForPieceToGetOutOfTopRow.onLockEffect))
+	else:
+		chooseNewFocusPiece(true)
+
+	_waitingForPieceToGetOutOfTopRow = null
 
 func sortActivePieces():
 	activePieces.sort_custom(
@@ -609,6 +625,12 @@ func isTopRowFull() -> bool:
 		if not isTileOccupied(Vector2i(x, y)):
 			return false
 	return true
+
+func isPieceOnTopRow(piece:Piece) -> bool:
+	for cell in piece.globalCells:
+		if cell.y <= BOUNDS.position.y:
+			return true
+	return false
 
 func isInDanger() -> bool:
 	for y in range(DANGER_ZONE.position.y, DANGER_ZONE.end.y):
@@ -788,7 +810,10 @@ func _on_Piece_ghost_cells_requested(_piece:Piece, _ghost:GhostPiece):
 	updateAllGhosts()			
 
 func _on_Piece_focus_lost(piece:Piece):
-	chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(piece.onLockEffect))
+	if FlagManager.isFlagSet("hard_drop") and is_instance_valid(piece) and isPieceOnTopRow(piece):
+		_waitingForPieceToGetOutOfTopRow = piece
+	else:
+		chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(piece.onLockEffect))
 
 func _on_Piece_tree_exiting(piece:Piece): # Fallback if piece didn't delete properly
 	activePieces.erase(piece)
