@@ -202,11 +202,11 @@ func processClearingChunk(chunk:ClearingChunk) -> void:
 			pushDownRows(chunk)
 			lines_cleared.emit([chunk.mappedLine])
 			if not clearingChunks.size():
-				checkForEvent()
+				checkForEvent(["line_clear"])
 	)
 
-func checkForEvent():
-	var nextEffect = effectHandler.tryToTriggerNextEffect()
+func checkForEvent(context:Array[StringName] = []):
+	var nextEffect = effectHandler.tryToTriggerNextEffect(context)
 	if not effectHandler.willBlockRequestPiece(nextEffect, true):
 		requestPiece()
 

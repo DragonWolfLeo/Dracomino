@@ -10,6 +10,7 @@ class Effect:
 	var canTriggerFn:Callable = func(): return true
 	var playTrapSound:bool = false
 	var blockRequestPiece:bool = false
+	var context:Array[StringName] = []
 	func _init(_triggerFn:Callable) -> void:
 		triggerFn = _triggerFn
 	func setCanTriggerFn(fn:Callable) -> Effect:
@@ -24,13 +25,21 @@ class Effect:
 	func setBlockRequestPiece(block:bool = true) -> Effect:
 		blockRequestPiece = block
 		return self
-
+	func addContext(tag:StringName) -> Effect:
+		if not context.has(tag):
+			context.append(tag)
+		return self
+	func matchesContext(ctxMask:Array[StringName]) -> bool:
+		for tag in context:
+			if not ctxMask.has(tag):
+				return false
+		return true
 
 var EFFECTS:Dictionary[StringName, Effect] = {
 	tutorial = Effect.new(_loadDialogue.bind("tutorial")).setCanTriggerFn(_canLoadNewDialogue),
 	logic_tutorial = Effect.new(_loadDialogue.bind("tutorial_logic")).setCanTriggerFn(_canLoadNewDialogue),
 	fishing = Effect.new(_setMode.bind("fishing")).setCanTriggerFn(_piecesAreLeft.bind(2)).setBlockRequestPiece(),
-	welldone = Effect.new(_activateEffect.bind("overlay_welldone", 3)),
+	welldone = Effect.new(_activateEffect.bind("overlay_welldone", 3)).addContext("line_clear"),
 	crystal_trap = Effect.new(_activateEffect.bind("overlay_crystal", 4)),
 	invertcolors_trap = Effect.new(_activateEffect.bind("overlay_invert")),
 	water_trap = Effect.new(_activateEffect.bind("overlay_water")),
@@ -88,11 +97,11 @@ func getEffectObject(stateItem:DracominoHandler.StateItem) -> Effect:
 func hasValidBufferedEvent() -> bool:
 	return getNextValidBufferedEffect() != null
 
-func getNextValidBufferedEffect() -> DracominoHandler.StateItem:
+func getNextValidBufferedEffect(context:Array[StringName] = []) -> DracominoHandler.StateItem:
 	var ret:bool = false
 	for stateItem in bufferedEffects:
 		var fx:Effect = getEffectObject(stateItem)
-		if fx and fx.canTriggerFn.call() and not stateItem.used:
+		if fx and fx.canTriggerFn.call() and not stateItem.used and fx.matchesContext(context):
 			return stateItem
 	return null
 
@@ -102,11 +111,11 @@ func willBlockRequestPiece(stateItem:DracominoHandler.StateItem, ignoreUsed:bool
 	var fx:Effect = getEffectObject(stateItem)
 	return fx and fx.canTriggerFn.call() and fx.blockRequestPiece
 
-func tryToTriggerNextEffect() -> DracominoHandler.StateItem: ## Returns triggered state item on success
+func tryToTriggerNextEffect(context:Array[StringName] = []) -> DracominoHandler.StateItem: ## Returns triggered state item on success
 	if FlagManager.isFlagSet("gameover"):
 		return null
 
-	var nextEffect: DracominoHandler.StateItem = getNextValidBufferedEffect()
+	var nextEffect: DracominoHandler.StateItem = getNextValidBufferedEffect(context)
 	if nextEffect:
 		# No verification needed since next effect is guaranteed valid
 		var fx:Effect = getEffectObject(nextEffect)
@@ -119,7 +128,7 @@ func tryToTriggerNextEffect() -> DracominoHandler.StateItem: ## Returns triggere
 		return nextEffect
 	return null
 
-func tryToTriggerEffect(stateItem:DracominoHandler.StateItem) -> bool: ## Returns true on success
+func tryToTriggerEffect(stateItem:DracominoHandler.StateItem, context:Array[StringName] = []) -> bool: ## Returns true on success
 	if FlagManager.isFlagSet("gameover"):
 		return false
 	if stateItem:
@@ -127,7 +136,7 @@ func tryToTriggerEffect(stateItem:DracominoHandler.StateItem) -> bool: ## Return
 			return false
 		var fx:Effect = getEffectObject(stateItem)
 		if fx:
-			if fx.canTriggerFn.call():
+			if fx.canTriggerFn.call() and fx.matchesContext(context):
 				fx.triggerFn.call()
 				if fx.playTrapSound:
 					SoundManager.play("trap")
