@@ -851,7 +851,6 @@ func _on_DracominoState_slot_context_hash_updated(ctx:int) -> void:
 	randomSaveState = random.state
 	rotate_random.seed = ctx+1
 	rotate_randomSaveState = rotate_random.state
-	effectHandler.fullClear()
 
 func _on_activePieces_changed():
 	var a:float = 1.0

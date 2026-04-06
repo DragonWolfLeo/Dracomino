@@ -1,7 +1,6 @@
 class_name EffectHandler extends Node
 
 var bufferedEffects:Array[DracominoHandler.StateItem] = []
-var deferredEffects:Array[DracominoHandler.StateItem] = [] ## Cutscenes saved for when you restart because it wasn't a good time
 var _NOOP:Callable = func(): pass
 
 signal effect_activated(item:DracominoHandler.StateItem)
@@ -69,21 +68,14 @@ func hasEffectsBuffered() -> bool:
 	return not bufferedEffects.is_empty()
 
 func on_board_reset() -> void:
-	# Give deferred effects another chance
 	bufferedEffects.clear()
-	bufferedEffects.append_array(deferredEffects)
-	deferredEffects.clear()
 	# Get rid of active effects
 	for child in get_children():
 		if child is ActiveEffect:
 			child.queue_free()
 
-func fullClear() -> void: ## To be used when loading a new seed
-	bufferedEffects.clear()
-	deferredEffects.clear()
-
 func bufferEffect(stateItem:DracominoHandler.StateItem) -> void:
-	if stateItem and not bufferedEffects.has(stateItem):
+	if stateItem and not stateItem.used and not bufferedEffects.has(stateItem):
 		bufferedEffects.append(stateItem)
 
 func getEffectObject(stateItem:DracominoHandler.StateItem) -> Effect:
@@ -113,22 +105,18 @@ func willBlockRequestPiece(stateItem:DracominoHandler.StateItem, ignoreUsed:bool
 func tryToTriggerNextEffect() -> DracominoHandler.StateItem: ## Returns triggered state item on success
 	if FlagManager.isFlagSet("gameover"):
 		return null
-	if bufferedEffects.size():
-		var popped:DracominoHandler.StateItem = bufferedEffects.pop_front() as DracominoHandler.StateItem
-		var fx:Effect = getEffectObject(popped)
-		if fx:
-			if popped.used:
-				return tryToTriggerNextEffect()
-			elif fx.canTriggerFn.call():
-				fx.triggerFn.call()
-				if fx.playTrapSound:
-					SoundManager.play("trap")
-				popped.used = true
-				effect_activated.emit(popped)
-				return popped
-			else:
-				deferredEffects.append(popped)
-		return tryToTriggerNextEffect()
+
+	var nextEffect: DracominoHandler.StateItem = getNextValidBufferedEffect()
+	if nextEffect:
+		# No verification needed since next effect is guaranteed valid
+		var fx:Effect = getEffectObject(nextEffect)
+		fx.triggerFn.call()
+		if fx.playTrapSound:
+			SoundManager.play("trap")
+		nextEffect.used = true
+		effect_activated.emit(nextEffect)
+		bufferedEffects.erase(nextEffect)
+		return nextEffect
 	return null
 
 func tryToTriggerEffect(stateItem:DracominoHandler.StateItem) -> bool: ## Returns true on success
