@@ -28,7 +28,7 @@ func showNotification(notif:String, color:Color) -> void:
 func cancelTimer() -> void:
 	if timer.timeout.is_connected(_on_timer_timeout):
 		timer.timeout.disconnect(_on_timer_timeout)
-		timer.stop()
+	timer.stop()
 
 # === Events ===
 func _on_DracominoHandler_notification_signal(notif:String, color:Color, force:bool = false) -> void:
