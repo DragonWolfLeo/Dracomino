@@ -8,19 +8,12 @@ signal effect_activated(item:DracominoHandler.StateItem)
 class Effect:
 	var triggerFn:Callable
 	var canTriggerFn:Callable = func(): return true
-	var playTrapSound:bool = false
 	var blockRequestPiece:bool = false
 	var context:Array[StringName] = []
 	func _init(_triggerFn:Callable) -> void:
 		triggerFn = _triggerFn
 	func setCanTriggerFn(fn:Callable) -> Effect:
 		canTriggerFn = fn
-		return self
-	func setTrapSound(enabled:bool = true) -> Effect:
-		playTrapSound = enabled
-		return self
-	func noTrapSound() -> Effect:
-		playTrapSound = false
 		return self
 	func setBlockRequestPiece(block:bool = true) -> Effect:
 		blockRequestPiece = block
@@ -120,8 +113,6 @@ func tryToTriggerNextEffect(context:Array[StringName] = []) -> DracominoHandler.
 		# No verification needed since next effect is guaranteed valid
 		var fx:Effect = getEffectObject(nextEffect)
 		fx.triggerFn.call()
-		if fx.playTrapSound:
-			SoundManager.play("trap")
 		nextEffect.used = true
 		effect_activated.emit(nextEffect)
 		bufferedEffects.erase(nextEffect)
@@ -138,8 +129,6 @@ func tryToTriggerEffect(stateItem:DracominoHandler.StateItem, context:Array[Stri
 		if fx:
 			if fx.canTriggerFn.call() and fx.matchesContext(context):
 				fx.triggerFn.call()
-				if fx.playTrapSound:
-					SoundManager.play("trap")
 				stateItem.used = true
 				effect_activated.emit(stateItem)
 				return true
@@ -154,8 +143,6 @@ func triggerEffectImmediately(stateItem:DracominoHandler.StateItem) -> bool: ## 
 	if fx:
 		if fx.canTriggerFn.call():
 			fx.triggerFn.call()
-			if fx.playTrapSound:
-				SoundManager.play("trap")
 			effect_activated.emit(stateItem)
 			return true
 	return false
