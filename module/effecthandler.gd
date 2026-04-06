@@ -8,6 +8,7 @@ class Effect:
 	var triggerFn:Callable
 	var canTriggerFn:Callable = func(): return true
 	var playTrapSound:bool = false
+	var blockRequestPiece:bool = false
 	func _init(_triggerFn:Callable) -> void:
 		triggerFn = _triggerFn
 	func setCanTriggerFn(fn:Callable) -> Effect:
@@ -19,11 +20,15 @@ class Effect:
 	func noTrapSound() -> Effect:
 		playTrapSound = false
 		return self
+	func setBlockRequestPiece(block:bool = true) -> Effect:
+		blockRequestPiece = block
+		return self
+
 
 var EFFECTS:Dictionary[StringName, Effect] = {
 	tutorial = Effect.new(_loadDialogue.bind("tutorial")).setCanTriggerFn(_canLoadNewDialogue),
 	logic_tutorial = Effect.new(_loadDialogue.bind("tutorial_logic")).setCanTriggerFn(_canLoadNewDialogue),
-	fishing = Effect.new(_setMode.bind("fishing")).setCanTriggerFn(func(): return FlagManager.getTotalCountAmount("shapes_left") >= 2),
+	fishing = Effect.new(_setMode.bind("fishing")).setCanTriggerFn(_piecesAreLeft.bind(2)).setBlockRequestPiece(),
 	welldone = Effect.new(_activateEffect.bind("overlay_welldone", 3)),
 	crystal_trap = Effect.new(_activateEffect.bind("overlay_crystal", 4)),
 	invertcolors_trap = Effect.new(_activateEffect.bind("overlay_invert")),
@@ -39,6 +44,9 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 # === Private functions ===
 func _setMode(modeName:StringName) -> void:
 	SignalBus.getSignal("mode_set_requested", modeName).emit()
+
+func _piecesAreLeft(amount:int) -> bool:
+	return FlagManager.getTotalCountAmount("shapes_left") >= amount
 
 func _loadDialogue(dialogue:Variant) -> void:
 	DialogueManager.loadDialogue(dialogue)
@@ -76,34 +84,54 @@ func bufferEffect(stateItem:DracominoHandler.StateItem) -> void:
 	if stateItem and not bufferedEffects.has(stateItem):
 		bufferedEffects.append(stateItem)
 
+func getEffectObject(stateItem:DracominoHandler.StateItem) -> Effect:
+	if stateItem and stateItem.data:
+		if stateItem.used:
+			return null
+		return EFFECTS.get(stateItem.data.internalName)
+	return null
+
 func tryToTriggerNextEffect() -> DracominoHandler.StateItem: ## Returns triggered state item on success
 	if FlagManager.isFlagSet("gameover"):
 		return null
 	if bufferedEffects.size():
 		var popped:DracominoHandler.StateItem = bufferedEffects.pop_front() as DracominoHandler.StateItem
-		if popped and popped.data:
-			var fx:Effect = EFFECTS.get(popped.data.internalName)
-			if fx:
-				if popped.used:
-					return tryToTriggerNextEffect()
-				elif fx.canTriggerFn.call():
-					fx.triggerFn.call()
-					if fx.playTrapSound:
-						SoundManager.play("trap")
-					popped.used = true
-					return popped
-				else:
-					deferredEffects.append(popped)
-			return tryToTriggerNextEffect()
+		var fx:Effect = getEffectObject(popped)
+		if fx:
+			if popped.used:
+				return tryToTriggerNextEffect()
+			elif fx.canTriggerFn.call():
+				fx.triggerFn.call()
+				if fx.playTrapSound:
+					SoundManager.play("trap")
+				popped.used = true
+				return popped
+			else:
+				deferredEffects.append(popped)
+		return tryToTriggerNextEffect()
 	return null
+
+func canTriggerAnyBufferedEvent() -> bool:
+	var ret:bool = false
+	for stateItem in bufferedEffects:
+		var fx:Effect = getEffectObject(stateItem)
+		if fx and fx.canTriggerFn.call() and not stateItem.used:
+			return true
+	return ret
+
+func willBlockRequestPiece(stateItem:DracominoHandler.StateItem) -> bool:
+	if stateItem == null or stateItem.used:
+		return false
+	var fx:Effect = getEffectObject(stateItem)
+	return fx and fx.canTriggerFn.call() and fx.blockRequestPiece
 
 func tryToTriggerEffect(stateItem:DracominoHandler.StateItem) -> bool: ## Returns true on success
 	if FlagManager.isFlagSet("gameover"):
 		return false
-	if stateItem and stateItem.data:
+	if stateItem:
 		if stateItem.used:
 			return false
-		var fx:Effect = EFFECTS.get(stateItem.data.internalName)
+		var fx:Effect = getEffectObject(stateItem)
 		if fx:
 			if fx.canTriggerFn.call():
 				fx.triggerFn.call()
@@ -118,12 +146,11 @@ func tryToTriggerEffect(stateItem:DracominoHandler.StateItem) -> bool: ## Return
 func triggerEffectImmediately(stateItem:DracominoHandler.StateItem) -> bool: ## Returns true on success
 	if FlagManager.isFlagSet("gameover"):
 		return false
-	if stateItem and stateItem.data:
-		var fx:Effect = EFFECTS.get(stateItem.data.internalName)
-		if fx:
-			if fx.canTriggerFn.call():
-				fx.triggerFn.call()
-				if fx.playTrapSound:
-					SoundManager.play("trap")
-				return true
+	var fx:Effect = getEffectObject(stateItem)
+	if fx:
+		if fx.canTriggerFn.call():
+			fx.triggerFn.call()
+			if fx.playTrapSound:
+				SoundManager.play("trap")
+			return true
 	return false

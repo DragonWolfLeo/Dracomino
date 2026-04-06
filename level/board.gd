@@ -201,7 +201,7 @@ func processClearingChunk(chunk:ClearingChunk) -> void:
 			pushDownRows(chunk)
 			lines_cleared.emit([chunk.mappedLine])
 			if not clearingChunks.size():
-				requestPiece()
+				checkForEvent()
 	)
 
 func checkForEvent():
@@ -215,10 +215,10 @@ func requestPiece(allowMultiplePieces:bool = false):
 		isGameOver # Obviously don't make pieces when game over'd
 		or activePieces.size() > MAX_PIECES # No making pieces when the max is reached
 		or (countNonlockedPieces() and not allowMultiplePieces) # No making multiple pieces if disallowed
-		or isTopRowFull() # No making piece when top row is full
+		or isTopRowFull() # No making pieces when top row is full
 	):
 		return
-	if effectHandler.bufferedEffects.size():
+	if effectHandler.canTriggerAnyBufferedEvent():
 		if clearingChunks.size():
 			return
 		checkForEvent()
@@ -235,7 +235,7 @@ func requestPiece(allowMultiplePieces:bool = false):
 			game = poppedPiece.context.gameName,
 		}))
 		spawnPiece(poppedPiece)
-		effectHandler.tryToTriggerEffect(poppedPiece.onSpawnEffect)
+		if poppedPiece.onSpawnEffect: effectHandler.tryToTriggerEffect(poppedPiece.onSpawnEffect)
 
 func fillPreview(buffer:int = 0): ## This functions usually leads into createPiece being called, if there's pieces available
 	if isGameOver: return
@@ -265,7 +265,7 @@ func spawnPiece(piece:Piece):
 		piece.movement_requested.connect(_on_Piece_movement_requested)
 		piece.new_cells_requested.connect(_on_Piece_new_cells_requested)
 		piece.ghost_cells_requested.connect(_on_Piece_ghost_cells_requested)
-		piece.focus_lost.connect(_on_Piece_focus_lost)
+		piece.focus_lost.connect(_on_Piece_focus_lost.bind(piece))
 		piece.tree_exiting.connect(_on_Piece_tree_exiting.bind(piece))
 		piece.makeActive()
 		piece.currentPosition = SPAWN_POINT + piece.origin
@@ -279,12 +279,11 @@ func spawnPiece(piece:Piece):
 				placeAboveOtherPieces(piece)
 				sortActivePieces()
 
-func deletePiece(piece:Piece): ## Remove a piece and immediately update activePieces
+func deletePiece(piece:Piece): ## Remove a piece without emitting activePieces_changed
 	if piece.focus_lost.is_connected(_on_Piece_focus_lost):
 		piece.focus_lost.disconnect(_on_Piece_focus_lost)
 	activePieces.erase(piece)
 	piece.queue_free()
-	activePieces_changed.emit()
 
 func hold(index:int = -1):
 	var piece:Piece = getFocusPiece()
@@ -509,6 +508,7 @@ func resetGame():
 	# Delete current pieces
 	for piece in activePieces:
 		deletePiece(piece)
+	activePieces_changed.emit()
 	activePieces.clear() # Clear now to avoid weird race condition
 
 	# Clear previews and hold
@@ -548,20 +548,27 @@ func lockPiece(piece:Piece):
 				item_pickedup.emit(pickup.loc_id)
 	if pickedUpItem:
 		SoundManager.play("itempickup")
-	
-	effectHandler.bufferedEffects.append(piece.onLockEffect)
+
 	boardIsFresh = false
 	
 	if not isGameOver:
 		var fullRows:Array[int] = getFullRows()
 		if fullRows.size() > 0:
+			if piece.onLockEffect: effectHandler.bufferEffect(piece.onLockEffect)
 			linesCleared += fullRows.size()
 			for row:int in fullRows:
 				var chunk := ClearingChunk.new(row)
 				clearingChunks.append(chunk)
 				processClearingChunk(chunk)
-
+		else:
+			if piece.onLockEffect: effectHandler.tryToTriggerEffect(piece.onLockEffect)
+	
+	var fx = effectHandler.getEffectObject(piece.onLockEffect)
 	deletePiece(piece)
+	if fx and fx.blockRequestPiece:
+		pass
+	else:
+		activePieces_changed.emit()
 
 	SignalBus.getSignal("effect_duration_down").emit() # Used to count down effect duration
 
@@ -778,8 +785,8 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 func _on_Piece_ghost_cells_requested(_piece:Piece, _ghost:GhostPiece):
 	updateAllGhosts()			
 
-func _on_Piece_focus_lost():
-	chooseNewFocusPiece(true)
+func _on_Piece_focus_lost(piece:Piece):
+	chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(piece.onLockEffect))
 
 func _on_Piece_tree_exiting(piece:Piece): # Fallback if piece didn't delete properly
 	activePieces.erase(piece)
