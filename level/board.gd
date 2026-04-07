@@ -226,7 +226,8 @@ func requestPiece(allowMultiplePieces:bool = false):
 		return
 	fillPreview(2) # Generate one extra because we're gonna use it, and another so gravity drop can work
 	if clearingChunks.size() or (activePieces.size() and activePieces[0].moveLock):
-		if not canSafelySpawnPiece(previewStorage.nextPiece()):
+		var nextPiece = previewStorage.nextPiece()
+		if not nextPiece or not canSafelySpawnPiece(nextPiece):
 			return
 	var poppedPiece:Piece
 	if previewStorage:
@@ -490,6 +491,7 @@ func checkForFailure(piece:Piece) -> bool:
 	return false
 
 func canSafelySpawnPiece(piece:Piece) -> bool:
+	if not piece: return false
 	var cells:Array[Vector2i] = getCellsTranslatedOntoHighestRow(getTranslatedCells(piece.localCells, SPAWN_POINT + piece.origin))
 	for cell in cells:
 		if isTileOccupied(cell):
