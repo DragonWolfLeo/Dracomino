@@ -217,7 +217,6 @@ func requestPiece(allowMultiplePieces:bool = false):
 		isGameOver # Obviously don't make pieces when game over'd
 		or activePieces.size() > MAX_PIECES # No making pieces when the max is reached
 		or (countNonlockedPieces() and not allowMultiplePieces) # No making multiple pieces if disallowed
-		or isTopRowFull() # No making pieces when top row is full
 	):
 		return
 	if effectHandler.hasValidBufferedEvent():
@@ -226,6 +225,9 @@ func requestPiece(allowMultiplePieces:bool = false):
 		checkForEvent()
 		return
 	fillPreview(2) # Generate one extra because we're gonna use it, and another so gravity drop can work
+	if clearingChunks.size() or (activePieces.size() and activePieces[0].moveLock):
+		if not canSafelySpawnPiece(previewStorage.nextPiece()):
+			return
 	var poppedPiece:Piece
 	if previewStorage:
 		poppedPiece = previewStorage.popPiece()
@@ -333,6 +335,17 @@ func placeOnHighestRow(piece:Piece):
 		# If reach below top-most row, nudge up
 		piece.move(Vector2i.UP)
 		placeOnHighestRow(piece)
+
+func getCellsTranslatedOntoHighestRow(cells:Array[Vector2i]) -> Array[Vector2i]:
+	var greatestY:int = 0
+	for cell in cells:
+		if greatestY < cell.y:
+			greatestY = cell.y
+	if greatestY > 0:
+		# If reach below top-most row, nudge up
+		cells = getTranslatedCells(cells, Vector2i.UP)
+		return getCellsTranslatedOntoHighestRow(cells)
+	return cells
 
 func placeRandomHorizontally(piece:Piece):
 	var rect:Rect2i
@@ -474,6 +487,13 @@ func checkForFailure(piece:Piece) -> bool:
 			gameOver(deathContext)
 			return true
 	return false
+
+func canSafelySpawnPiece(piece:Piece) -> bool:
+	var cells:Array[Vector2i] = getCellsTranslatedOntoHighestRow(getTranslatedCells(piece.localCells, SPAWN_POINT + piece.origin))
+	for cell in cells:
+		if isTileOccupied(cell):
+			return false
+	return true
 
 func gameOver(deathContext:DracominoUtil.DeathContext = null):
 	if isGameOver:
@@ -618,13 +638,6 @@ func isRowClearing(row:int) -> bool:
 		if chunk.row == row:
 			return true
 	return false
-
-func isTopRowFull() -> bool:
-	var y = BOUNDS.position.y
-	for x in range(BOUNDS.position.x, BOUNDS.end.x):
-		if not isTileOccupied(Vector2i(x, y)):
-			return false
-	return true
 
 func isPieceOnTopRow(piece:Piece) -> bool:
 	for cell in piece.globalCells:

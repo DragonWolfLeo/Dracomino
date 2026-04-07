@@ -134,6 +134,14 @@ func popPiece(index:int = -1, swap:bool = false) -> Piece:
 			return piece
 	return null
 
+func nextPiece() -> Piece:
+	# Return first valid
+	for preview in storage:
+		var piece:Piece = preview.piece
+		if piece:
+			return piece
+	return null
+
 func popPieceByPiece(piece:Piece) -> Piece:
 	for i in storage.size():
 		if storage[i].piece == piece:
