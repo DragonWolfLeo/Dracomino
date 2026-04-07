@@ -282,6 +282,7 @@ func spawnPiece(piece:Piece):
 			else:
 				placeAboveOtherPieces(piece)
 				sortActivePieces()
+			tryToMakePiecesCollible()
 
 func deletePiece(piece:Piece): ## Remove a piece without emitting activePieces_changed
 	if piece.focus_lost.is_connected(_on_Piece_focus_lost):
