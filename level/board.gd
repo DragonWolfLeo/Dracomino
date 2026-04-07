@@ -903,6 +903,8 @@ func _on_activePieces_changed():
 				a -= OPACITY_REDUCTION_PER_GHOST
 
 func _on_mode_enabled():
+	inputTimer.reset()
+	pieceTimer.isAFK()
 	requestPiece()
 
 func _on_FishingBoard_piece_selected(piece:Piece) -> void:
