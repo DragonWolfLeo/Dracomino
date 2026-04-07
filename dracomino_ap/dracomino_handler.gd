@@ -235,6 +235,9 @@ func upgradeFeatures(generatedVersion:String = "0.0.0"): ## Add new features to 
 				if not seedFlagHolder.isFlagSet(item.internalName):
 					seedFlagHolder.count(item.internalName, "collected", 1)
 					upgradeResult.retrofitted.append(item.prettyName)
+		
+		# Set legacy colors
+		seedFlagHolder.setFlag("legacy_piece_colors")
 
 	if upgradeResult.retrofitted.size():
 		# TODO: This is an important message and probably should be forced to last longer

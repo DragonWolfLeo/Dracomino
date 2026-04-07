@@ -80,7 +80,22 @@ enum MOVEMENT {
 	FORCED_SHOVE,
 }
 
-static var TOTAL_NUMBER_OF_COLORS = 12
+static var LEGACY_COLOR_MAPPINGS:Array[int] = [
+	0,
+	1,
+	15,
+	2,
+	4,
+	6,
+	8,
+	10,
+	11,
+	12,
+	13,
+	14,
+]
+static var NUMBER_OF_COLORS_MIN = 1
+static var NUMBER_OF_COLORS_MAX = 16
 var pieceDefinition:PieceDefinition
 var localCells:Array[Vector2i] = []
 var globalCells:Array[Vector2i] = []
@@ -182,7 +197,10 @@ func makeLimbo():
 func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects:Dictionary[StringName, DracominoHandler.StateItem] = {}) -> void:
 	prettyName = pieceName
 	pieceDefinition = PIECES.get(pieceName)
-	id = Board.random.randi_range(0, TOTAL_NUMBER_OF_COLORS - 1)
+	if FlagManager.isFlagSet("legacy_piece_colors"):
+		id = LEGACY_COLOR_MAPPINGS[Board.random.randi_range(0, LEGACY_COLOR_MAPPINGS.size() - 1)]
+	else:
+		id = Board.random.randi_range(NUMBER_OF_COLORS_MIN, NUMBER_OF_COLORS_MAX - 1)
 	var orientation:int = Board.rotate_random.randi_range(0,3)
 	if pieceDefinition:
 		if not ghost:
