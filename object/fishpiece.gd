@@ -23,6 +23,7 @@ var setupCompleted:bool = false
 var tileMapOffset:Vector2
 
 @onready var tileMapLayer:TileMapLayer = $TileMapLayer
+@onready var bigPiece:BigPiece = $BigPiece
 
 # === Virtuals ===
 func _ready() -> void:
@@ -79,3 +80,10 @@ func beHooked():
 		if child is CollisionPolygon2D:
 			(child as CollisionPolygon2D).disabled = true
 	set_physics_process(false)
+
+func showBigPiece() -> void:
+	tileMapLayer.hide()
+	bigPiece.show()
+	bigPiece.renderPiece(piece)
+	# Adjust position to be close to the tile map position
+	bigPiece.position = tileMapLayer.position - tileMapOffset

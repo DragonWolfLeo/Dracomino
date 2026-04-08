@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://dfbgngfn58vt1"]
+
+[ext_resource type="Texture2D" uid="uid://dynlhwaxk50fp" path="res://assets/art/bigblock.png" id="1_t8lnj"]
+
+[node name="BigBlock" type="Sprite2D"]
+texture = ExtResource("1_t8lnj")
+hframes = 16

@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://bda3r5r6j4txl"]
+[gd_scene load_steps=4 format=3 uid="uid://bda3r5r6j4txl"]
 
 [ext_resource type="TileSet" uid="uid://bik73l7fn0v3b" path="res://resource/tileset/dracomino_piece.tres" id="1_0bny8"]
 [ext_resource type="Script" uid="uid://8yp0shgfkiwb" path="res://object/fishpiece.gd" id="2_0bny8"]
+[ext_resource type="Script" uid="uid://blv05eqm4lkjp" path="res://object/bigpiece.gd" id="3_ko8wa"]
 
 [node name="FishPiece" type="CharacterBody2D"]
 collision_mask = 6
@@ -13,3 +14,8 @@ tile_set = ExtResource("1_0bny8")
 occlusion_enabled = false
 collision_enabled = false
 navigation_enabled = false
+
+[node name="BigPiece" type="Node2D" parent="."]
+rotation = 0.15708
+scale = Vector2(0.25, 0.25)
+script = ExtResource("3_ko8wa")
