@@ -18,12 +18,15 @@ var cutscene:Control = null
 @onready var textureRect:TextureRect = $ImageOverlay/ImageOffset/ImageContainer/TextureRect
 @onready var blackFader := $Faders/Black
 @onready var cutsceneContainer := $CutsceneContainer
+@onready var objectOverlay := $ObjectOverlay
+@onready var objectContainer := $ObjectOverlay/ObjectContainer
 
 func _enter_tree() -> void:
 	overlay = self
 
 func _ready():
 	imageOverlay.hide()
+	objectOverlay.hide()
 
 static func doFade(fadeOutTime = 0.5, fadeInTime = 0.5):
 	if not overlay: return
@@ -84,8 +87,7 @@ static func showImageByName(imageName:String):
 	if ResourceLoader.exists(resName): 
 		overlay.showImage(load(resName))
 	else:
-		# Is either invalid or something I didn't update
-		printerr("Old link to image found in dialogue. Please update")
+		printerr("Overlay.showImageByName: %s does not exist"%resName)
 
 func showImage(tex:Texture2D = null, immediate:bool = false):
 	if tex:		
@@ -94,7 +96,7 @@ func showImage(tex:Texture2D = null, immediate:bool = false):
 		# $ImageOverlay/ImageOffset/ImageContainer.self_modulate.a = 1 if item.border else 0
 		# $ImageOverlay/ImageOffset/ImageContainer/TextureRect/ColorRect.visible = item.border
 		if !immediate:
-			var tween = create_tween().set_parallel(true).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+			var tween = imageOverlay.create_tween().set_parallel(true).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 			tween.tween_property(imageOverlay, "modulate", Color(1,1,1,1), 0.3).from(Color(1,1,1,0))
 			tween.tween_property(imageOverlay, "position", Vector2(0,0), 0.4).from(Vector2(-200,0))
 			imageoverlay_appearing.emit()
@@ -103,10 +105,11 @@ func showImage(tex:Texture2D = null, immediate:bool = false):
 			imageOverlay.modulate = Color(1,1,1,1)
 		imageOverlay.show()
 	elif !immediate:
-		var tween = create_tween().set_parallel(true).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+		var tween = imageOverlay.create_tween().set_parallel(true).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 		tween.tween_property(imageOverlay, "modulate", Color(1,1,1,0), 0.3).from_current()
 		tween.tween_property(imageOverlay, "position", Vector2(200,0), 0.3).from_current()
 		tween.tween_callback(_hideAndEmit).set_delay(0.4)
+		tween.finished.connect(_hideAndEmit, CONNECT_ONE_SHOT)
 		imageoverlay_hidden.connect(tween.kill) # Needed to stop some weirdness
 		imageoverlay_appearing.connect(tween.kill) # Needed to stop some weirdness
 	else:
@@ -132,6 +135,52 @@ func _hideAndEmit():
 	imageOverlay.hide()
 	imageoverlay_animation_finished.emit()
 	imageoverlay_hidden.emit()
+
+static func showObjectByName(objectName:String):
+	if not overlay: return
+	# If empty parameters, then hide object
+	if !objectName.length():
+		hideImage()
+		return
+	
+	# Get object resource	
+	var resName:String = "res://object/overlayobject/"+objectName+".tscn"
+	if ResourceLoader.exists(resName):
+		var objectScene:Resource = load(resName)
+		if objectScene is PackedScene:
+			overlay.showObject(objectScene.instantiate())
+		else:
+			printerr("Overlay.showObjectByName: %s is not a PackedScene"%resName)
+	else:
+		printerr("Overlay.showObjectByName: %s does not exist"%resName)
+
+func showObject(control:Control = null, immediate:bool = false):
+	if control:
+		objectContainer.add_child(control)
+		imageoverlay_hidden.connect(control.queue_free)
+		if !immediate:
+			var tween = create_tween().set_parallel(true).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+			tween.tween_property(objectOverlay, "modulate", Color(1,1,1,1), 0.3).from(Color(1,1,1,0))
+			tween.tween_property(objectOverlay, "position", Vector2(0,0), 0.4).from(Vector2(-200,0))
+			imageoverlay_appearing.emit()
+		else:
+			objectOverlay.position = Vector2.ZERO
+			objectOverlay.modulate = Color(1,1,1,1)
+		objectOverlay.show()
+	elif !immediate:
+		var tween = objectOverlay.create_tween().set_parallel(true).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+		tween.tween_property(objectOverlay, "modulate", Color(1,1,1,0), 0.3).from_current()
+		tween.tween_property(objectOverlay, "position", Vector2(200,0), 0.3).from_current()
+		tween.finished.connect(objectOverlay.hide, CONNECT_ONE_SHOT)
+		imageoverlay_hidden.connect(tween.kill) # Needed to stop some weirdness
+		imageoverlay_appearing.connect(tween.kill) # Needed to stop some weirdness
+	else:
+		imageoverlay_hidden.emit()
+		objectOverlay.hide()
+
+static func hideObject(immediate:bool = false):
+	if not overlay: return
+	overlay.showObject(null, immediate)
 	
 func isActive():
 	return fadeActive

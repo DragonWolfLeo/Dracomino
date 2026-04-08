@@ -60,7 +60,6 @@ unique_name_in_owner = true
 process_mode = 3
 
 [node name="Overlay" parent="SubViewport" instance=ExtResource("5_yivgv")]
-visible = false
 
 [node name="LevelOverlay" parent="SubViewport" instance=ExtResource("6_w0fxs")]
 process_mode = 1

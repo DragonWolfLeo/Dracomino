@@ -37,6 +37,8 @@ func _ready():
 	# # Overlay stuff
 	addCommand("SHOWIMAGE", Overlay.showImageByName).setArgHint("image")
 	addCommand("HIDEIMAGE", Overlay.hideImage.bind(false).unbind(1), true)
+	addCommand("SHOWOBJECT", Overlay.showObjectByName).setArgHint("scene")
+	addCommand("HIDEOBJECT", Overlay.hideObject.bind(false).unbind(1), true)
 	addCommand("FADEIN", Overlay.doFadeIn.unbind(1), true)
 	addCommand("FADEOUT", Overlay.doFadeOut.unbind(1), true)
 	addCommand("FADEOUTINVISIBLE", Overlay.doFadeOut.unbind(1), true)

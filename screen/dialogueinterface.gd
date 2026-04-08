@@ -69,6 +69,7 @@ func _process(delta):
 # === Functions ===
 func resetInterface():
 	Overlay.hideImage(true)
+	Overlay.hideObject(true)
 	# Clear portrait container
 	for child in portraitContainer.get_children():
 		child.queue_free()
@@ -244,6 +245,7 @@ func _on_dialogue_started():
 
 func _on_dialogue_ended():
 	Overlay.hideImage()
+	Overlay.hideObject()
 	Overlay.hideCutscene()
 	var tween = create_tween()
 	tween.tween_property(self, "modulate", Color(1,1,1,0), 0.05).from_current()

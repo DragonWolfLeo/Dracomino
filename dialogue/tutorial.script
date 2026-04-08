@@ -9,7 +9,8 @@
 [Response FirstTime]
 Mini (happy): Hello! I'm here to help!
 Mini: You must've come here to get my help. I'm happy to teach you about Dracominos!
-Mini: **Show image Dracominos** These are Dracominos. They're colorful blocks made of pure magic!
+Mini: [ShowObject dracomino] These are Dracominos. They're colorful blocks made of pure magic!
+[HideObject]
 [NextState]
 
 [Response SecondTime]

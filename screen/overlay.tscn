@@ -41,6 +41,7 @@ grow_vertical = 2
 focus_mode = 1
 
 [node name="ImageOverlay" type="Control" parent="."]
+visible = false
 texture_filter = 2
 layout_mode = 3
 anchors_preset = 15
@@ -89,6 +90,28 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0.262745, 0.262745, 0.262745, 1)
+
+[node name="ObjectOverlay" type="Control" parent="."]
+texture_filter = 2
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ObjectContainer" type="Control" parent="ObjectOverlay"]
+layout_mode = 1
+anchor_left = 0.25
+anchor_top = 0.138889
+anchor_right = 0.75
+anchor_bottom = 0.805556
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+metadata/_edit_group_ = true
+metadata/_edit_use_anchors_ = true
 
 [node name="CutsceneContainer" type="CanvasLayer" parent="."]
 
