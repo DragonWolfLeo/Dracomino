@@ -40,6 +40,8 @@ var dialogue:Dialogue:
 		return DialogueManager.dialogue
 var state := DialogueState.new()
 
+var speakerAlignment:Dictionary[StringName, int] = {} ## To be modified using ALIGNLEFT/ALIGNRIGHT command
+
 var _was_focused:bool = false
 
 # === Virtuals===
@@ -52,6 +54,8 @@ func _ready():
 	SignalBus.getSignal("stateflag_cleared","game_focus").connect(set_process.bind(false))
 	SignalBus.getSignal("stateflag_set","game_focus").connect(set.bind("_was_focused", true), CONNECT_DEFERRED)
 	SignalBus.getSignal("stateflag_cleared","game_focus").connect(set.bind("_was_focused", false), CONNECT_DEFERRED)
+	DracominoCommandManager.addCommand("ALIGNLEFT", setSpeakerAlignment.bind(1), true).setArgHint("speaker")
+	DracominoCommandManager.addCommand("ALIGNRIGHT", setSpeakerAlignment.bind(-1), true).setArgHint("speaker")
 
 func _process(delta):
 	# Print text procedurally
@@ -165,7 +169,7 @@ func updatePortrait(speaker, expression):
 	
 	var dir = (
 		0 if expression == "none" else
-		1 if portraitSpeaker else
+		speakerAlignment.get(portraitSpeaker.to_lower(), 1) if portraitSpeaker else
 		0
 	)
 	
@@ -190,6 +194,10 @@ func updatePortrait(speaker, expression):
 func setPortraitExpression(expression:String = "", isInitial:bool = false) -> void:
 	if portrait and portrait.has_method("setExpression"):
 		portrait.call("setExpression", expression, isInitial)
+
+func setSpeakerAlignment(speaker:String, dir:int=1) -> void:
+	speaker = speaker.to_lower()
+	speakerAlignment[speaker] = dir
 	
 ### 
 func isSkippable()->bool:

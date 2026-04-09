@@ -7,8 +7,7 @@
 [Jump FirstTime]
 
 [Response FirstTime]
-Mini (happy): Hello! I'm here to help!
-Mini: You must've come here to get my help. I'm happy to teach you about Dracominos!
+Mini (happy): Hello! I'm here to help! I'm happy to teach you about Dracominos!
 Mini: [ShowObject dracomino] These are Dracominos. They're colorful blocks made of pure magic!
 [HideObject]
 [NextState]
@@ -39,27 +38,27 @@ Mini: You're back! I'm always happy to talk Dracominos, coins, magic, and fresh 
 
 // === Gravity + Soft Drop + Hard Drop Explanations ===
 [Response Tutorial_JustGot_Gravity]
-Mini: [shake rate=30 level=10 connected=false][font size=28] Aaaaa! What happened?! The pieces are falling!
-Mini: They fall pretty slow, though. But still, now our moves are on a time limit!
+Mini (panicked): [shake rate=30 level=10 connected=false][font size=28] Aaaaa! What happened?! The pieces are falling!
+Mini (neutral): We need to hurry! Our moves are on a time limit now!
 [if soft_drop not hard_drop]
-Mini: Not only that, but if you press the {UP} button, you'll let go of your Dracomino, and another will appear. You may want to be careful about pressing that button.
-Mini: Though, it could allow for some advanced moves, like, if you wanted one piece to go under another. You can quickly slide a piece under another while it's still falling.
+Mini (neutral): Not only that, but if you press the {UP} button, you'll let go of your Dracomino, and another will appear. You may want to be careful about pressing that button.
+Mini (think): Though, it could allow for some advanced moves, like, if you wanted one piece to go under another. You can quickly slide a piece under another while it's still falling.
 [always]
 [ClearWorldFlag prev_no_gravity]
 
 [Response Tutorial_JustGot_SoftDrop]
-Mini: Hey! {DOWN} button now does a thing! It makes things go down!
+Mini (eager): Hey! {DOWN} button now does a thing! It makes things go down!
 [if hard_drop not prev_no_harddrop]
-Mini: So no more needing to press {UP} to go down. Man, that was so confusing.
-Mini: Though, {UP} makes things go down a lot faster than pressing {DOWN}. What's up with that?
+Mini (content): So no more needing to press {UP} to go down. Man, that was so confusing.
+Mini (confused): Though, {UP} makes things go down a lot faster than pressing {DOWN}. What's up with that?
 [always]
 [ClearWorldFlag prev_no_softdrop]
 
 [Response Tutorial_JustGot_HardDrop]
-Mini: Guess what! The {UP} button [if not gravity] now does a thing! Pressing it [always] makes Dracominos fall down fast!
+Mini (eager): Guess what! The {UP} button [if not gravity] now does a thing! Pressing it [always] makes Dracominos fall down fast!
 [if gravity not soft_drop]
-Mini: So, no more having to wait for pieces to featherfall their way down.
-Mini: I don't know, why {UP} though. There's a {DOWN} button. Why doesn't it do anything?!
+Mini (cute): So, no more having to wait for pieces to featherfall their way down.
+Mini (annoyed): I don't know, why {UP} though. There's a {DOWN} button. Why doesn't it do anything?!
 [always]
 Mini: This is so useful. We can place Dracominos down so quickly! But I don't know why it has to be the {UP} button.
 [ClearWorldFlag prev_no_harddrop]
@@ -74,29 +73,29 @@ Mini: This is so useful. We can place Dracominos down so quickly! But I don't kn
 Mini: Oh! If you're wondering about the exact controls, the WASD keys and arrow keys both work.
 Mini: And if you're on a controller, it's the D-Pad or the left analog stick. Not the right analog stick. That's used for something entirely different.
 [always]
-Mini: You can move Dracominos around using the [if not soft_drop]{LEFT} and {RIGHT} [if soft_drop]{LEFT}, {RIGHT}, and {DOWN} [always]buttons.
+Mini (content): You can move Dracominos around using the [if not soft_drop]{LEFT} and {RIGHT} [if soft_drop]{LEFT}, {RIGHT}, and {DOWN} [always]buttons.
 [if gravity]
-Mini: They take a while to fall down. [if hard_drop] If you want them to fall down really, really fast, press the {UP} button! [if soft_drop not hard_drop] So press {DOWN} to push it down faster!
+Mini (content): They take a while to fall down. [if hard_drop] If you want them to fall down really, really fast, press the {UP} button! [if soft_drop not hard_drop] So press {DOWN} to push it down faster!
 [if gravity+hard_drop not soft_drop]
 Mini: I don't know why {DOWN} doesn't do that. It's kinda confusing. But just remember: Go up to go down!
 [if gravity+hard_drop+soft_drop]
 Mini: And if you need a medium speed, you can press the {DOWN} button. I don't know why there's two buttons to go down, and why {UP} goes down even more than {DOWN}.
-Mini: I guess think of it like... If you want to hit the ground harder, you would jump up first before falling. Yeah, that kinda makes sense.
+Mini (smile): I guess think of it like... If you want to hit the ground harder, you would jump up first before falling. Yeah, that kinda makes sense.
 [if gravity+soft_drop not hard_drop]
 Mini: But try not to press the {UP} button. Another Dracomino will fall, but we can only hold one at a time.
-Mini: When you have multiple pieces falling at once, it makes things very difficult.
+Mini (neutral): When you have multiple pieces falling at once, it makes things very difficult.
 [if gravity not soft_drop/hard_drop]
 Mini: You can press the {UP} button to make another one appear. But you wanna be careful about that, because too many is a lot to handle.
-Mini: Though it makes things go a little faster to drop a bunch at once.
+Mini (smile): Though it makes things go a little faster to drop a bunch at once.
 [if hard_drop not gravity]
-Mini: However, pressing the {UP} button doesn't go up! Instead you'll slam the Dracomino down to the ground. Very hard!
+Mini (smile): However, pressing the {UP} button doesn't go up! Instead you'll slam the Dracomino down to the ground. Very hard!
 [if hard_drop]
-Mini: You can't break a Dracomino by slamming it though. They're very, very, very sturdy!
+Mini (tough): You can't break a Dracomino by slamming it though. They're very, very, very sturdy!
 Mini: If you wish to "break" a Dracomino into magic crystals, you have to line up a bunch from wall to wall. [if soft_drop+rotate] Don't leave any gaps either! [if not rotate] Which is very difficult. So just focus on getting coins.
 [if hard_drop not soft_drop/gravity]
-Mini: Don't leave any gaps either! [if not rotate] Well, try your best anyway. [always] Because once you cover a hole, you'll have to fill the line on top of it to open back up.
+Mini (smile): Don't leave any gaps either! [if not rotate] Well, try your best anyway. [always] Because once you cover a hole, you'll have to fill the line on top of it to open back up.
 [if hard_drop+gravity not soft_drop]
-Mini: Also, be careful about slamming a Dracomino over an edge. Because then you'll have to wait for the Dracomino to slowly fall to fill it. It's such a huge waste of time.
+Mini (annoyed): Also, be careful about slamming a Dracomino over an edge. Because then you'll have to wait for the Dracomino to slowly fall to fill it. It's such a huge waste of time.
 [always]
 [SetWorldFlag explained_move]
 
@@ -109,9 +108,9 @@ Mini: Also, be careful about slamming a Dracomino over an edge. Because then you
 
 [Response Tutorial_JustGotHold]
 [if explained_no_hold]
-Mini: Hey! Remember before, when you asked about how to hold Dracominos for later? We can do that now!
+Mini (eager): Hey! Remember before, when you asked about how to hold Dracominos for later? We can do that now!
 [else]
-Mini: Hey! Good news! We can now hold on to Dracominos to use them whenever we want!
+Mini (eager): Hey! Good news! We can now hold on to Dracominos to use them whenever we want!
 [always]
 [ClearWorldFlag explained_no_hold]
 [Jump Tutorial_HasHold]
@@ -122,16 +121,16 @@ Mini: [if not explained_done] Oh! Also, if [else] If [always] you end up in a si
 Mini: On a keyboard, the Shift and Space keys both do this. On a controller, it's the right shoulder.
 [always]
 Mini: Then press {HOLD} again to take it back out. You can also use the number keys to take out just the one you need. Or use the right stick if you're on a controller.
-Mini: But be warned: once you take out of storage again, you can't put it back! So only take it out when you're sure you need it. Or if your current piece is that bad.
-Mini: Oh... Pardon me. There's no such thing as a bad Dracomino. All Dracominos are important, and we need every single one of them! Do your best to find a place for each one!
+Mini (think): But be warned: once you take out of storage again, you can't put it back! So only take it out when you're sure you need it. Or if your current piece is that bad.
+Mini (cute): Whoops. There's no such thing as a bad Dracomino. All Dracominos are important, and we need every single one of them! Do your best to find a place for each one!
 [SetWorldFlag explained_hold]
 [ClearWorldFlag prev_no_hold]
 
 [Response Tutorial_NoHold]
-Mini: Holding Dracominos? There's nowhere to put them though...
-Mini: Once you get a Dracomino, you have to find a place for it. [if rotate] Make sure you clear some lines with it!
+Mini (neutral): Holding Dracominos? There's nowhere to put them though...
+Mini (awkward): Once you get a Dracomino, you have to find a place for it. [if rotate] Make sure you clear some lines with it!
 [if not rotate]
-Mini: Which is tricky though... You'll just have to be smart about where they go. I'm not very good at it.
+Mini (think): Which is tricky though... You'll just have to be smart about where they go. I'm not very good at it.
 [always]
 [SetWorldFlag explained_no_hold]
 
@@ -143,11 +142,11 @@ Mini: Which is tricky though... You'll just have to be smart about where they go
 [Jump Tutorial_NoRotate]
 
 [Response Tutorial_JustGotRotate]
-Mini: Oh! I got something new to tell you! We just got the ability to rotate Dracominos!
+Mini (eager): Oh! I got something new to tell you! We just got the ability to rotate Dracominos!
 [if explained_no_rotate]
-Mini: I remember you were having a lot of trouble with this before. Clearing lines was so difficult.
+Mini (smile): I remember you were having a lot of trouble with this before. Clearing lines was so difficult.
 [else]
-Mini: You've been trying so hard to clear lines without it. I appreciate the dedication you put into helping us! But no longer do you have to take it so tough.
+Mini (tough): You've been trying so hard to clear lines without it. I appreciate the dedication you put into helping us! But no longer do you have to act so tough.
 [always]
 [ClearWorldFlag explained_no_rotate]
 [Jump Tutorial_HasRotate]
@@ -156,100 +155,100 @@ Mini: You've been trying so hard to clear lines without it. I appreciate the ded
 Mini: To turn a Dracomino, press the {ROTATE} button. This way, you can fit them in better places without leaving gaps. This allows us to form full lines of Dracominos.
 [if explained_rotate]
 Mini: Q and E can be used to rotate if you're using WASD to move. Z and X are also an option if you move with the arrow keys.
-Mini: As for the controller... I guess it depends on which controller you have, because they all have different buttons!
-Mini: Just press whatever symbols are on the right and bottom of the right side.
+Mini: As for the controller... I guess it depends on which controller you have. Sometimes it's A and B, and others it's X and O. Don't know why they're so different.
 [if prev_no_rotate]
-Mini: And just so you know, [b]you were never expected to make lines without rotating pieces[/b]. Some people are really curious about that kind of thing. But anyway...
+Mini (awkward): And just so you know, [b]you were never expected to make lines without rotating pieces[/b]. Some people are really curious about that kind of thing. But anyway...
 [always]
-Mini: Build up as many lines as you can! Dracominos are compressed magic. When you put them in a line, they'll burst into magic crystals, which are much easier for us to use.
-Mini: We need to collect as much magic as we can! And grab the coins while you're at it, too!
+Mini (happy): Build up as many lines as you can! Dracominos are compressed magic. When you put them in a line, they'll burst into magic crystals, which are much easier for us to use.
+Mini (smile): We need to collect as much magic as we can! And grab the coins while you're at it, too!
 [SetWorldFlag explained_rotate]
 [ClearWorldFlag prev_no_rotate]
 
 [Response Tutorial_NoRotate]
-Mini: Rotating Dracominos? I don't think that's possible.
+Mini (awkward): Rotating Dracominos? I don't think that's possible.
 Mini: With no way to turn Dracominos, you have to be very careful about where you put them.
 Mini: You might be able to manage to clear a few lines, but [b]you're better off going for coins[/b]. Hopefully we'll get a useful ability from it.
-Mini: Don't worry about lining up Dracominos for now. I think later on, we'll discover a way to rotate.
-Mini: But as it is, making lines is like fishing without a fishing rod. Sure, it's possible. But if you wait and actually get the proper tool, you'll save so much time and effort.
+Mini (smile): Don't worry about lining up Dracominos for now. I think later on, we'll discover a way to rotate.
+Mini (content): But as it is, making lines is like fishing without a fishing rod. Sure, it's possible. But if you wait and actually get the proper tool, you'll save so much time and effort.
 [SetWorldFlag explained_no_rotate]
 
 
 // === Coin explanations ===
 [Response Tutorial_Coins]
 [if not explained_coins]
-Mini: Oh that reminds me of the next thing: Coins!
+Mini (eager): Oh that reminds me of the next thing: Coins!
 Mini: Dragon coins are spread out all over the place. They're filled with magical draconic energy! Because they belonged to dragons first!
 [if explained_coins]
-Mini: To collect coins, place a Dracomino right on it! That way, you'll knock it down so I could reach it.
+Mini (content): To collect coins, place a Dracomino right on it! That way, you'll knock it down so I could reach it.
 Mini: Some of them are up really high, so you'll have to stack Dracominos to reach them. [b]Don't be too afraid to tower up to collect coins[/b].
-Mini: But be careful! If you build too high, the Dracominos will all topple, and you may hurt yourself. I don't want to see you get hurt...
-Mini: And also [b]don't worry about towering to fill lines[/b]! That's kinda crazy. I would never make you do that!
-Mini: Once you grab some coins, hand them over to me!
+Mini (uncomfortable): But be careful! If you build too high, the Dracominos will all topple, and you may hurt yourself. I don't want to see you get hurt...
+Mini (awkward): And also [b]don't worry about towering to fill lines[/b]! That's kinda crazy. I would never make you do that!
+Mini (happy): Once you grab some coins, hand them over to me!
 [always]
-Mini: When I touch a coin, I'm able to extract that energy, and out comes Dracominos!
+Mini (cute): When I touch a coin, I'm able to extract that energy, and out comes Dracominos!
 Mini (think): ...Or other items. Like abilities, which are very useful. But also some not very useful things.
-Mini: Or even weirder things like swords, potions, keys, collectibles, and traps. And then some other person takes it.
-Mini: I don't mind though. I like making people happy with the random stuff I get from time to time. All I need are the coins and Dracominos.
-Mini (cute): With more Dracominos, we could reach further! Which means getting more coins! And then more Dracominos! It's a fun cycle!
+Mini (think): Or even weirder things like swords, potions, keys, collectibles, and traps. And then some other person takes it.
+Mini (smile): I don't mind though. I like making people happy with the random stuff I get from time to time. All I need are the coins and Dracominos.
+Mini (happy): With more Dracominos, we could reach further! Which means getting more coins! And then more Dracominos! It's a fun cycle!
 [SetWorldFlag explained_coins]
 
 // === Done ===
 [Response Tutorial_Done]
-Mini: And that it for my lesson! Now you can help me and my partner with our goal of collecting as much gold and mana as we can!
+Mini (happy): And that it for my lesson! Now you can help me and my partner with our goal of collecting as much gold and mana as we can!
 Mini: Before we get back to it, do you have any questions?
 [SetWorldFlag explained_done]
 
 [Response Dracominos]
-Mini: Oh... Still confused about Dracominos? I guess... I'm not quite sure myself.
+Mini (think): Oh... Still confused about Dracominos? I guess... I'm not quite sure myself.
 Mini: I at least know they're magic blocks. Like, hardened magic materialized into a physical shape.
 Mini: I don't understand how I'm able to create them. Even my partner is stumped, and they're the magic expert.
-Mini: But the way they said it, my ability helps us move magic around by taking it from things, so we could use it for our needs.
-Mini: For everyone else, it's hard to drain the magic from coins. Well, not [i]hard[/i] but rather, slow and boring.
-Mini: But somehow I'm able to just pull it out, and it turns into a colorful block. Still, there's not much we can do with it in this state because the magic is trapped inside.
-Mini: Dracominos are like nuts. Magical, square nuts, with a very hard shell. But once you crack it open, you get the yummy insides!
-Mini: Though it's not as easy as it sounds. Dracominos are very tough, like adamantite. You can't break them with brute force.
-Mini: Well... actually, you can break them if hit hard enough. Like, very, very hard. I mean... of course it's hard! I just compared it to adamantite!
-Mini: And if you do manage to break it that way, it just turns into aether... which is... uh... proto-magic? I dunno. I wish Meg were here to explain the magic stuff.
-Mini: Aether has the potential to be anything. But it's hard to work with. I don't even know where to begin messing with that stuff.
-Mini: But my partner can use aether to shape it back into Dracominos. So at the very least, nothing goes to waste.
+Mini (smile): But the way they said it, my ability helps us move magic around by taking it from things, so we could use it for our needs.
+Mini (bored): For everyone else, it's hard to drain the magic from coins. Well, not [i]hard[/i] but rather, slow and boring.
+Mini (awkward): But somehow I'm able to just pull it out, and it turns into a colorful block. Still, there's not much we can do with it in this state because the magic is trapped inside.
+Mini (cute): Dracominos are like nuts. Magical, square nuts, with a very hard shell. But once you crack it open, you get the yummy insides!
+Mini (tough): Though it's not as easy as it sounds. Dracominos are very tough, like adamantite. You can't break them with brute force.
+Mini (awkward): Well... actually, you can break them if hit hard enough. Like, very, very hard. I mean... of course it's hard! I just compared it to adamantite!
+Mini (confused): And if you do manage to break it that way, it just turns into aether... which is... uh... proto-magic? I dunno. I wish Meg were here to explain the magic stuff.
+Mini (think): Aether has the potential to be anything. But it's hard to work with. I don't even know where to begin messing with that stuff.
+Mini (smile): But my partner can use aether to shape it back into Dracominos. So at the very least, nothing goes to waste.
 Mini: Anyway, to make better use of Dracominos, you have to line them up to get them to burst into mana crystals. [i]These[/i] are what we can use.
 Mini: Mana can be used for magic stuff! Like spells, or enchanting.
-Mini: While I'm not good at magic, it's still very important to dragons. We'd get sick if we didn't get enough of the stuff.
+Mini (cute): While I'm not good at magic, it's still very important to dragons. We'd get sick if we didn't get enough of the stuff.
 Mini: Anyway... I explained Dracominos and magic the best I can. We're working for an important goal, so we need as much magic as we can get. Coins, too!
 [SetWorldFlag explained_dracominos]
 
 [Response Tutorial_DoneForReal]
-Mini: Allrighty! Best of luck on converting the Dracominos for us! [if rotate]I appreciate your help tons!
+Mini (happy): Alrighty! Best of luck on converting the Dracominos for us! [if rotate]I appreciate your help tons!
 [if explained_no_rotate not rotate]
-Mini: I know it may not seem like it, but you're doing a great job! Keep it up, but go at your own pace.
+Mini (smile): I know it may not seem like it, but you're doing a great job! Keep it up, but go at your own pace.
 [if explained_dracominos]
-Mini: And thanks for being such a good listener. I'm happy to meet someone so eager to know us and help us with our goal!
+Mini (happy): And thanks for being such a good listener. I'm happy to meet someone so eager to know us and help us with our goal!
 [if not tutorial]
-Mini: Oh! And if you ever want my help again, press the F1 button! I'm always happy to help!
+Mini (cute): Oh! And if you ever want my help again, press the F1 button! I'm always happy to help!
 [always]
 [SetWorldFlag tutorial]
 [End]
 
 // === The fishing tutorial part ===
 [State FishingTutorial]
-Mini: Hey there! You caught me in the middle of fishing.
-Mini: Some of our Dracominos fell into the river, so we need to catch them. Good thing I'm an experienced fisher!
-Mini: Hey, do you want me to teach you how to fish? It's really fun, and easy!
+Mini (cute): Hey there! You caught me in the middle of fishing.
+Mini (awkward): Some of our Dracominos fell into the river, so we need to catch them.
+Mini (tough): Good thing I'm an experienced fisher!
+Mini (eager): Hey, do you want me to teach you how to fish? It's really fun, and easy!
 
 [Choice Yes] You: Yes
 [Choice No if not explained_fishing] You: No
 [Choice No_ExplainedAlready if explained_fishing] You: No
 
 [Response Yes]
-Mini: [wave]Awesome!!![/wave] [if explained_fishing]I'll explain it as many times as you want!
+Mini (happy): [wave]Awesome!!![/wave] [if explained_fishing]I'll explain it as many times as you want!
 Mini: First, you'd need a fishing rod, like this one I have here.
 Mini: For fishing, you'll only need one button. So pick your favorite button to cast your rod! Hold it down to charge your cast. The longer you charge, the further you throw the hook.
 Mini: Next, let the hook sink into the water so it could come into contact with a fish. Press any button to pull the hook closer to you.
-Mini: Once you hooked a yummy fish, pull it in!
-Mini: Some fish will try to get away. If you shake the rod too much, the fish will go faster, so don't do that. You ideally want to pull for a couple seconds at a time before tugging again.
+Mini (cute): Once you hooked a yummy fish, pull it in!
+Mini (tough): Some fish will try to get away. If you shake the rod too much, the fish will go faster, so don't do that. You ideally want to pull for a couple seconds at a time before tugging again.
 Mini: Once you get the fish close to you, pull again, and you'll catch it!
-Mini: From that point, you can then make a tasty meal out of your fresh fish! Or you can sell it to get some coins. This is what I do. More coins means more Dracominos!
+Mini (cute): From that point, you can then make a tasty meal out of your fresh fish! Or you can sell it to get some coins. This is what I do. More coins means more Dracominos!
 [SetWorldFlag explained_fishing]
 [if not tutorial]
 Mini: I hope that was helpful. If you need me again, press the F1 button! I'm always happy to help!
@@ -258,8 +257,8 @@ Mini: I hope that was helpful. If you need me again, press the F1 button! I'm al
 [End]
 
 [Response No]
-Mini: Oh...
-Mini: Well, that's okay. If you ever want fresh fish, I'd be happy to sell some to you!
+Mini (bothered): Oh...
+Mini (evil): Well, that's okay. If you ever want fresh fish, I'd be happy to sell some to you! Bring lots of shiny coins!
 [if not tutorial]
 Mini: And also, if you ever change your mind, press the F1 button! I'll happily teach you how to fish!
 [always]
@@ -267,6 +266,6 @@ Mini: And also, if you ever change your mind, press the F1 button! I'll happily 
 [End]
 
 [Response No_ExplainedAlready]
-Mini: Oh, right. I already taught you! Hehe.
-Mini: Well, if you ever want a refresher, you know who to go to!
+Mini (cute): Oh, right. I already taught you! Hehe.
+Mini (cute): Well, if you ever want a refresher, you know who to go to!
 [End]
