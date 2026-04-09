@@ -1,17 +1,45 @@
 [State]
-[AlignRight Mega]
-Mega: [ShowCutscene boardcutscene] In Dracomino, the locations you're expected to reach depends on the Rotate ability and the total amount of blocks your pieces make up.
+[AlignRight Mega][WorldCount mega_annoyed threshold 3]
+// Deny dispelling fishing if you annoyed Mega before
+[if mode=fishing+mega_annoyed]
+[GotoState DispelDenied_Mini]
+// Mega is annoyed (Phase 3)
+[if effects_active+mega_annoyed]
+Mega (annoyed): [ShowCutscene boardcutscene]...
+[if effects_active+mega_annoyed not mega_very_annoyed]
+Mega (annoyed): You know, it costs mana to dispel these traps. 
+[if effects_active+mega_annoyed]
+Mega (conjuring): *Mega dispels the effect* [Emit dispel_all_effects][WorldCount dispels_done amount 1 add][WorldCount mega_very_annoyed amount 1 add]
+Mega: In Dracomino, the locations you're expected to reach depends on the Rotate ability and the total amount of blocks your pieces make up.
+[else]
+// The actual beginning of the tutorial
+Mega: [ShowCutscene boardcutscene] In Dracomino, the locations you're expected to reach [if effects_active+dispels_done]...[else]depends on the Rotate ability and the total amount of blocks your pieces make up.
+// Mega is annoyed (Phase 2)
+[if effects_active+dispels_done not mega_annoyed]
+Mega (annoyed): Really? Again?
+Mega (conjuring): *Mega dispels the effect* [Emit dispel_all_effects][WorldCount dispels_done amount 1 add][WorldCount mega_annoyed amount 1 add]
+Mega (unimpressed): I wish you would take my time seriously.
+Mega: Anyway, back to the tutorial.
+[always]
+// Tutorial continuation
 Mega: Line clears are [b]not in logic until you have the ability to rotate[/b].
 Mega: In a solo game, you can expect to find Rotate at a coin location in your first 20 lines.
 Mega: [Emit progress_tutorial_logic] For line clears, the number of lines you can fill with your blocks is the number of lines in logic.
 // ** Example - 8 rows of lines representing available blocks. 8 lines worth of blocks make 8 lines in logic **
 Mega: [Emit progress_tutorial_logic] The option [b]Line Clear Leniency[/b] will require additional lines worth of blocks for a line clear location to be in logic, making the requirement less strict.
+[if overlay_pixel/overlay_crystal not dispels_done]
+// Dispel annoying visuals
+Mega (annoyed): ...
+Mega (annoyed): This effect is getting on my nerves.
+Mega (conjuring): *Mega dispels the effect* [Emit dispel_all_effects][WorldCount dispels_done amount 1 add]
+[always]
+// Tutorial continuation
 // ** Example - 10 rows of lines representing available blocks. 2 of those lines represent leniency. 10 lines worth of blocks makes 8 lines in logic **
 Mega: The logic may seem strict at first, especially dealing with imperfect placement of various shapes, but it's actually lenient.
 Mega: [Emit progress_tutorial_logic] Stacking pieces can allow you to reach lines higher. You can reach above 10 lines above par with this method.
 // ** Example - A 2-wide column extends up 15 lines. On top of it, 2 lines are filled. The bottom 5 lines are filled with ghost blocks, representing 5 lines worth of blocks are used **
-Mega: Even though this is possible, [b]it's not part of logic at all[/b]. Players are not expected to do this.
-Mega: The point: this demonstrates that if players can reach over 10 lines above par, then [b]reaching par isn't a problem[/b].
+Mega (unimpressed): Even though this is possible, [b]it's not part of logic at all[/b]. Players are not expected to do this.
+Mega (unimpressed): The point: this demonstrates that if players can reach over 10 lines above par, then [b]reaching par isn't a problem[/b].
 Mega: Additionally, the option [b]Max Stacking Height does [i]not[/i] affect line clear locations[/b]. This option is purely for coin locations.
 Mega: [Emit progress_tutorial_logic] For coin locations, the coins are in logic when you have enough blocks to form a column of a certain width.
 Mega: [Emit progress_tutorial_logic] Before you have Rotate, the coins in logic can be reached with a 4-wide column up to Max Stacking Height.
@@ -24,4 +52,11 @@ Mega: [Emit progress_tutorial_logic] Lowering Max Stacking Height will increase 
 // ** Example - 14 rows of lines are filled. On top, a 2-wide column extends 1 line, representing a max stacking height of 1. A total of 142 blocks are required for this coin to be in logic **
 [SetWorldFlag tutorial_logic]
 [HideCutscene]
+[End]
+
+[State DispelDenied_Mini] 
+Mega (unimpressed): [ShowCutscene boardcutscene]...
+Mega (unimpressed): No... I'm am not dispelling Time to Fish with my mate. You will fish whether you like it or not.
+Mini (panicked): [HideCutscene] What?! You were trying to dispel fishing time?!...
+Mini (grumpy): I can't believe this!
 [End]

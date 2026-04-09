@@ -22,6 +22,9 @@ static func instantiateEffect(flag:String, duration:int = -1) -> ActiveEffect:
 	ae.priority = FlagHolder.PRIORITY.OBJECT
 	ae.durationLeft = duration
 	ae.tree_entered.connect(ae.setFlag.bind(flag), CONNECT_ONE_SHOT)
+	ae.tree_entered.connect(ae.count.bind("effects_active", flag, 1), CONNECT_ONE_SHOT)
+	SignalBus.getSignal("dispel_"+flag).connect(ae._on_dispelled, CONNECT_ONE_SHOT)
+	SignalBus.getSignal("dispel_all_effects").connect(ae._on_dispelled, CONNECT_ONE_SHOT)
 	return ae
 
 # === Events ===
@@ -34,3 +37,9 @@ func _on_effect_duration_down() -> void:
 	else:
 		_cooldownTimer = get_tree().create_timer(EFFECT_DURATION_TICK_COOLDOWN, true)
 		_cooldownTimer.timeout.connect(set.bind("_cooldownTimer", null))
+
+func _on_dispelled() -> void:
+	if is_queued_for_deletion():
+		return
+	SoundManager.play("untrap")
+	queue_free()
