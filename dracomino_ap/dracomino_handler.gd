@@ -28,14 +28,6 @@ var slotContextHash:int:
 			return
 		slotContextHash = value
 		slotContextHash_updated.emit(slotContextHash)
-var energyLinkEnabled:bool = false:
-	set(value):
-		if energyLinkEnabled == value: return
-		energyLinkEnabled = value
-		if energyLinkEnabled:
-			FlagManager.setFlag("energy_link", value)
-		else:
-			FlagManager.clearFlag("energy_link", value)
 var seedFlagHolder:FlagHolder
 var effectHandler:EffectHandler
 
@@ -100,8 +92,6 @@ class Streak:
 func _ready() -> void:
 	Archipelago.connected.connect(_on_connected)
 	Archipelago.remove_location.connect(_on_remove_location)
-	SignalBus.getSignal("energyLink_enabled").connect(set.bind("energyLinkEnabled", true))
-	SignalBus.getSignal("energyLink_disabled").connect(set.bind("energyLinkEnabled", false))
 	
 	# Create flag holder
 	resetSeedFlagHolder()
@@ -346,10 +336,10 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 			else "deathOnRestart_disabled"
 		).emit()
 	# Set energy link
-	SignalBus.getSignal(
-		"energyLink_enabled" if conn.slot_data.get("energy_link", true)
-		else "energyLink_disabled"
-	).emit()
+	if conn.slot_data.get("energy_link", true):
+		FlagManager.setFlag("energy_link")
+	else:
+		FlagManager.clearFlag("energy_link")
 	#
 	var randomizeOrientations = conn.slot_data.get("randomize_orientations", false)
 	if randomizeOrientations:
@@ -550,7 +540,7 @@ func _on_Board_lines_cleared(lines:Array) -> void:
 	# Send mana/energy
 	var manaEarned:float = lines.size() * Board.BOUNDS.size.x * CONSTANTS.MANA_PER_BLOCK
 	var sharedMana:float = 0.0
-	if energyLinkEnabled:
+	if FlagManager.isFlagSet("energy_link"):
 		sharedMana = manaEarned * CONSTANTS.ENERGY_LINK_SHARE
 		sendEnergy(round(sharedMana * CONSTANTS.MANA_TO_ENERGY_RATIO))
 	seedFlagHolder.count("mana", "earned", manaEarned - sharedMana, true)
