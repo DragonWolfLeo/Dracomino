@@ -47,6 +47,8 @@ func _ready() -> void:
 
 	effectDurationTicker.timeout.connect(_on_effectDurationTicker_timeout)
 
+	_on_deferred_focus_exited.call_deferred()
+
 func _gui_input(event: InputEvent) -> void:
 	if event.is_action_pressed("restart"):
 		SignalBus.getSignal("restartGame").emit()
