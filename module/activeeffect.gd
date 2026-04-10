@@ -23,8 +23,8 @@ static func instantiateEffect(flag:String, duration:int = -1) -> ActiveEffect:
 	ae.durationLeft = duration
 	ae.tree_entered.connect(ae.setFlag.bind(flag), CONNECT_ONE_SHOT)
 	ae.tree_entered.connect(ae.count.bind("effects_active", flag, 1), CONNECT_ONE_SHOT)
-	SignalBus.getSignal("dispel_"+flag).connect(ae._on_dispelled, CONNECT_ONE_SHOT)
-	SignalBus.getSignal("dispel_all_effects").connect(ae._on_dispelled, CONNECT_ONE_SHOT)
+	SignalBus.getSignal("dispel_"+flag).connect(ae._on_dispelled)
+	SignalBus.getSignal("dispel_all_effects").connect(ae._on_dispelled)
 	return ae
 
 # === Events ===
@@ -45,7 +45,7 @@ func _on_dispelled() -> void:
 		return
 
 	var manaStored:float = FlagManager.getTotalCountAmount("mana")
-	print("We have %s mana"%manaStored, "cost: ", CONSTANTS.DISPEL_MANA_COST)
+	print("Stored mana: ", manaStored, "; Cost: ", CONSTANTS.DISPEL_MANA_COST)
 	if manaStored >= CONSTANTS.DISPEL_MANA_COST:
 		# Use local mana storage
 		FlagManager.setFlag("last_used_local_mana_balance")
@@ -54,6 +54,8 @@ func _on_dispelled() -> void:
 		# Queue it in a mana transaction
 		var manaCost:float = max(0, CONSTANTS.DISPEL_MANA_COST - manaStored)
 		DracominoUtil.tryEnergyLinkManaTransaction(manaCost, _on_successful_dispel.bind(manaStored))
+	else:
+		print("Did not have enough mana to dispel effect")
 
 func _on_successful_dispel(localManaCost:float = 0) -> void:
 	FlagManager.HANDLERS.WORLD.count("mana", "dispel_cost", -localManaCost, true) 
