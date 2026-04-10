@@ -28,8 +28,14 @@ var slotContextHash:int:
 			return
 		slotContextHash = value
 		slotContextHash_updated.emit(slotContextHash)
-var energyLinkEnabled:bool = false ## Static variable. Could probably be put somewhere neater
-var storedMana:float = 0 ## The amount of mana saved. Doesn't do anything yet
+var energyLinkEnabled:bool = false:
+	set(value):
+		if energyLinkEnabled == value: return
+		energyLinkEnabled = value
+		if energyLinkEnabled:
+			FlagManager.setFlag("energy_link", value)
+		else:
+			FlagManager.clearFlag("energy_link", value)
 var seedFlagHolder:FlagHolder
 var effectHandler:EffectHandler
 
@@ -547,7 +553,7 @@ func _on_Board_lines_cleared(lines:Array) -> void:
 	if energyLinkEnabled:
 		sharedMana = manaEarned * CONSTANTS.ENERGY_LINK_SHARE
 		sendEnergy(round(sharedMana * CONSTANTS.MANA_TO_ENERGY_RATIO))
-	storedMana += manaEarned - sharedMana
+	seedFlagHolder.count("mana", "earned", manaEarned - sharedMana, true)
 
 func _on_Board_item_pickedup(loc_id) -> void:
 	print("Picked up ", CONSTANTS.LOCATIONS[loc_id].prettyName)

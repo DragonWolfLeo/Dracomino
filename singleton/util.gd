@@ -78,7 +78,75 @@ class DeathContext:
 			addContext(tag)
 		return self
 
+# Mode stuff
 static func getParentMode(node:Node) -> Mode:
 	while node and not node is Mode:
 		node = node.get_parent()
 	return node
+
+# Energy Link Stuff
+class EnergyLinkTransactionContext:
+	var manaCost:float = 0
+	var onSuccess:Callable
+	func _init(_manaCost:float, _onSuccess:Callable) -> void:
+		manaCost = _manaCost
+		onSuccess = _onSuccess
+
+static var _bufferedTransactionFns:Array[EnergyLinkTransactionContext]
+static var _bufferedTransactionLifetimeTween:Tween
+static func tryEnergyLinkManaTransaction(manaCost:float, onSuccess:Callable) -> void:
+	if Archipelago.conn and FlagManager.isFlagSet("energy_link"):
+		# Defer a check for bank balance and decide if we can make transaction
+		Archipelago.conn.retrieve.call_deferred("EnergyLink" + str(Archipelago.conn.team_id), makeEnergyLinkTransaction)
+		# Add to the buffer and make lifetime tween
+		_bufferedTransactionFns.append(EnergyLinkTransactionContext.new(manaCost, onSuccess))
+		if _bufferedTransactionLifetimeTween:
+			_bufferedTransactionLifetimeTween.kill()
+		_bufferedTransactionLifetimeTween = Game.create_tween()
+		_bufferedTransactionLifetimeTween.tween_callback(_bufferedTransactionFns.clear).set_delay(5.0)
+	else:
+		_bufferedTransactionFns.clear()
+		print("EnergyLink transaction failed: not connected or EnergyLink is disabled!")
+
+static func makeEnergyLinkTransaction(energyBankBalance:Variant) -> void:
+	if not _bufferedTransactionFns.size() or not(energyBankBalance is float or energyBankBalance is int):
+		return
+	_bufferedTransactionLifetimeTween.kill()
+	var bufferedTransactionFns = _bufferedTransactionFns.duplicate()
+	_bufferedTransactionFns.clear()
+	var approvedSuccessFns:Array[Callable] = []
+
+	# Get energy cost all added up
+	var energyCost:float = 0
+	for transaction:EnergyLinkTransactionContext in bufferedTransactionFns:
+		if not transaction.onSuccess.is_valid():
+			# The parent node will freed before we had to chance to call this
+			continue
+		var transactionEnergyCost:float = transaction.manaCost * CONSTANTS.MANA_TO_ENERGY_RATIO
+		if energyBankBalance < energyCost + transactionEnergyCost:
+			# Can't afford the thing
+			print("EnergyLink transaction failed: energy cost %s exceeds energy bank balance %s"%[energyCost + transactionEnergyCost, energyBankBalance])
+			break
+		energyCost += max(0, transactionEnergyCost)
+		approvedSuccessFns.append(transaction.onSuccess)
+
+	if energyCost == 0:
+		print("EnergyLink transaction failed: no transaction was approved")
+		return
+
+	# Send the withdrawal request
+	var args = {
+		"key": "EnergyLink" + str(Archipelago.conn.team_id),
+		"default": 0,
+		"operations": [
+			{"operation": "add", "value": -energyCost},
+			{"operation": "max", "value": 0},
+		]
+	}
+	Archipelago.send_command("Set", args)
+
+	# We'll call that a success. I don't think we need the reply for this(?) But maybe it will be good if we want to guarantee an accurate bank balance
+	print("Energy transaction succeeded: spent %s, predicted bank balance %s"%[energyCost, (energyBankBalance-energyCost)])
+	FlagManager.setFlag("last_known_energy_bank_balance", energyBankBalance-energyCost)
+	for fn in approvedSuccessFns:
+		fn.call()

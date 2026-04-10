@@ -5,6 +5,8 @@ var MANA_TO_ENERGY_RATIO:float = 1e6
 var MANA_PER_BLOCK:float = 4
 var ENERGY_LINK_SHARE:float = 0.5
 
+var DISPEL_MANA_COST:float = MANA_PER_BLOCK * 100 # Ten lines worth
+
 # Colors
 class COLOR:
 	static var PROGUSEFUL =  Color8(0xFF, 0xAA, 0x00)

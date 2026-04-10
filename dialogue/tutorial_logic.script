@@ -9,7 +9,7 @@ Mega (annoyed): [ShowCutscene boardcutscene]...
 [if effects_active+mega_annoyed not mega_very_annoyed]
 Mega (annoyed): You know, it costs mana to dispel these traps. 
 [if effects_active+mega_annoyed]
-Mega (conjuring): *Mega dispels the effect* [Emit dispel_all_effects][WorldCount dispels_done amount 1 add][WorldCount mega_very_annoyed amount 1 add]
+[WorldCount mega_very_annoyed amount 1 add][SubDialogue tutorial_logic DispelMacro]
 Mega: In Dracomino, the locations you're expected to reach depends on the Rotate ability and the total amount of blocks your pieces make up.
 [else]
 // The actual beginning of the tutorial
@@ -17,7 +17,7 @@ Mega: [ShowCutscene boardcutscene] In Dracomino, the locations you're expected t
 // Mega is annoyed (Phase 2)
 [if effects_active+dispels_done not mega_annoyed]
 Mega (annoyed): Really? Again?
-Mega (conjuring): *Mega dispels the effect* [Emit dispel_all_effects][WorldCount dispels_done amount 1 add][WorldCount mega_annoyed amount 1 add]
+[WorldCount mega_annoyed amount 1 add][SubDialogue tutorial_logic DispelMacro]
 Mega (unimpressed): I wish you would take my time seriously.
 Mega: Anyway, back to the tutorial.
 [always]
@@ -31,7 +31,7 @@ Mega: [Emit progress_tutorial_logic] The option [b]Line Clear Leniency[/b] will 
 // Dispel annoying visuals
 Mega (annoyed): ...
 Mega (annoyed): This effect is getting on my nerves.
-Mega (conjuring): *Mega dispels the effect* [Emit dispel_all_effects][WorldCount dispels_done amount 1 add]
+[SubDialogue tutorial_logic DispelMacro]
 [always]
 // Tutorial continuation
 // ** Example - 10 rows of lines representing available blocks. 2 of those lines represent leniency. 10 lines worth of blocks makes 8 lines in logic **
@@ -56,7 +56,29 @@ Mega: [Emit progress_tutorial_logic] Lowering Max Stacking Height will increase 
 
 [State DispelDenied_Mini] 
 Mega (unimpressed): [ShowCutscene boardcutscene]...
-Mega (unimpressed): No... I'm am not dispelling Time to Fish with my mate. You will fish whether you like it or not.
+Mega (unimpressed): No... I'm am not dispelling Time to Fish with my mate. You will fish with them whether you like it or not.
 Mini (panicked): [HideCutscene] What?! You were trying to dispel fishing time?!...
 Mini (grumpy): I can't believe this!
+[End]
+
+
+[State DispelMacro]
+Mega (cast): *Mega casts a spell!* [Emit dispel_all_effects][WorldCount dispels_done amount 1 add]
+[if last_mana_transaction_succeeded]
+Mega (cast): *The effects were magically dispelled!* [if last_used_local_mana_balance][End]
+[if last_mana_transaction_succeeded not last_used_local_mana_balance]
+Mega (cast): *Since you didn't have enough mana for this spell, energy was withdrawn through Energy Link.*
+[End]
+[else]
+Mega (cast): ... // Give it time to wait a bit
+[if last_mana_transaction_succeeded]
+Mega (cast): *The effects were magically dispelled!* [if last_used_local_mana_balance][End]
+[if last_mana_transaction_succeeded not last_used_local_mana_balance]
+Mega (cast): *Since you didn't have enough mana for this spell, energy was withdrawn through Energy Link.*
+[End]
+[else]
+Mega: Looks like we're out of mana, so the spell didn't work. *sigh*
+[if last_mana_transaction_succeeded]
+Mega: ...Oh. [i]There[/i] it goes.
+[always]
 [End]
