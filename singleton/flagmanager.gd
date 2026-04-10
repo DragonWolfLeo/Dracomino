@@ -196,5 +196,11 @@ func _on_stateflags_aboutToDirty(flags, source:FlagHolder):
 		elif flagWasSet[flag]:
 			stateflag_cleared.emit(flag)
 		
-		if flagPrevValue[flag] != getFlagValue(flag) or flagTotalCount[flag] != getTotalCountAmount(flag):
+		var v1 = getFlagValue(flag)
+		var v2 = flagPrevValue[flag]
+		if (
+			typeof(v1) != typeof(v2)
+			or (v1 != v2)
+			or (flagTotalCount[flag] != getTotalCountAmount(flag))
+		):
 			stateflag_changed.emit(flag)
