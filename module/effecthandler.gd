@@ -41,7 +41,7 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 	pixellation_trap = Effect.new(_activateEffect.bind("overlay_pixel", 6)),
 	fracture_trap = Effect.new(_activateEffect.bind("overlay_fracture")),
 	zoom_trap = Effect.new(_activateEffect.bind("effect_zoom", 2)),
-	impatience_trap = Effect.new(SignalBus.getSignal("effect_impatience").emit),
+	impatience_trap = Effect.new(SignalBus.getSignal("effect_impatience").emit).setCanTriggerFn(_canDoImpatienceTrap).addContext("delayed"),
 	commitment_trap = Effect.new(_activateEffect.bind("committed", -1)),
 	egg = Effect.new(_NOOP),
 	noop = Effect.new(_NOOP),
@@ -63,6 +63,9 @@ func _setMode(modeName:StringName) -> void:
 
 func _piecesAreLeft(amount:int) -> bool:
 	return FlagManager.getTotalCountAmount("shapes_left") >= amount
+
+func _canDoImpatienceTrap() -> bool:
+	return _piecesAreLeft(3) and FlagManager.getTotalCountAmount("shapes_active") < 5
 
 func _loadDialogue(dialogue:Variant) -> void:
 	DialogueManager.loadDialogue(dialogue)

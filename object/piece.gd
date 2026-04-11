@@ -131,6 +131,7 @@ var isFocus:bool: ## Decides whether or not piece listens to inputs
 		isFocus = value
 		set_process_unhandled_input(value)
 		if not value: focus_lost.emit()
+var flagHolder:FlagHolder
 
 static var GHOSTPIECE_SCENE:PackedScene = load("res://object/ghostpiece.tscn")
 
@@ -141,6 +142,9 @@ signal focus_lost()
 
 #==== Virtuals ======
 func _ready() -> void:
+	flagHolder = FlagHolder.new(FlagHolder.PRIORITY.OBJECT)
+	flagHolder.count("shapes_active", "amount", 1)
+	add_child(flagHolder)
 	SignalBus.getSignal("setting_changed", "gravity").connect(_on_gravity_setting_changed)
 	_on_gravity_setting_changed()
 
@@ -181,6 +185,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func makeActive():
 	process_mode = Node.PROCESS_MODE_INHERIT
 	set_process_unhandled_input(isFocus)
+	if flagHolder: flagHolder.monitoring = true
 	show()
 	if FlagManager.isFlagSet("ghost_piece") and ghost:
 		ghost.show()
@@ -192,6 +197,7 @@ func makeActive():
 func makeLimbo():
 	process_mode = Node.PROCESS_MODE_DISABLED
 	set_process_unhandled_input(false)
+	if flagHolder: flagHolder.monitoring = false
 	hide()
 
 func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects:Dictionary[StringName, DracominoHandler.StateItem] = {}) -> void:

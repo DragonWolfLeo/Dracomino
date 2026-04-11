@@ -11,6 +11,8 @@ var DANGER_ZONE := BOUNDS.grow_individual(-2, 0, -2, -17)
 var ALLOW_GRAVITY_DROP:bool = true # TODO: Make an option
 var OPACITY_REDUCTION_PER_GHOST:float = 1/3 # 
 var MAX_PIECES:int = 8
+var EFFECT_IMPATIENCE_NUM_PIECES_TO_SPAWN:int = 3
+var DELAYED_EFFECT_CONTEXT_DURATION:float = 1.3
 
 static var ACTIVE_TILE_ATLAS_ROW:int = 0
 static var SET_TILE_ATLAS_ROW:int = 1
@@ -153,6 +155,8 @@ func _ready():
 	var mode:Mode = DracominoUtil.getParentMode(self)
 	if mode:
 		mode.mode_enabled.connect(_on_mode_enabled)
+	# Effect signals
+	SignalBus.getSignal("effect_impatience").connect(_on_effect_impatience)
 
 	# Make line numbers labels
 	for i:int in range(BOUNDS.end.y):
@@ -225,6 +229,12 @@ func requestPiece(allowMultiplePieces:bool = false):
 			return
 		checkForEvent()
 		return
+	
+	# Try to spawn delayed thing
+	var tween:Tween = effectHandler.create_tween()
+	tween.tween_callback(effectHandler.tryToTriggerNextEffect.bind(["delayed"] as Array[StringName]))\
+	.set_delay(DELAYED_EFFECT_CONTEXT_DURATION/Config.getSetting("gravity", 1.0))
+
 	fillPreview(2) # Generate one extra because we're gonna use it, and another so gravity drop can work
 	if clearingChunks.size() or (activePieces.size() and activePieces[0].moveLock):
 		var nextPiece = previewStorage.nextPiece()
@@ -926,3 +936,9 @@ func _on_effected_activated(item:DracominoHandler.StateItem):
 		if trapLinkAlias and Archipelago.conn:
 			Archipelago.conn.send_traplink(trapLinkAlias)
 			print("Sending trap: ", trapLinkAlias)
+
+func _on_effect_impatience():
+	var tween:Tween = create_tween().set_parallel()
+	SoundManager.play("trap")
+	for i in range(EFFECT_IMPATIENCE_NUM_PIECES_TO_SPAWN):
+		tween.tween_callback(requestPiece.bind(true)).set_delay(i*0.5)

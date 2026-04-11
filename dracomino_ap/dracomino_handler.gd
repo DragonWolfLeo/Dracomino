@@ -33,6 +33,7 @@ var effectHandler:EffectHandler
 
 var isJustConnected:bool = false
 var VERSION_WARNING_DIALOG_SCENE:PackedScene = load("res://ui/versionwarning_dialog.tscn")
+var DELAYED_EFFECT_CONTEXT_DURATION:float = 0.5 # Shorter than board's
 
 var LINE_THRESHOLD_FOR_NO_ROTATE_DEATH_CONTEXT:int = 8 ## For death context
 var _canUseDeathContext_NO_ROTATE:bool = false ## For death context
@@ -343,18 +344,32 @@ func giveItem(item:StateItem):
 			# Trigger effects
 			"on_lock", "on_spawn":
 				if not isJustConnected:
-					var result = effectHandler.tryToTriggerEffect(item, false)
-					if result and FlagManager.isFlagSet("trap_link"):
-						var trapLinkAlias:String = CONSTANTS.TRAP_ALIASES.get(item.data.internalName, "")
-						if trapLinkAlias and Archipelago.conn:
-							Archipelago.conn.send_traplink(trapLinkAlias)
-							print("Sending trap: ", trapLinkAlias)
-
+					var result = triggerEffect(item)
+					if not result:
+						# Is this a delayed effect?
+						var fx = effectHandler.getEffectObject(item)
+						if fx.context.has("delayed"):
+							# Then spawn it again delayed
+							var tween:Tween = create_tween()
+							tween.tween_callback(triggerEffect.bind(item, ["delayed"] as Array[StringName]))\
+							.set_delay(DELAYED_EFFECT_CONTEXT_DURATION/Config.getSetting("gravity", 1.0))
 
 	else:
 		print("Obtained invalid item: id: {id}; name: {name}; You may be running an outdated version of the client!"
 			.format({id=item.id,name=item.get_name()})
 		)
+
+func triggerEffect(stateItem:StateItem, context:Array[StringName] = []) -> bool: ## Return true on null or success
+	if not stateItem or not stateItem.data:
+		return true
+	var result = effectHandler.tryToTriggerEffect(stateItem, false, context)
+	if result and FlagManager.isFlagSet("trap_link"):
+		var trapLinkAlias:String = CONSTANTS.TRAP_ALIASES.get(stateItem.data.internalName, "")
+		if trapLinkAlias and Archipelago.conn:
+			Archipelago.conn.send_traplink(trapLinkAlias)
+			print("Sending trap: ", trapLinkAlias)
+	return result
+
 
 #===== Events =====
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
