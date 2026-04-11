@@ -43,7 +43,18 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 	zoom_trap = Effect.new(_activateEffect.bind("effect_zoom", 2)),
 	impatience_trap = Effect.new(SignalBus.getSignal("effect_impatience").emit),
 	commitment_trap = Effect.new(_activateEffect.bind("committed", -1)),
+	egg = Effect.new(_NOOP),
 	noop = Effect.new(_NOOP),
+	enchantment_curse = Effect.new(_NOOP),
+	enchantment_curse_gravity = Effect.new(_NOOP),
+	enchantment_curse_movement = Effect.new(_NOOP),
+	enchantment_legendary_movement = Effect.new(_NOOP),
+	enchantment_legendary_spin = Effect.new(_NOOP),
+	enchantment = Effect.new(_NOOP),
+
+	# == Trap Link Specific ==
+	fade_trap = Effect.new(SignalBus.getSignal("effect_fade").emit),
+	random_trap = Effect.new(_NOOP),
 }
 
 # === Private functions ===
