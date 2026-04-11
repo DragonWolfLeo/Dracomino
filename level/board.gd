@@ -37,6 +37,7 @@ static var SET_TILE_ATLAS_ROW:int = 1
 
 @onready var activatedTileHandler:ActivatedTileHandler = $ActivatedTileHandler
 @onready var masterCoin:Node2D = $MasterCoin
+@onready var focusCamera:Camera2D = $FocusCamera
 
 var activePieces:Array[Piece] = []
 
@@ -187,6 +188,12 @@ func chooseNewFocusPiece(requestIfNone:bool = false) -> void:
 		if not piece.moveLock and not focusPiece:
 			piece.isFocus = true
 			focusPiece = piece
+			# Make focus camera follow with a bit of a delay
+			if piece == activePieces.front():
+				var tween:Tween = piece.create_tween()
+				var delay:float = 1.0 if clearingChunks.size() else 0.5
+				tween.tween_callback(focusCamera.set.bind("global_position", piece.global_position)).set_delay(delay)
+				piece.movement_requested.connect(tween.kill.unbind(3), CONNECT_ONE_SHOT)
 		else:
 			piece.isFocus = false
 	if requestIfNone and not focusPiece:
@@ -289,6 +296,8 @@ func spawnPiece(piece:Piece):
 		placeOnHighestRow(piece)
 		if not checkForFailure(piece):
 			activePieces_changed.emit()
+			if piece == activePieces.front():
+				focusCamera.global_position = piece.global_position
 			if piece.isFocus:
 				forceShoveOtherPiecesDown(piece)
 			else:
@@ -433,6 +442,8 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 					if nudgeResult: blocked = true
 		if not blocked:
 			piece.move(direction)
+			if piece == activePieces.front():
+				focusCamera.global_position = piece.global_position
 			tryToMakePiecesCollible()
 			checkIfWaitingToChooseNewFocusPiece()
 			match movementType:

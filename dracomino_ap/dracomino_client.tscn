@@ -302,6 +302,14 @@ flag = "overlay_welldone"
 ignoreExternalSignals = true
 debugOnly = true
 
+[node name="Btn_WellDoneOverlay2" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
+layout_mode = 2
+text = "Zoom Effect"
+script = ExtResource("8_s3ubo")
+flag = "effect_zoom"
+ignoreExternalSignals = true
+debugOnly = true
+
 [node name="Bounds" type="Control" parent="."]
 layout_mode = 2
 mouse_filter = 2

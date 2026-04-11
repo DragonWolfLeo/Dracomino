@@ -135,7 +135,7 @@ var flagHolder:FlagHolder
 
 static var GHOSTPIECE_SCENE:PackedScene = load("res://object/ghostpiece.tscn")
 
-signal movement_requested(piece:Piece, direction:Vector2i)
+signal movement_requested(piece:Piece, direction:Vector2i, movementType:int)
 signal new_cells_requested(piece:Piece, cells:Array[Vector2i])
 signal ghost_cells_requested(piece:Piece, ghostPiece:GhostPiece)
 signal focus_lost()

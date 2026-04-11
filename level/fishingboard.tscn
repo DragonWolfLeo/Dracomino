@@ -69,6 +69,7 @@ region_rect = Rect2(0, 160, 256, 48)
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(128, 192)
 script = ExtResource("3_6egt2")
+disableFlag = "effect_zoom"
 
 [node name="SpawnRect" type="ReferenceRect" parent="."]
 offset_left = 80.0
@@ -161,6 +162,17 @@ offset = Vector2(0, 3)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="FishingMini/FishingHook"]
 position = Vector2(0, 1)
 shape = SubResource("RectangleShape2D_tlecd")
+
+[node name="FocusCamera" type="Camera2D" parent="FishingMini/FishingHook"]
+process_mode = 3
+offset = Vector2(0, 16)
+enabled = false
+limit_smoothed = true
+position_smoothing_enabled = true
+position_smoothing_speed = 4.0
+script = ExtResource("3_6egt2")
+zoomMultiplier = 3
+enableFlag = "effect_zoom"
 
 [node name="FishingLine" type="Line2D" parent="FishingMini"]
 unique_name_in_owner = true

@@ -65,10 +65,24 @@ tile_set = SubResource("TileSet_gwc1d")
 [node name="CrystallizedTileMap" type="TileMapLayer" parent="ActivatedTileHandler"]
 tile_set = SubResource("TileSet_m3cj1")
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="AutoResizeCamera" type="Camera2D" parent="."]
 process_mode = 3
 position = Vector2(80, 160)
 script = ExtResource("7_flfvq")
+disableFlag = "effect_zoom"
+
+[node name="FocusCamera" type="Camera2D" parent="."]
+process_mode = 3
+position = Vector2(80, 160)
+offset = Vector2(0, 32)
+enabled = false
+limit_smoothed = true
+position_smoothing_enabled = true
+position_smoothing_speed = 16.0
+script = ExtResource("7_flfvq")
+zoomMultiplier = 3
+enableFlag = "effect_zoom"
+soundToPlay = &"trap"
 
 [node name="LineNumberBar" type="Node2D" parent="."]
 position = Vector2(-28.3333, 0)
