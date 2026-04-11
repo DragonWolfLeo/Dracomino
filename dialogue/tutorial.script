@@ -239,6 +239,7 @@ Mini (eager): Hey, do you want me to teach you how to fish? It's really fun, and
 [Choice Yes] You: Yes
 [Choice No if not explained_fishing] You: No
 [Choice No_ExplainedAlready if explained_fishing] You: No
+[Choice WhatHappened if fishing_tutorial_hoard_mentioned not if explained_fishing] You: What happened?
 
 [Response Yes]
 Mini (happy): [wave]Awesome!!![/wave] [if explained_fishing]I'll explain it as many times as you want!
@@ -257,8 +258,19 @@ Mini: I hope that was helpful. If you need me again, press the F1 button! I'm al
 [End]
 
 [Response No]
+[if fishing_tutorial_refused=2]
+Mini (bored): Okay...
+[ClearWorldFlag fishing_tutorial_hoard_mentioned]
+[else if fishing_tutorial_refused=1]
+Mini (annoyed): ...Why are you looking me like that? Is it because of what I said earlier?
+Mini (sad): I have a hoard to rebuild. Don't ask what happened...
+Mini (awkward): Anyway, I'm still willing to teach you to fish if you change your mind.
+[SetWorldFlag fishing_tutorial_refused 2]
+[SetWorldFlag fishing_tutorial_hoard_mentioned]
+[else]
 Mini (bothered): Oh...
-Mini (evil): Well, that's okay. If you ever want fresh fish, I'd be happy to sell some to you! Bring lots of shiny coins!
+Mini (evil): Well, that's okay. If you ever want fresh fish, I'd be happy to sell some to you! Bring all your shiny coins to me!
+[SetWorldFlag fishing_tutorial_refused 1]
 [if not tutorial]
 Mini: And also, if you ever change your mind, press the F1 button! I'll happily teach you how to fish!
 [always]
@@ -268,4 +280,14 @@ Mini: And also, if you ever change your mind, press the F1 button! I'll happily 
 [Response No_ExplainedAlready]
 Mini (cute): Oh, right. I already taught you! Hehe.
 Mini (cute): Well, if you ever want a refresher, you know who to go to!
+[End]
+
+
+[Response WhatHappened]
+Mini (grumpy): No! I told you don't ask!
+Mini (bothered): ...
+Mini (sad): There were adventurers. You know, the kind that like to invade your home and take your stuff. Even if it's infused with life-giving magic.
+Mini (sad): ...I'm not a fighter. Besides, fighting would only cause more problems.
+Mini (awkward): Hey... can we get back to fishing?
+[ClearWorldFlag fishing_tutorial_hoard_mentioned]
 [End]
