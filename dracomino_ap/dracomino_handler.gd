@@ -354,7 +354,13 @@ func giveItem(item:StateItem):
 			# Trigger effects
 			"on_lock", "on_spawn":
 				if not isJustConnected:
-					effectHandler.tryToTriggerEffect(item, false)
+					var result = effectHandler.tryToTriggerEffect(item, false)
+					if result and FlagManager.isFlagSet("trap_link"):
+						var trapLinkAlias:String = CONSTANTS.TRAP_ALIASES.get(item.data.internalName, "")
+						if trapLinkAlias and Archipelago.conn:
+							Archipelago.conn.send_traplink(trapLinkAlias)
+							print("Sending trap: ", trapLinkAlias)
+
 
 	else:
 		print("Obtained invalid item: id: {id}; name: {name}; You may be running an outdated version of the client!"
