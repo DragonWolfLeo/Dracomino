@@ -5,7 +5,7 @@ var MANA_TO_ENERGY_RATIO:float = 1e6
 var MANA_PER_BLOCK:float = 4
 var ENERGY_LINK_SHARE:float = 0.5
 
-var DISPEL_MANA_COST:float = MANA_PER_BLOCK * 100 # Ten lines worth
+var DISPEL_MANA_COST:float = MANA_PER_BLOCK * 50 # 5 lines worth
 
 # Colors
 class COLOR:
