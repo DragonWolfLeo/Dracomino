@@ -205,7 +205,7 @@ func isSkippable()->bool:
 	
 ### Events ###
 func _gui_input(_event: InputEvent):
-	if !dialogue: return
+	if !dialogue or not FlagManager.isFlagSet("game_focus"): return
 	# Give focus to buttons if using keyboard/controller during choices. Must be checked before proceeding
 	if (
 		has_focus() 
