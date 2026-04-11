@@ -282,7 +282,7 @@ func triggerEffectCommand(option:String): ## Triggers an effect immediately
 		else:
 			notification_signal.emit("Trigger effect failed: %s does not meet conditions"%item.data.prettyName, CONSTANTS.COLOR.ERROR, true)
 
-func triggerTrapLinkTrap(trapname:String) -> String: ## Triggers trap link trap immediately or buffers it
+func triggerTrapLinkTrap(trapname:String, source:String = "") -> String: ## Triggers trap link trap immediately or buffers it
 	var mapping:Variant = CONSTANTS.TRAP_LINK_MAPPINGS.get(trapname)
 	var trapsToTrigger:Array[StringName] = []
 	var triggeredTraps:Array[StringName] = []
@@ -298,6 +298,8 @@ func triggerTrapLinkTrap(trapname:String) -> String: ## Triggers trap link trap 
 
 	for alias in trapsToTrigger:
 		var item:StateItem = resolveItem(alias)
+		item.senderName = source
+		item.isLocal = false
 		if item and item.data:
 			var success:bool = false
 			match item.data.type:
@@ -515,7 +517,7 @@ func _on_deathlink(source: String, cause: String, json: Dictionary):
 
 func _on_traplink(source: String, trapname: String, json: Dictionary):
 	if not trapname: return
-	var result:String = triggerTrapLinkTrap(trapname)
+	var result:String = triggerTrapLinkTrap(trapname, source)
 	if result:
 		notification_signal.emit("{source} triggered {trapname}{result}!".format({
 			source=source,
