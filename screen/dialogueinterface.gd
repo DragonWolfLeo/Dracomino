@@ -50,8 +50,6 @@ func _ready():
 	DialogueManager.dialogue_updated.connect(_on_dialogue_updated)
 	DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
 	DialogueManager.speaker_updated.connect(updatePortrait)
-	SignalBus.getSignal("stateflag_set","game_focus").connect(set_process.bind(true))
-	SignalBus.getSignal("stateflag_cleared","game_focus").connect(set_process.bind(false))
 	SignalBus.getSignal("stateflag_set","game_focus").connect(set.bind("_was_focused", true), CONNECT_DEFERRED)
 	SignalBus.getSignal("stateflag_cleared","game_focus").connect(set.bind("_was_focused", false), CONNECT_DEFERRED)
 	DracominoCommandManager.addCommand("ALIGNLEFT", setSpeakerAlignment.bind(1), true).setArgHint("speaker")
