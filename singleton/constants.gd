@@ -153,7 +153,7 @@ var TRAP_ALIASES:Dictionary[StringName, String] = {
 	fishing                 = "Fishing Trap",
 	tutorial                = "Tutorial Trap",
 	logic_tutorial          = "Tutorial Trap",
-	invertcolors_trap       = "Invert Colors Trap ",
+	invertcolors_trap       = "Invert Colors Trap",
 	water_trap              = "Underwater Trap",
 	pixellation_trap        = "Pixellation Trap",
 	zoom_trap               = "Zoom Trap",
@@ -186,6 +186,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"Crystal Trap"            : "crystal_trap",
 	"Fracture Trap"           : "fracture_trap",
 	"Well Done Trap"          : "welldone",
+	"Impatience Trap"         : "impatience_trap",
 	# "Unrandomization Trap"    : "unrandomization_trap",
 
 	# OTHER TRAPS
@@ -210,7 +211,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"Buyon Trap"              : "egg",
 	# "Camera Rotate Trap"      : "Camera Rotate Trap",
 	"Chaos Trap"              : "crystal_trap",
-	"Chaos Control Trap"      : ["invertcolors_trap", "enchantment_curse_movement"], #"Curse (Movement)+invertcolors_trap",
+	"Chaos Control Trap"      : ["invertcolors_trap", "enchantment_curse_movement"],
 	"Chart Modifier Trap"     : "enchantment",
 	# "Chaser Trap"             : "shatter_trap",
 	# "Clear Image Trap"        : "Board Wipe Trap",
