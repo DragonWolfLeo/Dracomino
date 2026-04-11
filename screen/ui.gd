@@ -66,7 +66,7 @@ func changeState(_state: int):
 			if screen.has_method("hide"): screen.hide()
 	
 	# Control the pausing here
-	get_tree().paused = not bool(state & STATES.NORMAL)
+	if is_inside_tree(): get_tree().paused = not bool(state & STATES.NORMAL)
 
 	# Set flag for a form of pausing just for notification layer
 	if state & STATES.NOTIFICATION_PAUSE:
