@@ -50,6 +50,8 @@ func _ready() -> void:
 	_on_deferred_focus_exited.call_deferred()
 
 func _gui_input(event: InputEvent) -> void:
+	if not FlagManager.isFlagSet("game_focus"):
+		return
 	if event.is_action_pressed("restart"):
 		SignalBus.getSignal("restartGame").emit()
 		accept_event()
