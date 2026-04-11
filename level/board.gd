@@ -922,7 +922,7 @@ func _on_FishingBoard_piece_selected(piece:Piece) -> void:
 
 func _on_effected_activated(item:DracominoHandler.StateItem):
 	if FlagManager.isFlagSet("trap_link") and item and item.data:
-		var trapLinkAlias:String = CONSTANTS.TRAP_LINK_CONVERTS.get(item.data.internalName, "")
+		var trapLinkAlias:String = CONSTANTS.TRAP_ALIASES.get(item.data.internalName, "")
 		if trapLinkAlias and Archipelago.conn:
 			Archipelago.conn.send_traplink(trapLinkAlias)
 			print("Sending trap: ", trapLinkAlias)

@@ -297,8 +297,8 @@ func triggerTrapLinkTrap(trapname:String, source:String = "") -> String: ## Trig
 			trapsToTrigger.append(mapping)
 
 	if not trapsToTrigger.size():
-		print("There is no alias for ", trapname)
-		return ""
+		trapsToTrigger.append(CONSTANTS.TRAP_FALLBACKS.pick_random())
+		print("There is no alias for %s so we'll randomly picked %s"%[trapname, trapsToTrigger[0]])
 
 	for alias in trapsToTrigger:
 		var item:StateItem = resolveItem(alias)
@@ -309,7 +309,7 @@ func triggerTrapLinkTrap(trapname:String, source:String = "") -> String: ## Trig
 			match item.data.type:
 				"on_lock", "on_spawn":
 					effectHandler.tryToTriggerEffect(item, true, ["all"])
-					triggeredTraps.append(CONSTANTS.TRAP_LINK_CONVERTS.get(alias, alias))
+					triggeredTraps.append(CONSTANTS.TRAP_ALIASES.get(alias, alias))
 				"modifier": pass
 				_:
 					print("DracominoHandler.triggerTrapLinkTrap: there is not an effect called ", alias)

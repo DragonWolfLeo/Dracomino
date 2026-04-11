@@ -133,7 +133,7 @@ class LocationData extends Data: pass
 
 
 # === Trap Link ===
-var TRAP_LINK_CONVERTS:Dictionary[StringName, String] = {
+var TRAP_ALIASES:Dictionary[StringName, String] = {
 	# DRACOMINO TRAPS 
 	# egg                    = "Egg Trap",
 	# premium_trap           = "Premium Trap", # Might scrap
@@ -157,6 +157,15 @@ var TRAP_LINK_CONVERTS:Dictionary[StringName, String] = {
 	pixellation_trap        = "Pixellation Trap",
 	# Random Cutscene         = "Cutscene Trap",
 }
+var TRAP_FALLBACKS:Array[StringName] = [
+	"crystal_trap",
+	"fracture_trap",
+	"welldone",
+	"fishing",
+	"invertcolors_trap",
+	"water_trap",
+	"pixellation_trap",
+]
 var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	# DRACOMINO TRAPS
 	# "Egg Trap"                : "egg",
