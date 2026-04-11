@@ -108,6 +108,10 @@ func _ready() -> void:
 	SignalBus.getSignal("stateflag_set", "trap_link").connect(Archipelago.set_traplink.bind(true))
 	SignalBus.getSignal("stateflag_cleared", "trap_link").connect(Archipelago.set_traplink.bind(false))
 
+	# Make the EnergyLink tag appear when energy link is enabled
+	SignalBus.getSignal("stateflag_set", "energy_link").connect(Archipelago.set_tag.bind("EnergyLink", true))
+	SignalBus.getSignal("stateflag_cleared", "energy_link").connect(Archipelago.set_tag.bind("EnergyLink", false))
+
 #===== Functions =====
 func reset():
 	currentIndex = 0
