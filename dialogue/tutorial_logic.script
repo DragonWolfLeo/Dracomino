@@ -9,7 +9,7 @@ Mega (annoyed): [ShowCutscene boardcutscene]...
 [if effects_active+mega_annoyed not mega_very_annoyed]
 Mega (annoyed): You know, it costs mana to dispel these traps. 
 [if effects_active+mega_annoyed]
-[WorldCount mega_very_annoyed amount 1 add][SubDialogue tutorial_logic DispelMacro]
+[WorldCount mega_very_annoyed amount 1 add][SubDialogue tutorial_logic Dispel_Macro]
 Mega: In Dracomino, the locations you're expected to reach depends on the Rotate ability and the total amount of blocks your pieces make up.
 [else]
 // The actual beginning of the tutorial
@@ -17,7 +17,7 @@ Mega: [ShowCutscene boardcutscene] In Dracomino, the locations you're expected t
 // Mega is annoyed (Phase 2)
 [if effects_active+dispels_done not mega_annoyed]
 Mega (annoyed): Really? Again?
-[WorldCount mega_annoyed amount 1 add][SubDialogue tutorial_logic DispelMacro]
+[WorldCount mega_annoyed amount 1 add][SubDialogue tutorial_logic Dispel_Macro]
 Mega (unimpressed): I wish you would take my time seriously.
 Mega: Anyway, back to the tutorial.
 [always]
@@ -27,11 +27,11 @@ Mega: In a solo game, you can expect to find Rotate at a coin location in your f
 Mega: [Emit progress_tutorial_logic] For line clears, the number of lines you can fill with your blocks is the number of lines in logic.
 // ** Example - 8 rows of lines representing available blocks. 8 lines worth of blocks make 8 lines in logic **
 Mega: [Emit progress_tutorial_logic] The option [b]Line Clear Leniency[/b] will require additional lines worth of blocks for a line clear location to be in logic, making the requirement less strict.
-[if overlay_pixel/overlay_crystal not dispels_done]
+[if counted_effects_active_overlay_pixel/counted_effects_active_overlay_crystal not dispels_done]
 // Dispel annoying visuals
 Mega (annoyed): ...
 Mega (annoyed): This effect is getting on my nerves.
-[SubDialogue tutorial_logic DispelMacro]
+[SubDialogue tutorial_logic Dispel_Macro]
 [always]
 // Tutorial continuation
 // ** Example - 10 rows of lines representing available blocks. 2 of those lines represent leniency. 10 lines worth of blocks makes 8 lines in logic **
@@ -62,23 +62,34 @@ Mini (grumpy): I can't believe this!
 [End]
 
 
-[State DispelMacro]
+[State Dispel_Macro]
 Mega (cast): *Mega casts a spell!* [Emit dispel_all_effects][WorldCount dispels_done amount 1 add]
+// Check for results of energy transaction
+[SubDialogue tutorial_logic DispelResult_Macro]
+// End here if we succeeded
 [if last_mana_transaction_succeeded]
-Mega (cast): *The effects were magically dispelled!* [if last_used_local_mana_balance][End]
-[if last_mana_transaction_succeeded not last_used_local_mana_balance]
-Mega (cast): *Since you didn't have enough mana for this spell, energy was withdrawn through Energy Link.*
 [End]
 [else]
-Mega (cast): ... // Give it time to wait a bit
+Mega (cast): ... // Give it time to wait a bit since it's asynchronous
+// Check for results of energy transaction again
+[SubDialogue tutorial_logic DispelResult_Macro]
 [if last_mana_transaction_succeeded]
-Mega (cast): *The effects were magically dispelled!* [if last_used_local_mana_balance][End]
-[if last_mana_transaction_succeeded not last_used_local_mana_balance]
-Mega (cast): *Since you didn't have enough mana for this spell, energy was withdrawn through Energy Link.*
 [End]
 [else]
-Mega: Looks like we're out of mana, so the spell didn't work. *sigh*
-[if last_mana_transaction_succeeded]
-Mega: ...Oh. [i]There[/i] it goes.
+Mega (unimpressed): Looks like we're out of mana, so the spell didn't work. *sigh*
+[if not effects_active]
+Mega (eyeroll): ...Oh. [i]There[/i] it goes.
+[always]
+[End]
+
+[State DispelResult_Macro]
+[if last_mana_transaction_succeeded not effects_active]
+Mega (cast): *The effects were magically dispelled!* [if last_used_local_mana_balance][End]
+[if last_mana_transaction_succeeded+effects_active]
+Mega (cast): *Some effects were magically dispelled!*
+[if last_mana_transaction_succeeded not last_used_local_mana_balance]
+Mega (cast): *Energy was withdrawn through Energy Link to cover the cost.*
+[if last_mana_transaction_succeeded+effects_active]
+Mega (unimpressed): We only had enough mana to get rid of some of them... *sigh* [if last_used_local_mana_balance][End]
 [always]
 [End]
