@@ -81,9 +81,13 @@ func _fade() -> void:
 	Overlay.doFade(1.5, 1.5)
 
 func _randomTrap():
-	var fx:Effect = EFFECTS.get(CONSTANTS.RANDOM_TRAP_CHOICES.pick_random())
-	if fx:
-		return fx.triggerFn.call()
+	var validTraps:Array[Effect] = []
+	for effectName in CONSTANTS.RANDOM_TRAP_CHOICES:
+		var fx:Effect = EFFECTS.get(effectName)
+		if fx is Effect and fx.canTriggerFn.call():
+			validTraps.append(fx)
+	if validTraps.size():
+		(validTraps.pick_random() as Effect).triggerFn.call()
 
 # === Virtuals ===
 func _ready() -> void:
