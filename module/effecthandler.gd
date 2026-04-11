@@ -53,8 +53,8 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 	enchantment = Effect.new(_NOOP),
 
 	# == Trap Link Specific ==
-	fade_trap = Effect.new(SignalBus.getSignal("effect_fade").emit),
-	random_trap = Effect.new(_NOOP),
+	fade = Effect.new(_fade),
+	random_trap = Effect.new(_randomTrap),
 }
 
 # === Private functions ===
@@ -73,6 +73,14 @@ func _canLoadNewDialogue() -> bool:
 func _activateEffect(flag:String, duration:int = 8) -> void:
 	var ae:ActiveEffect = ActiveEffect.instantiateEffect(flag, duration)
 	add_child(ae)
+
+func _fade() -> void:
+	Overlay.doFade(1.5, 1.5)
+
+func _randomTrap():
+	var fx:Effect = EFFECTS.get(CONSTANTS.RANDOM_TRAP_CHOICES.pick_random())
+	if fx:
+		return fx.triggerFn.call()
 
 # === Virtuals ===
 func _ready() -> void:
@@ -149,13 +157,13 @@ func tryToTriggerEffect(stateItem:DracominoHandler.StateItem, bufferOnFailure:bo
 				bufferedEffects.append(stateItem)
 	return false
 
-func triggerEffectImmediately(stateItem:DracominoHandler.StateItem) -> bool: ## Returns true on success
+
+func triggerEffectByName(effectName:StringName) -> bool: ## Returns true on success
 	if FlagManager.isFlagSet("gameover"):
 		return false
-	var fx:Effect = getEffectObject(stateItem)
+	var fx:Effect = EFFECTS.get(effectName)
 	if fx:
 		if fx.canTriggerFn.call():
 			fx.triggerFn.call()
-			effect_activated.emit(stateItem)
 			return true
 	return false

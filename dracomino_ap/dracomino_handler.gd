@@ -269,22 +269,17 @@ func giveItemCommand(option:String): ## Give you an item using the debug console
 		notification_signal.emit("Failed to give item: %s"%option, CONSTANTS.COLOR.ERROR, true)
 
 func triggerEffectCommand(option:String): ## Triggers an effect immediately
-	var item:StateItem = resolveItem(option)
-	if item and item.data:
-		var success:bool = false
-		match item.data.type:
-			"on_lock", "on_spawn":
-				success = effectHandler.triggerEffectImmediately(item)
-			"modifier": pass
-			_:
-				var msg:String = "%s is not an effect"%item.data.prettyName
-				printerr("DracominoHandler.triggerEffectCommand: ", msg)
-				notification_signal.emit("Trigger effect failed: "+msg, CONSTANTS.COLOR.ERROR, true)
-				return
-		if success:
-			notification_signal.emit("Triggering effect: %s"%item.data.prettyName, CONSTANTS.COLOR.SPECIAL, true)
-		else:
-			notification_signal.emit("Trigger effect failed: %s does not meet conditions"%item.data.prettyName, CONSTANTS.COLOR.ERROR, true)
+	option = option.to_snake_case()
+	if not effectHandler.EFFECTS.has(option):
+		var msg:String = "%s is not an effect"%option
+		printerr("DracominoHandler.triggerEffectCommand: ", msg)
+		notification_signal.emit("Trigger effect failed: "+msg, CONSTANTS.COLOR.ERROR, true)
+		return
+	var success:bool = effectHandler.triggerEffectByName(option)
+	if success:
+		notification_signal.emit("Triggering effect: %s"%CONSTANTS.TRAP_ALIASES.get(option, option), CONSTANTS.COLOR.SPECIAL, true)
+	else:
+		notification_signal.emit("Trigger effect failed: %s does not meet conditions"%CONSTANTS.TRAP_ALIASES.get(option, option), CONSTANTS.COLOR.ERROR, true)
 
 func triggerTrapLinkTrap(trapname:String, source:String = "") -> String: ## Triggers trap link trap immediately or buffers it
 	var mapping:Variant = CONSTANTS.TRAP_LINK_MAPPINGS.get(trapname)
@@ -297,22 +292,12 @@ func triggerTrapLinkTrap(trapname:String, source:String = "") -> String: ## Trig
 			trapsToTrigger.append(mapping)
 
 	if not trapsToTrigger.size():
-		trapsToTrigger.append(CONSTANTS.TRAP_FALLBACKS.pick_random())
+		trapsToTrigger.append("random_trap")
 		print("There is no alias for %s so we'll randomly picked %s"%[trapname, trapsToTrigger[0]])
 
 	for alias in trapsToTrigger:
-		var item:StateItem = resolveItem(alias)
-		item.senderName = source
-		item.isLocal = false
-		if item and item.data:
-			var success:bool = false
-			match item.data.type:
-				"on_lock", "on_spawn":
-					effectHandler.triggerEffectImmediately(item)
-					triggeredTraps.append(CONSTANTS.TRAP_ALIASES.get(alias, alias))
-				"modifier": pass
-				_:
-					print("DracominoHandler.triggerTrapLinkTrap: there is not an effect called ", alias)
+		var success = effectHandler.triggerEffectByName(alias)
+		if success: triggeredTraps.append(CONSTANTS.TRAP_ALIASES.get(alias, alias))
 	
 	if triggeredTraps.size():
 		return " and ".join(triggeredTraps)

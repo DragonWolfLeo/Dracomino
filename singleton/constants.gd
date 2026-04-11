@@ -158,8 +158,18 @@ var TRAP_ALIASES:Dictionary[StringName, String] = {
 	pixellation_trap        = "Pixellation Trap",
 	zoom_trap               = "Zoom Trap",
 	# Random Cutscene         = "Cutscene Trap",
+
+	# FAKE TRAPS (Shouldn't be sent, but giving them a display name)
+	enchantment_curse                = "Curse Trap",
+	enchantment_curse_gravity        = "Curse Trap",
+	enchantment_curse_movement       = "Curse Trap",
+	enchantment_legendary_movement   = "Enchantment Trap",
+	enchantment_legendary_spin       = "Enchantment Trap",
+	enchantment                      = "Enchantment Trap",
+	fade                             = "Fake Transition",
+	random_trap                      = "Random Trap",
 }
-var TRAP_FALLBACKS:Array[StringName] = [
+var RANDOM_TRAP_CHOICES:Array[StringName] = [
 	"crystal_trap",
 	"fracture_trap",
 	"welldone",
@@ -231,7 +241,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	# "Explosion Trap"          : "shatter_trap",
 	"Exposition Trap"         : "logic_tutorial", # "Random Cutscene",
 	"Extreme Chaos Mode"      : ["crystal_trap", "fracture_trap"],
-	"Fake Transition"         : "fade_trap",
+	"Fake Transition"         : "fade",
 	"Fast Trap"               : "enchantment_legendary_movement",
 	"Fear Trap"               : "zoom_trap",
 	# "fire_trap"               : "fire_trap",
