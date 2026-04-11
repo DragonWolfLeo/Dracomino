@@ -1,0 +1,256 @@
+[gd_scene load_steps=12 format=3 uid="uid://dhqni4ryrpliy"]
+
+[ext_resource type="Script" uid="uid://biptfn5riqsjl" path="res://screen/welldone_filter.gd" id="1_bft8r"]
+[ext_resource type="Material" uid="uid://ftvia48v2ph6" path="res://resource/shader/ega_object.tres" id="2_fauuw"]
+[ext_resource type="FontFile" uid="uid://brbxrenwotboe" path="res://resource/font/Galindo-Regular.ttf" id="3_bft8r"]
+[ext_resource type="Texture2D" uid="uid://63qdysrsk0xu" path="res://assets/art/crystalfragment_1.png" id="4_8xmr1"]
+[ext_resource type="Script" uid="uid://3hyxsaj4myy1" path="res://module/play_sound_on_visible.gd" id="5_v1hah"]
+[ext_resource type="Texture2D" uid="uid://0y5s3eu75e33" path="res://assets/art/dialogueportrait/mini-happy.png" id="6_bft8r"]
+[ext_resource type="Texture2D" uid="uid://bhsf8qlw65fip" path="res://assets/art/dialogueportrait/mega.png" id="7_8xmr1"]
+
+[sub_resource type="Curve" id="Curve_ogaaw"]
+_limits = [-1.0, 1.0, 0.0, 1.0]
+_data = [Vector2(0, -1), 0.0, 2.0, 0, 1, Vector2(1, 1), 2.0, 0.0, 1, 0]
+point_count = 2
+
+[sub_resource type="Animation" id="Animation_ogaaw"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Confetti1:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(-100, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Confetti2:position")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(50, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_5uhy6"]
+resource_name = "wave"
+length = 2.0
+loop_mode = 1
+step = 2.0
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Confetti1:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1, 2),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(-50, 0), Vector2(50, 0), Vector2(-50, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Confetti2:position")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 1, 2),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(50, 0), Vector2(-50, 0), Vector2(50, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_jm7pi"]
+_data = {
+&"RESET": SubResource("Animation_ogaaw"),
+&"wave": SubResource("Animation_5uhy6")
+}
+
+[node name="WellDoneFilter" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_bft8r")
+flag = "overlay_welldone"
+
+[node name="RichTextLabel" type="RichTextLabel" parent="."]
+material = ExtResource("2_fauuw")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_constants/shadow_offset_y = 8
+theme_override_constants/shadow_offset_x = 4
+theme_override_fonts/normal_font = ExtResource("3_bft8r")
+theme_override_font_sizes/normal_font_size = 72
+bbcode_enabled = true
+text = "[wave amp=130 freq=10][rainbow sat=1.0 val=1.0]Well Done!"
+fit_content = true
+scroll_active = false
+shortcut_keys_enabled = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+grow_horizontal = 2
+
+[node name="Confetti1" type="CPUParticles2D" parent="Control"]
+material = ExtResource("2_fauuw")
+position = Vector2(-100, 0)
+amount = 32
+texture = ExtResource("4_8xmr1")
+lifetime = 3.0
+explosiveness = 0.15
+randomness = 1.0
+local_coords = true
+emission_shape = 3
+emission_rect_extents = Vector2(1000, 1)
+direction = Vector2(0, 1)
+spread = 10.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 200.0
+initial_velocity_max = 400.0
+angular_velocity_min = -720.0
+angular_velocity_max = 720.0
+linear_accel_max = 100.0
+angle_max = 360.0
+scale_amount_max = 2.0
+hue_variation_min = -1.0
+hue_variation_max = 1.0
+hue_variation_curve = SubResource("Curve_ogaaw")
+
+[node name="Confetti2" type="CPUParticles2D" parent="Control"]
+material = ExtResource("2_fauuw")
+position = Vector2(50, 0)
+amount = 32
+texture = ExtResource("4_8xmr1")
+lifetime = 3.0
+explosiveness = 0.15
+randomness = 1.0
+local_coords = true
+emission_shape = 3
+emission_rect_extents = Vector2(1000, 1)
+direction = Vector2(0, 1)
+spread = 10.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 200.0
+initial_velocity_max = 400.0
+angular_velocity_min = -720.0
+angular_velocity_max = 720.0
+linear_accel_max = 100.0
+angle_max = 360.0
+scale_amount_max = 2.0
+hue_variation_min = -1.0
+hue_variation_max = 1.0
+hue_variation_curve = SubResource("Curve_ogaaw")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Control"]
+libraries = {
+&"": SubResource("AnimationLibrary_jm7pi")
+}
+autoplay = "wave"
+
+[node name="PlaySoundOnVisible" type="Node2D" parent="."]
+script = ExtResource("5_v1hah")
+soundName = "welldone"
+soundType = "voice"
+
+[node name="BackBufferCopy" type="BackBufferCopy" parent="."]
+copy_mode = 2
+
+[node name="Control2" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="Control3" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="LeftCanvasLayer" type="CanvasLayer" parent="."]
+unique_name_in_owner = true
+layer = 2
+
+[node name="Control" type="Control" parent="LeftCanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TextureRect" type="TextureRect" parent="LeftCanvasLayer/Control"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -248.0
+offset_right = 224.0
+grow_vertical = 0
+mouse_filter = 2
+texture = ExtResource("6_bft8r")
+stretch_mode = 4
+
+[node name="RightCanvasLayer" type="CanvasLayer" parent="."]
+unique_name_in_owner = true
+layer = 2
+
+[node name="Control" type="Control" parent="RightCanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TextureRect" type="TextureRect" parent="RightCanvasLayer/Control"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -224.0
+offset_top = -248.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+texture = ExtResource("7_8xmr1")
+stretch_mode = 4
+flip_h = true

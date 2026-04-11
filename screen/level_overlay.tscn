@@ -1,13 +1,11 @@
-[gd_scene load_steps=18 format=3 uid="uid://ckv6tnuoxlxgw"]
+[gd_scene load_steps=12 format=3 uid="uid://ckv6tnuoxlxgw"]
 
 [ext_resource type="Shader" uid="uid://bqohxdob6tubs" path="res://resource/shader/crystal.gdshader" id="1_qjtf7"]
 [ext_resource type="Script" uid="uid://dvj4uugycseke" path="res://module/overlayfilter.gd" id="2_5coou"]
 [ext_resource type="Shader" uid="uid://jo62bd4fm34j" path="res://resource/shader/pixel.gdshader" id="3_74bbe"]
 [ext_resource type="Shader" uid="uid://38rkwlxs4jwj" path="res://resource/shader/fracture.gdshader" id="4_5uhy6"]
 [ext_resource type="Shader" uid="uid://dobuvt43qhvwi" path="res://resource/shader/waterwave.gdshader" id="5_ogaaw"]
-[ext_resource type="Material" uid="uid://ftvia48v2ph6" path="res://resource/shader/ega_object.tres" id="6_5uhy6"]
-[ext_resource type="FontFile" uid="uid://brbxrenwotboe" path="res://resource/font/Galindo-Regular.ttf" id="7_5uhy6"]
-[ext_resource type="Texture2D" uid="uid://63qdysrsk0xu" path="res://assets/art/crystalfragment_1.png" id="8_5uhy6"]
+[ext_resource type="PackedScene" uid="uid://dhqni4ryrpliy" path="res://screen/welldone_filter.tscn" id="7_74bbe"]
 [ext_resource type="Script" uid="uid://3hyxsaj4myy1" path="res://module/play_sound_on_visible.gd" id="9_ogaaw"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_m1ejn"]
@@ -47,74 +45,6 @@ shader_parameter/distortion_strength = 0.05
 shader_parameter/water_height = 0.3
 shader_parameter/reflection_shear = 0.0
 shader_parameter/reflection_strength = 0.155
-
-[sub_resource type="Curve" id="Curve_ogaaw"]
-_limits = [-1.0, 1.0, 0.0, 1.0]
-_data = [Vector2(0, -1), 0.0, 2.0, 0, 1, Vector2(1, 1), 2.0, 0.0, 1, 0]
-point_count = 2
-
-[sub_resource type="Animation" id="Animation_ogaaw"]
-length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Confetti1:position")
-tracks/0/interp = 2
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector2(-100, 0)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("Confetti2:position")
-tracks/1/interp = 2
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector2(50, 0)]
-}
-
-[sub_resource type="Animation" id="Animation_5uhy6"]
-resource_name = "wave"
-length = 2.0
-loop_mode = 1
-step = 2.0
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Confetti1:position")
-tracks/0/interp = 2
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 1, 2),
-"transitions": PackedFloat32Array(1, 1, 1),
-"update": 0,
-"values": [Vector2(-50, 0), Vector2(50, 0), Vector2(-50, 0)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("Confetti2:position")
-tracks/1/interp = 2
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0, 1, 2),
-"transitions": PackedFloat32Array(1, 1, 1),
-"update": 0,
-"values": [Vector2(50, 0), Vector2(-50, 0), Vector2(50, 0)]
-}
-
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_jm7pi"]
-_data = {
-&"RESET": SubResource("Animation_ogaaw"),
-&"wave": SubResource("Animation_5uhy6")
-}
 
 [node name="LevelOverlay" type="CanvasLayer"]
 
@@ -191,108 +121,4 @@ soundName = "trap"
 [node name="BackBufferCopy" type="BackBufferCopy" parent="WaterFilter"]
 copy_mode = 2
 
-[node name="WellDoneFilter" type="Control" parent="."]
-process_mode = 3
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-script = ExtResource("2_5coou")
-flag = "overlay_welldone"
-
-[node name="RichTextLabel" type="RichTextLabel" parent="WellDoneFilter"]
-material = ExtResource("6_5uhy6")
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 8
-theme_override_constants/shadow_offset_y = 8
-theme_override_constants/shadow_offset_x = 4
-theme_override_fonts/normal_font = ExtResource("7_5uhy6")
-theme_override_font_sizes/normal_font_size = 72
-bbcode_enabled = true
-text = "[wave amp=130 freq=10][rainbow sat=1.0 val=1.0]Well Done!"
-fit_content = true
-scroll_active = false
-shortcut_keys_enabled = false
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Control" type="Control" parent="WellDoneFilter"]
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-grow_horizontal = 2
-
-[node name="Confetti1" type="CPUParticles2D" parent="WellDoneFilter/Control"]
-material = ExtResource("6_5uhy6")
-position = Vector2(-100, 0)
-amount = 32
-texture = ExtResource("8_5uhy6")
-lifetime = 3.0
-explosiveness = 0.15
-randomness = 1.0
-local_coords = true
-emission_shape = 3
-emission_rect_extents = Vector2(1000, 1)
-direction = Vector2(0, 1)
-spread = 10.0
-gravity = Vector2(0, 0)
-initial_velocity_min = 200.0
-initial_velocity_max = 400.0
-angular_velocity_min = -720.0
-angular_velocity_max = 720.0
-linear_accel_max = 100.0
-angle_max = 360.0
-scale_amount_max = 2.0
-hue_variation_min = -1.0
-hue_variation_max = 1.0
-hue_variation_curve = SubResource("Curve_ogaaw")
-
-[node name="Confetti2" type="CPUParticles2D" parent="WellDoneFilter/Control"]
-material = ExtResource("6_5uhy6")
-position = Vector2(50, 0)
-amount = 32
-texture = ExtResource("8_5uhy6")
-lifetime = 3.0
-explosiveness = 0.15
-randomness = 1.0
-local_coords = true
-emission_shape = 3
-emission_rect_extents = Vector2(1000, 1)
-direction = Vector2(0, 1)
-spread = 10.0
-gravity = Vector2(0, 0)
-initial_velocity_min = 200.0
-initial_velocity_max = 400.0
-angular_velocity_min = -720.0
-angular_velocity_max = 720.0
-linear_accel_max = 100.0
-angle_max = 360.0
-scale_amount_max = 2.0
-hue_variation_min = -1.0
-hue_variation_max = 1.0
-hue_variation_curve = SubResource("Curve_ogaaw")
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="WellDoneFilter/Control"]
-libraries = {
-&"": SubResource("AnimationLibrary_jm7pi")
-}
-autoplay = "wave"
-
-[node name="PlaySoundOnVisible" type="Node2D" parent="WellDoneFilter"]
-script = ExtResource("9_ogaaw")
-soundName = "welldone"
-soundType = "voice"
-
-[node name="BackBufferCopy" type="BackBufferCopy" parent="WellDoneFilter"]
-copy_mode = 2
+[node name="WellDoneFilter" parent="." instance=ExtResource("7_74bbe")]
