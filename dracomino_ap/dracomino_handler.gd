@@ -308,7 +308,7 @@ func triggerTrapLinkTrap(trapname:String, source:String = "") -> String: ## Trig
 			var success:bool = false
 			match item.data.type:
 				"on_lock", "on_spawn":
-					effectHandler.tryToTriggerEffect(item, true, ["all"])
+					effectHandler.triggerEffectImmediately(item)
 					triggeredTraps.append(CONSTANTS.TRAP_ALIASES.get(alias, alias))
 				"modifier": pass
 				_:
