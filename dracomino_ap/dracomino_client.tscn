@@ -252,12 +252,14 @@ layout_mode = 2
 text = "Enforce 6-bit Palette"
 script = ExtResource("8_s3ubo")
 flag = "overlay_ega"
+ignoreExternalSignals = true
 
 [node name="Btn_PixelFilter" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
 layout_mode = 2
 text = "Pixellation Filter"
 script = ExtResource("8_s3ubo")
 flag = "overlay_pixel"
+ignoreExternalSignals = true
 debugOnly = true
 
 [node name="Btn_CrystalFilter" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
@@ -265,6 +267,7 @@ layout_mode = 2
 text = "Crystal Filter"
 script = ExtResource("8_s3ubo")
 flag = "overlay_crystal"
+ignoreExternalSignals = true
 debugOnly = true
 
 [node name="Btn_FractureFilter" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
@@ -272,6 +275,7 @@ layout_mode = 2
 text = "Fracture Filter"
 script = ExtResource("8_s3ubo")
 flag = "overlay_fracture"
+ignoreExternalSignals = true
 debugOnly = true
 
 [node name="Btn_WaterFilter" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
@@ -279,6 +283,7 @@ layout_mode = 2
 text = "Water Filter"
 script = ExtResource("8_s3ubo")
 flag = "overlay_water"
+ignoreExternalSignals = true
 debugOnly = true
 
 [node name="Btn_InvertFilter" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
@@ -286,6 +291,7 @@ layout_mode = 2
 text = "Invert Filter"
 script = ExtResource("8_s3ubo")
 flag = "overlay_invert"
+ignoreExternalSignals = true
 debugOnly = true
 
 [node name="Btn_WellDoneOverlay" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
@@ -293,6 +299,7 @@ layout_mode = 2
 text = "Well Done!"
 script = ExtResource("8_s3ubo")
 flag = "overlay_welldone"
+ignoreExternalSignals = true
 debugOnly = true
 
 [node name="Bounds" type="Control" parent="."]

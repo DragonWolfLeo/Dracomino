@@ -1,10 +1,11 @@
 extends CheckButton
 
 @export var flag:String = ""
+@export var ignoreExternalSignals:bool = false
 @export var debugOnly:bool = false
 
 func _ready() -> void:
-	if flag:
+	if flag and not ignoreExternalSignals:
 		SignalBus.getSignal("stateflag_set", flag).connect(_on_stateflag_set)
 		SignalBus.getSignal("stateflag_cleared", flag).connect(_on_stateflag_cleared)
 
