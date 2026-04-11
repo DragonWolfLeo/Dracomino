@@ -109,7 +109,10 @@ static func tryEnergyLinkManaTransaction(manaCost:float, onSuccess:Callable) -> 
 		print("EnergyLink transaction failed: not connected or EnergyLink is disabled!")
 
 static func makeEnergyLinkTransaction(energyBankBalance:Variant) -> void:
-	if not _bufferedTransactionFns.size() or not(energyBankBalance is float or energyBankBalance is int):
+	if not(energyBankBalance is float or energyBankBalance is int):
+		return
+	if not _bufferedTransactionFns.size():
+		FlagManager.setFlag("last_known_energy_bank_balance", energyBankBalance)
 		return
 	_bufferedTransactionLifetimeTween.kill()
 	var bufferedTransactionFns = _bufferedTransactionFns.duplicate()
@@ -118,35 +121,48 @@ static func makeEnergyLinkTransaction(energyBankBalance:Variant) -> void:
 
 	# Get energy cost all added up
 	var energyCost:float = 0
+	var manaCost:float = 0
+	var storedMana:float = FlagManager.getTotalCountAmount("mana")
 	for transaction:EnergyLinkTransactionContext in bufferedTransactionFns:
 		if not transaction.onSuccess.is_valid():
 			# The parent node will freed before we had to chance to call this
 			continue
-		var transactionEnergyCost:float = transaction.manaCost * CONSTANTS.MANA_TO_ENERGY_RATIO
+
+		# Figure out how much mana will be spent on this
+		var manaBudget:float = min(transaction.manaCost, storedMana-manaCost)
+
+		# If we don't have the mana budget, pay remaining cost as an energy transaction
+		var transactionEnergyCost:float = (transaction.manaCost-manaBudget) * CONSTANTS.MANA_TO_ENERGY_RATIO
 		if energyBankBalance < energyCost + transactionEnergyCost:
 			# Can't afford the thing
 			print("EnergyLink transaction failed: energy cost %s exceeds energy bank balance %s"%[energyCost + transactionEnergyCost, energyBankBalance])
 			break
 		energyCost += max(0, transactionEnergyCost)
+		manaCost += max(0, manaBudget)
 		approvedSuccessFns.append(transaction.onSuccess)
 
-	if energyCost == 0:
+	if energyCost == 0 and manaCost == 0:
 		print("EnergyLink transaction failed: no transaction was approved")
-		return
 
-	# Send the withdrawal request
-	var args = {
-		"key": "EnergyLink" + str(Archipelago.conn.team_id),
-		"default": 0,
-		"operations": [
-			{"operation": "add", "value": -energyCost},
-			{"operation": "max", "value": 0},
-		]
-	}
-	Archipelago.send_command("Set", args)
-
-	# We'll call that a success. I don't think we need the reply for this(?) But maybe it will be good if we want to guarantee an accurate bank balance
-	print("Energy transaction succeeded: spent %s, predicted bank balance %s"%[energyCost, (energyBankBalance-energyCost)])
+	if energyCost > 0:
+		# Send the withdrawal request
+		var args = {
+			"key": "EnergyLink" + str(Archipelago.conn.team_id),
+			"default": 0,
+			"operations": [
+				{"operation": "add", "value": -energyCost},
+				{"operation": "max", "value": 0},
+			]
+		}
+		Archipelago.send_command("Set", args)
+		# We'll call that a success. I don't think we need the reply for this(?) But maybe it will be good if we want to guarantee an accurate bank balance
+		print("Energy transaction succeeded: spent %s energy, predicted bank balance %s"%[energyCost, energyBankBalance-energyCost])
+	
 	FlagManager.setFlag("last_known_energy_bank_balance", energyBankBalance-energyCost)
+	
+	if manaCost > 0:
+		FlagManager.HANDLERS.WORLD.count("mana", "spent", -manaCost, true) 
+		print("Mana spent: %s; Mana left: %s"%[manaCost, FlagManager.getTotalCountAmount("mana")])
+
 	for fn in approvedSuccessFns:
 		fn.call()

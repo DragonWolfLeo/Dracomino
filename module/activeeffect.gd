@@ -49,17 +49,16 @@ func _on_dispelled() -> void:
 	if manaStored >= CONSTANTS.DISPEL_MANA_COST:
 		# Use local mana storage
 		FlagManager.setFlag("last_used_local_mana_balance")
-		_on_successful_dispel(CONSTANTS.DISPEL_MANA_COST)
+		FlagManager.HANDLERS.WORLD.count("mana", "spent", -CONSTANTS.DISPEL_MANA_COST, true)
+		print("Using %s local mana"%CONSTANTS.DISPEL_MANA_COST, "... We now have %s mana"%FlagManager.getTotalCountAmount("mana"))
+		_on_successful_dispel()
 	elif FlagManager.isFlagSet("energy_link"):
 		# Queue it in a mana transaction
-		var manaCost:float = max(0, CONSTANTS.DISPEL_MANA_COST - manaStored)
-		DracominoUtil.tryEnergyLinkManaTransaction(manaCost, _on_successful_dispel.bind(manaStored))
+		DracominoUtil.tryEnergyLinkManaTransaction(CONSTANTS.DISPEL_MANA_COST, _on_successful_dispel)
 	else:
 		print("Did not have enough mana to dispel effect")
 
-func _on_successful_dispel(localManaCost:float = 0) -> void:
-	FlagManager.HANDLERS.WORLD.count("mana", "dispel_cost", -localManaCost, true) 
-	print("Using %s local mana"%localManaCost, "... We now have %s mana"%FlagManager.getTotalCountAmount("mana"))
+func _on_successful_dispel() -> void:
 	FlagManager.setFlag("last_mana_transaction_succeeded")
 	SoundManager.play("untrap")
 	queue_free()
