@@ -134,6 +134,7 @@ func _ready():
 	effectHandler = EffectHandler.new()
 	add_child(effectHandler)
 	effectHandler.effect_activated.connect(effect_activated.emit)
+	effectHandler.effect_activated.connect(_on_effected_activated)
 	 # Master coin is just a reference for the rest of the coins and should be hidden 
 	masterCoin.visible = false
 	# Set up input timers
@@ -918,3 +919,10 @@ func _on_FishingBoard_piece_selected(piece:Piece) -> void:
 			spawnPiece(popped)
 			return
 	requestPiece()
+
+func _on_effected_activated(item:DracominoHandler.StateItem):
+	if FlagManager.isFlagSet("trap_link") and item and item.data:
+		var trapLinkAlias:String = CONSTANTS.TRAP_LINK_CONVERTS.get(item.data.internalName, "")
+		if trapLinkAlias and Archipelago.conn:
+			Archipelago.conn.send_traplink(trapLinkAlias)
+			print("Sending trap: ", trapLinkAlias)

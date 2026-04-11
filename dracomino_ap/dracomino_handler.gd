@@ -104,6 +104,10 @@ func _ready() -> void:
 	DracominoCommandManager.addCommand("GETITEM", giveItemCommand).setArgHint("name")
 	DracominoCommandManager.addCommand("TRIGGEREFFECT", triggerEffectCommand).setArgHint("name")
 
+	# Set up trap link signal
+	SignalBus.getSignal("stateflag_set", "trap_link").connect(Archipelago.set_traplink.bind(true))
+	SignalBus.getSignal("stateflag_cleared", "trap_link").connect(Archipelago.set_traplink.bind(false))
+
 #===== Functions =====
 func reset():
 	currentIndex = 0
@@ -278,6 +282,37 @@ func triggerEffectCommand(option:String): ## Triggers an effect immediately
 		else:
 			notification_signal.emit("Trigger effect failed: %s does not meet conditions"%item.data.prettyName, CONSTANTS.COLOR.ERROR, true)
 
+func triggerTrapLinkTrap(trapname:String) -> String: ## Triggers trap link trap immediately or buffers it
+	var mapping:Variant = CONSTANTS.TRAP_LINK_MAPPINGS.get(trapname)
+	var trapsToTrigger:Array[StringName] = []
+	var triggeredTraps:Array[StringName] = []
+	if mapping:
+		if mapping is Array:
+			trapsToTrigger.append_array(mapping)
+		elif mapping is StringName or mapping is String:
+			trapsToTrigger.append(mapping)
+
+	if not trapsToTrigger.size():
+		print("There is no alias for ", trapname)
+		return ""
+
+	for alias in trapsToTrigger:
+		var item:StateItem = resolveItem(alias)
+		if item and item.data:
+			var success:bool = false
+			match item.data.type:
+				"on_lock", "on_spawn":
+					effectHandler.tryToTriggerEffect(item, true, ["all"])
+					triggeredTraps.append(CONSTANTS.TRAP_LINK_CONVERTS.get(alias, alias))
+				"modifier": pass
+				_:
+					print("DracominoHandler.triggerTrapLinkTrap: there is not an effect called ", alias)
+	
+	if triggeredTraps.size():
+		return " and ".join(triggeredTraps)
+	print("No traps were triggered: ", trapsToTrigger)
+	return ""
+
 
 func giveItem(item:StateItem):
 	if not item: return
@@ -340,6 +375,13 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		FlagManager.setFlag("energy_link")
 	else:
 		FlagManager.clearFlag("energy_link")
+	# Set trap link
+	if conn.slot_data.get("trap_link"):
+		FlagManager.setFlag("trap_link")
+	elif conn.slot_data.get("trap_link") == false:
+		FlagManager.clearFlag("trap_link")
+	else:
+		Archipelago.set_traplink(FlagManager.isFlagSet("trap_link"))
 	#
 	var randomizeOrientations = conn.slot_data.get("randomize_orientations", false)
 	if randomizeOrientations:
@@ -347,6 +389,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	else:
 		seedFlagHolder.clearFlag("randomize_orientations")
 	conn.deathlink.connect(_on_deathlink)
+	conn.traplink.connect(_on_traplink)
 	conn.obtained_item.connect(_on_obtained_item)
 	conn.set_hint_notify(_on_on_hint_update)
 
@@ -469,6 +512,16 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 func _on_deathlink(source: String, cause: String, json: Dictionary):
 	if not cause: cause = "Died."
 	notification_signal.emit("{source}: {cause}".format({source=source, cause=cause}), CONSTANTS.COLOR.DEATH, true)
+
+func _on_traplink(source: String, trapname: String, json: Dictionary):
+	if not trapname: return
+	var result:String = triggerTrapLinkTrap(trapname)
+	if result:
+		notification_signal.emit("{source} triggered {trapname}{result}!".format({
+			source=source,
+			trapname=trapname,
+			result= "" if result == trapname else " as %s"%result,
+		}), CONSTANTS.COLOR.TRAP, true)
 
 func _on_obtained_item(item: NetworkItem):
 	if not isJustConnected:

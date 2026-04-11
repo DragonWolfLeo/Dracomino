@@ -116,6 +116,13 @@ text = "Energy Link
 script = ExtResource("8_s3ubo")
 flag = "energy_link"
 
+[node name="Btn_TrapLink" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "Send your traps to other players in your multiworld, as well as receive theirs"
+text = "Trap Link"
+script = ExtResource("8_s3ubo")
+flag = "trap_link"
+
 [node name="Container_Gravity" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/margin_left = 5

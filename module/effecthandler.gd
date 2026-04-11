@@ -23,6 +23,8 @@ class Effect:
 			context.append(tag)
 		return self
 	func matchesContext(ctxMask:Array[StringName]) -> bool:
+		if ctxMask.has("all"):
+			return true
 		for tag in context:
 			if not ctxMask.has(tag):
 				return false

@@ -3,6 +3,7 @@ Version 0.3.0 (traps-alpha3)
  - Add Time for Fishing!
  - Add Tutorial and Logic Tutorial
  - Add more piece colors, and no longer use white, for a total of 15 colors
+ - Add Trap Link. (Receiving is backwards-compatible, but must be manually set in the settings)
 
 Version 0.2.4 (dev-beta3)
  - Fix wrong amount of energy being sent
