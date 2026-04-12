@@ -135,37 +135,37 @@ class LocationData extends Data: pass
 # === Trap Link ===
 var TRAP_ALIASES:Dictionary[StringName, String] = {
 	# DRACOMINO TRAPS 
-	egg                    = "Egg Trap",
-	# premium_trap           = "Premium Trap", # Might scrap
-	# commitment_trap        = "Commitment Trap", # Might scrap
 	crystal_trap            = "Crystal Trap",
-	fracture_trap           = "Fracture Trap",
-	welldone                = "Well Done Trap",
-	# unrandomization_trap    = "Unrandomization Trap",
+	egg                    = "Egg Trap",
+	# commitment_trap        = "Commitment Trap", # Might scrap
 	# enchantment_curse       = "Curse Trap",
-	# enchantment_legendary   = "Enchantment Trap",
 	# enchantment_epic        = "Enchantment Trap",
-	# enchantment_rare        = "Enchantment Trap",
+	# enchantment_legendary   = "Enchantment Trap",
 	# enchantment_mediumrare  = "Enchantment Trap",
+	# enchantment_rare        = "Enchantment Trap",
+	fracture_trap           = "Fracture Trap",
 	impatience_trap         = "Impatience Trap",
+	# premium_trap           = "Premium Trap", # Might scrap
+	# unrandomization_trap    = "Unrandomization Trap",
+	welldone                = "Well Done Trap",
 
 	# EXISTING TRAPS
 	fishing                 = "Fishing Trap",
-	tutorial                = "Tutorial Trap",
-	logic_tutorial          = "Tutorial Trap",
 	invertcolors_trap       = "Invert Colors Trap",
-	water_trap              = "Underwater Trap",
+	logic_tutorial          = "Tutorial Trap",
 	pixellation_trap        = "Pixellation Trap",
-	zoom_trap               = "Zoom Trap",
 	# Random Cutscene         = "Cutscene Trap",
+	tutorial                = "Tutorial Trap",
+	water_trap              = "Underwater Trap",
+	zoom_trap               = "Zoom Trap",
 
 	# FAKE TRAPS (Shouldn't be sent, but giving them a display name)
+	enchantment                      = "Enchantment Trap",
 	enchantment_curse                = "Curse Trap",
 	enchantment_curse_gravity        = "Curse Trap",
 	enchantment_curse_movement       = "Curse Trap",
 	enchantment_legendary_movement   = "Enchantment Trap",
 	enchantment_legendary_spin       = "Enchantment Trap",
-	enchantment                      = "Enchantment Trap",
 	fade                             = "Fake Transition",
 	random_trap                      = "Random Trap",
 }
@@ -180,14 +180,14 @@ var RANDOM_TRAP_CHOICES:Array[StringName] = [
 ]
 var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	# DRACOMINO TRAPS
-	"Egg Trap"                : "egg",
-	# "Premium Trap"            : "premium_trap",
 	# "Commitment Trap"         : "commitment_trap",
 	"Crystal Trap"            : "crystal_trap",
+	"Egg Trap"                : "egg",
 	"Fracture Trap"           : "fracture_trap",
-	"Well Done Trap"          : "welldone",
 	"Impatience Trap"         : "impatience_trap",
+	# "Premium Trap"            : "premium_trap",
 	# "Unrandomization Trap"    : "unrandomization_trap",
+	"Well Done Trap"          : "welldone",
 
 	# OTHER TRAPS
 	"144p Trap"               : "pixellation_trap",
@@ -337,6 +337,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"Sandstorm Trap"          : "fracture_trap",
 	# "Screen Flip Trap"        : "Flip Trap",
 	"Shake Trap"              : "fracture_trap",
+	"Shuffle Trap"            : "unrandomization_trap",
 	# "Sleep Trap"              : "Sleep Trap",
 	"Slip Trap"               : "impatience_trap",
 	"Slow Trap"               : "enchantment_curse_movement",
