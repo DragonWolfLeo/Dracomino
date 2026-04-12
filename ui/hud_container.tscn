@@ -1,11 +1,9 @@
-[gd_scene load_steps=16 format=3 uid="uid://eb7omf02s6oc"]
+[gd_scene load_steps=12 format=3 uid="uid://eb7omf02s6oc"]
 
 [ext_resource type="Script" uid="uid://celwdodq1ovmq" path="res://ui/hud_container.gd" id="1_3knna"]
 [ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="1_8igwg"]
-[ext_resource type="Texture2D" uid="uid://djkedv7qa2eob" path="res://assets/art/icons/coin.png" id="2_3knna"]
-[ext_resource type="Texture2D" uid="uid://u1wfvmy0oh5k" path="res://assets/art/icons/mana.png" id="3_a0tbu"]
+[ext_resource type="PackedScene" uid="uid://b8b6x2hyktncv" path="res://ui/currencybar.tscn" id="3_8igwg"]
 [ext_resource type="Texture2D" uid="uid://xko8ufrcrwoi" path="res://assets/art/icons/rotate_clockwise.png" id="4_8v834"]
-[ext_resource type="Script" uid="uid://tu6jveltuomr" path="res://ui/currencylabel.gd" id="4_a0tbu"]
 [ext_resource type="PackedScene" uid="uid://tkgjls0batwm" path="res://ui/flag_colorrect.tscn" id="5_c37wy"]
 [ext_resource type="Texture2D" uid="uid://c5effepfuway0" path="res://assets/art/icons/rotate_counterclockwise.png" id="6_67b2e"]
 [ext_resource type="Texture2D" uid="uid://cuvxsetataxu4" path="res://assets/art/icons/gravity.png" id="7_6swh8"]
@@ -21,18 +19,6 @@ font_size = 20
 font_color = Color(1, 1, 0.129412, 1)
 outline_size = 6
 outline_color = Color(0.0646965, 0.0646965, 0.0646965, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a0tbu"]
-bg_color = Color(0, 0, 0.333333, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-corner_detail = 1
-
-[sub_resource type="LabelSettings" id="LabelSettings_a0tbu"]
-font_size = 12
-shadow_color = Color(0, 0, 0, 0.666667)
 
 [node name="HUDContainer" type="MarginContainer"]
 anchors_preset = 15
@@ -72,66 +58,8 @@ layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="CurrencyBar" type="HBoxContainer" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 24)
+[node name="CurrencyBar" parent="VBoxContainer" instance=ExtResource("3_8igwg")]
 layout_mode = 2
-mouse_filter = 2
-alignment = 1
-
-[node name="CoinPanel" type="PanelContainer" parent="VBoxContainer/CurrencyBar"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_a0tbu")
-
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/CurrencyBar/CoinPanel"]
-layout_mode = 2
-mouse_filter = 2
-alignment = 1
-
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/CurrencyBar/CoinPanel/HBoxContainer"]
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-tooltip_text = "Coins"
-texture = ExtResource("2_3knna")
-expand_mode = 1
-stretch_mode = 3
-
-[node name="Label" type="Label" parent="VBoxContainer/CurrencyBar/CoinPanel/HBoxContainer"]
-custom_minimum_size = Vector2(40, 0)
-layout_mode = 2
-theme_override_fonts/font = ExtResource("1_8igwg")
-text = "0"
-label_settings = SubResource("LabelSettings_a0tbu")
-vertical_alignment = 1
-script = ExtResource("4_a0tbu")
-currencyFlag = "coins"
-
-[node name="ManaPanel" type="PanelContainer" parent="VBoxContainer/CurrencyBar"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_a0tbu")
-
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/CurrencyBar/ManaPanel"]
-layout_mode = 2
-mouse_filter = 2
-alignment = 1
-
-[node name="TextureRect" type="TextureRect" parent="VBoxContainer/CurrencyBar/ManaPanel/HBoxContainer"]
-custom_minimum_size = Vector2(32, 0)
-layout_mode = 2
-tooltip_text = "Mana"
-texture = ExtResource("3_a0tbu")
-expand_mode = 1
-stretch_mode = 3
-
-[node name="Label" type="Label" parent="VBoxContainer/CurrencyBar/ManaPanel/HBoxContainer"]
-custom_minimum_size = Vector2(40, 0)
-layout_mode = 2
-theme_override_fonts/font = ExtResource("1_8igwg")
-text = "0"
-label_settings = SubResource("LabelSettings_a0tbu")
-vertical_alignment = 1
-script = ExtResource("4_a0tbu")
-currencyFlag = "mana"
-useTween = true
 
 [node name="AbilityBar" type="HBoxContainer" parent="VBoxContainer"]
 custom_minimum_size = Vector2(0, 32)

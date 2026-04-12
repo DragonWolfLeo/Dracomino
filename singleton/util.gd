@@ -111,8 +111,10 @@ static func tryEnergyLinkManaTransaction(manaCost:float, onSuccess:Callable) -> 
 static func makeEnergyLinkTransaction(energyBankBalance:Variant) -> void:
 	if not(energyBankBalance is float or energyBankBalance is int):
 		return
+	FlagManager.setFlag("last_known_energy_bank_balance", energyBankBalance)
+	SignalBus.getSignal("display_energy").emit()
+	SignalBus.getSignal("display_mana").emit()
 	if not _bufferedTransactionFns.size():
-		FlagManager.setFlag("last_known_energy_bank_balance", energyBankBalance)
 		return
 	_bufferedTransactionLifetimeTween.kill()
 	var bufferedTransactionFns = _bufferedTransactionFns.duplicate()

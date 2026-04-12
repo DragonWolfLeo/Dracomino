@@ -5,14 +5,19 @@ var displayedBalance:int = 0:
 	set(value):
 		if displayedBalance == value: return
 		displayedBalance = value
-		text = str(displayedBalance)
+		if useScientificNotation:
+			text = String.num_scientific(displayedBalance)+suffix
+		else:
+			text = str(displayedBalance)+suffix
 
 @export var displaySignal:StringName
-@export var displayDuration:float = 5.0
+@export var displayDuration:float = 10.0
 @export var displayTarget:CanvasItem
 @export var currencyFlag:String
 @export var useTween:bool = false
 @export var balanceTweenDuration:float = 0.5
+@export var useScientificNotation:bool = false
+@export var suffix:String = ""
 var tween:Tween
 var displayTween:Tween
 
@@ -30,8 +35,7 @@ func _ready() -> void:
 			targetBalance = FlagManager.getTotalCountAmount(currencyFlag)
 			if useTween and is_visible_in_tree():
 				if tween: tween.kill()
-				tween = create_tween()
-				tween.set_pause_mode(tween.TWEEN_PAUSE_PROCESS)
+				tween = create_tween().set_pause_mode(tween.TWEEN_PAUSE_PROCESS)
 				tween.tween_property(self, "displayedBalance", targetBalance, balanceTweenDuration).from_current()
 			else:
 				displayedBalance = targetBalance
@@ -43,5 +47,5 @@ func _on_displaySignal() -> void:
 	if displayDuration <= 0:
 		return
 	if displayTween: displayTween.kill()
-	displayTween = target.create_tween()
+	displayTween = target.create_tween().set_pause_mode(tween.TWEEN_PAUSE_PROCESS)
 	displayTween.tween_callback(target.hide).set_delay(displayDuration)

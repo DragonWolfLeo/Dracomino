@@ -1,0 +1,116 @@
+[gd_scene load_steps=8 format=3 uid="uid://b8b6x2hyktncv"]
+
+[ext_resource type="Texture2D" uid="uid://djkedv7qa2eob" path="res://assets/art/icons/coin.png" id="1_nacgx"]
+[ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="2_tl1qv"]
+[ext_resource type="Script" uid="uid://tu6jveltuomr" path="res://ui/currencylabel.gd" id="3_vebgi"]
+[ext_resource type="Texture2D" uid="uid://u1wfvmy0oh5k" path="res://assets/art/icons/mana.png" id="4_xtmjq"]
+[ext_resource type="Texture2D" uid="uid://da7t3p5tc8fyh" path="res://assets/art/icons/energy.png" id="5_tl1qv"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_x2l6y"]
+bg_color = Color(0, 0, 0.333333, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+corner_detail = 1
+
+[sub_resource type="LabelSettings" id="LabelSettings_6ejui"]
+font_size = 12
+shadow_color = Color(0, 0, 0, 0.666667)
+
+[node name="CurrencyBar" type="HBoxContainer"]
+custom_minimum_size = Vector2(0, 24)
+offset_right = 276.0
+offset_bottom = 24.0
+size_flags_horizontal = 4
+mouse_filter = 2
+
+[node name="CoinPanel" type="PanelContainer" parent="."]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_x2l6y")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CoinPanel"]
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="CoinPanel/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Coins"
+texture = ExtResource("1_nacgx")
+expand_mode = 1
+stretch_mode = 3
+
+[node name="Label" type="Label" parent="CoinPanel/HBoxContainer" node_paths=PackedStringArray("displayTarget")]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_tl1qv")
+text = "0"
+label_settings = SubResource("LabelSettings_6ejui")
+vertical_alignment = 1
+script = ExtResource("3_vebgi")
+displayTarget = NodePath("../..")
+currencyFlag = "coins"
+
+[node name="ManaPanel" type="PanelContainer" parent="."]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_x2l6y")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="ManaPanel"]
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="ManaPanel/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Mana"
+texture = ExtResource("4_xtmjq")
+expand_mode = 1
+stretch_mode = 3
+
+[node name="Label" type="Label" parent="ManaPanel/HBoxContainer" node_paths=PackedStringArray("displayTarget")]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_tl1qv")
+text = "0"
+label_settings = SubResource("LabelSettings_6ejui")
+vertical_alignment = 1
+script = ExtResource("3_vebgi")
+displayTarget = NodePath("../..")
+currencyFlag = "mana"
+useTween = true
+
+[node name="EnergyPanel" type="PanelContainer" parent="."]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_x2l6y")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="EnergyPanel"]
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="EnergyPanel/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Mana"
+texture = ExtResource("5_tl1qv")
+expand_mode = 1
+stretch_mode = 3
+
+[node name="Label" type="Label" parent="EnergyPanel/HBoxContainer" node_paths=PackedStringArray("displayTarget")]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_tl1qv")
+text = "0"
+label_settings = SubResource("LabelSettings_6ejui")
+vertical_alignment = 1
+script = ExtResource("3_vebgi")
+displaySignal = &"display_energy"
+displayTarget = NodePath("../..")
+currencyFlag = "last_known_energy_bank_balance"
+useTween = true
+balanceTweenDuration = 1.0
+useScientificNotation = true
+suffix = "J"
