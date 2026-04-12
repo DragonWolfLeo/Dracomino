@@ -47,6 +47,7 @@ shader_parameter/reflection_shear = 0.0
 shader_parameter/reflection_strength = 0.155
 
 [node name="LevelOverlay" type="CanvasLayer"]
+layer = 2
 
 [node name="CrystalFilter" type="ColorRect" parent="."]
 material = SubResource("ShaderMaterial_m1ejn")

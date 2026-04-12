@@ -1,6 +1,7 @@
-extends CanvasLayer
+extends Node
 
 @onready var notificationLabel:Label = %NotificationLabel
+@onready var notificationContents:Control = %NotificationContents
 @onready var timer:Timer = $Timer
 
 var _queuedNotifications:Array[Dictionary]
@@ -11,7 +12,7 @@ var DRACOMINO_NOTIFICATION_TIME_SHORT:float = 1.0
 # === Virtuals ===
 func _ready():
 	notificationLabel.text = ""
-	notificationLabel.hide()
+	notificationContents.hide()
 	SignalBus.getSignal("stateflag_set", "notification_pause").connect(timer.set.bind("paused", true))
 	SignalBus.getSignal("stateflag_cleared", "notification_pause").connect(timer.set.bind("paused", false))
 
@@ -19,7 +20,7 @@ func _ready():
 func showNotification(notif:String, color:Color) -> void:
 	cancelTimer()
 	if notificationLabel:
-		notificationLabel.show()
+		notificationContents.show()
 		notificationLabel.text = notif
 		notificationLabel.label_settings.font_color = color
 		timer.start(DRACOMINO_NOTIFICATION_TIME_SHORT if _queuedNotifications.size() else DRACOMINO_NOTIFICATION_TIME)
@@ -46,7 +47,7 @@ func _on_timer_timeout():
 		var qn:Dictionary = _queuedNotifications.pop_front()
 		showNotification(qn.notif, qn.color)
 	else:
-		notificationLabel.hide()
+		notificationContents.hide()
 		cancelTimer()
 
 func _on_Board_effect_activated(item: DracominoHandler.StateItem) -> void:

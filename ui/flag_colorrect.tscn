@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://tkgjls0batwm"]
+
+[ext_resource type="Script" uid="uid://bdjl4wjprpljg" path="res://module/hide_on_flag_set.gd" id="1_ncqix"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_yexnv"]
+blend_mode = 2
+
+[node name="FlagColorRect" type="ColorRect"]
+visible = false
+material = SubResource("CanvasItemMaterial_yexnv")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.666667, 0.666667, 0.666667, 1)
+script = ExtResource("1_ncqix")

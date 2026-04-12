@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://c5lm3ikyfckvp"]
+[gd_scene load_steps=26 format=3 uid="uid://c5lm3ikyfckvp"]
 
 [ext_resource type="Script" uid="uid://c5jgcsxvnygnn" path="res://mode/main.gd" id="1_gx2q7"]
 [ext_resource type="PackedScene" uid="uid://txbrdml6vs6n" path="res://screen/ui.tscn" id="2_yivgv"]
@@ -11,9 +11,17 @@
 [ext_resource type="Script" uid="uid://c5w663oymc2oy" path="res://module/hide_with_mode.gd" id="8_jjnvi"]
 [ext_resource type="PackedScene" uid="uid://boraki5ygsa0g" path="res://level/board.tscn" id="8_wule5"]
 [ext_resource type="Script" uid="uid://dutbiv2hgugwn" path="res://module/piecestorage.gd" id="9_3joyb"]
+[ext_resource type="Texture2D" uid="uid://djkedv7qa2eob" path="res://assets/art/icons/coin.png" id="10_3sqm2"]
 [ext_resource type="PackedScene" uid="uid://rd6em7cjqrum" path="res://level/fishingboard.tscn" id="10_jc8m0"]
 [ext_resource type="Script" uid="uid://uaf4h6orb4o4" path="res://mode/mode.gd" id="10_jjnvi"]
+[ext_resource type="Texture2D" uid="uid://u1wfvmy0oh5k" path="res://assets/art/icons/mana.png" id="11_xjetl"]
+[ext_resource type="Texture2D" uid="uid://xko8ufrcrwoi" path="res://assets/art/icons/rotate_clockwise.png" id="12_xmb3i"]
+[ext_resource type="PackedScene" uid="uid://tkgjls0batwm" path="res://ui/flag_colorrect.tscn" id="13_8cqs1"]
+[ext_resource type="Texture2D" uid="uid://c5effepfuway0" path="res://assets/art/icons/rotate_counterclockwise.png" id="14_7n4vj"]
 [ext_resource type="Script" uid="uid://3hyxsaj4myy1" path="res://module/play_sound_on_visible.gd" id="14_m1ejn"]
+[ext_resource type="Texture2D" uid="uid://cuvxsetataxu4" path="res://assets/art/icons/gravity.png" id="15_useh7"]
+[ext_resource type="Texture2D" uid="uid://c6vhet4yyaup8" path="res://assets/art/icons/softdrop.png" id="16_1fxbc"]
+[ext_resource type="Texture2D" uid="uid://g81y46tu318g" path="res://assets/art/icons/harddrop.png" id="17_lsjhy"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_gpyk6"]
 font = ExtResource("3_yivgv")
@@ -28,14 +36,19 @@ font_color = Color(1, 1, 0.129412, 1)
 outline_size = 6
 outline_color = Color(0.0646965, 0.0646965, 0.0646965, 1)
 
-[node name="Main" type="SubViewportContainer"]
-process_mode = 3
+[node name="MainSplit" type="VSplitContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+split_offset = -40
+
+[node name="Main" type="SubViewportContainer" parent="."]
+process_mode = 3
+layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 3
 focus_neighbor_left = NodePath(".")
 focus_neighbor_top = NodePath(".")
 focus_neighbor_right = NodePath(".")
@@ -43,28 +56,25 @@ focus_neighbor_bottom = NodePath(".")
 stretch = true
 script = ExtResource("1_gx2q7")
 
-[node name="SubViewport" type="SubViewport" parent="."]
+[node name="SubViewport" type="SubViewport" parent="Main"]
 handle_input_locally = false
 snap_2d_transforms_to_pixel = true
 canvas_item_default_texture_filter = 3
-size = Vector2i(960, 540)
+size = Vector2i(960, 488)
 render_target_update_mode = 4
 
-[node name="DracominoHandler" type="Node" parent="SubViewport"]
+[node name="DracominoHandler" type="Node" parent="Main/SubViewport"]
 script = ExtResource("4_d6dmn")
 
-[node name="UI" parent="SubViewport" instance=ExtResource("2_yivgv")]
+[node name="UI" parent="Main/SubViewport" instance=ExtResource("2_yivgv")]
 unique_name_in_owner = true
 
-[node name="NotificationLayer" parent="SubViewport" instance=ExtResource("5_d6dmn")]
-process_mode = 3
+[node name="Overlay" parent="Main/SubViewport" instance=ExtResource("5_yivgv")]
 
-[node name="Overlay" parent="SubViewport" instance=ExtResource("5_yivgv")]
-
-[node name="LevelOverlay" parent="SubViewport" instance=ExtResource("6_w0fxs")]
+[node name="LevelOverlay" parent="Main/SubViewport" instance=ExtResource("6_w0fxs")]
 process_mode = 1
 
-[node name="PuzzleMode" type="Control" parent="SubViewport"]
+[node name="PuzzleMode" type="Control" parent="Main/SubViewport"]
 unique_name_in_owner = true
 process_mode = 1
 layout_mode = 3
@@ -79,11 +89,11 @@ mouse_filter = 1
 script = ExtResource("5_m1ejn")
 modeName = &"puzzle"
 
-[node name="PuzzleHUD" type="CanvasLayer" parent="SubViewport/PuzzleMode"]
+[node name="PuzzleHUD" type="CanvasLayer" parent="Main/SubViewport/PuzzleMode"]
 layer = 2
 script = ExtResource("8_jjnvi")
 
-[node name="HoldContainer" type="MarginContainer" parent="SubViewport/PuzzleMode/PuzzleHUD"]
+[node name="HoldContainer" type="MarginContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -94,21 +104,21 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 16
 
-[node name="ScrollContainer" type="ScrollContainer" parent="SubViewport/PuzzleMode/PuzzleHUD/HoldContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HoldContainer"]
 layout_mode = 2
 size_flags_horizontal = 0
 horizontal_scroll_mode = 0
 
-[node name="HoldBar" type="VBoxContainer" parent="SubViewport/PuzzleMode/PuzzleHUD/HoldContainer/ScrollContainer"]
+[node name="HoldBar" type="VBoxContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HoldContainer/ScrollContainer"]
 layout_mode = 2
 
-[node name="HoldLabel" type="Label" parent="SubViewport/PuzzleMode/PuzzleHUD/HoldContainer/ScrollContainer/HoldBar"]
+[node name="HoldLabel" type="Label" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HoldContainer/ScrollContainer/HoldBar"]
 layout_mode = 2
 text = "Hold"
 label_settings = SubResource("LabelSettings_gpyk6")
 horizontal_alignment = 1
 
-[node name="PreviewContainer" type="MarginContainer" parent="SubViewport/PuzzleMode/PuzzleHUD"]
+[node name="PreviewContainer" type="MarginContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -120,23 +130,23 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 16
 
-[node name="ScrollContainer" type="ScrollContainer" parent="SubViewport/PuzzleMode/PuzzleHUD/PreviewContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/PreviewContainer"]
 layout_mode = 2
 size_flags_horizontal = 8
 horizontal_scroll_mode = 0
 
-[node name="PreviewBar" type="VBoxContainer" parent="SubViewport/PuzzleMode/PuzzleHUD/PreviewContainer/ScrollContainer"]
+[node name="PreviewBar" type="VBoxContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/PreviewContainer/ScrollContainer"]
 clip_contents = true
 layout_mode = 2
 size_flags_horizontal = 10
 
-[node name="PreviewLabel" type="Label" parent="SubViewport/PuzzleMode/PuzzleHUD/PreviewContainer/ScrollContainer/PreviewBar"]
+[node name="PreviewLabel" type="Label" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/PreviewContainer/ScrollContainer/PreviewBar"]
 layout_mode = 2
 text = "Next"
 label_settings = SubResource("LabelSettings_gpyk6")
 horizontal_alignment = 1
 
-[node name="MarginContainer" type="MarginContainer" parent="SubViewport/PuzzleMode/PuzzleHUD"]
+[node name="HUDContainer" type="MarginContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -146,11 +156,11 @@ mouse_filter = 2
 theme_override_constants/margin_top = 30
 theme_override_constants/margin_bottom = 30
 
-[node name="VBoxContainer" type="VBoxContainer" parent="SubViewport/PuzzleMode/PuzzleHUD/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer"]
 layout_mode = 2
 theme = SubResource("Theme_d5o15")
 
-[node name="LinesLabel" type="Label" parent="SubViewport/PuzzleMode/PuzzleHUD/MarginContainer/VBoxContainer"]
+[node name="LinesLabel" type="Label" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
@@ -158,7 +168,7 @@ text = "Lines: 0"
 label_settings = SubResource("LabelSettings_rni7d")
 horizontal_alignment = 1
 
-[node name="PiecesLabel" type="Label" parent="SubViewport/PuzzleMode/PuzzleHUD/MarginContainer/VBoxContainer"]
+[node name="PiecesLabel" type="Label" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
@@ -167,7 +177,116 @@ text = "Pieces Left: 0"
 label_settings = SubResource("LabelSettings_rni7d")
 horizontal_alignment = 1
 
-[node name="SubViewportContainer" type="SubViewportContainer" parent="SubViewport/PuzzleMode"]
+[node name="Spacer" type="Control" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="CurrencyBar" type="HBoxContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer/CurrencyBar"]
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer/CurrencyBar/HBoxContainer"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Coins"
+texture = ExtResource("10_3sqm2")
+expand_mode = 1
+stretch_mode = 3
+
+[node name="Label" type="Label" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer/CurrencyBar/HBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_yivgv")
+text = "100000"
+vertical_alignment = 1
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer/CurrencyBar"]
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer/CurrencyBar/HBoxContainer2"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Mana"
+texture = ExtResource("11_xjetl")
+expand_mode = 1
+stretch_mode = 3
+
+[node name="Label" type="Label" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer/CurrencyBar/HBoxContainer2"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_yivgv")
+text = "100000"
+vertical_alignment = 1
+
+[node name="AbilityBar" type="HBoxContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+alignment = 1
+
+[node name="RotateClockwise" type="TextureRect" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer/AbilityBar"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Rotate Clockwise"
+texture = ExtResource("12_xmb3i")
+stretch_mode = 3
+
+[node name="FlagColorRect" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer/AbilityBar/RotateClockwise" instance=ExtResource("13_8cqs1")]
+layout_mode = 1
+flag = "rotate_clockwise"
+
+[node name="RotateCounterclockwise" type="TextureRect" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer/AbilityBar"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Rotate Counterclockwise"
+texture = ExtResource("14_7n4vj")
+stretch_mode = 3
+
+[node name="FlagColorRect" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer/AbilityBar/RotateCounterclockwise" instance=ExtResource("13_8cqs1")]
+layout_mode = 1
+flag = "rotate_counterclockwise"
+
+[node name="Gravity" type="TextureRect" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer/AbilityBar"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Gravity"
+texture = ExtResource("15_useh7")
+stretch_mode = 3
+
+[node name="FlagColorRect" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer/AbilityBar/Gravity" instance=ExtResource("13_8cqs1")]
+layout_mode = 1
+flag = "gravity"
+
+[node name="SoftDrop" type="TextureRect" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer/AbilityBar"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Soft Drop"
+texture = ExtResource("16_1fxbc")
+stretch_mode = 3
+
+[node name="FlagColorRect" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer/AbilityBar/SoftDrop" instance=ExtResource("13_8cqs1")]
+layout_mode = 1
+flag = "soft_drop"
+
+[node name="HardDrop" type="TextureRect" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer/AbilityBar"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Hard Drop"
+texture = ExtResource("17_lsjhy")
+stretch_mode = 3
+
+[node name="FlagColorRect" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HUDContainer/VBoxContainer/AbilityBar/HardDrop" instance=ExtResource("13_8cqs1")]
+layout_mode = 1
+flag = "hard_drop"
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="Main/SubViewport/PuzzleMode"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -176,32 +295,32 @@ grow_horizontal = 2
 grow_vertical = 2
 stretch = true
 
-[node name="SubViewport" type="SubViewport" parent="SubViewport/PuzzleMode/SubViewportContainer"]
+[node name="SubViewport" type="SubViewport" parent="Main/SubViewport/PuzzleMode/SubViewportContainer"]
 handle_input_locally = false
 snap_2d_transforms_to_pixel = true
 canvas_item_default_texture_filter = 3
-size = Vector2i(960, 540)
+size = Vector2i(960, 488)
 render_target_update_mode = 4
 
-[node name="Board" parent="SubViewport/PuzzleMode/SubViewportContainer/SubViewport" node_paths=PackedStringArray("previewStorage", "holdStorage") instance=ExtResource("8_wule5")]
+[node name="Board" parent="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport" node_paths=PackedStringArray("previewStorage", "holdStorage") instance=ExtResource("8_wule5")]
 unique_name_in_owner = true
 previewStorage = NodePath("PreviewStorage")
 holdStorage = NodePath("HoldStorage")
 
-[node name="PreviewStorage" type="Node" parent="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" node_paths=PackedStringArray("targetControl")]
+[node name="PreviewStorage" type="Node" parent="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" node_paths=PackedStringArray("targetControl")]
 script = ExtResource("9_3joyb")
 targetControl = NodePath("../../../../PuzzleHUD/PreviewContainer/ScrollContainer/PreviewBar")
 slotAbilityName = "Next Piece Slot"
 addToPieceTotal = true
 
-[node name="HoldStorage" type="Node" parent="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" node_paths=PackedStringArray("targetControl")]
+[node name="HoldStorage" type="Node" parent="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" node_paths=PackedStringArray("targetControl")]
 script = ExtResource("9_3joyb")
 targetControl = NodePath("../../../../PuzzleHUD/HoldContainer/ScrollContainer/HoldBar")
 slotAbilityName = "Hold Slot"
 emptyFill = true
 useNumberedSlots = true
 
-[node name="FishingMode" type="Control" parent="SubViewport"]
+[node name="FishingMode" type="Control" parent="Main/SubViewport"]
 unique_name_in_owner = true
 process_mode = 1
 visible = false
@@ -217,7 +336,7 @@ mouse_filter = 1
 script = ExtResource("10_jjnvi")
 modeName = &"fishing"
 
-[node name="SubViewportContainer" type="SubViewportContainer" parent="SubViewport/FishingMode"]
+[node name="SubViewportContainer" type="SubViewportContainer" parent="Main/SubViewport/FishingMode"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -226,56 +345,44 @@ grow_horizontal = 2
 grow_vertical = 2
 stretch = true
 
-[node name="SubViewport" type="SubViewport" parent="SubViewport/FishingMode/SubViewportContainer"]
+[node name="SubViewport" type="SubViewport" parent="Main/SubViewport/FishingMode/SubViewportContainer"]
 handle_input_locally = false
 snap_2d_transforms_to_pixel = true
 canvas_item_default_texture_filter = 3
-size = Vector2i(960, 540)
+size = Vector2i(960, 488)
 render_target_update_mode = 0
 
-[node name="FishingBoard" parent="SubViewport/FishingMode/SubViewportContainer/SubViewport" node_paths=PackedStringArray("board") instance=ExtResource("10_jc8m0")]
+[node name="FishingBoard" parent="Main/SubViewport/FishingMode/SubViewportContainer/SubViewport" node_paths=PackedStringArray("board") instance=ExtResource("10_jc8m0")]
 board = NodePath("../../../../PuzzleMode/SubViewportContainer/SubViewport/Board")
 
-[node name="PlaySoundOnVisible" type="Node2D" parent="SubViewport/FishingMode"]
+[node name="PlaySoundOnVisible" type="Node2D" parent="Main/SubViewport/FishingMode"]
 script = ExtResource("14_m1ejn")
 soundName = "trap"
 
-[node name="DialogueMode" type="Control" parent="SubViewport"]
-unique_name_in_owner = true
-process_mode = 1
-visible = false
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-mouse_filter = 1
-script = ExtResource("10_jjnvi")
-modeName = &"dialogue"
-
-[node name="EffectDurationTicker" type="Timer" parent="."]
+[node name="EffectDurationTicker" type="Timer" parent="Main"]
 unique_name_in_owner = true
 process_mode = 1
 wait_time = 5.0
 autostart = true
 
-[connection signal="lineMappings_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_line_mappings_updated"]
-[connection signal="missingLines_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_lines_updated"]
-[connection signal="missingPickupCoordinates_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_pickup_coordinates_updated"]
-[connection signal="notification_signal" from="SubViewport/DracominoHandler" to="SubViewport/NotificationLayer" method="_on_DracominoHandler_notification_signal"]
-[connection signal="slotContextHash_updated" from="SubViewport/DracominoHandler" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_slot_context_hash_updated"]
-[connection signal="started" from="SubViewport/DracominoHandler" to="." method="_on_DracominoHandler_started"]
-[connection signal="resized" from="SubViewport/PuzzleMode/SubViewportContainer" to="SubViewport/PuzzleMode" method="_on_SubViewportContainer_resized"]
-[connection signal="deathlink_earned" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_deathlink_earned"]
-[connection signal="effect_activated" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/NotificationLayer" method="_on_Board_effect_activated"]
-[connection signal="game_started" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_game_started"]
-[connection signal="game_started" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_game_started"]
-[connection signal="item_pickedup" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_item_pickedup"]
-[connection signal="linesCleared_updated" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_lines_cleared_updated"]
-[connection signal="lines_cleared" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_lines_cleared"]
-[connection signal="pieces_requested" from="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="SubViewport/DracominoHandler" method="_on_Board_pieces_requested"]
-[connection signal="resized" from="SubViewport/FishingMode/SubViewportContainer" to="SubViewport/PuzzleMode" method="_on_SubViewportContainer_resized"]
-[connection signal="piece_selected" from="SubViewport/FishingMode/SubViewportContainer/SubViewport/FishingBoard" to="SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_FishingBoard_piece_selected"]
+[node name="NotificationScreen" parent="." instance=ExtResource("5_d6dmn")]
+process_mode = 3
+layout_mode = 2
+
+[connection signal="lineMappings_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_line_mappings_updated"]
+[connection signal="missingLines_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_lines_updated"]
+[connection signal="missingPickupCoordinates_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_pickup_coordinates_updated"]
+[connection signal="notification_signal" from="Main/SubViewport/DracominoHandler" to="NotificationScreen" method="_on_DracominoHandler_notification_signal"]
+[connection signal="slotContextHash_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_slot_context_hash_updated"]
+[connection signal="started" from="Main/SubViewport/DracominoHandler" to="Main" method="_on_DracominoHandler_started"]
+[connection signal="resized" from="Main/SubViewport/PuzzleMode/SubViewportContainer" to="Main/SubViewport/PuzzleMode" method="_on_SubViewportContainer_resized"]
+[connection signal="deathlink_earned" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="Main/SubViewport/DracominoHandler" method="_on_Board_deathlink_earned"]
+[connection signal="effect_activated" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="NotificationScreen" method="_on_Board_effect_activated"]
+[connection signal="game_started" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="Main" method="_on_Board_game_started"]
+[connection signal="game_started" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="Main/SubViewport/DracominoHandler" method="_on_Board_game_started"]
+[connection signal="item_pickedup" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="Main/SubViewport/DracominoHandler" method="_on_Board_item_pickedup"]
+[connection signal="linesCleared_updated" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="Main/SubViewport/DracominoHandler" method="_on_Board_lines_cleared_updated"]
+[connection signal="lines_cleared" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="Main/SubViewport/DracominoHandler" method="_on_Board_lines_cleared"]
+[connection signal="pieces_requested" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="Main/SubViewport/DracominoHandler" method="_on_Board_pieces_requested"]
+[connection signal="resized" from="Main/SubViewport/FishingMode/SubViewportContainer" to="Main/SubViewport/PuzzleMode" method="_on_SubViewportContainer_resized"]
+[connection signal="piece_selected" from="Main/SubViewport/FishingMode/SubViewportContainer/SubViewport/FishingBoard" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_FishingBoard_piece_selected"]
