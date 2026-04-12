@@ -16,6 +16,7 @@ signal nothing_caught()
 @onready var fishingRodMarker_idle:Marker2D = %FishingRodMarker_Idle
 @onready var fishingRodMarker_charge:Marker2D = %FishingRodMarker_Charge
 @onready var fishingLine:Line2D = %FishingLine
+@onready var focusCamera:Camera2D = %FocusCamera
 
 @onready var FISHING_HOOK_STARTING_POSITION = fishingHook.position
 
@@ -86,6 +87,7 @@ func reset(immediate:bool = true):
 	casted = false
 	currentCharge = 0
 	frame = IDLE_FRAME
+	focusCamera.position = Vector2.ZERO
 	if immediate:
 		fishingHook.position = FISHING_HOOK_STARTING_POSITION
 	else:
@@ -105,6 +107,7 @@ func retrieve():
 		fishCaughtTween.tween_property(hooked, "position", camera.position if camera else position, 1.5).from_current()
 		fishCaughtTween.tween_property(hooked, "scale", Vector2(4,4), 1.5).from_current()
 		fishCaughtTween.tween_property(hooked, "rotation_degrees", ANIMATION_ROTATION_OFFSET, 1.5).from_current()
+		fishCaughtTween.tween_property(focusCamera, "global_position", camera.global_position, 1.5).from_current()
 		fishCaughtTween.tween_callback(hooked.showBigPiece).set_delay(0.25)
 		fishCaughtTween.set_parallel(false)
 		fishCaughtTween.tween_property(hooked, "rotation_degrees", ANIMATION_ROTATION_OFFSET+15, 0.2).from(ANIMATION_ROTATION_OFFSET).set_ease(Tween.EASE_IN)

@@ -164,6 +164,7 @@ position = Vector2(0, 1)
 shape = SubResource("RectangleShape2D_tlecd")
 
 [node name="FocusCamera" type="Camera2D" parent="FishingMini/FishingHook"]
+unique_name_in_owner = true
 process_mode = 3
 offset = Vector2(0, 16)
 enabled = false
