@@ -1,10 +1,9 @@
-extends Mode
+extends MarginContainer
 
 @onready var linesLabel:Label = %LinesLabel
 @onready var piecesLabel:Label = %PiecesLabel
 
 func _ready() -> void:
-	super()
 	SignalBus.getSignal("stateflag_changed", "goal").connect(updateLineClearedLabel, CONNECT_DEFERRED)
 	SignalBus.getSignal("stateflag_changed", "lines_cleared").connect(updateLineClearedLabel, CONNECT_DEFERRED)
 	SignalBus.getSignal("stateflag_changed", "shapes_left").connect(updatePiecesLeft, CONNECT_DEFERRED)
