@@ -254,7 +254,7 @@ metadata/_edit_lock_ = true
 
 [node name="Camera2D" type="Camera2D" parent="."]
 process_mode = 3
-position = Vector2(80, 160)
+position = Vector2(80, 176)
 script = ExtResource("5_ynmsg")
 heightThreshold = 320.0
 
