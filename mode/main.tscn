@@ -73,7 +73,7 @@ script = ExtResource("10_jjnvi")
 modeName = &"puzzle"
 
 [node name="PuzzleHUD" type="CanvasLayer" parent="Main/SubViewport/PuzzleMode"]
-layer = 2
+layer = 3
 script = ExtResource("8_jjnvi")
 
 [node name="HoldContainer" type="MarginContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD"]
