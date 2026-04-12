@@ -67,6 +67,7 @@ region_enabled = true
 region_rect = Rect2(0, 160, 256, 48)
 
 [node name="Camera2D" type="Camera2D" parent="."]
+process_mode = 3
 position = Vector2(128, 192)
 script = ExtResource("3_6egt2")
 disableFlag = "effect_zoom"

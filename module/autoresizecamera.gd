@@ -18,6 +18,7 @@ func _enter_tree() -> void:
 		printerr("autoresize.gd error: no target control found")
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	if enableFlag:
 		SignalBus.getSignal("stateflag_set", enableFlag).connect(set.bind("enabled", true))
 		if soundToPlay:
