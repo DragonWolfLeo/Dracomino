@@ -71,7 +71,7 @@ func _ready():
 	addCommand("HIDEPORTRAIT", DialogueManager.hidePortrait.unbind(1), true)
 	addSignalCommand("WAIT")
 	# Emit from signal bus
-	addCommand("EMIT", SignalBus.signal_self.emit, true).setArgHint("signal")
+	addCommand("EMIT", func(_option:String): var args = _option.split(" ", false, 1); SignalBus.getSignal.callv(args).emit(), true).setArgHint("key(optional) flag")
 
 func addCommand(id:StringName, fnWithExactlyOneArgument: Callable, invisible:bool = false, force:bool = false)->Command:
 	id = id.to_upper()
