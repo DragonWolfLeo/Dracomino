@@ -31,6 +31,7 @@ wait_time = 5.0
 
 [node name="Control" type="Control" parent="."]
 layout_mode = 2
+mouse_filter = 2
 
 [node name="NotificationContents" type="PanelContainer" parent="Control"]
 unique_name_in_owner = true
@@ -42,6 +43,7 @@ anchor_bottom = 1.0
 offset_top = -44.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_ywagh")
 
 [node name="MarginContainer" type="MarginContainer" parent="Control/NotificationContents"]
