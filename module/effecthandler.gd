@@ -31,9 +31,12 @@ class Effect:
 		return true
 
 var EFFECTS:Dictionary[StringName, Effect] = {
-	tutorial = Effect.new(_loadDialogue.bind("tutorial")).setCanTriggerFn(_canLoadNewDialogue),
-	logic_tutorial = Effect.new(_loadDialogue.bind("tutorial_logic")).setCanTriggerFn(_canLoadNewDialogue),
-	fishing = Effect.new(_setMode.bind("fishing")).setCanTriggerFn(_piecesAreLeft.bind(2)).setBlockRequestPiece(),
+	tutorial = Effect.new(_loadDialogue.bind("tutorial"))\
+		.setCanTriggerFn(_canLoadNewDialogue),
+	logic_tutorial = Effect.new(_loadDialogue.bind("tutorial_logic")).\
+		setCanTriggerFn(_canLoadNewDialogue),
+	fishing = Effect.new(_setMode.bind("fishing"))\
+		.setCanTriggerFn(combineFunctions.bind(_piecesAreLeft.bind(2), FlagManager.isFlagSet.bind("!mode=fishing"))).setBlockRequestPiece(),
 	welldone = Effect.new(_activateEffect.bind("overlay_welldone", 3)).addContext("line_clear"),
 	crystal_trap = Effect.new(_activateEffect.bind("overlay_crystal", 4)),
 	invertcolors_trap = Effect.new(_activateEffect.bind("overlay_invert")),
@@ -41,7 +44,8 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 	pixellation_trap = Effect.new(_activateEffect.bind("overlay_pixel", 6)),
 	fracture_trap = Effect.new(_activateEffect.bind("overlay_fracture")),
 	zoom_trap = Effect.new(_activateEffect.bind("effect_zoom", 4)),
-	impatience_trap = Effect.new(SignalBus.getSignal("effect_impatience").emit).setCanTriggerFn(_canDoImpatienceTrap).addContext("delayed"),
+	impatience_trap = Effect.new(SignalBus.getSignal("effect_impatience").emit)\
+		.setCanTriggerFn(_canSpawnMoreShapes).addContext("delayed"),
 	commitment_trap = Effect.new(_activateEffect.bind("committed", -1)),
 	egg = Effect.new(_NOOP),
 	noop = Effect.new(_NOOP),
@@ -57,6 +61,9 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 	random_trap = Effect.new(_randomTrap),
 }
 
+# === Static helpers ===
+func combineFunctions(a:Callable, b:Callable) -> bool:
+	return a.call() and b.call()
 # === Private functions ===
 func _setMode(modeName:StringName) -> void:
 	SignalBus.getSignal("mode_set_requested", modeName).emit()
@@ -64,7 +71,7 @@ func _setMode(modeName:StringName) -> void:
 func _piecesAreLeft(amount:int) -> bool:
 	return FlagManager.getTotalCountAmount("shapes_left") >= amount
 
-func _canDoImpatienceTrap() -> bool:
+func _canSpawnMoreShapes() -> bool:
 	return _piecesAreLeft(3) and FlagManager.getTotalCountAmount("shapes_active") < 5
 
 func _loadDialogue(dialogue:Variant) -> void:
