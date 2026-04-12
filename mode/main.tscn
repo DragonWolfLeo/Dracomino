@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://txbrdml6vs6n" path="res://screen/ui.tscn" id="2_yivgv"]
 [ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="3_yivgv"]
 [ext_resource type="Script" uid="uid://daewoikmtskpi" path="res://dracomino_ap/dracomino_handler.gd" id="4_d6dmn"]
-[ext_resource type="PackedScene" uid="uid://0ung6f7krjet" path="res://screen/notificationlayer.tscn" id="5_d6dmn"]
+[ext_resource type="PackedScene" uid="uid://0ung6f7krjet" path="res://screen/notificationscreen.tscn" id="5_d6dmn"]
 [ext_resource type="PackedScene" uid="uid://3jevvou6slg2" path="res://screen/overlay.tscn" id="5_yivgv"]
 [ext_resource type="PackedScene" uid="uid://ckv6tnuoxlxgw" path="res://screen/level_overlay.tscn" id="6_w0fxs"]
 [ext_resource type="Script" uid="uid://c5w663oymc2oy" path="res://module/hide_with_mode.gd" id="8_jjnvi"]

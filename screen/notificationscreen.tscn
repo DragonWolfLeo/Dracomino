@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3 uid="uid://0ung6f7krjet"]
 
-[ext_resource type="Script" uid="uid://bc3842mfx25wv" path="res://screen/notificationlayer.gd" id="1_cq227"]
+[ext_resource type="Script" uid="uid://bc3842mfx25wv" path="res://screen/notificationscreen.gd" id="1_cq227"]
 [ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="1_u1max"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cq227"]
