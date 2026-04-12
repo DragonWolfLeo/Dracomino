@@ -191,6 +191,8 @@ func sendLocation(loc_id:int):
 	
 	missingLocations[loc_id] = false
 	checkedLocations[loc_id] = true
+	if id_to_pickupCoord.has(loc_id):
+		addLocationToCoinCurrency(loc_id)
 
 func sendLine(lineIndex:int):
 	if lineIndex >= allLineLocations.size():
@@ -370,6 +372,8 @@ func triggerEffect(stateItem:StateItem, context:Array[StringName] = []) -> bool:
 			print("Sending trap: ", trapLinkAlias)
 	return result
 
+func addLocationToCoinCurrency(loc_id): ## Add coins to currency (be careful not to use line locations here)
+	seedFlagHolder.count("coins", "coin_%s"%loc_id, 1)
 
 #===== Events =====
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
@@ -470,6 +474,8 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 				_allPickups.append(loc_id)
 				if not checked:
 					missingPickups.append(loc_id)
+				else:
+					addLocationToCoinCurrency(loc_id)
 		else:
 			printerr("Got invalid location: id: {id}; name: {name}; You may be running an outdated version of the client!"
 				.format({id=loc_id, name=conn.locations[loc_id].name})
@@ -576,6 +582,7 @@ func _on_remove_location(loc_id:int):
 		elif id_to_pickupCoord.has(loc_id):
 			missingPickupCoordinates.erase(id_to_pickupCoord[loc_id])
 			missingPickupCoordinates_updated.emit(missingPickupCoordinates)
+			addLocationToCoinCurrency(loc_id)
 
 func _on_Board_pieces_requested(callback:Callable, num:int) -> void:
 	for i:int in range(num):
