@@ -4,7 +4,7 @@ signal triggered()
 
 @onready var label:Label = $Label
 
-var tileMapLayer:TileMapLayer
+var pieceTiles:PieceTiles
 var shortcut:StringName = ""
 var piece:Piece:
 	set(value):
@@ -20,7 +20,7 @@ var piece:Piece:
 #===== Virtuals ======
 func _ready() -> void:
 	setLabel()
-	tileMapLayer = find_child("TileMapLayer")
+	pieceTiles = find_child("PieceTiles")
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if shortcut.is_empty(): return
@@ -30,8 +30,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 #===== Functions ======
 func renderPiece():
-	for pos:Vector2i in piece.localCells:
-		tileMapLayer.set_cell(pos, 0, Vector2i(piece.id, Board.ACTIVE_TILE_ATLAS_ROW))
+	pieceTiles.renderPiece(piece)
 
 func setLabel(text:String = ""):
 	if label:

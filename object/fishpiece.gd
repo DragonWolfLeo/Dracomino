@@ -22,7 +22,7 @@ var waveAmplitude:float = 3
 var setupCompleted:bool = false
 var tileMapOffset:Vector2
 
-@onready var tileMapLayer:TileMapLayer = $TileMapLayer
+@onready var pieceTiles:PieceTiles = $PieceTiles
 @onready var bigPiece:BigPiece = $BigPiece
 
 # === Virtuals ===
@@ -34,14 +34,14 @@ func _ready() -> void:
 
 	await get_tree().process_frame
 	# Copy tile collision into the collision body
-	var cells:Array[Vector2i] = tileMapLayer.get_used_cells()
+	var cells:Array[Vector2i] = pieceTiles.get_used_cells()
 	for cell:Vector2i in cells:
-		var data:TileData = tileMapLayer.get_cell_tile_data(cell) 
+		var data:TileData = pieceTiles.get_cell_tile_data(cell) 
 		var points:PackedVector2Array = data.get_collision_polygon_points(0, 0) 
 		var collisionShape = CollisionPolygon2D.new()  
 		collisionShape.polygon = points
 		
-		collisionShape.position = tileMapLayer.map_to_local(cell) + tileMapLayer.position
+		collisionShape.position = pieceTiles.map_to_local(cell) + pieceTiles.position
 		add_child(collisionShape)
 	
 	setupCompleted = true
@@ -49,7 +49,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	# if not setupCompleted: return
 	time += delta
-	tileMapLayer.position.y = waveAmplitude*sin(time*waveFrequency) + tileMapOffset.y
+	pieceTiles.position.y = waveAmplitude*sin(time*waveFrequency) + tileMapOffset.y
 	var col := move_and_collide(direction*speed*delta)
 	if col:
 		set_physics_process(false)
@@ -64,15 +64,14 @@ func renderPiece():
 	if not piece:
 		printerr("FishPiece.renderPiece error: piece is null")
 		return
-	if tileMapLayer:
-		for pos:Vector2i in piece.localCells:
-			tileMapLayer.set_cell(pos, 0, Vector2i(piece.id, Board.ACTIVE_TILE_ATLAS_ROW))
+	if pieceTiles:
+		pieceTiles.renderPiece(piece)
 		# Center piece
-		var rect:Rect2 = Rect2(tileMapLayer.get_used_rect())
-		tileMapOffset = -rect.get_center() * Vector2(tileMapLayer.tile_set.tile_size)
-		tileMapLayer.position += tileMapOffset
+		var rect:Rect2 = Rect2(pieceTiles.get_used_rect())
+		tileMapOffset = -rect.get_center() * Vector2(pieceTiles.tile_set.tile_size)
+		pieceTiles.position += tileMapOffset
 	else:
-		printerr("FishPiece.renderPiece: tileMapLayer is null for some reason")
+		printerr("FishPiece.renderPiece: pieceTiles is null for some reason")
 
 func beHooked():
 	# Disable further collisions
@@ -82,8 +81,8 @@ func beHooked():
 	set_physics_process(false)
 
 func showBigPiece() -> void:
-	tileMapLayer.hide()
+	pieceTiles.hide()
 	bigPiece.show()
 	bigPiece.renderPiece(piece)
 	# Adjust position to be close to the tile map position
-	bigPiece.position = tileMapLayer.position - tileMapOffset
+	bigPiece.position = pieceTiles.position - tileMapOffset

@@ -1,4 +1,4 @@
-class_name Piece extends TileMapLayer
+class_name Piece extends PieceTiles
 
 @export var canRotate:bool = true 
 
@@ -233,11 +233,9 @@ func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects
 		queue_free()
 
 func updateTiles():
-	clear()	
-	for cell in localCells:
-		var pos:Vector2i = cell
-		# if Board.BOUNDS.has_point(pos+currentPosition): # Render in bounds
-		set_cell(pos, 0, Vector2i(id, Board.ACTIVE_TILE_ATLAS_ROW))
+	clear()
+	if outline: outline.clear()
+	renderPiece(self)
 	
 	globalCells = Board.getTranslatedCells(localCells, currentPosition)
 	if ghost:

@@ -3,6 +3,7 @@ class_name OutlineTileMap extends TileMapLayer
 @export var specificAtlasCoordTest:Vector2i = Vector2i(-1, -1)
 @export var specificSourceTest:int = -1
 @export var target:TileMapLayer
+@export var onlyInBoardBounds:bool = false
 
 func setTile(cell:Vector2i, _updateSurrounding:bool = true) -> void:
 	var nativeCell:Vector2i = cell*2
@@ -35,7 +36,7 @@ func updateSurrounding(cell:Vector2i) -> void:
 		updateCell(v)
 
 func updateCell(cell:Vector2i) -> void:
-	if not Board.BOUNDS.has_point(cell) or isCellOccupied(cell):
+	if (onlyInBoardBounds and not Board.BOUNDS.has_point(cell)) or isCellOccupied(cell):
 		# Only change crystal edges in bounds
 		return
 	var nativeCell:Vector2i = cell*2
@@ -78,12 +79,18 @@ func updateCell(cell:Vector2i) -> void:
 	)
 
 func isCellOccupied(cell:Vector2i) -> bool:
-	if not target:
+	var _target = target if target else get_parent()
+	if _target is not TileMapLayer:
+		printerr("OutlineTileMap.isCellOccupied: target is invalid: ", target)
 		return false
-	var atlasCoord:Vector2i = target.get_cell_atlas_coords(cell)
-	if atlasCoord == Vector2i(-1, -1) or atlasCoord != specificAtlasCoordTest:
+	var atlasCoord:Vector2i = _target.get_cell_atlas_coords(cell)
+	if atlasCoord == Vector2i(-1, -1):
 		return false
-	var source:int = target.get_cell_source_id(cell)
-	if source == -1 or source != specificSourceTest:
+	if atlasCoord != specificAtlasCoordTest and specificAtlasCoordTest != Vector2i(-1, -1):
+		return false
+	var source:int = _target.get_cell_source_id(cell)
+	if source == -1:
+		return false
+	if source != specificSourceTest and specificSourceTest != -1:
 		return false
 	return true

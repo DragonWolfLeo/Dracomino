@@ -31,6 +31,7 @@ script = ExtResource("7_wxhti")
 specificAtlasCoordTest = Vector2i(2, 0)
 specificSourceTest = 1
 target = NodePath("../ActivatedTileMap")
+onlyInBoardBounds = true
 
 [node name="AutoResizeCamera" type="Camera2D" parent="."]
 process_mode = 3
