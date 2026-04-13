@@ -29,6 +29,7 @@ var slotContextHash:int:
 		slotContextHash = value
 		slotContextHash_updated.emit(slotContextHash)
 var seedFlagHolder:FlagHolder
+var retroFlagHolder:FlagHolder
 var effectHandler:EffectHandler
 
 var isJustConnected:bool = false
@@ -148,9 +149,12 @@ func newSeedReset():
 
 func resetSeedFlagHolder():
 	if seedFlagHolder: seedFlagHolder.queue_free()
+	if retroFlagHolder: retroFlagHolder.queue_free()
 	seedFlagHolder = FlagHolder.new(FlagHolder.PRIORITY.WORLD)
+	retroFlagHolder = FlagHolder.new(FlagHolder.PRIORITY.WORLD)
 	FlagManager.HANDLERS.WORLD.setAsFlagHolder(seedFlagHolder)
 	add_child(seedFlagHolder)
+	add_child(retroFlagHolder)
 
 func getNextPiece() -> Dictionary:
 	var numItems := collectedItems.size()
@@ -342,6 +346,10 @@ func giveItem(item:StateItem):
 				# Add flag for ability
 				seedFlagHolder.count(item.data.internalName, "collected", collectedAbilities[item.id])
 
+				# We were given an item that doesn't exist, so put it in our other flag holder so it appears in the ability bar
+				if not seedFlagHolder.isFlagSet("existing_"+item.data.internalName):
+					retroFlagHolder.setFlag("existing_"+item.data.internalName, collectedAbilities[item.id])
+
 				# Keep track of rotate abilities collected
 				if item.data.tags.get("rotate"):
 					seedFlagHolder.count("rotate", item.data.internalName, 1)
@@ -400,6 +408,17 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		FlagManager.clearFlag("trap_link")
 	else:
 		Archipelago.set_traplink(FlagManager.isFlagSet("trap_link"))
+	# Existing items
+	var itemCounts:Variant = conn.slot_data.get("item_counts")
+	if itemCounts is Dictionary:
+		for id in itemCounts.keys():
+			var item:CONSTANTS.ItemData = CONSTANTS.ITEMS.get(int(id))
+			if item and item.data:
+				seedFlagHolder.setFlag("existing_"+item.data.internalName, int(itemCounts[id]))
+	else:
+		# Older gens are unaware of item counts, so assume the abilities
+		for abilityname in ["rotate_clockwise", "rotate_counterclockwise", "gravity", "soft_drop", "hard_drop"]:
+			seedFlagHolder.setFlag("existing_"+abilityname)
 	#
 	var randomizeOrientations = conn.slot_data.get("randomize_orientations", false)
 	if randomizeOrientations:
