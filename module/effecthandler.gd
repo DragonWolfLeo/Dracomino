@@ -37,16 +37,16 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 		setCanTriggerFn(_canLoadNewDialogue),
 	fishing = Effect.new(_setMode.bind("fishing"))\
 		.setCanTriggerFn(combineFunctions.bind(_piecesAreLeft.bind(2), FlagManager.isFlagSet.bind("!mode=fishing"))).setBlockRequestPiece(),
-	welldone = Effect.new(_activateEffect.bind("overlay_welldone", 3)).addContext("line_clear"),
+	welldone = Effect.new(_activateEffect.bind("overlay_welldone", 3, false)).addContext("line_clear"),
 	crystal_trap = Effect.new(_activateEffect.bind("overlay_crystal", 4)),
 	invertcolors_trap = Effect.new(_activateEffect.bind("overlay_invert")),
 	water_trap = Effect.new(_activateEffect.bind("overlay_water")),
 	pixellation_trap = Effect.new(_activateEffect.bind("overlay_pixel", 6)),
 	fracture_trap = Effect.new(_activateEffect.bind("overlay_fracture")),
-	zoom_trap = Effect.new(_activateEffect.bind("effect_zoom", 4)),
+	zoom_trap = Effect.new(_activateEffect.bind("effect_zoom", 4, false)), # Not "annoying" because doesn't affect the logic tutorial
 	impatience_trap = Effect.new(SignalBus.getSignal("effect_impatience").emit)\
 		.setCanTriggerFn(_canSpawnMoreShapes).addContext("delayed"),
-	commitment_trap = Effect.new(_activateEffect.bind("committed", -1)),
+	commitment_trap = Effect.new(_activateEffect.bind("committed", -1, false)),
 	egg = Effect.new(_NOOP),
 	noop = Effect.new(_NOOP),
 	enchantment_curse = Effect.new(_NOOP),
@@ -80,8 +80,8 @@ func _loadDialogue(dialogue:Variant) -> void:
 func _canLoadNewDialogue() -> bool:
 	return DialogueManager.dialogue == null
 
-func _activateEffect(flag:String, duration:int = 8) -> void:
-	var ae:ActiveEffect = ActiveEffect.instantiateEffect(flag, duration)
+func _activateEffect(flag:String, duration:int = 8, annoying:bool = true) -> void:
+	var ae:ActiveEffect = ActiveEffect.instantiateEffect(flag, duration, annoying)
 	add_child(ae)
 
 func _fade() -> void:

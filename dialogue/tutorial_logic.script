@@ -4,18 +4,18 @@
 [if mode=fishing+mega_annoyed]
 [GotoState DispelDenied_Mini]
 // Mega is annoyed (Phase 3)
-[if effects_active+mega_annoyed]
+[if annoying_effects_active+mega_annoyed]
 Mega (annoyed): [ShowCutscene boardcutscene]...
-[if effects_active+mega_annoyed not mega_very_annoyed]
+[if annoying_effects_active+mega_annoyed not mega_very_annoyed]
 Mega (annoyed): You know, it costs mana to dispel these traps. 
-[if effects_active+mega_annoyed]
+[if annoying_effects_active+mega_annoyed]
 [WorldCount mega_very_annoyed amount 1 add][SubDialogue tutorial_logic Dispel_Macro]
 Mega: In Dracomino, the locations you're expected to reach depends on the Rotate ability and the total amount of blocks your pieces make up.
 [else]
 // The actual beginning of the tutorial
-Mega: [ShowCutscene boardcutscene] In Dracomino, the locations you're expected to reach [if effects_active+dispels_done]...[else]depends on the Rotate ability and the total amount of blocks your pieces make up.
+Mega: [ShowCutscene boardcutscene] In Dracomino, the locations you're expected to reach [if annoying_effects_active+dispels_done]...[else]depends on the Rotate ability and the total amount of blocks your pieces make up.
 // Mega is annoyed (Phase 2)
-[if effects_active+dispels_done not mega_annoyed]
+[if annoying_effects_active+dispels_done not mega_annoyed]
 Mega (annoyed): Really? Again?
 [WorldCount mega_annoyed amount 1 add][SubDialogue tutorial_logic Dispel_Macro]
 Mega (unimpressed): I wish you would take my time seriously.
@@ -77,19 +77,19 @@ Mega (cast): ... // Give it time to wait a bit since it's asynchronous
 [End]
 [else]
 Mega (unimpressed): Looks like we're out of mana, so the spell didn't work. *sigh*
-[if not effects_active]
+[if not annoying_effects_active]
 Mega (eyeroll): ...Oh. [i]There[/i] it goes.
 [always]
 [End]
 
 [State DispelResult_Macro]
-[if last_mana_transaction_succeeded not effects_active]
+[if last_mana_transaction_succeeded not annoying_effects_active]
 Mega (cast): *The effects were magically dispelled!* [if last_used_local_mana_balance][End]
-[if last_mana_transaction_succeeded+effects_active]
+[if last_mana_transaction_succeeded+annoying_effects_active]
 Mega (cast): *Some effects were magically dispelled!*
 [if last_mana_transaction_succeeded not last_used_local_mana_balance]
 Mega (cast): *Energy was withdrawn through Energy Link to cover the cost.*
-[if last_mana_transaction_succeeded+effects_active]
+[if last_mana_transaction_succeeded+annoying_effects_active]
 Mega (unimpressed): We only had enough mana to get rid of some of them... *sigh* [if last_used_local_mana_balance][End]
 [always]
 [End]
