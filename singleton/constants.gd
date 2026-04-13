@@ -82,7 +82,7 @@ class LocationData extends Data: pass
 	[213, "Water Trap",               "water_trap",                 [ "trap", "on_spawn" ] ],
 	[214, "Pixellation Trap",         "pixellation_trap",           [ "trap", "on_spawn"] ],
 	[215, "Fracture Trap",            "fracture_trap",              [ "trap", "on_spawn" ] ],
-	[216, "Zoom Trap",                "zoom_trap",                  [ "trap", "on_spawn" ] ],
+	[216, "Zoom Trap",                "zoom_trap",                  [ "trap", "on_lock" ] ],
 	[217, "Impatience Trap",          "impatience_trap",            [ "trap", "on_spawn" ] ],
 	# [218, "Commitment Trap",          "commitment_trap",            [ "trap", "on_spawn"] ],
 
