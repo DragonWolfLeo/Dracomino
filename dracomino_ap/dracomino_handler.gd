@@ -451,7 +451,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	}))
 
 	# Check if this is a brand new seed, player, and team, and do a full reset
-	if slotContextHash and slotContextHash != _conn_ctx: newSeedReset()
+	if slotContextHash != _conn_ctx: newSeedReset()
 
 	slotContextHash = _conn_ctx
 	goal = conn.slot_data.get("goal", -1)
