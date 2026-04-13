@@ -52,10 +52,6 @@ func _ready() -> void:
 func _gui_input(event: InputEvent) -> void:
 	if not FlagManager.isFlagSet("game_focus"):
 		return
-	if event.is_action_pressed("restart"):
-		SignalBus.getSignal("restartGame").emit()
-		accept_event()
-		return
 
 	if event is InputEventMouseButton:
 		var mouseEvent:InputEventMouseButton = event as InputEventMouseButton
@@ -79,6 +75,13 @@ func _input(event: InputEvent) -> void:
 		FlagManager.count("game_focus", "window_focus_lost", 0)
 		if FlagManager.isFlagSet("game_focus"):
 			accept_event()
+			return
+
+	# Restart the game
+	if event.is_action_pressed("restart"):
+		SignalBus.getSignal("restartGame").emit()
+		accept_event()
+		return
 
 	# Give focus to client when pressing tab
 	if event.is_action_pressed("ui_focus_next") or event.is_action_pressed("ui_focus_prev"):
