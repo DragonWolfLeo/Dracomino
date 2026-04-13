@@ -389,42 +389,8 @@ func addLocationToCoinCurrency(loc_id): ## Add coins to currency (be careful not
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	isJustConnected = true
 	get_tree().create_timer(2, true).timeout.connect(set.bind("isJustConnected", false))
-	# Set death link
-	Archipelago.set_deathlink(conn.slot_data.get("death_link", false) as bool)
-	if "death_on_restart" in conn.slot_data:
-		SignalBus.getSignal(
-			"deathOnRestart_enabled" if conn.slot_data.get("death_on_restart", false)
-			else "deathOnRestart_disabled"
-		).emit()
-	# Set energy link
-	if conn.slot_data.get("energy_link", true):
-		FlagManager.setFlag("energy_link")
-	else:
-		FlagManager.clearFlag("energy_link")
-	# Set trap link
-	if conn.slot_data.get("trap_link"):
-		FlagManager.setFlag("trap_link")
-	elif conn.slot_data.get("trap_link") == false:
-		FlagManager.clearFlag("trap_link")
-	else:
-		Archipelago.set_traplink(FlagManager.isFlagSet("trap_link"))
-	# Existing items
-	var itemCounts:Variant = conn.slot_data.get("item_counts")
-	if itemCounts is Dictionary:
-		for id in itemCounts.keys():
-			var item:CONSTANTS.ItemData = CONSTANTS.ITEMS.get(int(id))
-			if item and item.data:
-				seedFlagHolder.setFlag("existing_"+item.data.internalName, int(itemCounts[id]))
-	else:
-		# Older gens are unaware of item counts, so assume the abilities
-		for abilityname in ["rotate_clockwise", "rotate_counterclockwise", "gravity", "soft_drop", "hard_drop"]:
-			seedFlagHolder.setFlag("existing_"+abilityname)
-	#
-	var randomizeOrientations = conn.slot_data.get("randomize_orientations", false)
-	if randomizeOrientations:
-		seedFlagHolder.setFlag("randomize_orientations")
-	else:
-		seedFlagHolder.clearFlag("randomize_orientations")
+	
+	# Connect signals
 	conn.deathlink.connect(_on_deathlink)
 	conn.traplink.connect(_on_traplink)
 	conn.obtained_item.connect(_on_obtained_item)
@@ -455,6 +421,45 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 
 	slotContextHash = _conn_ctx
 	goal = conn.slot_data.get("goal", -1)
+
+	# Set death link
+	Archipelago.set_deathlink(conn.slot_data.get("death_link", false) as bool)
+	if "death_on_restart" in conn.slot_data:
+		SignalBus.getSignal(
+			"deathOnRestart_enabled" if conn.slot_data.get("death_on_restart", false)
+			else "deathOnRestart_disabled"
+		).emit()
+	# Set energy link
+	if conn.slot_data.get("energy_link", true):
+		FlagManager.setFlag("energy_link")
+	else:
+		FlagManager.clearFlag("energy_link")
+	# Set trap link
+	if conn.slot_data.get("trap_link"):
+		FlagManager.setFlag("trap_link")
+	elif conn.slot_data.get("trap_link") == false:
+		FlagManager.clearFlag("trap_link")
+	else:
+		Archipelago.set_traplink(FlagManager.isFlagSet("trap_link"))
+	# Existing items
+	var itemCounts:Variant = conn.slot_data.get("item_counts")
+	if itemCounts is Dictionary:
+		for id in itemCounts.keys():
+			var item:CONSTANTS.ItemData = CONSTANTS.ITEMS.get(int(id))
+			if item and item.data:
+				seedFlagHolder.setFlag("existing_"+item.data.internalName, int(itemCounts[id]))
+	else:
+		# Older gens are unaware of item counts, so assume the abilities
+		for abilityname in ["rotate_clockwise", "rotate_counterclockwise", "gravity", "soft_drop", "hard_drop"]:
+			print("existing_"+abilityname)
+			seedFlagHolder.setFlag("existing_"+abilityname)
+			
+	# Set randomize orientations
+	var randomizeOrientations = conn.slot_data.get("randomize_orientations", false)
+	if randomizeOrientations:
+		seedFlagHolder.setFlag("randomize_orientations")
+	else:
+		seedFlagHolder.clearFlag("randomize_orientations")
 
 	# Reset collected items
 	collectedItems.clear()
