@@ -30,6 +30,7 @@ tile_size = Vector2i(8, 8)
 sources/0 = SubResource("TileSetAtlasSource_2q776")
 
 [node name="PieceTiles" type="TileMapLayer"]
+z_index = 2
 tile_set = ExtResource("1_0r6ss")
 occlusion_enabled = false
 collision_enabled = false
