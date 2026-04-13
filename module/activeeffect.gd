@@ -21,9 +21,12 @@ static func instantiateEffect(flag:String, duration:int = -1, annoying:bool = tr
 	var ae := ActiveEffect.new()
 	ae.priority = FlagHolder.PRIORITY.OBJECT
 	ae.durationLeft = duration
-	ae.tree_entered.connect(ae.setFlag.bind(flag), CONNECT_ONE_SHOT)
-	ae.tree_entered.connect(ae.count.bind("effects_active", flag, 1), CONNECT_ONE_SHOT | CONNECT_REFERENCE_COUNTED)
-	if annoying: ae.tree_entered.connect(ae.count.bind("annoying_effects_active", flag, 1), CONNECT_ONE_SHOT | CONNECT_REFERENCE_COUNTED)
+	var _setflags = func():
+		ae.setFlag(flag)
+		ae.count("effects_active", flag, 1)
+		if annoying:
+			ae.count("annoying_effects_active", flag, 1)
+	ae.tree_entered.connect(_setflags, CONNECT_ONE_SHOT)
 	SignalBus.getSignal("dispel_"+flag).connect(ae._on_dispelled)
 	SignalBus.getSignal("dispel_all_effects").connect(ae._on_dispelled)
 	return ae
