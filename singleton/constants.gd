@@ -58,8 +58,8 @@ class LocationData extends Data: pass
 	[5,   "Rotate Counterclockwise",  "rotate_counterclockwise",    [ "progression", "useful", "ability", "classic", "rotate" ] ],
 	[6,   "Ghost Piece",              "ghost_piece",                [ "useful", "ability", "classic" ] ],
 	[7,   "Kick",                     "kick",                       [ "useful", "ability", "classic" ] ],
-	[8,   "Vertical Shove",           "vertical_shove",             [ "useful", "ability" ] ],
-	[9,   "Horizontal Shove",         "horizontal_shove",           [ "useful", "trap", "ability" ] ],
+	# [8,   "Vertical Shove",           "vertical_shove",             [ "useful", "ability" ] ],
+	# [9,   "Horizontal Shove",         "horizontal_shove",           [ "useful", "trap", "ability" ] ],
 	[10,  "Lock Delay",               "lock_delay",                 [ "useful", "ability", "classic" ] ],
 
 	# Progressive Items (101-200)

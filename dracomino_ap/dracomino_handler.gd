@@ -93,7 +93,10 @@ class Streak:
 func _ready() -> void:
 	Archipelago.connected.connect(_on_connected)
 	Archipelago.remove_location.connect(_on_remove_location)
-	
+
+	# Make vertical shove always active
+	FlagManager.setFlag("vertical_shove")
+
 	# Create flag holder
 	resetSeedFlagHolder()
 
@@ -231,7 +234,6 @@ func upgradeFeatures(generatedVersion:String = "0.0.0"): ## Add new features to 
 	if UserData.versionIsOlderThan(generatedVersion, "0.2.2"):
 		var RETROFITTED_ABILITIES:Array[StringName] = [
 			"kick",
-			"vertical_shove",
 			"lock_delay",
 		]
 		for internalName:StringName in RETROFITTED_ABILITIES:
