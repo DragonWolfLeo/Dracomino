@@ -95,9 +95,6 @@ func _ready() -> void:
 	Archipelago.connected.connect(_on_connected)
 	Archipelago.remove_location.connect(_on_remove_location)
 
-	# Make vertical shove always active
-	FlagManager.setFlag("vertical_shove")
-
 	# Create flag holder
 	resetSeedFlagHolder()
 
@@ -232,6 +229,9 @@ func sendEnergy(amount:int = 0):
 		_energySendBuffer = amount
 
 func upgradeFeatures(generatedVersion:String = "0.0.0"): ## Add new features to old games
+	# Make vertical shove always active
+	seedFlagHolder.setFlag("vertical_shove")
+	#
 	var upgradeResult:Dictionary = {
 		retrofitted = [],
 	}
