@@ -6,6 +6,5 @@
 [node name="ActivatedTile" type="Sprite2D"]
 z_index = 1
 texture = ExtResource("1_8iaa4")
-hframes = 4
-vframes = 2
+hframes = 3
 script = ExtResource("2_pnwat")
