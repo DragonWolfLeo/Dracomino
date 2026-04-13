@@ -446,14 +446,14 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	if itemCounts is Dictionary:
 		for id in itemCounts.keys():
 			var item:CONSTANTS.ItemData = CONSTANTS.ITEMS.get(int(id))
-			if item and item.data:
-				seedFlagHolder.setFlag("existing_"+item.data.internalName, int(itemCounts[id]))
+			if item:
+				seedFlagHolder.setFlag("existing_"+item.internalName, int(itemCounts[id]))
 	else:
 		# Older gens are unaware of item counts, so assume the abilities
 		for abilityname in ["rotate_clockwise", "rotate_counterclockwise", "gravity", "soft_drop", "hard_drop"]:
 			print("existing_"+abilityname)
 			seedFlagHolder.setFlag("existing_"+abilityname)
-			
+
 	# Set randomize orientations
 	var randomizeOrientations = conn.slot_data.get("randomize_orientations", false)
 	if randomizeOrientations:
