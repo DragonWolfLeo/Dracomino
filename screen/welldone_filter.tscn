@@ -203,7 +203,7 @@ mouse_filter = 2
 
 [node name="LeftCanvasLayer" type="CanvasLayer" parent="."]
 unique_name_in_owner = true
-layer = 2
+layer = 4
 
 [node name="Control" type="Control" parent="LeftCanvasLayer"]
 layout_mode = 3
@@ -228,7 +228,7 @@ stretch_mode = 4
 
 [node name="RightCanvasLayer" type="CanvasLayer" parent="."]
 unique_name_in_owner = true
-layer = 2
+layer = 4
 
 [node name="Control" type="Control" parent="RightCanvasLayer"]
 layout_mode = 3
