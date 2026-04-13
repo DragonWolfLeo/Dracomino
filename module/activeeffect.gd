@@ -41,17 +41,18 @@ func _on_effect_duration_down() -> void:
 func _on_dispelled() -> void:
 	FlagManager.clearFlag("last_mana_transaction_succeeded")
 	FlagManager.clearFlag("last_used_local_mana_balance")
+	FlagManager.HANDLERS.WORLD.clearFlag("mana_cost") # Clear this now, but defer cost calculation so we get an accurate value
 	if is_queued_for_deletion():
 		return
-
+		
 	var manaStored:float = FlagManager.getTotalCountAmount("mana")
 	print("Stored mana: ", manaStored, "; Cost: ", CONSTANTS.DISPEL_MANA_COST)
 	if manaStored >= CONSTANTS.DISPEL_MANA_COST:
 		# Use local mana storage
 		FlagManager.setFlag("last_used_local_mana_balance")
 		SignalBus.getSignal("display_mana").emit()
-		SignalBus.getSignal("display_mana_cost").emit()
-		FlagManager.HANDLERS.WORLD.setFlag("mana_cost", CONSTANTS.DISPEL_MANA_COST)
+		SignalBus.getSignal("display_mana_cost").emit.call_deferred()
+		FlagManager.HANDLERS.WORLD.count.call_deferred("mana_cost", "cost", CONSTANTS.DISPEL_MANA_COST, true)
 		FlagManager.HANDLERS.WORLD.count("mana", "spent", -CONSTANTS.DISPEL_MANA_COST, true)
 		print("Using %s local mana"%CONSTANTS.DISPEL_MANA_COST, "... We now have %s mana"%FlagManager.getTotalCountAmount("mana"))
 		_on_successful_dispel()
@@ -59,9 +60,9 @@ func _on_dispelled() -> void:
 		# Queue it in a mana transaction
 		DracominoUtil.tryEnergyLinkManaTransaction(CONSTANTS.DISPEL_MANA_COST, _on_successful_dispel)
 	else:
-		FlagManager.HANDLERS.WORLD.setFlag("mana_cost", CONSTANTS.DISPEL_MANA_COST)
+		FlagManager.HANDLERS.WORLD.count.call_deferred("mana_cost", "cost", CONSTANTS.DISPEL_MANA_COST, true)
 		SignalBus.getSignal("display_mana").emit()
-		SignalBus.getSignal("display_mana_cost").emit()
+		SignalBus.getSignal("display_mana_cost").emit.call_deferred()
 		print("Did not have enough mana to dispel effect")
 
 func _on_successful_dispel() -> void:

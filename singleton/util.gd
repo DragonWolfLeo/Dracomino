@@ -109,6 +109,8 @@ static func tryEnergyLinkManaTransaction(manaCost:float, onSuccess:Callable) -> 
 		print("EnergyLink transaction failed: not connected or EnergyLink is disabled!")
 
 static func makeEnergyLinkTransaction(energyBankBalance:Variant) -> void:
+	FlagManager.HANDLERS.WORLD.clearFlag("mana_cost")
+	FlagManager.HANDLERS.WORLD.clearFlag("energy_cost")
 	if not(energyBankBalance is float or energyBankBalance is int):
 		return
 	FlagManager.setFlag("last_known_energy_bank_balance", energyBankBalance)
@@ -149,15 +151,15 @@ static func makeEnergyLinkTransaction(energyBankBalance:Variant) -> void:
 		approvedSuccessFns.append(transaction.onSuccess)
 
 	if energyCost == 0 and manaCost == 0:
-		FlagManager.HANDLERS.WORLD.setFlag("mana_cost", attemptedManaCost)
-		FlagManager.HANDLERS.WORLD.setFlag("energy_cost", attemptedEnergyCost)
-		SignalBus.getSignal("display_mana_cost").emit()
-		SignalBus.getSignal("display_energy_cost").emit()
+		FlagManager.HANDLERS.WORLD.count.call_deferred("mana_cost", "cost", attemptedManaCost, true)
+		FlagManager.HANDLERS.WORLD.count.call_deferred("energy_cost", "cost", attemptedEnergyCost, true)
+		SignalBus.getSignal("display_mana_cost").emit.call_deferred()
+		SignalBus.getSignal("display_energy_cost").emit.call_deferred()
 		print("EnergyLink transaction failed: no transaction was approved")
 
 	if energyCost > 0:
-		SignalBus.getSignal("display_energy_cost").emit()
-		FlagManager.HANDLERS.WORLD.setFlag("energy_cost", energyCost)
+		SignalBus.getSignal("display_energy_cost").emit.call_deferred()
+		FlagManager.HANDLERS.WORLD.count.call_deferred("energy_cost", "cost", energyCost, true)
 		# Send the withdrawal request
 		var args = {
 			"key": "EnergyLink" + str(Archipelago.conn.team_id),
@@ -174,9 +176,9 @@ static func makeEnergyLinkTransaction(energyBankBalance:Variant) -> void:
 	FlagManager.setFlag("last_known_energy_bank_balance", energyBankBalance-energyCost)
 	
 	if manaCost > 0:
-		SignalBus.getSignal("display_mana_cost").emit()
-		FlagManager.HANDLERS.WORLD.setFlag("mana_cost", manaCost)
-		FlagManager.HANDLERS.WORLD.count("mana", "spent", -manaCost, true) 
+		SignalBus.getSignal("display_mana_cost").emit.call_deferred()
+		FlagManager.HANDLERS.WORLD.count.call_deferred("mana_cost", "cost", manaCost, true)
+		FlagManager.HANDLERS.WORLD.count.call_deferred("mana", "spent", -manaCost, true) 
 		print("Mana spent: %s; Mana left: %s"%[manaCost, FlagManager.getTotalCountAmount("mana")])
 
 	for fn in approvedSuccessFns:
