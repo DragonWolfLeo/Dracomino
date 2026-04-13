@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bdomhcei8ek7c"
-path="res://.godot/imported/dracomino_piece.png-88c9aa2f7d81690d4a8aa0e90562b204.ctex"
+uid="uid://dlmb3thc1447s"
+path="res://.godot/imported/dracomino_board.png-306c7f78672cde1f934c2fbaa6609132.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/dracomino_piece.png"
-dest_files=["res://.godot/imported/dracomino_piece.png-88c9aa2f7d81690d4a8aa0e90562b204.ctex"]
+source_file="res://assets/art/tile/dracomino_board.png"
+dest_files=["res://.godot/imported/dracomino_board.png-306c7f78672cde1f934c2fbaa6609132.ctex"]
 
 [params]
 
