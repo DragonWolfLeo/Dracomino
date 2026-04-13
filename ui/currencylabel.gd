@@ -5,10 +5,8 @@ var displayedBalance:int = 0:
 	set(value):
 		if displayedBalance == value: return
 		displayedBalance = value
-		if useScientificNotation:
-			text = String.num_scientific(displayedBalance)+suffix
-		else:
-			text = str(displayedBalance)+suffix
+		
+		text = DracominoUtil.getSimplifiedNumberString(displayedBalance)+suffix
 		if isCost and not text.begins_with("-"):
 			text = "-" + text
 
@@ -18,7 +16,6 @@ var displayedBalance:int = 0:
 @export var currencyFlag:String
 @export var useTween:bool = false
 @export var balanceTweenDuration:float = 0.5
-@export var useScientificNotation:bool = false
 @export var suffix:String = ""
 @export var isCost:bool = false
 var tween:Tween

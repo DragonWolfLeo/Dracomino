@@ -181,3 +181,23 @@ static func makeEnergyLinkTransaction(energyBankBalance:Variant) -> void:
 
 	for fn in approvedSuccessFns:
 		fn.call()
+
+# Use unit prefixes for big numbers
+static func getSimplifiedNumberString(num:float) -> String:
+		var units:float = num
+		var idx:int = 0
+		var useScientificNotation:bool = false
+
+		while units > 1000:
+			units /= 1000
+			idx += 1
+			if idx >= UNIT_MULTIPLES.size():
+				useScientificNotation = true
+				break
+
+		if useScientificNotation:
+			return String.num_scientific(num)
+		else:
+			return String.num(units, 1 if idx > 0 else 0)+UNIT_MULTIPLES[idx]
+
+static var UNIT_MULTIPLES:Array[String] = ["", "k", "M", "G", "T"]

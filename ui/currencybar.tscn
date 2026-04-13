@@ -158,7 +158,6 @@ displayTarget = NodePath("../..")
 currencyFlag = "last_known_energy_bank_balance"
 useTween = true
 balanceTweenDuration = 1.0
-useScientificNotation = true
 suffix = "J"
 
 [node name="CostLabel" type="Label" parent="EnergyPanel/HBoxContainer/Label"]
@@ -179,6 +178,5 @@ script = ExtResource("3_vebgi")
 displaySignal = &"display_energy_cost"
 displayDuration = 5.0
 currencyFlag = "energy_cost"
-useScientificNotation = true
 suffix = "J"
 isCost = true
