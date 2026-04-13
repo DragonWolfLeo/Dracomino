@@ -33,6 +33,7 @@ mouse_filter = 2
 [node name="CoinPanel" type="PanelContainer" parent="."]
 layout_mode = 2
 size_flags_horizontal = 3
+tooltip_text = "Coins"
 theme_override_styles/panel = SubResource("StyleBoxFlat_x2l6y")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="CoinPanel"]
@@ -43,7 +44,7 @@ alignment = 1
 [node name="TextureRect" type="TextureRect" parent="CoinPanel/HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-tooltip_text = "Coins"
+mouse_filter = 2
 texture = ExtResource("1_nacgx")
 expand_mode = 1
 stretch_mode = 3
@@ -81,6 +82,7 @@ isCost = true
 
 [node name="ManaPanel" type="PanelContainer" parent="."]
 layout_mode = 2
+tooltip_text = "Mana"
 theme_override_styles/panel = SubResource("StyleBoxFlat_x2l6y")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="ManaPanel"]
@@ -91,7 +93,7 @@ alignment = 1
 [node name="TextureRect" type="TextureRect" parent="ManaPanel/HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-tooltip_text = "Mana"
+mouse_filter = 2
 texture = ExtResource("4_xtmjq")
 expand_mode = 1
 stretch_mode = 3
@@ -130,6 +132,7 @@ isCost = true
 
 [node name="EnergyPanel" type="PanelContainer" parent="."]
 layout_mode = 2
+tooltip_text = "Energy"
 theme_override_styles/panel = SubResource("StyleBoxFlat_x2l6y")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="EnergyPanel"]
@@ -140,7 +143,7 @@ alignment = 1
 [node name="TextureRect" type="TextureRect" parent="EnergyPanel/HBoxContainer"]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
-tooltip_text = "Mana"
+mouse_filter = 2
 texture = ExtResource("5_tl1qv")
 expand_mode = 1
 stretch_mode = 3
