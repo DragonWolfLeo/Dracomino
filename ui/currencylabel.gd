@@ -9,6 +9,8 @@ var displayedBalance:int = 0:
 			text = String.num_scientific(displayedBalance)+suffix
 		else:
 			text = str(displayedBalance)+suffix
+		if isCost and not text.begins_with("-"):
+			text = "-" + text
 
 @export var displaySignal:StringName
 @export var displayDuration:float = 10.0
@@ -18,6 +20,7 @@ var displayedBalance:int = 0:
 @export var balanceTweenDuration:float = 0.5
 @export var useScientificNotation:bool = false
 @export var suffix:String = ""
+@export var isCost:bool = false
 var tween:Tween
 var displayTween:Tween
 

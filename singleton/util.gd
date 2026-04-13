@@ -124,6 +124,8 @@ static func makeEnergyLinkTransaction(energyBankBalance:Variant) -> void:
 	# Get energy cost all added up
 	var energyCost:float = 0
 	var manaCost:float = 0
+	var attemptedEnergyCost:float = 0
+	var attemptedManaCost:float = 0
 	var storedMana:float = FlagManager.getTotalCountAmount("mana")
 	for transaction:EnergyLinkTransactionContext in bufferedTransactionFns:
 		if not transaction.onSuccess.is_valid():
@@ -135,18 +137,27 @@ static func makeEnergyLinkTransaction(energyBankBalance:Variant) -> void:
 
 		# If we don't have the mana budget, pay remaining cost as an energy transaction
 		var transactionEnergyCost:float = (transaction.manaCost-manaBudget) * CONSTANTS.MANA_TO_ENERGY_RATIO
+		
+		attemptedEnergyCost += max(0, transactionEnergyCost)
+		attemptedManaCost += max(0, manaBudget)
+
 		if energyBankBalance < energyCost + transactionEnergyCost:
 			# Can't afford the thing
-			print("EnergyLink transaction failed: energy cost %s exceeds energy bank balance %s"%[energyCost + transactionEnergyCost, energyBankBalance])
-			break
+			continue
 		energyCost += max(0, transactionEnergyCost)
 		manaCost += max(0, manaBudget)
 		approvedSuccessFns.append(transaction.onSuccess)
 
 	if energyCost == 0 and manaCost == 0:
+		FlagManager.HANDLERS.WORLD.setFlag("mana_cost", attemptedManaCost)
+		FlagManager.HANDLERS.WORLD.setFlag("energy_cost", attemptedEnergyCost)
+		SignalBus.getSignal("display_mana_cost").emit()
+		SignalBus.getSignal("display_energy_cost").emit()
 		print("EnergyLink transaction failed: no transaction was approved")
 
 	if energyCost > 0:
+		SignalBus.getSignal("display_energy_cost").emit()
+		FlagManager.HANDLERS.WORLD.setFlag("energy_cost", energyCost)
 		# Send the withdrawal request
 		var args = {
 			"key": "EnergyLink" + str(Archipelago.conn.team_id),
@@ -163,6 +174,8 @@ static func makeEnergyLinkTransaction(energyBankBalance:Variant) -> void:
 	FlagManager.setFlag("last_known_energy_bank_balance", energyBankBalance-energyCost)
 	
 	if manaCost > 0:
+		SignalBus.getSignal("display_mana_cost").emit()
+		FlagManager.HANDLERS.WORLD.setFlag("mana_cost", manaCost)
 		FlagManager.HANDLERS.WORLD.count("mana", "spent", -manaCost, true) 
 		print("Mana spent: %s; Mana left: %s"%[manaCost, FlagManager.getTotalCountAmount("mana")])
 
