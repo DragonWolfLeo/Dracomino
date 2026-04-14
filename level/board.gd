@@ -258,7 +258,8 @@ func requestPiece(allowMultiplePieces:bool = false):
 			game = poppedPiece.context.gameName,
 		}))
 		spawnPiece(poppedPiece)
-		if poppedPiece.onSpawnEffect: effectHandler.tryToTriggerEffect(poppedPiece.onSpawnEffect)
+		var onSpawnEffect:DracominoHandler.StateItem = poppedPiece.attachedEffects.get("on_spawn")
+		if onSpawnEffect: effectHandler.tryToTriggerEffect(onSpawnEffect)
 
 func fillPreview(buffer:int = 0): ## This functions usually leads into createPiece being called, if there's pieces available
 	if isGameOver: return
@@ -482,7 +483,7 @@ func checkIfWaitingToChooseNewFocusPiece() -> void: ## Wait for a dropped piece 
 		if isPieceOnTopRow(piece):
 			return
 	if is_instance_valid(_waitingForPieceToGetOutOfTopRow):
-		chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(_waitingForPieceToGetOutOfTopRow.onLockEffect))
+		chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(_waitingForPieceToGetOutOfTopRow.attachedEffects.get("on_lock")))
 	else:
 		chooseNewFocusPiece(true)
 
@@ -614,21 +615,22 @@ func lockPiece(piece:Piece):
 
 	boardIsFresh = false
 	
+	var onLockEffect:DracominoHandler.StateItem = piece.attachedEffects.get("on_lock")
 	if not isGameOver:
 		var fullRows:Array[int] = getFullRows()
 		if fullRows.size() > 0:
-			if piece.onLockEffect: effectHandler.bufferEffect(piece.onLockEffect)
+			if onLockEffect: effectHandler.bufferEffect(onLockEffect)
 			linesCleared += fullRows.size()
 			for row:int in fullRows:
 				var chunk := ClearingChunk.new(row)
 				clearingChunks.append(chunk)
 				processClearingChunk(chunk)
 		else:
-			if piece.onLockEffect: effectHandler.tryToTriggerEffect(piece.onLockEffect)
+			if onLockEffect: effectHandler.tryToTriggerEffect(onLockEffect)
 	
-	var fx = effectHandler.getEffectObject(piece.onLockEffect)
 	deletePiece(piece)
-	if fx and fx.blockRequestPiece:
+	var fx = effectHandler.getEffectObject(onLockEffect)
+	if fx and fx.blockRequestPiece and not isGameOver:
 		pass
 	else:
 		activePieces_changed.emit()
@@ -851,7 +853,7 @@ func _on_Piece_focus_lost(piece:Piece):
 	if FlagManager.isFlagSet("hard_drop") and is_instance_valid(piece) and isPieceOnTopRow(piece):
 		_waitingForPieceToGetOutOfTopRow = piece
 	else:
-		chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(piece.onLockEffect))
+		chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(piece.attachedEffects.get("on_lock")))
 
 func _on_Piece_tree_exiting(piece:Piece): # Fallback if piece didn't delete properly
 	activePieces.erase(piece)

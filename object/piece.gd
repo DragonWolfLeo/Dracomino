@@ -188,10 +188,7 @@ var origin:Vector2i
 var id:int
 var prettyName:String = "Piece"
 var context:DracominoHandler.StateItem = null
-var onLockEffect:DracominoHandler.StateItem = null
-var onSpawnEffect:DracominoHandler.StateItem = null
-var onSpawnTrapLinkToSend:StringName
-var attachedModifier:DracominoHandler.StateItem = null
+var attachedEffects:Dictionary[StringName, DracominoHandler.StateItem] = {}
 var moveLock:bool = false: ## Prevent moving this anymore
 	set(value):
 		moveLock = value
@@ -284,12 +281,22 @@ func makeActive():
 	collidible = false
 
 	# Send trap link
-	if onSpawnTrapLinkToSend and FlagManager.isFlagSet("trap_link"):
-		var trapLinkAlias:String = CONSTANTS.TRAP_ALIASES.get(onSpawnTrapLinkToSend, "")
-		if trapLinkAlias and Archipelago.conn:
-			onSpawnTrapLinkToSend = ""
-			Archipelago.conn.send_traplink(trapLinkAlias)
-			print("Piece: Sending trap: ", trapLinkAlias)
+	if FlagManager.isFlagSet("trap_link"):
+		# Prepare to send a trap link if this is a shape trap
+		if context and context.data and context.data.tags.has("trap") and not context.usedTrapLink:
+			_sendTrapLink(context.data.internalName)
+			context.usedTrapLink = true
+		var attachedModifier:DracominoHandler.StateItem = attachedEffects.get("modifier")
+		if attachedModifier is DracominoHandler.StateItem and not attachedModifier.usedTrapLink:
+			# Prepare to send a trap link if this is an enchantment
+			_sendTrapLink("enchantment_curse" if rarity == "curse" else "enchantment")
+			attachedModifier.usedTrapLink = true
+
+func _sendTrapLink(trapInternalName:StringName) -> void:
+	var trapLinkAlias:String = CONSTANTS.TRAP_ALIASES.get(trapInternalName, "")
+	if trapLinkAlias and Archipelago.conn:
+		Archipelago.conn.send_traplink(trapLinkAlias)
+		print("Piece: Sending trap: ", trapLinkAlias)
 
 func makeLimbo():
 	process_mode = Node.PROCESS_MODE_DISABLED
@@ -323,20 +330,10 @@ func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects
 		origin = pieceDefinition.offset
 		context = pieceContext
 		canRotate = pieceDefinition.canRotate
-		
-		# Prepare to send a trap link if this is a shape trap
-		if context and context.data and context.data.tags.has("trap") and not context.usedTrapLink:
-			onSpawnTrapLinkToSend = context.data.internalName
-			context.usedTrapLink = true
-		onLockEffect = effects.get("on_lock")
-		onSpawnEffect = effects.get("on_spawn")
-		attachedModifier = effects.get("modifier")
+		attachedEffects.merge(effects, true)
+		var attachedModifier:DracominoHandler.StateItem = attachedEffects.get("modifier")
 		if attachedModifier is DracominoHandler.StateItem and attachedModifier.data:
 			applyEnchantmentByName(attachedModifier.data.internalName)
-			if not attachedModifier.usedTrapLink:
-				# Prepare to send a trap link if this is an enchantment. Will also conflict with shape traps, but those shouldn't be enchanted anyway
-				onSpawnTrapLinkToSend = "enchantment_curse" if rarity == "curse" else "enchantment"
-				attachedModifier.usedTrapLink = true
 	else:
 		printerr("Piece.setPiece:", pieceName, " does not exist!")
 		queue_free()
