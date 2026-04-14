@@ -190,7 +190,8 @@ var prettyName:String = "Piece"
 var context:DracominoHandler.StateItem = null
 var onLockEffect:DracominoHandler.StateItem = null
 var onSpawnEffect:DracominoHandler.StateItem = null
-var modifier:DracominoHandler.StateItem = null
+var onSpawnTrapLinkToSend:StringName
+var attachedModifier:DracominoHandler.StateItem = null
 var moveLock:bool = false: ## Prevent moving this anymore
 	set(value):
 		moveLock = value
@@ -282,6 +283,14 @@ func makeActive():
 	# Wait for pieces to get out of this one
 	collidible = false
 
+	# Send trap link
+	if onSpawnTrapLinkToSend and FlagManager.isFlagSet("trap_link"):
+		var trapLinkAlias:String = CONSTANTS.TRAP_ALIASES.get(onSpawnTrapLinkToSend, "")
+		if trapLinkAlias and Archipelago.conn:
+			onSpawnTrapLinkToSend = ""
+			Archipelago.conn.send_traplink(trapLinkAlias)
+			print("Piece: Sending trap: ", trapLinkAlias)
+
 func makeLimbo():
 	process_mode = Node.PROCESS_MODE_DISABLED
 	set_process_unhandled_input(false)
@@ -314,11 +323,20 @@ func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects
 		origin = pieceDefinition.offset
 		context = pieceContext
 		canRotate = pieceDefinition.canRotate
+		
+		# Prepare to send a trap link if this is a shape trap
+		if context and context.data and context.data.tags.has("trap") and not context.usedTrapLink:
+			onSpawnTrapLinkToSend = context.data.internalName
+			context.usedTrapLink = true
 		onLockEffect = effects.get("on_lock")
 		onSpawnEffect = effects.get("on_spawn")
-		modifier = effects.get("modifier")
-		if modifier and modifier.data:
-			applyEnchantmentByName(modifier.data.internalName)
+		attachedModifier = effects.get("modifier")
+		if attachedModifier is DracominoHandler.StateItem and attachedModifier.data:
+			applyEnchantmentByName(attachedModifier.data.internalName)
+			if not attachedModifier.usedTrapLink:
+				# Prepare to send a trap link if this is an enchantment. Will also conflict with shape traps, but those shouldn't be enchanted anyway
+				onSpawnTrapLinkToSend = "enchantment_curse" if rarity == "curse" else "enchantment"
+				attachedModifier.usedTrapLink = true
 	else:
 		printerr("Piece.setPiece:", pieceName, " does not exist!")
 		queue_free()

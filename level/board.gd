@@ -942,11 +942,12 @@ func _on_FishingBoard_piece_selected(piece:Piece) -> void:
 	requestPiece()
 
 func _on_effected_activated(item:DracominoHandler.StateItem):
-	if FlagManager.isFlagSet("trap_link") and item and item.data:
+	if FlagManager.isFlagSet("trap_link") and item and item.data and not item.usedTrapLink:
 		var trapLinkAlias:String = CONSTANTS.TRAP_ALIASES.get(item.data.internalName, "")
 		if trapLinkAlias and Archipelago.conn:
+			item.usedTrapLink = true
 			Archipelago.conn.send_traplink(trapLinkAlias)
-			print("Sending trap: ", trapLinkAlias)
+			print("Board: Sending trap: ", trapLinkAlias)
 
 func _on_effect_impatience():
 	var tween:Tween = create_tween().set_parallel()

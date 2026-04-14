@@ -163,11 +163,8 @@ var TRAP_ALIASES:Dictionary[StringName, String] = {
 	# DRACOMINO TRAPS 
 	crystal_trap            = "Crystal Trap",
 	egg                     = "Egg Trap",
-	# enchantment_curse       = "Curse Trap",
-	# enchantment_epic        = "Enchantment Trap",
-	# enchantment_legendary   = "Enchantment Trap",
-	# enchantment_uncommon    = "Enchantment Trap",
-	# enchantment_rare        = "Enchantment Trap",
+	enchantment             = "Enchantment Trap",
+	enchantment_curse       = "Curse Trap",
 	fracture_trap           = "Fracture Trap",
 	impatience_trap         = "Impatience Trap",
 	# premium_trap           = "Premium Trap", # Might scrap
@@ -186,8 +183,6 @@ var TRAP_ALIASES:Dictionary[StringName, String] = {
 	zoom_trap               = "Zoom Trap",
 
 	# FAKE TRAPS (Shouldn't be sent, but giving them a display name)
-	enchantment                      = "Enchantment Trap",
-	enchantment_curse                = "Curse Trap",
 	enchantment_curse_gravity        = "Curse Trap",
 	enchantment_curse_movement       = "Curse Trap",
 	enchantment_legendary_movement   = "Enchantment Trap",

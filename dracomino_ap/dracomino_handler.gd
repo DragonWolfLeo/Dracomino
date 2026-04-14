@@ -60,6 +60,7 @@ class StateItem:
 	var isLocal:bool = true
 	var streak:Streak = null
 	var used:bool = false ## Set to true when used as an effect, to prevent using again
+	var usedTrapLink:bool = false ## Set to true to avoid sending to trap link again
 	var data:CONSTANTS.ItemData:
 		get:
 			return CONSTANTS.ITEMS.get(id)
@@ -371,15 +372,16 @@ func giveItem(item:StateItem):
 			.format({id=item.id,name=item.get_name()})
 		)
 
-func triggerEffect(stateItem:StateItem, context:Array[StringName] = []) -> bool: ## Return true on null or success
+func triggerEffect(stateItem:StateItem, context:Array[StringName] = []) -> bool: ## Return true on null or success (false means try again but delayed)
 	if not stateItem or not stateItem.data:
 		return true
 	var result = effectHandler.tryToTriggerEffect(stateItem, false, context)
 	if result and FlagManager.isFlagSet("trap_link"):
 		var trapLinkAlias:String = CONSTANTS.TRAP_ALIASES.get(stateItem.data.internalName, "")
-		if trapLinkAlias and Archipelago.conn:
+		if trapLinkAlias and Archipelago.conn and not stateItem.usedTrapLink:
+			stateItem.usedTrapLink = true
 			Archipelago.conn.send_traplink(trapLinkAlias)
-			print("Sending trap: ", trapLinkAlias)
+			print("DracominoHandler: Sending trap: ", trapLinkAlias)
 	return result
 
 func addLocationToCoinCurrency(loc_id): ## Add coins to currency (be careful not to use line locations here)
