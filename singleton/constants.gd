@@ -84,7 +84,7 @@ class LocationData extends Data: pass
 	[215, "Fracture Trap",            "fracture_trap",              [ "trap", "on_spawn" ] ],
 	[216, "Zoom Trap",                "zoom_trap",                  [ "trap", "on_lock" ] ],
 	[217, "Impatience Trap",          "impatience_trap",            [ "trap", "on_spawn" ] ],
-	# [218, "Commitment Trap",          "commitment_trap",            [ "trap", "on_spawn"] ],
+	[218, "In Space!",               "commitment_trap",            [ "trap", "on_spawn"] ],
 
 	# # Ones that might just be effects only, dunno
 	# [000, "Premium Trap",             "", [ "trap" ] ],
@@ -158,13 +158,11 @@ class LocationData extends Data: pass
 	{} as Dictionary[StringName, int]
 )
 
-
 # === Trap Link ===
 var TRAP_ALIASES:Dictionary[StringName, String] = {
 	# DRACOMINO TRAPS 
 	crystal_trap            = "Crystal Trap",
-	egg                    = "Egg Trap",
-	# commitment_trap        = "Commitment Trap", # Might scrap
+	egg                     = "Egg Trap",
 	# enchantment_curse       = "Curse Trap",
 	# enchantment_epic        = "Enchantment Trap",
 	# enchantment_legendary   = "Enchantment Trap",
@@ -173,6 +171,7 @@ var TRAP_ALIASES:Dictionary[StringName, String] = {
 	fracture_trap           = "Fracture Trap",
 	impatience_trap         = "Impatience Trap",
 	# premium_trap           = "Premium Trap", # Might scrap
+	space_trap              = "Space Trap",
 	# unrandomization_trap    = "Unrandomization Trap",
 	welldone                = "Well Done Trap",
 
@@ -204,15 +203,16 @@ var RANDOM_TRAP_CHOICES:Array[StringName] = [
 	"invertcolors_trap",
 	"water_trap",
 	"pixellation_trap",
+	"space_trap",
 ]
 var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	# DRACOMINO TRAPS
-	# "Commitment Trap"         : "commitment_trap",
 	"Crystal Trap"            : "crystal_trap",
 	"Egg Trap"                : "egg",
 	"Fracture Trap"           : "fracture_trap",
 	"Impatience Trap"         : "impatience_trap",
 	# "Premium Trap"            : "premium_trap",
+	"Space Trap"              : "space_trap",
 	# "Unrandomization Trap"    : "unrandomization_trap",
 	"Well Done Trap"          : "welldone",
 
@@ -262,7 +262,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	# "Dry Trap"                : "Board Wipe Trap",
 	"Eject Ability"           : "impatience_trap",
 	"Electrocution Trap"      : "enchantment_legendary_spin",
-	# "Empty Item Box Trap"     : "Board Wipe Trap",
+	# "Empty Item Box Trap"     : "Board Wipe Trap", # TODO: Empty Hold Slots
 	"Enemy Ball Trap"         : "egg",
 	"Energy Drain Trap"       : "enchantment_curse_movement",
 	# "Expensive Stocks"        : "premium_trap",

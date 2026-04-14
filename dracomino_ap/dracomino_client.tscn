@@ -302,11 +302,19 @@ flag = "overlay_welldone"
 ignoreExternalSignals = true
 debugOnly = true
 
-[node name="Btn_WellDoneOverlay2" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
+[node name="Btn_ZoomEffect" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
 layout_mode = 2
 text = "Zoom Effect"
 script = ExtResource("8_s3ubo")
 flag = "effect_zoom"
+ignoreExternalSignals = true
+debugOnly = true
+
+[node name="Btn_SpaceEffect" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
+layout_mode = 2
+text = "Space Effect"
+script = ExtResource("8_s3ubo")
+flag = "effect_space"
 ignoreExternalSignals = true
 debugOnly = true
 

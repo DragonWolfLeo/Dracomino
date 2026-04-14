@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://c5lm3ikyfckvp"]
+[gd_scene load_steps=17 format=3 uid="uid://c5lm3ikyfckvp"]
 
 [ext_resource type="Script" uid="uid://c5jgcsxvnygnn" path="res://mode/main.gd" id="1_gx2q7"]
 [ext_resource type="PackedScene" uid="uid://txbrdml6vs6n" path="res://screen/ui.tscn" id="2_yivgv"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://daewoikmtskpi" path="res://dracomino_ap/dracomino_handler.gd" id="4_d6dmn"]
 [ext_resource type="PackedScene" uid="uid://0ung6f7krjet" path="res://screen/notificationscreen.tscn" id="5_d6dmn"]
 [ext_resource type="PackedScene" uid="uid://3jevvou6slg2" path="res://screen/overlay.tscn" id="5_yivgv"]
+[ext_resource type="PackedScene" uid="uid://c81i6wg82i8yk" path="res://screen/backgroundlayer.tscn" id="6_ckgpy"]
 [ext_resource type="PackedScene" uid="uid://ckv6tnuoxlxgw" path="res://screen/level_overlay.tscn" id="6_w0fxs"]
 [ext_resource type="Script" uid="uid://c5w663oymc2oy" path="res://module/hide_with_mode.gd" id="8_jjnvi"]
 [ext_resource type="PackedScene" uid="uid://boraki5ygsa0g" path="res://level/board.tscn" id="8_wule5"]
@@ -43,7 +44,7 @@ script = ExtResource("1_gx2q7")
 handle_input_locally = false
 snap_2d_transforms_to_pixel = true
 canvas_item_default_texture_filter = 3
-size = Vector2i(2, 2)
+size = Vector2i(960, 488)
 render_target_update_mode = 4
 
 [node name="DracominoHandler" type="Node" parent="Main/SubViewport"]
@@ -56,6 +57,8 @@ unique_name_in_owner = true
 
 [node name="LevelOverlay" parent="Main/SubViewport" instance=ExtResource("6_w0fxs")]
 process_mode = 1
+
+[node name="BackgroundLayer" parent="Main/SubViewport" instance=ExtResource("6_ckgpy")]
 
 [node name="PuzzleMode" type="Control" parent="Main/SubViewport"]
 unique_name_in_owner = true
@@ -142,10 +145,11 @@ grow_vertical = 2
 stretch = true
 
 [node name="SubViewport" type="SubViewport" parent="Main/SubViewport/PuzzleMode/SubViewportContainer"]
+transparent_bg = true
 handle_input_locally = false
 snap_2d_transforms_to_pixel = true
 canvas_item_default_texture_filter = 3
-size = Vector2i(2, 2)
+size = Vector2i(960, 488)
 render_target_update_mode = 4
 
 [node name="Board" parent="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport" node_paths=PackedStringArray("previewStorage", "holdStorage") instance=ExtResource("8_wule5")]
@@ -192,10 +196,11 @@ grow_vertical = 2
 stretch = true
 
 [node name="SubViewport" type="SubViewport" parent="Main/SubViewport/FishingMode/SubViewportContainer"]
+transparent_bg = true
 handle_input_locally = false
 snap_2d_transforms_to_pixel = true
 canvas_item_default_texture_filter = 3
-size = Vector2i(2, 2)
+size = Vector2i(960, 488)
 render_target_update_mode = 0
 
 [node name="FishingBoard" parent="Main/SubViewport/FishingMode/SubViewportContainer/SubViewport" node_paths=PackedStringArray("board") instance=ExtResource("10_jc8m0")]

@@ -1,7 +1,8 @@
-[gd_scene load_steps=16 format=3 uid="uid://rd6em7cjqrum"]
+[gd_scene load_steps=17 format=3 uid="uid://rd6em7cjqrum"]
 
 [ext_resource type="Script" uid="uid://c4627h5p2mc32" path="res://level/fishingboard.gd" id="1_qnlj5"]
 [ext_resource type="Texture2D" uid="uid://eotnw3aft54o" path="res://assets/art/fishing_background.png" id="1_qovn8"]
+[ext_resource type="Script" uid="uid://bdjl4wjprpljg" path="res://module/hide_on_flag_set.gd" id="2_yufu2"]
 [ext_resource type="Script" uid="uid://dcg8fgw3xw0em" path="res://module/autoresizecamera.gd" id="3_6egt2"]
 [ext_resource type="Texture2D" uid="uid://culgysr6fc5e" path="res://assets/art/fishing_mini.png" id="4_4n6dk"]
 [ext_resource type="Script" uid="uid://btanuiodywx0o" path="res://object/fishing_mini.gd" id="5_wbdmp"]
@@ -35,6 +36,8 @@ size = Vector2(6, 6)
 script = ExtResource("1_qnlj5")
 
 [node name="Background" type="Node2D" parent="."]
+script = ExtResource("2_yufu2")
+flag = "effect_space"
 
 [node name="Fishing" type="Sprite2D" parent="Background"]
 position = Vector2(128, 72)

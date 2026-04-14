@@ -6,6 +6,8 @@ Version 0.3.0 (traps-alpha3)
  - Add Trap Link. (Receiving is backwards-compatible, but must be manually set in the settings)
  - Add Zoom Trap
  - Add Impatience Trap
+ - Add In Space!
+ - Add currency bar
 
 Version 0.2.4 (dev-beta3)
  - Fix wrong amount of energy being sent

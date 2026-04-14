@@ -48,6 +48,7 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 		.setCanTriggerFn(_canSpawnMoreShapes).addContext("delayed"),
 	commitment_trap = Effect.new(_activateEffect.bind("committed", -1, false)),
 	egg = Effect.new(_NOOP),
+	space_trap = Effect.new(_activateEffect.bind("effect_space", 8, false)),
 	noop = Effect.new(_NOOP),
 	enchantment_curse = Effect.new(_NOOP),
 	enchantment_curse_gravity = Effect.new(_NOOP),
