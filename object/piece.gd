@@ -54,6 +54,14 @@ static var PIECES:Dictionary[StringName, PieceDefinition] = {
 	"Domino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT]),
 
 	"Monomino":  PieceDefinition.new([Vector2i.ZERO]).setCanRotate(false),
+
+	"Egg":  PieceDefinition.new([
+		Vector2i.ZERO, Vector2i.LEFT, Vector2i.RIGHT,
+		Vector2i.UP, Vector2i.LEFT+Vector2i.UP, Vector2i.RIGHT+Vector2i.UP,
+		Vector2i.DOWN, Vector2i.LEFT+Vector2i.DOWN, Vector2i.RIGHT+Vector2i.DOWN,
+		Vector2i.UP*2, Vector2i.LEFT+(Vector2i.UP*2), Vector2i.RIGHT+(Vector2i.UP*2),
+	]).setCanRotate(false),
+	
 }
 
 @onready var horizontalTimer:Timer = $HorizontalTimer
