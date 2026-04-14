@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://63qdysrsk0xu" path="res://assets/art/crystalfragment_1.png" id="4_8xmr1"]
 [ext_resource type="Script" uid="uid://3hyxsaj4myy1" path="res://module/play_sound_on_visible.gd" id="5_v1hah"]
 [ext_resource type="Texture2D" uid="uid://0y5s3eu75e33" path="res://assets/art/dialogueportrait/mini-happy.png" id="6_bft8r"]
-[ext_resource type="Texture2D" uid="uid://bhsf8qlw65fip" path="res://assets/art/dialogueportrait/mega.png" id="7_8xmr1"]
+[ext_resource type="Texture2D" uid="uid://24jtwjavp8va" path="res://assets/art/dialogueportrait/mega-happy.png" id="7_bft8r"]
 
 [sub_resource type="Curve" id="Curve_ogaaw"]
 _limits = [-1.0, 1.0, 0.0, 1.0]
@@ -251,6 +251,6 @@ offset_top = -248.0
 grow_horizontal = 0
 grow_vertical = 0
 mouse_filter = 2
-texture = ExtResource("7_8xmr1")
+texture = ExtResource("7_bft8r")
 stretch_mode = 4
 flip_h = true
