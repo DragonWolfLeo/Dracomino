@@ -214,11 +214,12 @@ func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects
 			add_child(ghost)
 		localCells = pieceDefinition.tiles.duplicate()
 		if FlagManager.isFlagSet("randomize_orientations"):
-			match orientation:
-				1: rotateClockwise(true)
-				2: rotate180(true)
-				3: rotateCounterclockwise(true)
-				_: updateTiles()
+			if pieceDefinition.canRotate:
+				match orientation:
+					1: rotateClockwise(true)
+					2: rotate180(true)
+					3: rotateCounterclockwise(true)
+					_: updateTiles()
 		else:
 			updateTiles()
 
