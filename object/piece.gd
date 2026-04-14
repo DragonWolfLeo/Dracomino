@@ -61,7 +61,24 @@ static var PIECES:Dictionary[StringName, PieceDefinition] = {
 		Vector2i.DOWN, Vector2i.LEFT+Vector2i.DOWN, Vector2i.RIGHT+Vector2i.DOWN,
 		Vector2i.UP*2, Vector2i.LEFT+(Vector2i.UP*2), Vector2i.RIGHT+(Vector2i.UP*2),
 	]).setCanRotate(false),
-	
+}
+
+class Enchantment:
+	var rarity:StringName
+	func _init(_rarity:StringName = "") -> void:
+		rarity = _rarity
+
+static var ENCHANTMENTS:Dictionary[StringName, Enchantment] = {
+	enchantment_curse = Enchantment.new("curse"),
+	enchantment_legendary = Enchantment.new("legendary"),
+	enchantment_epic = Enchantment.new("epic"),
+	enchantment_rare = Enchantment.new("rare"),
+	enchantment_mediumrare = Enchantment.new("uncommon"),
+	enchantment_curse_gravity = Enchantment.new("curse"),
+	enchantment_curse_movement = Enchantment.new("curse"),
+	enchantment_legendary_movement = Enchantment.new("legendary"),
+	enchantment_legendary_spin = Enchantment.new("legendary"),
+	enchantment = Enchantment.new(),
 }
 
 @onready var horizontalTimer:Timer = $HorizontalTimer
@@ -139,6 +156,7 @@ var isFocus:bool: ## Decides whether or not piece listens to inputs
 		isFocus = value
 		set_process_unhandled_input(value)
 		if not value: focus_lost.emit()
+var rarity:StringName
 var flagHolder:FlagHolder
 
 static var GHOSTPIECE_SCENE:PackedScene = load("res://object/ghostpiece.tscn")
@@ -237,13 +255,17 @@ func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects
 		onLockEffect = effects.get("on_lock")
 		onSpawnEffect = effects.get("on_spawn")
 		modifier = effects.get("modifier")
+		if modifier and modifier.data:
+			var enchantment:Enchantment = ENCHANTMENTS.get(modifier.data.internalName)
+			if enchantment is Enchantment:
+				rarity = enchantment.rarity
 	else:
 		printerr("Piece.setPiece:", pieceName, " does not exist!")
 		queue_free()
 
 func updateTiles():
 	clear()
-	if outline: outline.clear()
+	clearOutline()
 	renderPiece(self)
 	
 	globalCells = Board.getTranslatedCells(localCells, currentPosition)

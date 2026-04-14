@@ -1,9 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://jwpnrvrwchjh"]
+[gd_scene load_steps=3 format=3 uid="uid://jwpnrvrwchjh"]
 
 [ext_resource type="TileSet" uid="uid://bik73l7fn0v3b" path="res://resource/tileset/dracomino_piece.tres" id="1_0r6ss"]
 [ext_resource type="Script" uid="uid://vicpdo157hvg" path="res://object/piecetiles.gd" id="2_oapqj"]
-[ext_resource type="TileSet" uid="uid://bog40a6pcaq6t" path="res://resource/tileset/outline_uncommon.tres" id="3_0r6ss"]
-[ext_resource type="Script" uid="uid://tytc2y4lkci0" path="res://module/outlinetilemap.gd" id="4_b30gh"]
 
 [node name="PieceTiles" type="TileMapLayer"]
 z_index = 2
@@ -12,11 +10,3 @@ occlusion_enabled = false
 collision_enabled = false
 navigation_enabled = false
 script = ExtResource("2_oapqj")
-
-[node name="Outline" type="TileMapLayer" parent="."]
-tile_set = ExtResource("3_0r6ss")
-occlusion_enabled = false
-collision_enabled = false
-navigation_enabled = false
-script = ExtResource("4_b30gh")
-metadata/_custom_type_script = "uid://tytc2y4lkci0"
