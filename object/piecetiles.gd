@@ -3,7 +3,7 @@ class_name PieceTiles extends TileMapLayer
 var outline:OutlineTileMap
 
 static var RARITY_OUTLINE_TILESET_PATHS:Dictionary[StringName, String] = {
-	cursed = "res://resource/tileset/outline_cursed.tres",
+	curse = "res://resource/tileset/outline_curse.tres",
 	uncommon = "res://resource/tileset/outline_uncommon.tres",
 	rare = "res://resource/tileset/outline_rare.tres",
 	epic = "res://resource/tileset/outline_epic.tres",

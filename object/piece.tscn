@@ -7,21 +7,26 @@
 script = ExtResource("1_k13et")
 canRotate = true
 
-[node name="GravityTimer" type="Timer" parent="." index="1"]
+[node name="GravityTimer" type="Timer" parent="." index="0"]
 process_callback = 0
 wait_time = 0.8
 autostart = true
 
-[node name="HorizontalTimer" type="Timer" parent="." index="2"]
+[node name="HorizontalTimer" type="Timer" parent="." index="1"]
 process_callback = 0
 wait_time = 0.2
 autostart = true
 
-[node name="SoftDropTimer" type="Timer" parent="." index="3"]
+[node name="SoftDropTimer" type="Timer" parent="." index="2"]
 process_callback = 0
 wait_time = 0.2
 autostart = true
+
+[node name="RotateTimer" type="Timer" parent="." index="3"]
+process_callback = 0
+wait_time = 0.2
 
 [connection signal="timeout" from="GravityTimer" to="." method="_on_GravityTimer_timeout"]
 [connection signal="timeout" from="HorizontalTimer" to="." method="_on_HorizontalTimer_timeout"]
 [connection signal="timeout" from="SoftDropTimer" to="." method="_on_SoftDropTimer_timeout"]
+[connection signal="timeout" from="RotateTimer" to="." method="_on_RotateTimer_timeout"]

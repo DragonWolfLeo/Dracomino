@@ -65,25 +65,83 @@ static var PIECES:Dictionary[StringName, PieceDefinition] = {
 
 class Enchantment:
 	var rarity:StringName
-	func _init(_rarity:StringName = "") -> void:
+	var modifiers:Array[Modifier] = []
+	func _init(_rarity:StringName = "", _modifiers:Array[Modifier] = []) -> void:
 		rarity = _rarity
+		modifiers.append_array(_modifiers)
+
+	func addModifier(modifier:Modifier) -> Enchantment:
+		modifiers.append(modifier)
+		return self
+
+class Modifier:
+	var strength:float = 1
+	var type:StringName
+	var isEligible:Callable = func(): return true
+
+	func _init(_type:StringName = "") -> void:
+		type = _type
+
+	func addCondition(fn:Callable) -> Modifier:
+		isEligible = fn
+		return self
+
+	func setStrength(_strength:float) -> Modifier:
+		strength = _strength
+		return self
+
+static var MODIFIERS:Dictionary[StringName, Modifier] = {
+	gravity_curse = Modifier.new("gravity").setStrength(5.0),
+	gravity_uncommon = Modifier.new("gravity").setStrength(0.7).addCondition(_canUseGravityEnchantment),
+	gravity_rare = Modifier.new("gravity").setStrength(0.5).addCondition(_canUseGravityEnchantment),
+	gravity_epic = Modifier.new("gravity").setStrength(0.25).addCondition(_canUseGravityEnchantment),
+	gravity_legendary = Modifier.new("antigravity").setStrength(1).addCondition(_canUseGravityEnchantment),
+
+	movement_curse = Modifier.new("movement").setStrength(3.0),
+	movement_uncommon = Modifier.new("movement").setStrength(0.8),
+	movement_rare = Modifier.new("movement").setStrength(0.7),
+	movement_epic = Modifier.new("movement").setStrength(0.4),
+	movement_legendary = Modifier.new("movement").setStrength(0.1),
+
+	rotate_legendary = Modifier.new("rotate").setStrength(0.25),
+}
+
+static func _canUseGravityEnchantment() -> bool:
+	return FlagManager.isFlagSet("gravity") and FlagManager.isFlagSet("soft_drop/hard_drop")
 
 static var ENCHANTMENTS:Dictionary[StringName, Enchantment] = {
-	enchantment_curse = Enchantment.new("curse"),
-	enchantment_legendary = Enchantment.new("legendary"),
-	enchantment_epic = Enchantment.new("epic"),
-	enchantment_rare = Enchantment.new("rare"),
-	enchantment_mediumrare = Enchantment.new("uncommon"),
-	enchantment_curse_gravity = Enchantment.new("curse"),
-	enchantment_curse_movement = Enchantment.new("curse"),
-	enchantment_legendary_movement = Enchantment.new("legendary"),
-	enchantment_legendary_spin = Enchantment.new("legendary"),
+	enchantment_curse = Enchantment.new("curse", [
+		MODIFIERS.gravity_curse,
+		MODIFIERS.movement_curse,
+	]),
+	enchantment_uncommon = Enchantment.new("uncommon", [
+		MODIFIERS.gravity_uncommon,
+		MODIFIERS.movement_uncommon,
+	]),
+	enchantment_rare = Enchantment.new("rare", [
+		MODIFIERS.gravity_rare,
+		MODIFIERS.movement_rare,
+	]),
+	enchantment_epic = Enchantment.new("epic", [
+		MODIFIERS.gravity_epic,
+		MODIFIERS.movement_epic,
+	]),
+	enchantment_legendary = Enchantment.new("legendary", [
+		MODIFIERS.gravity_legendary,
+		MODIFIERS.movement_legendary,
+		MODIFIERS.rotate_legendary,
+	]),
+	enchantment_curse_gravity = Enchantment.new("curse", [MODIFIERS.gravity_curse]),
+	enchantment_curse_movement = Enchantment.new("curse", [MODIFIERS.movement_curse]),
+	enchantment_legendary_movement = Enchantment.new("legendary", [MODIFIERS.movement_legendary]),
+	enchantment_legendary_spin = Enchantment.new("legendary", [MODIFIERS.rotate_legendary]),
 	enchantment = Enchantment.new(),
 }
 
 @onready var horizontalTimer:Timer = $HorizontalTimer
 @onready var softDropTimer:Timer = $SoftDropTimer
 @onready var gravityTimer:Timer = $GravityTimer
+@onready var rotateTimer:Timer = $RotateTimer
 
 @onready var GRAVITY_WAIT_TIME:float = gravityTimer.wait_time
 var HARD_DROP_WAIT_TIME:float = 0.01
@@ -92,6 +150,7 @@ var SOFT_DROP_REPEAT_WAIT_TIME:float = .04
 var SOFT_DROP_LOCK_DELAY:float = 0.4
 @onready var HORIZONTAL_WAIT_TIME:float = horizontalTimer.wait_time
 var HORIZONTAL_REPEAT_WAIT_TIME:float = .075
+@onready var ROTATE_WAIT_TIME:float = rotateTimer.wait_time
 var USE_ALT_ROTATE:bool = true # TODO: Make an option
 
 enum MOVEMENT {
@@ -157,6 +216,7 @@ var isFocus:bool: ## Decides whether or not piece listens to inputs
 		set_process_unhandled_input(value)
 		if not value: focus_lost.emit()
 var rarity:StringName
+var modifiers:Dictionary[StringName, float] = {}
 var flagHolder:FlagHolder
 
 static var GHOSTPIECE_SCENE:PackedScene = load("res://object/ghostpiece.tscn")
@@ -176,31 +236,33 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("rotateClockwise"):
-		if FlagManager.isFlagSet("rotate_clockwise"):
+		if FlagManager.isFlagSet("rotate_clockwise") or modifiers.get("rotate"):
 			rotateClockwise()
 			get_viewport().set_input_as_handled()
+			if modifiers.get("rotate"): rotateTimer.start(ROTATE_WAIT_TIME*modifiers.get("rotate", 1.0))
 		elif USE_ALT_ROTATE and FlagManager.isFlagSet("rotate_counterclockwise"):
 			rotateCounterclockwise()
 			get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("rotateCounterclockwise"):
-		if FlagManager.isFlagSet("rotate_counterclockwise"):
+		if FlagManager.isFlagSet("rotate_counterclockwise") or modifiers.get("rotate"):
 			rotateCounterclockwise()
 			get_viewport().set_input_as_handled()
+			if modifiers.get("rotate"): rotateTimer.start(ROTATE_WAIT_TIME*modifiers.get("rotate", 1.0))
 		elif USE_ALT_ROTATE and FlagManager.isFlagSet("rotate_clockwise"):
 			rotateClockwise()
 			get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("moveLeft") and Input.is_action_just_pressed("moveLeft"):
-		horizontalTimer.start(HORIZONTAL_WAIT_TIME)
+		horizontalTimer.start(HORIZONTAL_WAIT_TIME * modifiers.get("movement", 1))
 		movement_requested.emit(self, Vector2i.LEFT, MOVEMENT.HORIZONTAL)
 		get_viewport().set_input_as_handled()
 		return
 	elif event.is_action_pressed("moveRight") and Input.is_action_just_pressed("moveRight"):
-		horizontalTimer.start(HORIZONTAL_WAIT_TIME)
+		horizontalTimer.start(HORIZONTAL_WAIT_TIME * modifiers.get("movement", 1))
 		movement_requested.emit(self, Vector2i.RIGHT, MOVEMENT.HORIZONTAL)
 		get_viewport().set_input_as_handled()
 		return
 	elif event.is_action_pressed("moveDown") and Input.is_action_just_pressed("moveDown") and FlagManager.isFlagSet("soft_drop"):
-		softDropTimer.start(SOFT_DROP_WAIT_TIME)
+		softDropTimer.start(SOFT_DROP_WAIT_TIME * modifiers.get("movement", 1))
 		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP_LOCK)
 		# Avoid falling too soon
 		gravityTimer.start()
@@ -256,12 +318,24 @@ func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects
 		onSpawnEffect = effects.get("on_spawn")
 		modifier = effects.get("modifier")
 		if modifier and modifier.data:
-			var enchantment:Enchantment = ENCHANTMENTS.get(modifier.data.internalName)
-			if enchantment is Enchantment:
-				rarity = enchantment.rarity
+			applyEnchantmentByName(modifier.data.internalName)
 	else:
 		printerr("Piece.setPiece:", pieceName, " does not exist!")
 		queue_free()
+
+func applyEnchantmentByName(enchantmentName:StringName):
+	var enchantment:Enchantment = ENCHANTMENTS.get(enchantmentName)
+	if enchantment is Enchantment:
+		rarity = enchantment.rarity
+		var eligibleMods:Array[Modifier] = []
+		for mod in enchantment.modifiers:
+			if mod.isEligible.call():
+				eligibleMods.append(mod)
+		if eligibleMods.size():
+			var mod:Modifier = eligibleMods.pick_random()
+			modifiers[mod.type] = mod.strength
+			match mod.type:
+				"gravity": _on_gravity_setting_changed.call_deferred()
 
 func updateTiles():
 	clear()
@@ -317,7 +391,7 @@ func hardDrop():
 	if not moveLock:
 		moveLock = true
 		canRotate = false
-		gravityTimer.wait_time = HARD_DROP_WAIT_TIME
+		gravityTimer.wait_time = HARD_DROP_WAIT_TIME * modifiers.get("movement", 1)
 		gravityTimer.start()
 
 func gravityDrop():
@@ -345,26 +419,36 @@ func _on_HorizontalTimer_timeout():
 	elif Input.is_action_pressed("moveRight"):
 		moved = Vector2i.RIGHT
 	else:
-		horizontalTimer.wait_time = HORIZONTAL_WAIT_TIME
+		horizontalTimer.wait_time = HORIZONTAL_WAIT_TIME * modifiers.get("movement", 1)
 		return
-	horizontalTimer.wait_time = HORIZONTAL_REPEAT_WAIT_TIME
+	horizontalTimer.wait_time = HORIZONTAL_REPEAT_WAIT_TIME * modifiers.get("movement", 1)
 	horizontalTimer.start()
 	movement_requested.emit(self, moved, MOVEMENT.HORIZONTAL)
 
 func _on_SoftDropTimer_timeout():
 	if not isFocus: return
 	if Input.is_action_pressed("moveDown") and FlagManager.isFlagSet("soft_drop"):
-		softDropTimer.start(SOFT_DROP_REPEAT_WAIT_TIME)
+		softDropTimer.start(SOFT_DROP_REPEAT_WAIT_TIME * modifiers.get("movement", 1))
 		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP_LOCK if lockDelayed else MOVEMENT.SOFT_DROP)
 		# Avoid falling too soon
 		gravityTimer.start()
 	else:
-		softDropTimer.wait_time = SOFT_DROP_WAIT_TIME
+		softDropTimer.wait_time = SOFT_DROP_WAIT_TIME * modifiers.get("movement", 1)
 		lockDelayed = false
 
 func _on_GravityTimer_timeout():
-	if moveLock or FlagManager.isFlagSet("gravity") or not isFocus:
+	if moveLock or (
+		(FlagManager.isFlagSet("gravity") and not modifiers.get("antigravity")) # Antigravity cancels out gravity
+		or modifiers.get("gravity", 1) > 1 # Otherwise if gravity is set at all, it's enabled whether it's unlocked or not
+	) or not isFocus:
 		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.HARD_DROP if playHardDropSound else MOVEMENT.GRAVITY)
+
+func _on_RotateTimer_timeout() -> void:
+	if not isFocus and not modifiers.get("rotate"): return
+	if Input.is_action_pressed("rotateClockwise"):
+		rotateClockwise()
+	elif Input.is_action_pressed("rotateCounterclockwise"):
+		rotateCounterclockwise()
 
 func _setCurrentPosition(value:Vector2i):
 	currentPosition = value
@@ -372,7 +456,7 @@ func _setCurrentPosition(value:Vector2i):
 	updateTiles()
 
 func _on_gravity_setting_changed():
-	if not moveLock:
-		var gravSpeed = Config.getSetting("gravity", 1.0)
+	if not moveLock and gravityTimer:
+		var gravSpeed = Config.getSetting("gravity", 1.0)*modifiers.get("gravity", 1.0)
 		gravityTimer.wait_time = GRAVITY_WAIT_TIME/gravSpeed
 		gravityTimer.start()
