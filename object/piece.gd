@@ -332,8 +332,6 @@ func makeActive():
 	set_process_unhandled_input(isFocus)
 	if flagHolder: flagHolder.monitoring = true
 	show()
-	if FlagManager.isFlagSet("ghost_piece") and ghost:
-		ghost.show()
 	# Avoid falling too soon
 	resetGravityTimer()
 	# Wait for pieces to get out of this one

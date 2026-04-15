@@ -3,11 +3,11 @@ class_name GhostPiece extends TileMapLayer
 var localCells:Array[Vector2i] = []
 var relativePosition:Vector2i: set = _set_relativePosition
 var GHOSTPIECE_ATLAS_COORD:Vector2i = Vector2i(0,0)
-# var GHOSTPIECE_TILESET:Resource = load("res://resource/tileset/ghostpiece.tres") as TileSet
 
 func _ready() -> void:
-	# tile_set = GHOSTPIECE_TILESET
-	hide()
+	visible = FlagManager.isFlagSet("ghost_piece")
+	SignalBus.getSignal("stateflag_set", "ghost_piece").connect(show)
+	SignalBus.getSignal("stateflag_cleared", "ghost_piece").connect(hide)
 
 func updateTiles():
 	clear()	
