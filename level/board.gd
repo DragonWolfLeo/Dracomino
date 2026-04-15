@@ -125,6 +125,12 @@ static func mergeCells(destination:Array[Vector2i], cells:Array[Vector2i]) -> vo
 		if not destination.has(cell):
 			destination.append(cell)
 
+static func getCellsDifference(cells:Array[Vector2i], subtracted:Array[Vector2i]) -> Array[Vector2i]:
+	var newCells = cells.duplicate()
+	for cell:Vector2i in subtracted:
+		newCells.erase(cell)
+	return newCells
+
 #===== Virtuals ======
 func _ready():
 	# Set up flag holder
@@ -450,7 +456,7 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 	if not piece.collidible and getCollidingPiece(piece.globalCells, piece) != null:
 		return true
 	# Check tiles the piece want to move
-	var translatedCells := getTranslatedCells(piece.globalCells, direction)
+	var translatedCells := getCellsDifference(getTranslatedCells(piece.globalCells, direction), piece.globalCells)
 	if areCellsOpen(translatedCells, [], true):
 		var blocked:bool = false
 		# Prevent going through activated lines
