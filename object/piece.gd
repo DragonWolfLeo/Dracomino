@@ -178,9 +178,16 @@ static var ENCHANTMENTS:Dictionary[StringName, Enchantment] = {
 	enchantment_curse_movement = Enchantment.new("curse", [MODIFIERS.movement_curse]),
 	enchantment_legendary_movement = Enchantment.new("legendary", [MODIFIERS.movement_legendary]),
 	enchantment_legendary_spin = Enchantment.new("legendary", [MODIFIERS.rotate_legendary]),
-	enchantment = Enchantment.new("random"),
+	enchantment_random = Enchantment.new("random"),
+	enchantment = Enchantment.new("enchantment"),
 }
-static var RANDOM_ENCHANTMENT_CHOICES:Array[Enchantment] = [
+static var ENCHANTMENT_CHOICES:Array[Enchantment] = [
+	ENCHANTMENTS.enchantment_uncommon,
+	ENCHANTMENTS.enchantment_rare,
+	ENCHANTMENTS.enchantment_epic,
+	ENCHANTMENTS.enchantment_legendary,
+]
+static var ENCHANTMENT_RANDOM_CHOICES:Array[Enchantment] = [
 	ENCHANTMENTS.enchantment_curse,
 	ENCHANTMENTS.enchantment_uncommon,
 	ENCHANTMENTS.enchantment_rare,
@@ -415,8 +422,11 @@ func setPiece(pieceContext:DracominoHandler.PieceContext) -> void:
 func applyEnchantmentByName(enchantmentName:StringName) -> Enchantment:
 	var enchantment:Enchantment = ENCHANTMENTS.get(enchantmentName)
 	if enchantment is Enchantment:
-		if enchantment.rarity.is_empty() or enchantment.rarity == "random":
-			enchantment = RANDOM_ENCHANTMENT_CHOICES.pick_random() as Enchantment
+		match enchantment.rarity:
+			"", "random":
+				enchantment = ENCHANTMENT_RANDOM_CHOICES.pick_random() as Enchantment
+			"enchantment":
+				enchantment = ENCHANTMENT_CHOICES.pick_random() as Enchantment
 		rarity = enchantment.rarity
 		if context:
 			context.prettyName = enchantment.prettyName + " " + context.name

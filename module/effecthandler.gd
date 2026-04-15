@@ -83,6 +83,8 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 		.setCanTriggerFn(_board_canEnchantPiece).addContext("on_spawn"),
 	enchantment_legendary_spin = BoardEffect.new(_board_enchantCurrentPiece.bind("enchantment_legendary_spin"))\
 		.setCanTriggerFn(_board_canEnchantPiece).addContext("on_spawn"),
+	enchantment_random = BoardEffect.new(_board_enchantCurrentPiece.bind("enchantment_random"))\
+		.setCanTriggerFn(_board_canEnchantPiece).addContext("on_spawn"),
 	enchantment = BoardEffect.new(_board_enchantCurrentPiece.bind("enchantment"))\
 		.setCanTriggerFn(_board_canEnchantPiece).addContext("on_spawn"),
 }
