@@ -104,24 +104,20 @@ settingName = "Lock Delay"
 
 [node name="SliderSetting_SoftDropSpeed" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_mtsfg")]
 layout_mode = 2
-tooltip_text = "Soft Drop Speed"
 targetSetting = &"softDrop_speed"
-settingName = "S.D. Speed"
+settingName = "Soft Drop Speed"
 
 [node name="SliderSetting_HorizontalSpeed" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_mtsfg")]
 layout_mode = 2
-tooltip_text = "Horizontal Movement Speed"
 targetSetting = &"horizontal_speed"
-settingName = "H. Speed"
+settingName = "Horizontal Speed"
 
 [node name="SliderSetting_SoftDropRepeatDelay" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_mtsfg")]
 layout_mode = 2
-tooltip_text = "Soft Drop Repeat Delay"
 targetSetting = &"softDrop_repeatDelay"
-settingName = "S.D. Repeat Delay"
+settingName = "Soft Drop Repeat Delay"
 
 [node name="SliderSetting_HorizontalRepeatDelay" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_mtsfg")]
 layout_mode = 2
-tooltip_text = "Horizontal Repeat Delay"
 targetSetting = &"horizontal_repeatDelay"
-settingName = "H. Repeat Delay"
+settingName = "Horizontal Repeat Delay"
