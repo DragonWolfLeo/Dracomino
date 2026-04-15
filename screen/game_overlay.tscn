@@ -1,15 +1,22 @@
-[gd_scene load_steps=7 format=3 uid="uid://bufsjxsve02l3"]
+[gd_scene load_steps=11 format=3 uid="uid://bufsjxsve02l3"]
 
 [ext_resource type="Shader" uid="uid://cc45hk356mhko" path="res://resource/shader/ega.gdshader" id="1_4gjj1"]
 [ext_resource type="Script" uid="uid://dvj4uugycseke" path="res://module/overlayfilter.gd" id="2_pwtad"]
 [ext_resource type="Shader" uid="uid://pn15pak7pnld" path="res://resource/shader/invert.gdshader" id="3_xy513"]
 [ext_resource type="Script" uid="uid://3hyxsaj4myy1" path="res://module/play_sound_on_visible.gd" id="4_pwtad"]
+[ext_resource type="Shader" uid="uid://bfhy0lg4xg5kt" path="res://resource/shader/shake.gdshader" id="5_bo0we"]
+[ext_resource type="Texture2D" uid="uid://j0c1gduh44u0" path="res://assets/art/mini_scream.png" id="6_j5tl8"]
+[ext_resource type="FontFile" uid="uid://dsmco8aopu3b6" path="res://resource/font/ChakraPetch-Bold.ttf" id="7_j5tl8"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_wule5"]
 shader = ExtResource("1_4gjj1")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ckgpy"]
 shader = ExtResource("3_xy513")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_akjsg"]
+shader = ExtResource("5_bo0we")
+shader_parameter/intensity = 10.0
 
 [node name="GameOverlay" type="CanvasLayer"]
 
@@ -48,3 +55,47 @@ soundName = "trap"
 
 [node name="BackBufferCopy" type="BackBufferCopy" parent="InvertFilter"]
 copy_mode = 2
+
+[node name="MiniScream" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_pwtad")
+flag = "mini_jumpscare"
+
+[node name="TextureRect" type="TextureRect" parent="MiniScream"]
+material = SubResource("ShaderMaterial_akjsg")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("6_j5tl8")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="RichTextLabel" type="RichTextLabel" parent="MiniScream"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/outline_size = 12
+theme_override_fonts/normal_font = ExtResource("7_j5tl8")
+bbcode_enabled = true
+text = "[font size=72][shake level=40 rate=60]AAAAAAAAAAAAAAAAAAA[/shake]"
+horizontal_alignment = 1
+vertical_alignment = 2
+
+[node name="PlaySoundOnVisible" type="Node2D" parent="MiniScream"]
+script = ExtResource("4_pwtad")
+soundName = "fishget"

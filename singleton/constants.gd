@@ -207,6 +207,7 @@ var TRAP_ALIASES:Dictionary[StringName, String] = {
 	enchantment_legendary_spin       = "Enchantment Trap",
 	enchantment_random               = "Random Enchantment",
 	fade                             = "Fake Transition",
+	mini_jumpscare                   = "Mini Jumpscare",
 	random_trap                      = "Random Trap",
 }
 var RANDOM_TRAP_CHOICES:Array[StringName] = [
@@ -234,7 +235,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 
 	# OTHER TRAPS
 	"144p Trap"               : "pixellation_trap",
-	"Aaa Trap"                : "tutorial",
+	"Aaa Trap"                : "mini_jumpscare",
 	# "Animal Trap"             : "Transform Trap",
 	"Animal Bonus Trap"       : "fishing",
 	"Army Trap"               : "impatience_trap",
@@ -397,6 +398,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"Stun Trap"               : "enchantment_curse_movement",
 	"SvC Effect"              : "enchantment_random",
 	# "Swap Trap"               : "Swap Trap",
+	"Syntax Jumpscare Trap"   : "mini_jumpscare",
 	# "Tarr Trap"               : "glue_trap",
 	"Teleport Trap"           : "impatience_trap",
 	"Text Trap"               : "tutorial", # "Random Cutscene",

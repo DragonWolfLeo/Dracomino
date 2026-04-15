@@ -70,6 +70,7 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 
 	# == Trap Link Specific ==
 	fade = Effect.new(_fade),
+	mini_jumpscare = Effect.new(_activateTimedEffect.bind("mini_jumpscare", 1.0)),
 	random_trap = Effect.new(_randomTrap),
 
 	# == Board Effects ==
@@ -112,6 +113,12 @@ func _canLoadNewDialogue() -> bool:
 func _activateEffect(flag:String, duration:int = 8, annoying:bool = true) -> void:
 	var ae:ActiveEffect = ActiveEffect.instantiateEffect(flag, duration, annoying)
 	add_child(ae)
+
+func _activateTimedEffect(flag:String, duration:float = 1.0) -> void:
+	var ae:ActiveEffect = ActiveEffect.instantiateEffect(flag, -1, false)
+	add_child(ae)
+	var tween:Tween = ae.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.tween_callback(ae.queue_free).set_delay(duration)
 
 func _board_instantSpawn(board:Board, internalName:StringName) -> void:
 	var stateItem:DracominoHandler.StateItem = DracominoHandler.StateItem.fromInternalName(internalName)
