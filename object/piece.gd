@@ -168,8 +168,15 @@ static var ENCHANTMENTS:Dictionary[StringName, Enchantment] = {
 	enchantment_curse_movement = Enchantment.new("curse", [MODIFIERS.movement_curse]),
 	enchantment_legendary_movement = Enchantment.new("legendary", [MODIFIERS.movement_legendary]),
 	enchantment_legendary_spin = Enchantment.new("legendary", [MODIFIERS.rotate_legendary]),
-	enchantment = Enchantment.new(),
+	enchantment = Enchantment.new("random"),
 }
+static var RANDOM_ENCHANTMENT_CHOICES:Array[Enchantment] = [
+	ENCHANTMENTS.enchantment_curse,
+	ENCHANTMENTS.enchantment_uncommon,
+	ENCHANTMENTS.enchantment_rare,
+	ENCHANTMENTS.enchantment_epic,
+	ENCHANTMENTS.enchantment_legendary,
+]
 
 @onready var horizontalTimer:Timer = $HorizontalTimer
 @onready var softDropTimer:Timer = $SoftDropTimer
@@ -180,10 +187,10 @@ static var ENCHANTMENTS:Dictionary[StringName, Enchantment] = {
 var HARD_DROP_WAIT_TIME:float = 0.01
 @onready var SOFT_DROP_WAIT_TIME:float = softDropTimer.wait_time:
 	get():
-		return SOFT_DROP_WAIT_TIME * modifiers.get("movement", 1.0) * Config.getSetting("softDrop_repeatDelay", 1.0)
+		return max(SOFT_DROP_REPEAT_WAIT_TIME, SOFT_DROP_WAIT_TIME * min(1.0, modifiers.get("movement", 1.0)) * Config.getSetting("softDrop_repeatDelay", 1.0))
 var SOFT_DROP_REPEAT_WAIT_TIME:float = .04:
 	get():
-		return SOFT_DROP_REPEAT_WAIT_TIME / Config.getSetting("softDrop_speed", 1.0)
+		return SOFT_DROP_REPEAT_WAIT_TIME * modifiers.get("movement", 1.0) / Config.getSetting("softDrop_speed", 1.0)
 var SOFT_DROP_LOCK_DELAY:float = 0.4:
 	get():
 		return SOFT_DROP_LOCK_DELAY * Config.getSetting("lockDelay", 1.0)
@@ -192,10 +199,10 @@ var GRAVITY_LOCK_DELAY:float = 0.6:
 		return max(getGravityDelay(), GRAVITY_LOCK_DELAY * Config.getSetting("lockDelay", 1.0) )
 @onready var HORIZONTAL_WAIT_TIME:float = horizontalTimer.wait_time:
 	get():
-		return HORIZONTAL_WAIT_TIME * modifiers.get("movement", 1.0) * Config.getSetting("horizontal_repeatDelay", 1.0)
+		return max(HORIZONTAL_REPEAT_WAIT_TIME, HORIZONTAL_WAIT_TIME * min(1.0, modifiers.get("movement", 1.0)) * Config.getSetting("horizontal_repeatDelay", 1.0))
 var HORIZONTAL_REPEAT_WAIT_TIME:float = .075:
 	get():
-		return HORIZONTAL_REPEAT_WAIT_TIME / Config.getSetting("horizontal_speed", 1.0)
+		return HORIZONTAL_REPEAT_WAIT_TIME * modifiers.get("movement", 1.0) / Config.getSetting("horizontal_speed", 1.0)
 @onready var ROTATE_WAIT_TIME:float = rotateTimer.wait_time
 var USE_ALT_ROTATE:bool = true # TODO: Make an option
 
@@ -413,6 +420,8 @@ func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects
 func applyEnchantmentByName(enchantmentName:StringName) -> void:
 	var enchantment:Enchantment = ENCHANTMENTS.get(enchantmentName)
 	if enchantment is Enchantment:
+		if enchantment.rarity.is_empty() or enchantment.rarity == "random":
+			enchantment = RANDOM_ENCHANTMENT_CHOICES.pick_random() as Enchantment
 		rarity = enchantment.rarity
 		var eligibleMods:Array[Modifier] = []
 		for mod in enchantment.modifiers:
@@ -549,19 +558,19 @@ func _on_HorizontalTimer_timeout():
 	else:
 		horizontalTimer.wait_time = HORIZONTAL_WAIT_TIME
 		return
-	horizontalTimer.wait_time = HORIZONTAL_REPEAT_WAIT_TIME * modifiers.get("movement", 1)
+	horizontalTimer.wait_time = HORIZONTAL_REPEAT_WAIT_TIME
 	horizontalTimer.start()
 	movement_requested.emit(self, moved, MOVEMENT.HORIZONTAL)
 
 func _on_SoftDropTimer_timeout():
 	if not isFocus: return
 	if Input.is_action_pressed("moveDown") and FlagManager.isFlagSet("soft_drop"):
-		softDropTimer.start(SOFT_DROP_REPEAT_WAIT_TIME * modifiers.get("movement", 1))
+		softDropTimer.start(SOFT_DROP_REPEAT_WAIT_TIME)
 		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP_LOCK if lockDelayed else MOVEMENT.SOFT_DROP)
 		# Avoid falling too soon
 		gravityTimer.start()
 	else:
-		softDropTimer.wait_time = SOFT_DROP_WAIT_TIME * modifiers.get("movement", 1)
+		softDropTimer.wait_time = SOFT_DROP_WAIT_TIME
 		lockDelayed = false
 
 func _on_GravityTimer_timeout():
