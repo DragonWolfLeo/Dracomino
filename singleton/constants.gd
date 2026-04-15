@@ -75,7 +75,7 @@ class LocationData extends Data: pass
 	[206, "Legendary Enchantment",    "enchantment_legendary",      [ "trap", "modifier" ] ],
 	[207, "Epic Enchantment",         "enchantment_epic",           [ "trap", "modifier" ] ],
 	[208, "Rare Enchantment",         "enchantment_rare",           [ "trap", "modifier"] ],
-	[209, "Medium Rare Enchantment",  "enchantment_uncommon",       [ "trap", "modifier"] ],
+	[209, "Medium-Rare Enchantment",  "enchantment_uncommon",       [ "trap", "modifier"] ],
 	[210, "Well Done!",               "welldone",                   [ "trap", "on_lock"] ],
 	[211, "Crystal Trap",             "crystal_trap",               [ "trap", "on_spawn"] ],
 	[212, "Invert Colors Trap",       "invertcolors_trap",          [ "trap", "on_spawn"] ],

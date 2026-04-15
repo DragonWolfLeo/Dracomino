@@ -99,6 +99,7 @@ class Modifier:
 	var strength:float = 1
 	var type:StringName
 	var isEligible:Callable = func(): return true
+	var alwaysActive:bool = false
 
 	func _init(_type:StringName = "") -> void:
 		type = _type
@@ -111,24 +112,33 @@ class Modifier:
 		strength = _strength
 		return self
 
+	func setAlwaysActive(_alwaysActive:bool = true) -> Modifier:
+		alwaysActive = _alwaysActive
+		return self
+
 static var MODIFIERS:Dictionary[StringName, Modifier] = {
 	gravity_curse = Modifier.new("gravity").setStrength(5.0),
-	gravity_uncommon = Modifier.new("gravity").setStrength(0.7).addCondition(_canUseGravityEnchantment),
-	gravity_rare = Modifier.new("gravity").setStrength(0.5).addCondition(_canUseGravityEnchantment),
-	gravity_epic = Modifier.new("gravity").setStrength(0.25).addCondition(_canUseGravityEnchantment),
-	gravity_legendary = Modifier.new("antigravity").setStrength(1).addCondition(_canUseGravityEnchantment),
+	gravity_uncommon = Modifier.new("gravity").setStrength(0.7).addCondition(_canUseGravityEnchantment).setAlwaysActive(),
+	gravity_rare = Modifier.new("gravity").setStrength(0.5).addCondition(_canUseGravityEnchantment).setAlwaysActive(),
+	gravity_epic = Modifier.new("gravity").setStrength(0.25).addCondition(_canUseGravityEnchantment).setAlwaysActive(),
+	gravity_legendary = Modifier.new("antigravity").setStrength(1).addCondition(_canUseGravityEnchantment).setAlwaysActive(),
 
-	movement_curse = Modifier.new("movement").setStrength(3.0),
-	movement_uncommon = Modifier.new("movement").setStrength(0.8),
-	movement_rare = Modifier.new("movement").setStrength(0.7),
-	movement_epic = Modifier.new("movement").setStrength(0.4),
+	movement_curse = Modifier.new("movement").setStrength(4.0),
+	movement_uncommon = Modifier.new("movement").setStrength(0.8).setAlwaysActive(),
+	movement_rare = Modifier.new("movement").setStrength(0.75).setAlwaysActive(),
+	movement_epic = Modifier.new("movement").setStrength(0.5).setAlwaysActive(),
 	movement_legendary = Modifier.new("movement").setStrength(0.1),
 
+	rotate_rare = Modifier.new("rotate").setStrength(1.0).addCondition(_canRotate),
+	rotate_epic = Modifier.new("rotate").setStrength(0.7).addCondition(_canRotate),
 	rotate_legendary = Modifier.new("rotate").setStrength(0.25),
 }
 
 static func _canUseGravityEnchantment() -> bool:
 	return FlagManager.isFlagSet("gravity") and FlagManager.isFlagSet("soft_drop/hard_drop")
+
+static func _canRotate() -> bool:
+	return FlagManager.isFlagSet("rotate")
 
 static var ENCHANTMENTS:Dictionary[StringName, Enchantment] = {
 	enchantment_curse = Enchantment.new("curse", [
@@ -142,10 +152,12 @@ static var ENCHANTMENTS:Dictionary[StringName, Enchantment] = {
 	enchantment_rare = Enchantment.new("rare", [
 		MODIFIERS.gravity_rare,
 		MODIFIERS.movement_rare,
+		MODIFIERS.rotate_rare,
 	]),
 	enchantment_epic = Enchantment.new("epic", [
 		MODIFIERS.gravity_epic,
 		MODIFIERS.movement_epic,
+		MODIFIERS.rotate_epic,
 	]),
 	enchantment_legendary = Enchantment.new("legendary", [
 		MODIFIERS.gravity_legendary,
@@ -378,19 +390,24 @@ func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects
 		printerr("Piece.setPiece:", pieceName, " does not exist!")
 		queue_free()
 
-func applyEnchantmentByName(enchantmentName:StringName):
+func applyEnchantmentByName(enchantmentName:StringName) -> void:
 	var enchantment:Enchantment = ENCHANTMENTS.get(enchantmentName)
 	if enchantment is Enchantment:
 		rarity = enchantment.rarity
 		var eligibleMods:Array[Modifier] = []
 		for mod in enchantment.modifiers:
 			if mod.isEligible.call():
-				eligibleMods.append(mod)
+				if mod.alwaysActive:
+					applyModifer(mod)
+				else:
+					eligibleMods.append(mod)
 		if eligibleMods.size():
-			var mod:Modifier = eligibleMods.pick_random()
-			modifiers[mod.type] = mod.strength
-			match mod.type:
-				"gravity": _on_gravity_setting_changed.call_deferred()
+			applyModifer(eligibleMods.pick_random())
+
+func applyModifer(modifier:Modifier) -> void:
+	modifiers[modifier.type] = modifier.strength
+	match modifier.type:
+		"gravity": _on_gravity_setting_changed.call_deferred()
 
 func updateTiles():
 	clear()

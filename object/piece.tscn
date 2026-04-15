@@ -8,6 +8,7 @@ script = ExtResource("1_k13et")
 canRotate = true
 canFlip = true
 can180 = true
+preferCCW = false
 
 [node name="GravityTimer" type="Timer" parent="." index="0"]
 process_callback = 0
