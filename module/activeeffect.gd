@@ -26,6 +26,7 @@ static func instantiateEffect(flag:String, duration:int = -1, annoying:bool = tr
 		ae.count("effects_active", flag, 1)
 		if annoying:
 			ae.count("annoying_effects_active", flag, 1)
+			SignalBus.getSignal("dispel_annoying_effects").connect(ae._on_dispelled)
 	ae.tree_entered.connect(_setflags, CONNECT_ONE_SHOT)
 	SignalBus.getSignal("dispel_"+flag).connect(ae._on_dispelled)
 	SignalBus.getSignal("dispel_all_effects").connect(ae._on_dispelled)

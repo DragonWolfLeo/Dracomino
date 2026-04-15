@@ -27,7 +27,7 @@ Mega: In a solo game, you can expect to find Rotate at a coin location in your f
 Mega: [Emit progress_tutorial_logic] For line clears, the number of lines you can fill with your blocks is the number of lines in logic.
 // ** Example - 8 rows of lines representing available blocks. 8 lines worth of blocks make 8 lines in logic **
 Mega: [Emit progress_tutorial_logic] The option [b]Line Clear Leniency[/b] will require additional lines worth of blocks for a line clear location to be in logic, making the requirement less strict.
-[if counted_effects_active_overlay_pixel/counted_effects_active_overlay_crystal not dispels_done]
+[if counted_annoying_effects_active_overlay_pixel/counted_annoying_effects_active_overlay_crystal not dispels_done]
 // Dispel annoying visuals
 Mega (annoyed): ...
 Mega (annoyed): This effect is getting on my nerves.
@@ -63,7 +63,7 @@ Mini (grumpy): I can't believe this!
 
 
 [State Dispel_Macro]
-Mega (cast): *Mega casts a spell!* [Emit dispel_all_effects][WorldCount dispels_done amount 1 add]
+Mega (cast): *Mega casts a spell!* [Emit dispel_annoying_effects][WorldCount dispels_done amount 1 add]
 // Check for results of energy transaction
 [SubDialogue tutorial_logic DispelResult_Macro]
 // End here if we succeeded
