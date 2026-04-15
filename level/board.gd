@@ -189,7 +189,7 @@ func chooseNewFocusPiece(requestIfNone:bool = false) -> void:
 			piece.isFocus = true
 			focusPiece = piece
 			# Make focus camera follow with a bit of a delay
-			if piece == activePieces.front():
+			if activePieces.size() and piece == activePieces.front():
 				var tween:Tween = piece.create_tween()
 				var delay:float = 1.0 if clearingChunks.size() else 0.5
 				tween.tween_callback(focusCamera.set.bind("global_position", piece.global_position)).set_delay(delay)
@@ -443,7 +443,7 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 					if nudgeResult: blocked = true
 		if not blocked:
 			piece.move(direction)
-			if piece == activePieces.front():
+			if activePieces.size() and piece == activePieces.front():
 				focusCamera.global_position = piece.global_position
 			tryToMakePiecesCollible()
 			checkIfWaitingToChooseNewFocusPiece()
