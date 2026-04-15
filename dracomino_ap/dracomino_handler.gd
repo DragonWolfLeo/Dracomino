@@ -709,16 +709,17 @@ func _on_Board_deathlink_earned(deathContext:DracominoUtil.DeathContext) -> void
 		}
 		formatValues.merge(deathContext.formatValues, true)
 		var contextTags = deathContext.contextTags.duplicate()
-		var itemctx := deathContext.itemContext
-		if itemctx:
+		var itemctx:PieceContext = deathContext.itemContext
+		if itemctx is PieceContext and itemctx.stateItem is StateItem:
+			var stateItem:StateItem = itemctx.stateItem
 			# Add context of last piece if any
-			contextTags.append("LOCAL_ITEM" if itemctx.isLocal else "NONLOCAL_ITEM")
-			var item := CONSTANTS.ITEMS[itemctx.id]
+			contextTags.append("LOCAL_ITEM" if stateItem.isLocal else "NONLOCAL_ITEM")
+			var item := CONSTANTS.ITEMS[stateItem.id]
 			formatValues.merge({
 				item = (item.prettyName as String) if item else "Unknown Piece",
-				sender = itemctx.senderName,
-				location = itemctx.locationName,
-				game = itemctx.gameName,
+				sender = stateItem.senderName,
+				location = stateItem.locationName,
+				game = stateItem.gameName,
 			})
 			# Add context for having no rotate
 			if _canUseDeathContext_NO_ROTATE and not FlagManager.isFlagSet("rotate"):
@@ -735,10 +736,10 @@ func _on_Board_deathlink_earned(deathContext:DracominoUtil.DeathContext) -> void
 							game_rotate = hintedRotate.gameName,
 						})
 			# Add context for streaks
-			if itemctx.streak and itemctx.streak.size >= Streak.NOTABLE_THRESHOLD:
+			if stateItem.streak and stateItem.streak.size >= Streak.NOTABLE_THRESHOLD:
 				contextTags.append("ITEM_STREAK")
 				formatValues.merge({
-					streaksize = itemctx.streak.size,
+					streaksize = stateItem.streak.size,
 				})
 
 		# Pick a template and generate a deathlink message

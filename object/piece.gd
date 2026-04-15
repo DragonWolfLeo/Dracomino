@@ -225,7 +225,11 @@ var currentPosition:Vector2i: set = _setCurrentPosition
 var origin:Vector2i
 var id:int
 var prettyName:String = "Piece"
-var context:DracominoHandler.StateItem = null
+var context:DracominoHandler.PieceContext = null
+var stateItem:DracominoHandler.StateItem:
+	get():
+		if context: return context.stateItem
+		return null
 var attachedEffects:Dictionary[StringName, DracominoHandler.StateItem] = {}
 var moveLock:bool = false: ## Prevent moving this anymore
 	set(value):
@@ -328,10 +332,10 @@ func makeActive():
 	# Send trap link
 	if FlagManager.isFlagSet("trap_link"):
 		# Prepare to send a trap link if this is a shape trap
-		if context and context.data and context.data.tags.has("trap") and not context.usedTrapLink:
-			_sendTrapLink(context.data.internalName)
-			context.usedTrapLink = true
-			trap_activated.emit(context)
+		if stateItem and stateItem.data and stateItem.data.tags.has("trap") and not stateItem.usedTrapLink:
+			_sendTrapLink(stateItem.data.internalName)
+			stateItem.usedTrapLink = true
+			trap_activated.emit(stateItem)
 		var attachedModifier:DracominoHandler.StateItem = attachedEffects.get("modifier")
 		if attachedModifier is DracominoHandler.StateItem and not attachedModifier.usedTrapLink:
 			# Prepare to send a trap link if this is an enchantment
@@ -365,7 +369,7 @@ func setPiece(pieceContext:DracominoHandler.PieceContext) -> void:
 		can180 = pieceDefinition.can180
 		origin = pieceDefinition.offset
 		preferCCW = pieceDefinition.preferCCW
-		context = pieceContext.stateItem
+		context = pieceContext
 		if FlagManager.isFlagSet("randomize_orientations"):
 			match pieceContext.orientationId:
 				1:

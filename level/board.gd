@@ -63,7 +63,7 @@ var linesCleared:int = 0:
 var flagHolder:FlagHolder
 var effectHandler:EffectHandler
 
-var _lastHeldPieceContext:DracominoHandler.StateItem ## For deathlink message context; TODO: Obsolete
+var _lastHeldPieceContext:DracominoHandler.PieceContext ## For deathlink message context; TODO: Obsolete
 
 var _linemappings:Dictionary[int, int] = {}
 var _missinglines:Dictionary[int, bool] = {}
@@ -260,9 +260,9 @@ func requestPiece(allowMultiplePieces:bool = false):
 	if poppedPiece:
 		print("Spawned {pieceName} from {sender}'s {location} in {game}".format({
 			pieceName = poppedPiece.prettyName,
-			sender = "self" if poppedPiece.context.isLocal else poppedPiece.context.senderName,
-			location = poppedPiece.context.locationName,
-			game = poppedPiece.context.gameName,
+			sender = "self" if poppedPiece.stateItem.isLocal else poppedPiece.stateItem.senderName,
+			location = poppedPiece.stateItem.locationName,
+			game = poppedPiece.stateItem.gameName,
 		}))
 		spawnPiece(poppedPiece)
 		var onSpawnEffect:DracominoHandler.StateItem = poppedPiece.attachedEffects.get("on_spawn")

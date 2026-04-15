@@ -55,10 +55,10 @@ static func generateDeathlinkMessage(category:String = "TOP", contextTags:Array 
 
 class DeathContext:
 	var category:String
-	var itemContext:DracominoHandler.StateItem
+	var itemContext:DracominoHandler.PieceContext
 	var contextTags:Array[String]
 	var formatValues:Dictionary = {}
-	func _init(_category:String, _itemContext:DracominoHandler.StateItem = null) -> void:
+	func _init(_category:String, _itemContext:DracominoHandler.PieceContext = null) -> void:
 		if _category in CONSTANTS.DEATHLINK_MESSAGE_TEMPLATES:
 			category = _category
 		else:
