@@ -1,5 +1,6 @@
 extends VBoxContainer
 
+@onready var btnSidePanel:Button = %Btn_SidePanel
 @onready var btnChangelog:Button = %Btn_Changelog
 @onready var btnTutorial:Button = %Btn_Tutorial
 @onready var btnLogic:Button = %Btn_Logic
@@ -15,6 +16,7 @@ func _ready() -> void:
 	btnLogic.hide()
 
 	# Connect pressed signals
+	btnSidePanel.pressed.connect(_on_btnSidePanel_pressed)
 	btnChangelog.pressed.connect(_on_btnChangelog_pressed)
 	btnTutorial.pressed.connect(_on_btnTutorial_pressed)
 	btnLogic.pressed.connect(_on_btnLogic_pressed)
@@ -24,6 +26,9 @@ func _ready() -> void:
 	# Connect other signals
 	SignalBus.getSignal("stateflag_set", "tutorial").connect(btnTutorial.show)
 	SignalBus.getSignal("stateflag_set", "tutorial_logic").connect(btnLogic.show)
+
+func _on_btnSidePanel_pressed() -> void:
+	SignalBus.getSignal("toggle_client").emit()
 
 func _on_btnChangelog_pressed() -> void:
 	var _changelogWindow:Window = CHANGELOG_WINDOW_SCENE.instantiate() as Window
