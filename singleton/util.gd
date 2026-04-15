@@ -171,7 +171,7 @@ static func makeEnergyLinkTransaction(energyBankBalance:Variant) -> void:
 		}
 		Archipelago.send_command("Set", args)
 		# We'll call that a success. I don't think we need the reply for this(?) But maybe it will be good if we want to guarantee an accurate bank balance
-		print("Energy transaction succeeded: spent %s energy, predicted bank balance %s"%[energyCost, energyBankBalance-energyCost])
+		print.call_deferred("Energy transaction succeeded: spent %s energy, predicted bank balance %s"%[energyCost, energyBankBalance-energyCost])
 	
 	FlagManager.setFlag("last_known_energy_bank_balance", energyBankBalance-energyCost)
 	
@@ -179,7 +179,7 @@ static func makeEnergyLinkTransaction(energyBankBalance:Variant) -> void:
 		SignalBus.getSignal("display_mana_cost").emit.call_deferred()
 		FlagManager.HANDLERS.WORLD.count.call_deferred("mana_cost", "cost", manaCost, true)
 		FlagManager.HANDLERS.WORLD.count.call_deferred("mana", "spent", -manaCost, true) 
-		print("Mana spent: %s; Mana left: %s"%[manaCost, FlagManager.getTotalCountAmount("mana")])
+		print.call_deferred("Mana spent: %s; Mana left: %s"%[manaCost, FlagManager.getTotalCountAmount("mana")])
 
 	for fn in approvedSuccessFns:
 		fn.call()

@@ -13,6 +13,7 @@ var durationLeft:int = -1:
 			if sig.is_connected(_on_effect_duration_down):
 				sig.disconnect(_on_effect_duration_down)
 
+var dispelCost:float = CONSTANTS.DISPEL_MANA_COST
 var _cooldownTimer:SceneTreeTimer
 var EFFECT_DURATION_TICK_COOLDOWN:float = 2.0
 
@@ -51,21 +52,20 @@ func _on_dispelled() -> void:
 		return
 		
 	var manaStored:float = FlagManager.getTotalCountAmount("mana")
-	print("Stored mana: ", manaStored, "; Cost: ", CONSTANTS.DISPEL_MANA_COST)
-	if manaStored >= CONSTANTS.DISPEL_MANA_COST:
+	if manaStored >= dispelCost:
 		# Use local mana storage
 		FlagManager.setFlag("last_used_local_mana_balance")
 		SignalBus.getSignal("display_mana").emit()
 		SignalBus.getSignal("display_mana_cost").emit.call_deferred()
-		FlagManager.HANDLERS.WORLD.count.call_deferred("mana_cost", "cost", CONSTANTS.DISPEL_MANA_COST, true)
-		FlagManager.HANDLERS.WORLD.count("mana", "spent", -CONSTANTS.DISPEL_MANA_COST, true)
-		print("Using %s local mana"%CONSTANTS.DISPEL_MANA_COST, "... We now have %s mana"%FlagManager.getTotalCountAmount("mana"))
+		FlagManager.HANDLERS.WORLD.count.call_deferred("mana_cost", "cost", dispelCost, true)
+		FlagManager.HANDLERS.WORLD.count("mana", "spent", -dispelCost, true)
+		print.call_deferred("Using %s local mana"%dispelCost, "... We now have %s mana"%FlagManager.getTotalCountAmount("mana"))
 		_on_successful_dispel()
 	elif FlagManager.isFlagSet("energy_link"):
 		# Queue it in a mana transaction
-		DracominoUtil.tryEnergyLinkManaTransaction(CONSTANTS.DISPEL_MANA_COST, _on_successful_dispel)
+		DracominoUtil.tryEnergyLinkManaTransaction(dispelCost, _on_successful_dispel)
 	else:
-		FlagManager.HANDLERS.WORLD.count.call_deferred("mana_cost", "cost", CONSTANTS.DISPEL_MANA_COST, true)
+		FlagManager.HANDLERS.WORLD.count.call_deferred("mana_cost", "cost", dispelCost, true)
 		SignalBus.getSignal("display_mana").emit()
 		SignalBus.getSignal("display_mana_cost").emit.call_deferred()
 		print("Did not have enough mana to dispel effect")
