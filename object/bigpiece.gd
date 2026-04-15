@@ -35,7 +35,7 @@ func clear() -> void:
 
 func renderPiece(piece:Piece) -> void:
 	if not piece: return
-	colorId = piece.id
+	colorId = piece.colorId
 	cells = piece.localCells
 
 func render():

@@ -99,6 +99,7 @@ func retrieve():
 	var hooked:FishPiece = fishingHook.hooked
 	fishingHook.hooked = null
 	if hooked and hooked.piece:
+		var rotationOffset:float = 0.0 if hooked.piece.uniquePiece else ANIMATION_ROTATION_OFFSET
 		SignalBus.getSignal("effect_duration_down").emit()
 		# Make the fishpiece zoom to the center of the screen
 		if fishCaughtTween: fishCaughtTween.kill()
@@ -106,14 +107,14 @@ func retrieve():
 		fishCaughtTween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD).set_parallel()
 		fishCaughtTween.tween_property(hooked, "position", camera.position if camera else position, 1.5).from_current()
 		fishCaughtTween.tween_property(hooked, "scale", Vector2(4,4), 1.5).from_current()
-		fishCaughtTween.tween_property(hooked, "rotation_degrees", ANIMATION_ROTATION_OFFSET, 1.5).from_current()
+		fishCaughtTween.tween_property(hooked, "rotation_degrees", rotationOffset, 1.5).from_current()
 		fishCaughtTween.tween_property(focusCamera, "global_position", camera.global_position, 1.5).from_current()
 		fishCaughtTween.tween_callback(hooked.showBigPiece).set_delay(0.25)
 		fishCaughtTween.set_parallel(false)
-		fishCaughtTween.tween_property(hooked, "rotation_degrees", ANIMATION_ROTATION_OFFSET+15, 0.2).from(ANIMATION_ROTATION_OFFSET).set_ease(Tween.EASE_IN)
-		fishCaughtTween.tween_property(hooked, "rotation_degrees", ANIMATION_ROTATION_OFFSET, 0.15).from(ANIMATION_ROTATION_OFFSET+15).set_ease(Tween.EASE_IN)
-		fishCaughtTween.tween_property(hooked, "rotation_degrees", ANIMATION_ROTATION_OFFSET-30, 0.15).from(ANIMATION_ROTATION_OFFSET).set_ease(Tween.EASE_OUT)
-		fishCaughtTween.tween_property(hooked, "rotation_degrees", ANIMATION_ROTATION_OFFSET, 0.25).from(ANIMATION_ROTATION_OFFSET-30).set_ease(Tween.EASE_IN_OUT)
+		fishCaughtTween.tween_property(hooked, "rotation_degrees", rotationOffset+15, 0.2).from(rotationOffset).set_ease(Tween.EASE_IN)
+		fishCaughtTween.tween_property(hooked, "rotation_degrees", rotationOffset, 0.15).from(rotationOffset+15).set_ease(Tween.EASE_IN)
+		fishCaughtTween.tween_property(hooked, "rotation_degrees", rotationOffset-30, 0.15).from(rotationOffset).set_ease(Tween.EASE_OUT)
+		fishCaughtTween.tween_property(hooked, "rotation_degrees", rotationOffset, 0.25).from(rotationOffset-30).set_ease(Tween.EASE_IN_OUT)
 		hooked.z_index = 3
 		SoundManager.play("fishget")
 		DialogueManager.showNotification("You just caught a {name}!".format({name = hooked.piece.prettyName}))

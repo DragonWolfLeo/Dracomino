@@ -4,10 +4,13 @@ class_name Piece extends PieceTiles
 @export var canFlip:bool = true 
 @export var can180:bool = true
 @export var preferCCW:bool = false ## When rotate 180 is not allowed, chose which direction to spawn as with randomize orientations
+@export var uniquePiece:bool = false
+@export var isEntity:bool = false
+@export var ghost:GhostPiece
 
 class PieceDefinition:
 	var tiles:Array[Vector2i]
-	var id:int
+	var colorId:int
 	var canRotate:bool = true
 	var canFlip:bool = true
 	var can180:bool = true
@@ -19,7 +22,7 @@ class PieceDefinition:
 	func _init(_tiles:Array[Vector2i] = []) -> void:
 		tiles = _tiles
 		tiles.make_read_only()
-		id = _total + 1
+		colorId = _total + 1
 		_total += 1
 	func setCanRotate(_canRotate:bool = true) -> PieceDefinition:
 		canRotate = _canRotate
@@ -75,13 +78,6 @@ static var PIECES:Dictionary[StringName, PieceDefinition] = {
 	"Domino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT]).setCan180(false).setCanFlip(false),
 
 	"Monomino":  PieceDefinition.new([Vector2i.ZERO]).setCanRotate(false),
-
-	"Egg":  PieceDefinition.new([
-		Vector2i.ZERO, Vector2i.LEFT, Vector2i.RIGHT,
-		Vector2i.UP, Vector2i.LEFT+Vector2i.UP, Vector2i.RIGHT+Vector2i.UP,
-		Vector2i.DOWN, Vector2i.LEFT+Vector2i.DOWN, Vector2i.RIGHT+Vector2i.DOWN,
-		Vector2i.UP*2, Vector2i.LEFT+(Vector2i.UP*2), Vector2i.RIGHT+(Vector2i.UP*2),
-	]).setCanRotate(false),
 }
 
 class Enchantment:
@@ -240,7 +236,7 @@ var localCells:Array[Vector2i] = []
 var globalCells:Array[Vector2i] = []
 var currentPosition:Vector2i: set = _setCurrentPosition
 var origin:Vector2i
-var id:int
+var colorId:int
 var prettyName:String = "Piece"
 var context:DracominoHandler.PieceContext = null
 var stateItem:DracominoHandler.StateItem:
@@ -271,7 +267,6 @@ var gravityLockDelayed:bool = false: ## Prevent from locking for a bit
 				if not moveLock: gravityTimer.start(GRAVITY_LOCK_DELAY)
 var collidible:bool = false ## Enable when piece doesn't overlap with another
 var playHardDropSound:bool = false
-var ghost:GhostPiece
 var isFocus:bool: ## Decides whether or not piece listens to inputs
 	set(value):
 		if isFocus == value: return
@@ -373,51 +368,54 @@ func makeLimbo():
 func setPiece(pieceContext:DracominoHandler.PieceContext) -> void:
 	prettyName = pieceContext.name
 	pieceDefinition = PIECES.get(pieceContext.name)
-	id = pieceContext.colorId
+	colorId = pieceContext.colorId
 	if pieceDefinition:
-		if not ghost:
-			ghost = GHOSTPIECE_SCENE.instantiate()
-			add_child(ghost)
 		localCells = pieceDefinition.tiles.duplicate()
 		canRotate = pieceDefinition.canRotate
 		canFlip = pieceDefinition.canFlip
 		can180 = pieceDefinition.can180
 		origin = pieceDefinition.offset
 		preferCCW = pieceDefinition.preferCCW
-		context = pieceContext
-		if FlagManager.isFlagSet("randomize_orientations"):
-			match pieceContext.orientationId:
-				1:
-					if can180:
-						rotateClockwise(true)
-					elif preferCCW:
-						rotateCounterclockwise(true)
-					else:
-						rotateClockwise(true)
-				2: rotate180(true)
-				3: 
-					if can180:
-						rotateCounterclockwise(true)
-					elif preferCCW:
-						rotateCounterclockwise(true)
-					else:
-						rotateClockwise(true)
-				_: updateTiles()
-		elif pieceDefinition.horizontallyAmbiguous and not FlagManager.isFlagSet("legacy_orientations"):
-			match pieceContext.orientationId:
-				1, 3: flipHorizontal(true)
-				_: updateTiles()
-		else:
-			updateTiles()
-
-		attachedEffects.merge(pieceContext.effects, true)
-		var attachedModifier:DracominoHandler.StateItem = attachedEffects.get("modifier")
-		if attachedModifier is DracominoHandler.StateItem and attachedModifier.data:
-			applyEnchantmentByName(attachedModifier.data.internalName)
+	elif uniquePiece:
+		localCells = get_used_cells()
 	else:
-		# TODO: Here we can accept custom pieces
 		printerr("Piece.setPiece:", pieceContext.name, " does not exist!")
 		queue_free()
+		return
+
+	if not ghost:
+		ghost = GHOSTPIECE_SCENE.instantiate()
+		add_child(ghost)
+	context = pieceContext
+	if FlagManager.isFlagSet("randomize_orientations"):
+		match pieceContext.orientationId:
+			1:
+				if can180:
+					rotateClockwise(true)
+				elif preferCCW:
+					rotateCounterclockwise(true)
+				else:
+					rotateClockwise(true)
+			2: rotate180(true)
+			3: 
+				if can180:
+					rotateCounterclockwise(true)
+				elif preferCCW:
+					rotateCounterclockwise(true)
+				else:
+					rotateClockwise(true)
+			_: updateTiles()
+	elif pieceDefinition and pieceDefinition.horizontallyAmbiguous and not FlagManager.isFlagSet("legacy_orientations"):
+		match pieceContext.orientationId:
+			1, 3: flipHorizontal(true)
+			_: updateTiles()
+	else:
+		updateTiles()
+
+	attachedEffects.merge(pieceContext.effects, true)
+	var attachedModifier:DracominoHandler.StateItem = attachedEffects.get("modifier")
+	if attachedModifier is DracominoHandler.StateItem and attachedModifier.data:
+		applyEnchantmentByName(attachedModifier.data.internalName)
 
 func applyEnchantmentByName(enchantmentName:StringName) -> Enchantment:
 	var enchantment:Enchantment = ENCHANTMENTS.get(enchantmentName)
@@ -449,9 +447,10 @@ func applyModifer(modifier:Modifier) -> void:
 		"gravity": _on_gravity_setting_changed.call_deferred()
 
 func updateTiles():
-	clear()
-	clearOutline()
-	renderPiece(self)
+	if not uniquePiece:
+		clear()
+		clearOutline()
+		renderPiece(self)
 	
 	globalCells = Board.getTranslatedCells(localCells, currentPosition)
 	if ghost:

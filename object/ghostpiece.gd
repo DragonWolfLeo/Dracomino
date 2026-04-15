@@ -1,5 +1,7 @@
 class_name GhostPiece extends TileMapLayer
 
+@export var uniquePiece:bool = false
+
 var localCells:Array[Vector2i] = []
 var relativePosition:Vector2i: set = _set_relativePosition
 var GHOSTPIECE_ATLAS_COORD:Vector2i = Vector2i(0,0)
@@ -10,6 +12,7 @@ func _ready() -> void:
 	SignalBus.getSignal("stateflag_cleared", "ghost_piece").connect(hide)
 
 func updateTiles():
+	if uniquePiece: return
 	clear()	
 	for cell in localCells:
 		var pos:Vector2i = cell

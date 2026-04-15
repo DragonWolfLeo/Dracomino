@@ -6,4 +6,7 @@
 [node name="GhostPiece" type="TileMapLayer"]
 z_index = -2
 tile_set = ExtResource("1_3bsli")
+occlusion_enabled = false
+collision_enabled = false
+navigation_enabled = false
 script = ExtResource("2_3bsli")

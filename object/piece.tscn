@@ -9,6 +9,8 @@ canRotate = true
 canFlip = true
 can180 = true
 preferCCW = false
+uniquePiece = false
+isEntity = false
 
 [node name="GravityTimer" type="Timer" parent="." index="0"]
 process_callback = 0

@@ -82,6 +82,8 @@ func beHooked():
 	set_physics_process(false)
 
 func showBigPiece() -> void:
+	if piece.uniquePiece:
+		return
 	pieceTiles.hide()
 	bigPiece.show()
 	bigPiece.renderPiece(piece)

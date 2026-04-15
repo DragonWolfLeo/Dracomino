@@ -26,11 +26,21 @@ func renderPiece(piece:Piece):
 	if not piece:
 		printerr("PieceTiles.renderPiece error: piece is null")
 		return
-	for pos:Vector2i in piece.localCells:
-		set_cell(pos, 0, Vector2i(piece.id, Board.ACTIVE_TILE_ATLAS_ROW))
+	if piece.uniquePiece:
+		# Copy the piece
+		for cell:Vector2i in piece.get_used_cells():
+			set_cell(
+				cell,
+				piece.get_cell_source_id(cell),
+				piece.get_cell_atlas_coords(cell),
+				piece.get_cell_alternative_tile(cell)
+			)
+	else:
+		for cell:Vector2i in piece.localCells:
+			set_cell(cell, 0, Vector2i(piece.colorId, Board.ACTIVE_TILE_ATLAS_ROW))
 
-	if not outline and piece.rarity:
-		setRarity(piece.rarity)
+		if not outline and piece.rarity:
+			setRarity(piece.rarity)
 
 	if outline:
 		for cell in get_used_cells():

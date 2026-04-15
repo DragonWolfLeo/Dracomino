@@ -286,7 +286,17 @@ func createPiece(pieceContext:DracominoHandler.PieceContext) -> void:
 	if pieceContext.name.is_empty():
 		return
 
-	var piece:Piece = PIECE_SCENE.instantiate()
+	# Look for a special scene for this before making a generic one
+	var pieceScene:PackedScene = PIECE_SCENE
+	var respath:String = "res://object/piece_"+pieceContext.stateItem.data.internalName+".tscn"
+	if ResourceLoader.exists(respath):
+		var res:Resource = load(respath)
+		if res is PackedScene:
+			pieceScene = res
+		else:
+			printerr("Board.createPiece: %s is not PackedScene"%respath)
+
+	var piece:Piece = pieceScene.instantiate()
 	piece.setPiece(pieceContext)
 	add_child(piece)
 	game_started.connect(piece.queue_free)
@@ -621,7 +631,7 @@ func lockPiece(piece:Piece):
 	for cell in piece.globalCells:
 		if BOUNDS.has_point(cell):
 			var mapCoord:Vector2i = cell
-			set_cell(mapCoord, 0, Vector2i(piece.id, SET_TILE_ATLAS_ROW))
+			set_cell(mapCoord, 0, Vector2i(piece.colorId, SET_TILE_ATLAS_ROW))
 			var pickup:ItemPickupContext = _mappedpickups.get(mapCoord)
 			if pickup:
 				pickedUpItem = true
