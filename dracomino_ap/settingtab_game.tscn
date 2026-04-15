@@ -19,15 +19,18 @@ mouse_filter = 2
 
 [node name="Btn_DeathLink" type="CheckButton" parent="VBoxContainer"]
 layout_mode = 2
+tooltip_text = "When you game over, everyone else with Death Link enabled dies. Of course, the reverse is true too."
 text = "Death Link"
 
 [node name="Btn_DeathOnRestart" type="CheckButton" parent="VBoxContainer"]
 layout_mode = 2
+tooltip_text = "When Death Link is enabled, send a death whenever you reset your board"
 text = "Death On Restart
 "
 
 [node name="Container_DeathLinkGroup" type="MarginContainer" parent="VBoxContainer"]
 layout_mode = 2
+tooltip_text = "Send deaths to and receive deaths from only a specific group"
 theme_override_constants/margin_left = 5
 theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 5
@@ -82,6 +85,7 @@ settingName = "Gravity Speed"
 
 [node name="Btn_AllowUnfocusedInputs" type="CheckButton" parent="VBoxContainer"]
 layout_mode = 2
+tooltip_text = "Allow controller inputs to be accepted if game window is not focused"
 text = "Allow Unfocused Inputs
 "
 script = ExtResource("3_fprr2")
