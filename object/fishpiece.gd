@@ -37,12 +37,13 @@ func _ready() -> void:
 	var cells:Array[Vector2i] = pieceTiles.get_used_cells()
 	for cell:Vector2i in cells:
 		var data:TileData = pieceTiles.get_cell_tile_data(cell) 
-		var points:PackedVector2Array = data.get_collision_polygon_points(0, 0) 
-		var collisionShape = CollisionPolygon2D.new()  
-		collisionShape.polygon = points
-		
-		collisionShape.position = pieceTiles.map_to_local(cell) + pieceTiles.position
-		add_child(collisionShape)
+		if data.get_collision_polygons_count(0):
+			var points:PackedVector2Array = data.get_collision_polygon_points(0, 0) 
+			var collisionShape = CollisionPolygon2D.new()  
+			collisionShape.polygon = points
+			
+			collisionShape.position = pieceTiles.map_to_local(cell) + pieceTiles.position
+			add_child(collisionShape)
 	
 	setupCompleted = true
 
