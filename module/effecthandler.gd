@@ -74,12 +74,17 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 
 	# == Board Effects ==
 	egg = BoardEffect.new(_board_instantSpawn.bind("egg")).setCanTriggerFn(_canSpawnMoreShapes.unbind(1)).setMakesPiece(),
-	enchantment_curse = BoardEffect.new(_board_queueEnchantment.bind("enchantment_curse")),
-	enchantment_curse_gravity = BoardEffect.new(_board_queueEnchantment.bind("enchantment_curse_gravity")),
-	enchantment_curse_movement = BoardEffect.new(_board_queueEnchantment.bind("enchantment_curse_movement")),
-	enchantment_legendary_movement = BoardEffect.new(_board_queueEnchantment.bind("enchantment_legendary_movement")),
-	enchantment_legendary_spin = BoardEffect.new(_board_queueEnchantment.bind("enchantment_legendary_spin")),
-	enchantment = BoardEffect.new(_board_queueEnchantment.bind("enchantment")),
+	enchantment_curse = BoardEffect.new(_board_enchantCurrentPiece.bind("enchantment_curse")).addContext("on_spawn"),
+	enchantment_curse_gravity = BoardEffect.new(_board_enchantCurrentPiece.bind("enchantment_curse_gravity"))\
+		.setCanTriggerFn(_board_canEnchantPiece).addContext("on_spawn"),
+	enchantment_curse_movement = BoardEffect.new(_board_enchantCurrentPiece.bind("enchantment_curse_movement"))\
+		.setCanTriggerFn(_board_canEnchantPiece).addContext("on_spawn"),
+	enchantment_legendary_movement = BoardEffect.new(_board_enchantCurrentPiece.bind("enchantment_legendary_movement"))\
+		.setCanTriggerFn(_board_canEnchantPiece).addContext("on_spawn"),
+	enchantment_legendary_spin = BoardEffect.new(_board_enchantCurrentPiece.bind("enchantment_legendary_spin"))\
+		.setCanTriggerFn(_board_canEnchantPiece).addContext("on_spawn"),
+	enchantment = BoardEffect.new(_board_enchantCurrentPiece.bind("enchantment"))\
+		.setCanTriggerFn(_board_canEnchantPiece).addContext("on_spawn"),
 }
 
 # === Static helpers ===
@@ -106,16 +111,25 @@ func _activateEffect(flag:String, duration:int = 8, annoying:bool = true) -> voi
 	var ae:ActiveEffect = ActiveEffect.instantiateEffect(flag, duration, annoying)
 	add_child(ae)
 
-func _board_instantSpawn(board:Board, internalName:StringName, playTrapSound:bool = true) -> void:
+func _board_instantSpawn(board:Board, internalName:StringName) -> void:
 	var stateItem:DracominoHandler.StateItem = DracominoHandler.StateItem.fromInternalName(internalName)
 	stateItem.usedTrapLink = true # Prevent from spawning traps like this
 	board.createPiece(DracominoHandler.PieceContext.new(stateItem).setInstantSpawn())
-	if playTrapSound:
+	SoundManager.play("trap")
+
+func _board_enchantCurrentPiece(board:Board, enchantmentName:StringName) -> void:
+	var piece:Piece = board.getFocusPiece()
+	if not piece or piece.rarity:
+		return
+	var enchantment:Piece.Enchantment = piece.applyEnchantmentByName(enchantmentName)
+	if enchantment is Piece.Enchantment:
 		SoundManager.play("trap")
 
-func _board_queueEnchantment(board:Board, enchantmentName:StringName) -> void:
-	print("Trying to make ", enchantmentName)
-	pass
+func _board_canEnchantPiece(board:Board) -> bool:
+	var piece:Piece = board.getFocusPiece()
+	if piece and piece.rarity:
+		return false
+	return true
 
 func _fade() -> void:
 	Overlay.doFade(1.5, 1.5)

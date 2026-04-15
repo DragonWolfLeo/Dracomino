@@ -269,6 +269,8 @@ func requestPiece(allowMultiplePieces:bool = false):
 		spawnPiece(poppedPiece)
 		var onSpawnEffect:DracominoHandler.StateItem = poppedPiece.attachedEffects.get("on_spawn")
 		if onSpawnEffect: effectHandler.tryToTriggerEffect(onSpawnEffect)
+		# Check for any queued board effects for on_spawn
+		EffectHandler.tryToTriggerNextBoardEffect(self, ["on_spawn"])
 
 func fillPreview(buffer:int = 0): ## This functions usually leads into createPiece being called, if there's pieces available
 	if isGameOver: return

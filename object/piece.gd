@@ -414,7 +414,7 @@ func setPiece(pieceContext:DracominoHandler.PieceContext) -> void:
 		printerr("Piece.setPiece:", pieceContext.name, " does not exist!")
 		queue_free()
 
-func applyEnchantmentByName(enchantmentName:StringName) -> void:
+func applyEnchantmentByName(enchantmentName:StringName) -> Enchantment:
 	var enchantment:Enchantment = ENCHANTMENTS.get(enchantmentName)
 	if enchantment is Enchantment:
 		if enchantment.rarity.is_empty() or enchantment.rarity == "random":
@@ -431,6 +431,9 @@ func applyEnchantmentByName(enchantmentName:StringName) -> void:
 					eligibleMods.append(mod)
 		if eligibleMods.size():
 			applyModifer(eligibleMods.pick_random())
+		updateTiles()
+		return enchantment
+	return null
 
 func applyModifer(modifier:Modifier) -> void:
 	modifiers[modifier.type] = modifier.strength
