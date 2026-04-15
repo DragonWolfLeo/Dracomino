@@ -5,9 +5,9 @@
 [ext_resource type="PackedScene" uid="uid://dhya6ucgf72i8" path="res://godot_ap/ui/hints_tab.tscn" id="3_prof0"]
 [ext_resource type="PackedScene" uid="uid://c1pyfyn3ax5u2" path="res://dracomino_ap/dracomino_console_tab.tscn" id="3_vsama"]
 [ext_resource type="PackedScene" uid="uid://dp2yir3r1061y" path="res://godot_ap/ui/settings_tab.tscn" id="4_vsama"]
-[ext_resource type="PackedScene" uid="uid://bdby1xnydrw5r" path="res://dracomino_ap/slidersetting.tscn" id="7_ewm2l"]
-[ext_resource type="Script" uid="uid://cfbgk8vq58w0h" path="res://dracomino_ap/option_toggle_button.gd" id="7_s3ubo"]
-[ext_resource type="Script" uid="uid://bi07x0bnmtu8d" path="res://dracomino_ap/flag_toggle_button.gd" id="8_s3ubo"]
+[ext_resource type="PackedScene" uid="uid://hvf5xrhpkwaq" path="res://dracomino_ap/settingtab_game.tscn" id="6_s3ubo"]
+[ext_resource type="PackedScene" uid="uid://behnhtqv3gcyw" path="res://dracomino_ap/settingtab_audio.tscn" id="7_ewm2l"]
+[ext_resource type="PackedScene" uid="uid://bujktwm1f2onj" path="res://dracomino_ap/settingtab_debug.tscn" id="8_euklm"]
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_1wnfu"]
 
@@ -56,237 +56,17 @@ button_group = SubResource("ButtonGroup_1wnfu")
 [node name="LightTheme" parent="Tabs/Settings/Margin/Tabs/Theme/Row/Col1" index="1"]
 button_group = SubResource("ButtonGroup_1wnfu")
 
-[node name="Game" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs" index="2"]
+[node name="Game" parent="Tabs/Settings/Margin/Tabs" index="2" instance=ExtResource("6_s3ubo")]
 visible = false
 layout_mode = 2
-mouse_filter = 2
-metadata/_tab_index = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Tabs/Settings/Margin/Tabs/Game"]
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Btn_DeathLink" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
-layout_mode = 2
-text = "Death Link"
-
-[node name="Btn_DeathOnRestart" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
-layout_mode = 2
-text = "Death On Restart
-"
-
-[node name="Container_DeathLinkGroup" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
-
-[node name="VBoxContainer" type="VBoxContainer" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_DeathLinkGroup"]
-layout_mode = 2
-
-[node name="HBoxContainer" type="HFlowContainer" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_DeathLinkGroup/VBoxContainer"]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_DeathLinkGroup/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-text = "Death Link Group:"
-
-[node name="OptionButton_DeathLinkGroup" type="OptionButton" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_DeathLinkGroup/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-selected = 0
-item_count = 3
-popup/item_0/text = "Default"
-popup/item_0/id = 0
-popup/item_1/text = "Dracomino"
-popup/item_1/id = 1
-popup/item_2/text = "Custom"
-popup/item_2/id = 2
-
-[node name="LineEdit_DeathLinkGroup" type="LineEdit" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_DeathLinkGroup/VBoxContainer/HBoxContainer"]
+[node name="Audio" parent="Tabs/Settings/Margin/Tabs" index="3" instance=ExtResource("7_ewm2l")]
 visible = false
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
 
-[node name="Btn_EnergyLink" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
-layout_mode = 2
-tooltip_text = "Share your generated mana to other players as Energy"
-text = "Energy Link
-"
-script = ExtResource("8_s3ubo")
-flag = "energy_link"
-
-[node name="Btn_TrapLink" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
-layout_mode = 2
-tooltip_text = "Send your traps to other players in your multiworld, as well as receive theirs"
-text = "Trap Link"
-script = ExtResource("8_s3ubo")
-flag = "trap_link"
-
-[node name="SliderSetting_Gravity" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer" instance=ExtResource("7_ewm2l")]
-layout_mode = 2
-targetSetting = &"gravity"
-settingName = "Gravity Speed"
-
-[node name="Btn_AllowUnfocusedInputs" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
-layout_mode = 2
-text = "Allow Unfocused Inputs
-"
-script = ExtResource("7_s3ubo")
-optionKey = "allowUnfocusedInputs"
-
-[node name="Audio" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs" index="3"]
+[node name="Debug" parent="Tabs/Settings/Margin/Tabs" index="4" instance=ExtResource("8_euklm")]
 visible = false
 layout_mode = 2
-metadata/_tab_index = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="Tabs/Settings/Margin/Tabs/Audio"]
-layout_mode = 2
-
-[node name="MarginContainer" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
-
-[node name="GridContainer" type="GridContainer" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer/MarginContainer"]
-layout_mode = 2
-theme_override_constants/h_separation = 5
-theme_override_constants/v_separation = 5
-columns = 2
-
-[node name="Label_MasterVol" type="Label" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer/MarginContainer/GridContainer"]
-layout_mode = 2
-text = "Master Volume"
-
-[node name="HSlider_MasterVol" type="HSlider" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer/MarginContainer/GridContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-step = 5.0
-value = 100.0
-
-[node name="Label_MusicVol" type="Label" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer/MarginContainer/GridContainer"]
-visible = false
-layout_mode = 2
-text = "Music Volume"
-
-[node name="HSlider_MusicVol" type="HSlider" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer/MarginContainer/GridContainer"]
-visible = false
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-step = 5.0
-value = 100.0
-
-[node name="Label_SfxVol" type="Label" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer/MarginContainer/GridContainer"]
-layout_mode = 2
-text = "Sound Volume"
-
-[node name="HSlider_SfxVol" type="HSlider" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer/MarginContainer/GridContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-step = 5.0
-value = 100.0
-
-[node name="Label_VoiceVol" type="Label" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer/MarginContainer/GridContainer"]
-layout_mode = 2
-text = "Voice Volume"
-
-[node name="HSlider_VoiceVol" type="HSlider" parent="Tabs/Settings/Margin/Tabs/Audio/VBoxContainer/MarginContainer/GridContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-step = 5.0
-value = 100.0
-
-[node name="Debug" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs" index="4"]
-visible = false
-layout_mode = 2
-metadata/_tab_index = 3
-
-[node name="VBoxContainer" type="VBoxContainer" parent="Tabs/Settings/Margin/Tabs/Debug"]
-layout_mode = 2
-
-[node name="Btn_Debug" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
-layout_mode = 2
-text = "Debug Mode"
-script = ExtResource("7_s3ubo")
-optionKey = "debug"
-
-[node name="Btn_EGAFilter" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
-layout_mode = 2
-text = "Enforce 6-bit Palette"
-script = ExtResource("8_s3ubo")
-flag = "overlay_ega"
-ignoreExternalSignals = true
-
-[node name="Btn_PixelFilter" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
-layout_mode = 2
-text = "Pixellation Filter"
-script = ExtResource("8_s3ubo")
-flag = "overlay_pixel"
-ignoreExternalSignals = true
-debugOnly = true
-
-[node name="Btn_CrystalFilter" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
-layout_mode = 2
-text = "Crystal Filter"
-script = ExtResource("8_s3ubo")
-flag = "overlay_crystal"
-ignoreExternalSignals = true
-debugOnly = true
-
-[node name="Btn_FractureFilter" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
-layout_mode = 2
-text = "Fracture Filter"
-script = ExtResource("8_s3ubo")
-flag = "overlay_fracture"
-ignoreExternalSignals = true
-debugOnly = true
-
-[node name="Btn_WaterFilter" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
-layout_mode = 2
-text = "Water Filter"
-script = ExtResource("8_s3ubo")
-flag = "overlay_water"
-ignoreExternalSignals = true
-debugOnly = true
-
-[node name="Btn_InvertFilter" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
-layout_mode = 2
-text = "Invert Filter"
-script = ExtResource("8_s3ubo")
-flag = "overlay_invert"
-ignoreExternalSignals = true
-debugOnly = true
-
-[node name="Btn_WellDoneOverlay" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
-layout_mode = 2
-text = "Well Done!"
-script = ExtResource("8_s3ubo")
-flag = "overlay_welldone"
-ignoreExternalSignals = true
-debugOnly = true
-
-[node name="Btn_ZoomEffect" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
-layout_mode = 2
-text = "Zoom Effect"
-script = ExtResource("8_s3ubo")
-flag = "effect_zoom"
-ignoreExternalSignals = true
-debugOnly = true
-
-[node name="Btn_SpaceEffect" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Debug/VBoxContainer"]
-layout_mode = 2
-text = "Space Effect"
-script = ExtResource("8_s3ubo")
-flag = "effect_space"
-ignoreExternalSignals = true
-debugOnly = true
 
 [node name="Bounds" type="Control" parent="."]
 layout_mode = 2

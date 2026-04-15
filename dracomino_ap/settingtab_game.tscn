@@ -1,0 +1,88 @@
+[gd_scene load_steps=4 format=3 uid="uid://hvf5xrhpkwaq"]
+
+[ext_resource type="Script" uid="uid://bi07x0bnmtu8d" path="res://dracomino_ap/flag_toggle_button.gd" id="1_08t7n"]
+[ext_resource type="PackedScene" uid="uid://bdby1xnydrw5r" path="res://dracomino_ap/slidersetting.tscn" id="2_mtsfg"]
+[ext_resource type="Script" uid="uid://cfbgk8vq58w0h" path="res://dracomino_ap/option_toggle_button.gd" id="3_fprr2"]
+
+[node name="Game" type="MarginContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+metadata/_tab_index = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Btn_DeathLink" type="CheckButton" parent="VBoxContainer"]
+layout_mode = 2
+text = "Death Link"
+
+[node name="Btn_DeathOnRestart" type="CheckButton" parent="VBoxContainer"]
+layout_mode = 2
+text = "Death On Restart
+"
+
+[node name="Container_DeathLinkGroup" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/Container_DeathLinkGroup"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HFlowContainer" parent="VBoxContainer/Container_DeathLinkGroup/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/Container_DeathLinkGroup/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Death Link Group:"
+
+[node name="OptionButton_DeathLinkGroup" type="OptionButton" parent="VBoxContainer/Container_DeathLinkGroup/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+selected = 0
+item_count = 3
+popup/item_0/text = "Default"
+popup/item_0/id = 0
+popup/item_1/text = "Dracomino"
+popup/item_1/id = 1
+popup/item_2/text = "Custom"
+popup/item_2/id = 2
+
+[node name="LineEdit_DeathLinkGroup" type="LineEdit" parent="VBoxContainer/Container_DeathLinkGroup/VBoxContainer/HBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="Btn_EnergyLink" type="CheckButton" parent="VBoxContainer"]
+layout_mode = 2
+tooltip_text = "Share your generated mana to other players as Energy"
+text = "Energy Link
+"
+script = ExtResource("1_08t7n")
+flag = "energy_link"
+
+[node name="Btn_TrapLink" type="CheckButton" parent="VBoxContainer"]
+layout_mode = 2
+tooltip_text = "Send your traps to other players in your multiworld, as well as receive theirs"
+text = "Trap Link"
+script = ExtResource("1_08t7n")
+flag = "trap_link"
+
+[node name="SliderSetting_Gravity" parent="VBoxContainer" instance=ExtResource("2_mtsfg")]
+layout_mode = 2
+targetSetting = &"gravity"
+settingName = "Gravity Speed"
+
+[node name="Btn_AllowUnfocusedInputs" type="CheckButton" parent="VBoxContainer"]
+layout_mode = 2
+text = "Allow Unfocused Inputs
+"
+script = ExtResource("3_fprr2")
+optionKey = "allowUnfocusedInputs"
