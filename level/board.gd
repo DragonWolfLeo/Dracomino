@@ -457,12 +457,17 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 		# Lock piece
 		match movementType:
 			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE:
-
 				lockPiece(piece)
 				SoundManager.play("harddrop")
 			Piece.MOVEMENT.SOFT_DROP:
 				if FlagManager.isFlagSet("lock_delay"):
 					piece.lockDelayed = true
+				else:
+					lockPiece(piece)
+					SoundManager.play("drop")
+			Piece.MOVEMENT.GRAVITY:
+				if FlagManager.isFlagSet("lock_delay"):
+					piece.gravityLockDelayed = true
 				else:
 					lockPiece(piece)
 					SoundManager.play("drop")

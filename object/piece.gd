@@ -181,6 +181,9 @@ var HARD_DROP_WAIT_TIME:float = 0.01
 @onready var SOFT_DROP_WAIT_TIME:float = softDropTimer.wait_time
 var SOFT_DROP_REPEAT_WAIT_TIME:float = .04
 var SOFT_DROP_LOCK_DELAY:float = 0.4
+var GRAVITY_LOCK_DELAY:float = 0.6:
+	get():
+		return max(getGravityDelay(), GRAVITY_LOCK_DELAY)
 @onready var HORIZONTAL_WAIT_TIME:float = horizontalTimer.wait_time
 var HORIZONTAL_REPEAT_WAIT_TIME:float = .075
 @onready var ROTATE_WAIT_TIME:float = rotateTimer.wait_time
@@ -192,6 +195,7 @@ enum MOVEMENT {
 	SOFT_DROP,
 	SOFT_DROP_LOCK,
 	GRAVITY,
+	GRAVITY_LOCK,
 	HARD_DROP,
 	SHOVE,
 	FORCED_SHOVE,
@@ -237,6 +241,12 @@ var lockDelayed:bool = false: ## Prevent from locking for a bit
 			lockDelayed = value
 			if lockDelayed:
 				softDropTimer.start(SOFT_DROP_LOCK_DELAY)
+var gravityLockDelayed:bool = false: ## Prevent from locking for a bit
+	set(value):
+		if gravityLockDelayed != value:
+			gravityLockDelayed = value
+			if gravityLockDelayed:
+				if not moveLock: gravityTimer.start(GRAVITY_LOCK_DELAY)
 var collidible:bool = false ## Enable when piece doesn't overlap with another
 var playHardDropSound:bool = false
 var ghost:GhostPiece
@@ -296,7 +306,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		softDropTimer.start(SOFT_DROP_WAIT_TIME * modifiers.get("movement", 1))
 		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP_LOCK)
 		# Avoid falling too soon
-		gravityTimer.start()
+		resetGravityTimer()
 		get_viewport().set_input_as_handled()
 		return
 
@@ -309,7 +319,7 @@ func makeActive():
 	if FlagManager.isFlagSet("ghost_piece") and ghost:
 		ghost.show()
 	# Avoid falling too soon
-	gravityTimer.start()
+	resetGravityTimer()
 	# Wait for pieces to get out of this one
 	collidible = false
 
@@ -490,6 +500,7 @@ func gravityDrop():
 	if not moveLock:
 		moveLock = true
 		canRotate = false
+		_on_GravityTimer_timeout()
 
 func move(direction:Vector2i, isRotate:bool = false):
 	currentPosition += direction
@@ -497,10 +508,20 @@ func move(direction:Vector2i, isRotate:bool = false):
 		playHardDropSound = true
 	if isRotate:
 		# Avoid falling/locking too soon
-		if lockDelayed:
-			gravityTimer.start()
-			lockDelayed = false
+		if lockDelayed or gravityLockDelayed:
+			gravityTimer.start(GRAVITY_LOCK_DELAY if gravityLockDelayed else -1.0)
 			softDropTimer.start(SOFT_DROP_LOCK_DELAY)
+			lockDelayed = false
+			gravityLockDelayed = false
+
+func resetGravityTimer() -> void:
+	if not moveLock and gravityTimer:
+		gravityTimer.wait_time = getGravityDelay()
+		gravityTimer.start()
+
+func getGravityDelay() -> float:
+	var gravSpeed = Config.getSetting("gravity", 1.0)*modifiers.get("gravity", 1.0)
+	return GRAVITY_WAIT_TIME/gravSpeed
 
 # Events
 func _on_HorizontalTimer_timeout():
@@ -533,7 +554,13 @@ func _on_GravityTimer_timeout():
 		(FlagManager.isFlagSet("gravity") and not modifiers.get("antigravity")) # Antigravity cancels out gravity
 		or modifiers.get("gravity", 1) > 1 # Otherwise if gravity is set at all, it's enabled whether it's unlocked or not
 	) or not isFocus:
-		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.HARD_DROP if playHardDropSound else MOVEMENT.GRAVITY)
+		movement_requested.emit(
+			self,
+			Vector2i.DOWN,
+			MOVEMENT.HARD_DROP if playHardDropSound
+			else MOVEMENT.GRAVITY_LOCK if gravityLockDelayed or moveLock
+			else MOVEMENT.GRAVITY
+		)
 
 func _on_RotateTimer_timeout() -> void:
 	if not isFocus and not modifiers.get("rotate"): return
@@ -548,7 +575,4 @@ func _setCurrentPosition(value:Vector2i):
 	updateTiles()
 
 func _on_gravity_setting_changed():
-	if not moveLock and gravityTimer:
-		var gravSpeed = Config.getSetting("gravity", 1.0)*modifiers.get("gravity", 1.0)
-		gravityTimer.wait_time = GRAVITY_WAIT_TIME/gravSpeed
-		gravityTimer.start()
+	resetGravityTimer()
