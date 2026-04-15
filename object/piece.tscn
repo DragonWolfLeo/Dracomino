@@ -6,6 +6,8 @@
 [node name="Piece" instance=ExtResource("1_37kl0")]
 script = ExtResource("1_k13et")
 canRotate = true
+canFlip = true
+can180 = true
 
 [node name="GravityTimer" type="Timer" parent="." index="0"]
 process_callback = 0

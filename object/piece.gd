@@ -1,11 +1,19 @@
 class_name Piece extends PieceTiles
 
 @export var canRotate:bool = true 
+@export var canFlip:bool = true 
+@export var can180:bool = true
+@export var preferCCW:bool = false ## When rotate 180 is not allowed, chose which direction to spawn as with randomize orientations
 
 class PieceDefinition:
 	var tiles:Array[Vector2i]
 	var id:int
 	var canRotate:bool = true
+	var canFlip:bool = true
+	var can180:bool = true
+	var preferCCW:bool = false
+	var canVerticalFlip:bool = true
+	var horizontallyAmbiguous:bool = false
 	var offset:Vector2i
 	static var _total:int
 	func _init(_tiles:Array[Vector2i] = []) -> void:
@@ -15,22 +23,35 @@ class PieceDefinition:
 		_total += 1
 	func setCanRotate(_canRotate:bool = true) -> PieceDefinition:
 		canRotate = _canRotate
+		if not canRotate:
+			can180 = false
+			canFlip = false
 		return self
 	func setOffset(_offset:Vector2i) -> PieceDefinition:
 		offset = _offset
 		return self
+	func setCanFlip(_canFlip:bool = true) -> PieceDefinition:
+		canFlip = _canFlip
+		return self
+	func setCan180(_can180:bool = true, _preferCCW:bool = false) -> PieceDefinition:
+		can180 = _can180
+		preferCCW = _preferCCW
+		return self
+	func setHorizontallyAmbiguous(_horizonallyAmbiguous:bool = true) -> PieceDefinition:
+		horizontallyAmbiguous = _horizonallyAmbiguous
+		return self
 
 static var PIECES:Dictionary[StringName, PieceDefinition] = {
-	"I Pentomino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.LEFT*2, Vector2i.RIGHT, Vector2i.RIGHT*2]),
+	"I Pentomino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.LEFT*2, Vector2i.RIGHT, Vector2i.RIGHT*2]).setCan180(false).setCanFlip(false),
 	"U Pentomino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.RIGHT, Vector2i.RIGHT+Vector2i.UP, Vector2i.LEFT+Vector2i.UP]),
 	"T Pentomino": PieceDefinition.new([Vector2i.DOWN, Vector2i.LEFT+Vector2i.DOWN, Vector2i.RIGHT+Vector2i.DOWN, Vector2i.ZERO, Vector2i.UP]),
 	"X Pentomino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]).setCanRotate(false),
-	"V Pentomino": PieceDefinition.new([Vector2i.LEFT+Vector2i.UP, Vector2i.LEFT, Vector2i.LEFT+Vector2i.DOWN, Vector2i.DOWN, Vector2i.RIGHT+Vector2i.DOWN]),
-	"W Pentomino": PieceDefinition.new([Vector2i.LEFT+Vector2i.UP, Vector2i.LEFT, Vector2i.ZERO, Vector2i.DOWN, Vector2i.RIGHT+Vector2i.DOWN]),
+	"V Pentomino": PieceDefinition.new([Vector2i.LEFT+Vector2i.UP, Vector2i.LEFT, Vector2i.LEFT+Vector2i.DOWN, Vector2i.DOWN, Vector2i.RIGHT+Vector2i.DOWN]).setHorizontallyAmbiguous(),
+	"W Pentomino": PieceDefinition.new([Vector2i.LEFT+Vector2i.UP, Vector2i.LEFT, Vector2i.ZERO, Vector2i.DOWN, Vector2i.RIGHT+Vector2i.DOWN]).setHorizontallyAmbiguous(),
 	"L Pentomino": PieceDefinition.new([Vector2i.RIGHT, Vector2i.ZERO, Vector2i.RIGHT*2, Vector2i.LEFT, Vector2i(2,-1)]).setOffset(Vector2i.DOWN),
 	"J Pentomino": PieceDefinition.new([Vector2i.RIGHT, Vector2i.ZERO, Vector2i.RIGHT*2, Vector2i.LEFT, Vector2i.LEFT+Vector2i.UP]).setOffset(Vector2i.LEFT+Vector2i.DOWN),
-	"S Pentomino": PieceDefinition.new([Vector2i.LEFT+Vector2i.DOWN, Vector2i.DOWN, Vector2i.ZERO, Vector2i.UP, Vector2i.RIGHT+Vector2i.UP]),
-	"Z Pentomino": PieceDefinition.new([Vector2i.RIGHT+Vector2i.DOWN, Vector2i.DOWN, Vector2i.ZERO, Vector2i.UP, Vector2i.LEFT+Vector2i.UP]),
+	"S Pentomino": PieceDefinition.new([Vector2i.LEFT+Vector2i.DOWN, Vector2i.DOWN, Vector2i.ZERO, Vector2i.UP, Vector2i.RIGHT+Vector2i.UP]).setCan180(false),
+	"Z Pentomino": PieceDefinition.new([Vector2i.RIGHT+Vector2i.DOWN, Vector2i.DOWN, Vector2i.ZERO, Vector2i.UP, Vector2i.LEFT+Vector2i.UP]).setCan180(false),
 	"F Pentomino": PieceDefinition.new([Vector2i.ZERO, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT+Vector2i.DOWN]),
 	"F' Pentomino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.UP, Vector2i.DOWN, Vector2i.RIGHT+Vector2i.DOWN]),
 	"N Pentomino": PieceDefinition.new([Vector2i.UP, Vector2i.LEFT+Vector2i.UP, Vector2i.ZERO, Vector2i.RIGHT, Vector2i.RIGHT*2]).setOffset(Vector2i.LEFT),
@@ -40,18 +61,18 @@ static var PIECES:Dictionary[StringName, PieceDefinition] = {
 	"Y Pentomino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.LEFT*2]).setOffset(Vector2i.DOWN),
 	"Y' Pentomino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.RIGHT*2]).setOffset(Vector2i.DOWN),
 
-	"I Tetromino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.LEFT*2, Vector2i.RIGHT]),
-	"S Tetromino": PieceDefinition.new([Vector2i.ZERO, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT+Vector2i.DOWN]),
-	"Z Tetromino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.DOWN, Vector2i.RIGHT+Vector2i.DOWN]),
+	"I Tetromino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.LEFT*2, Vector2i.RIGHT]).setCan180(false).setCanFlip(false),
+	"S Tetromino": PieceDefinition.new([Vector2i.ZERO, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT+Vector2i.DOWN]).setCan180(false, true),
+	"Z Tetromino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.DOWN, Vector2i.RIGHT+Vector2i.DOWN]).setCan180(false),
 	"O Tetromino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.DOWN, Vector2i.LEFT+Vector2i.DOWN]).setCanRotate(false),
 	"L Tetromino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.RIGHT, Vector2i.RIGHT+Vector2i.UP]).setOffset(Vector2i.DOWN),
 	"J Tetromino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.LEFT+Vector2i.UP, Vector2i.RIGHT]).setOffset(Vector2i.DOWN),
 	"T Tetromino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP]).setOffset(Vector2i.DOWN),
 	
-	"I Tromino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.RIGHT]),
-	"L Tromino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.UP]).setOffset(Vector2i.DOWN),
+	"I Tromino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.RIGHT]).setCan180(false).setCanFlip(false),
+	"L Tromino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT, Vector2i.UP]).setOffset(Vector2i.DOWN).setHorizontallyAmbiguous(),
 
-	"Domino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT]),
+	"Domino": PieceDefinition.new([Vector2i.ZERO, Vector2i.LEFT]).setCan180(false).setCanFlip(false),
 
 	"Monomino":  PieceDefinition.new([Vector2i.ZERO]).setCanRotate(false),
 
@@ -317,24 +338,43 @@ func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects
 			ghost = GHOSTPIECE_SCENE.instantiate()
 			add_child(ghost)
 		localCells = pieceDefinition.tiles.duplicate()
+		canRotate = pieceDefinition.canRotate
+		canFlip = pieceDefinition.canFlip
+		can180 = pieceDefinition.can180
+		origin = pieceDefinition.offset
+		preferCCW = pieceDefinition.preferCCW
+		context = pieceContext
 		if FlagManager.isFlagSet("randomize_orientations"):
-			if pieceDefinition.canRotate:
-				match orientation:
-					1: rotateClockwise(true)
-					2: rotate180(true)
-					3: rotateCounterclockwise(true)
-					_: updateTiles()
+			match orientation:
+				1:
+					if can180:
+						rotateClockwise(true)
+					elif preferCCW:
+						rotateCounterclockwise(true)
+					else:
+						rotateClockwise(true)
+				2: rotate180(true)
+				3: 
+					if can180:
+						rotateCounterclockwise(true)
+					elif preferCCW:
+						rotateCounterclockwise(true)
+					else:
+						rotateClockwise(true)
+				_: updateTiles()
+		elif pieceDefinition.horizontallyAmbiguous and not FlagManager.isFlagSet("legacy_orientations"):
+			match orientation:
+				1, 3: flipHorizontal(true)
+				_: updateTiles()
 		else:
 			updateTiles()
 
-		origin = pieceDefinition.offset
-		context = pieceContext
-		canRotate = pieceDefinition.canRotate
 		attachedEffects.merge(effects, true)
 		var attachedModifier:DracominoHandler.StateItem = attachedEffects.get("modifier")
 		if attachedModifier is DracominoHandler.StateItem and attachedModifier.data:
 			applyEnchantmentByName(attachedModifier.data.internalName)
 	else:
+		# TODO: Here we can accept custom pieces
 		printerr("Piece.setPiece:", pieceName, " does not exist!")
 		queue_free()
 
@@ -387,10 +427,30 @@ func rotateCounterclockwise(force:bool = false):
 			new_cells_requested.emit(self, newCells)
 
 func rotate180(force:bool = false):
-	if canRotate:
+	if can180:
 		var newCells:Array[Vector2i] = localCells.duplicate()
 		for i in newCells.size():
 			newCells[i] *= -1
+		if force:
+			setCells(newCells)
+		else:
+			new_cells_requested.emit(self, newCells)
+
+func flipHorizontal(force:bool = false):
+	if canFlip:
+		var newCells:Array[Vector2i] = localCells.duplicate()
+		for i in newCells.size():
+			newCells[i].x = -newCells[i].x
+		if force:
+			setCells(newCells)
+		else:
+			new_cells_requested.emit(self, newCells)
+
+func flipVertical(force:bool = false):
+	if canFlip:
+		var newCells:Array[Vector2i] = localCells.duplicate()
+		for i in newCells.size():
+			newCells[i].y = -newCells[i].y
 		if force:
 			setCells(newCells)
 		else:
