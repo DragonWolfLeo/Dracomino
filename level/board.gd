@@ -240,7 +240,9 @@ func requestPiece(allowMultiplePieces:bool = false):
 		return
 
 	# Try to trigger board effect if valid
-	if EffectHandler.tryToTriggerNextBoardEffect(self):
+	var boardEffect:EffectHandler.BoardEffect = EffectHandler.tryToTriggerNextBoardEffect(self)
+	if boardEffect and boardEffect.makesPiece:
+		# Cancel piece since we spawned one
 		return
 	
 	# Try to spawn delayed thing

@@ -35,14 +35,18 @@ class Effect:
 class BoardEffect extends Effect:
 	var boardTriggerFn:Callable
 	var boardCanTriggerFn:Callable = func(board:Board): return true
+	var makesPiece:bool = false
 	func _init(boardFn:Callable) -> void:
 		boardTriggerFn = boardFn
 		triggerFn = _queueEffect
 	func _queueEffect() -> void:
 		EffectHandler.bufferedBoardEffects.append(self)
-		SignalBus.getSignal("boardeffect_queued")
-	func setCanTriggerFn(boardFn:Callable) -> Effect:
+		SignalBus.getSignal("boardeffect_queued").emit()
+	func setCanTriggerFn(boardFn:Callable) -> BoardEffect:
 		boardCanTriggerFn = boardFn
+		return self
+	func setMakesPiece(value:bool = true) -> BoardEffect:
+		makesPiece = value
 		return self
 
 var EFFECTS:Dictionary[StringName, Effect] = {
@@ -69,7 +73,7 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 	random_trap = Effect.new(_randomTrap),
 
 	# == Board Effects ==
-	egg = BoardEffect.new(_board_instantSpawn.bind("egg")).setCanTriggerFn(_canSpawnMoreShapes.unbind(1)),
+	egg = BoardEffect.new(_board_instantSpawn.bind("egg")).setCanTriggerFn(_canSpawnMoreShapes.unbind(1)).setMakesPiece(),
 	enchantment_curse = BoardEffect.new(_board_queueEnchantment.bind("enchantment_curse")),
 	enchantment_curse_gravity = BoardEffect.new(_board_queueEnchantment.bind("enchantment_curse_gravity")),
 	enchantment_curse_movement = BoardEffect.new(_board_queueEnchantment.bind("enchantment_curse_movement")),
@@ -102,12 +106,10 @@ func _activateEffect(flag:String, duration:int = 8, annoying:bool = true) -> voi
 	var ae:ActiveEffect = ActiveEffect.instantiateEffect(flag, duration, annoying)
 	add_child(ae)
 
-func _queueInstantSpawn(pieceName:StringName) -> void:
-	pass
-
 func _board_instantSpawn(board:Board, internalName:StringName, playTrapSound:bool = true) -> void:
-	print("Trying to instant-spawn an ", internalName)
-	board.createPiece(DracominoHandler.PieceContext.new(DracominoHandler.StateItem.fromInternalName(internalName)).setInstantSpawn())
+	var stateItem:DracominoHandler.StateItem = DracominoHandler.StateItem.fromInternalName(internalName)
+	stateItem.usedTrapLink = true # Prevent from spawning traps like this
+	board.createPiece(DracominoHandler.PieceContext.new(stateItem).setInstantSpawn())
 	if playTrapSound:
 		SoundManager.play("trap")
 
@@ -218,22 +220,18 @@ static func getNextValidBufferedBoardEffect(board:Board, context:Array[StringNam
 	var ret:bool = false
 	for fx in bufferedBoardEffects:
 		if fx and fx.boardCanTriggerFn.call(board) and fx.matchesContext(context):
-			print("Got board fx ", fx)
 			return fx
 	return null
 
-static func tryToTriggerNextBoardEffect(board:Board, context:Array[StringName] = []) -> BoardEffect: ## Returns triggered state item on success
+static func tryToTriggerNextBoardEffect(board:Board, context:Array[StringName] = []) -> BoardEffect: ## Returns triggered effect on success
 	if FlagManager.isFlagSet("gameover"):
 		return null
-
 	var fx:BoardEffect = getNextValidBufferedBoardEffect(board, context)
 	if fx:
 		# No verification needed since next effect is guaranteed valid
 		fx.boardTriggerFn.call(board)
 		bufferedBoardEffects.erase(fx)
 		return fx
-	else:
-		print("no fx was valid")
 	return null
 
 static func hasValidBufferedBoardEvent(board:Board) -> bool:
