@@ -367,7 +367,7 @@ func makeLimbo():
 	if flagHolder: flagHolder.monitoring = false
 	hide()
 
-func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects:Dictionary[StringName, DracominoHandler.StateItem] = {}) -> void:
+func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects:Dictionary = {}) -> void:
 	prettyName = pieceName
 	pieceDefinition = PIECES.get(pieceName)
 	if FlagManager.isFlagSet("legacy_piece_colors"):

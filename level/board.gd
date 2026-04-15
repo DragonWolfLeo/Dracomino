@@ -158,6 +158,7 @@ func _ready():
 		mode.mode_enabled.connect(_on_mode_enabled)
 	# Effect signals
 	SignalBus.getSignal("effect_impatience").connect(_on_effect_impatience)
+	SignalBus.getSignal("boardeffect_queued").connect(_on_boardeffect_queued)
 
 	# Make line numbers labels
 	for i:int in range(BOUNDS.end.y):
@@ -242,11 +243,16 @@ func requestPiece(allowMultiplePieces:bool = false):
 			return
 		checkForEvent()
 		return
+
+	# Try to trigger board effect if valid
+	if EffectHandler.tryToTriggerNextBoardEffect(self):
+		return
 	
 	# Try to spawn delayed thing
 	var tween:Tween = effectHandler.create_tween()
 	tween.tween_callback(effectHandler.tryToTriggerNextEffect.bind(["delayed"] as Array[StringName]))\
 	.set_delay(DELAYED_EFFECT_CONTEXT_DURATION/Config.getSetting("gravity", 1.0))
+	game_started.connect(tween.kill)
 
 	fillPreview(2) # Generate one extra because we're gonna use it, and another so gravity drop can work
 	if clearingChunks.size() or (activePieces.size() and activePieces[0].moveLock):
@@ -277,7 +283,7 @@ func fillPreview(buffer:int = 0): ## This functions usually leads into createPie
 
 	pieces_requested.emit(createPiece, availableSpace)
 
-func createPiece(pieceName:StringName = "", pieceContext:DracominoHandler.StateItem = null, effects:Dictionary = {}) -> void:
+func createPiece(pieceName:StringName = "", pieceContext:DracominoHandler.StateItem = null, effects:Dictionary = {}, immediateSpawn:bool = false) -> void:
 	if pieceName.is_empty():
 		return
 
@@ -286,8 +292,10 @@ func createPiece(pieceName:StringName = "", pieceContext:DracominoHandler.StateI
 	add_child(piece)
 	game_started.connect(piece.queue_free)
 	
-	if previewStorage:
+	if previewStorage and not immediateSpawn:
 		previewStorage.pushPiece(piece, true)
+	else:
+		spawnPiece(piece)
 
 func spawnPiece(piece:Piece):
 	if not activePieces.has(piece):
@@ -970,3 +978,6 @@ func _on_effect_impatience():
 	SoundManager.play("trap")
 	for i in range(EFFECT_IMPATIENCE_NUM_PIECES_TO_SPAWN):
 		tween.tween_callback(requestPiece.bind(true)).set_delay(i*0.5)
+
+func _on_boardeffect_queued():
+	EffectHandler.tryToTriggerNextBoardEffect(self)

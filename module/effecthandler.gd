@@ -1,17 +1,19 @@
 class_name EffectHandler extends Node
 
 var bufferedEffects:Array[DracominoHandler.StateItem] = []
-var _NOOP:Callable = func(): pass
+static var _NOOP:Callable = func(_null:Variant = null): pass
 
 signal effect_activated(item:DracominoHandler.StateItem)
+
+static var bufferedBoardEffects:Array[BoardEffect] = []
 
 class Effect:
 	var triggerFn:Callable
 	var canTriggerFn:Callable = func(): return true
 	var blockRequestPiece:bool = false
 	var context:Array[StringName] = []
-	func _init(_triggerFn:Callable) -> void:
-		triggerFn = _triggerFn
+	func _init(fn:Callable) -> void:
+		triggerFn = fn
 	func setCanTriggerFn(fn:Callable) -> Effect:
 		canTriggerFn = fn
 		return self
@@ -30,11 +32,24 @@ class Effect:
 				return false
 		return true
 
+class BoardEffect extends Effect:
+	var boardTriggerFn:Callable
+	var boardCanTriggerFn:Callable = func(board:Board): return true
+	func _init(boardFn:Callable) -> void:
+		boardTriggerFn = boardFn
+		triggerFn = _queueEffect
+	func _queueEffect() -> void:
+		EffectHandler.bufferedBoardEffects.append(self)
+		SignalBus.getSignal("boardeffect_queued")
+	func setCanTriggerFn(boardFn:Callable) -> Effect:
+		boardCanTriggerFn = boardFn
+		return self
+
 var EFFECTS:Dictionary[StringName, Effect] = {
 	tutorial = Effect.new(_loadDialogue.bind("tutorial"))\
 		.setCanTriggerFn(_canLoadNewDialogue),
-	logic_tutorial = Effect.new(_loadDialogue.bind("tutorial_logic")).\
-		setCanTriggerFn(_canLoadNewDialogue),
+	logic_tutorial = Effect.new(_loadDialogue.bind("tutorial_logic"))\
+		.setCanTriggerFn(_canLoadNewDialogue),
 	fishing = Effect.new(_setMode.bind("fishing"))\
 		.setCanTriggerFn(combineFunctions.bind(_piecesAreLeft.bind(2), FlagManager.isFlagSet.bind("!mode=fishing"))).setBlockRequestPiece(),
 	welldone = Effect.new(_activateEffect.bind("overlay_welldone", 3, false)).addContext("line_clear"),
@@ -46,25 +61,27 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 	zoom_trap = Effect.new(_activateEffect.bind("effect_zoom", 4, false)), # Not "annoying" because doesn't affect the logic tutorial
 	impatience_trap = Effect.new(SignalBus.getSignal("effect_impatience").emit)\
 		.setCanTriggerFn(_canSpawnMoreShapes).addContext("delayed"),
-	commitment_trap = Effect.new(_activateEffect.bind("committed", -1, false)),
-	egg = Effect.new(_NOOP),
 	space_trap = Effect.new(_activateEffect.bind("effect_space", 8, false)),
 	noop = Effect.new(_NOOP),
-	enchantment_curse = Effect.new(_NOOP),
-	enchantment_curse_gravity = Effect.new(_NOOP),
-	enchantment_curse_movement = Effect.new(_NOOP),
-	enchantment_legendary_movement = Effect.new(_NOOP),
-	enchantment_legendary_spin = Effect.new(_NOOP),
-	enchantment = Effect.new(_NOOP),
 
 	# == Trap Link Specific ==
 	fade = Effect.new(_fade),
 	random_trap = Effect.new(_randomTrap),
+
+	# == Board Effects ==
+	egg = BoardEffect.new(_board_instantSpawn.bind("Egg")).setCanTriggerFn(_canSpawnMoreShapes.unbind(1)),
+	enchantment_curse = BoardEffect.new(_board_queueEnchantment.bind("enchantment_curse")),
+	enchantment_curse_gravity = BoardEffect.new(_board_queueEnchantment.bind("enchantment_curse_gravity")),
+	enchantment_curse_movement = BoardEffect.new(_board_queueEnchantment.bind("enchantment_curse_movement")),
+	enchantment_legendary_movement = BoardEffect.new(_board_queueEnchantment.bind("enchantment_legendary_movement")),
+	enchantment_legendary_spin = BoardEffect.new(_board_queueEnchantment.bind("enchantment_legendary_spin")),
+	enchantment = BoardEffect.new(_board_queueEnchantment.bind("enchantment")),
 }
 
 # === Static helpers ===
-func combineFunctions(a:Callable, b:Callable) -> bool:
+static func combineFunctions(a:Callable, b:Callable) -> bool:
 	return a.call() and b.call()
+
 # === Private functions ===
 func _setMode(modeName:StringName) -> void:
 	SignalBus.getSignal("mode_set_requested", modeName).emit()
@@ -84,6 +101,19 @@ func _canLoadNewDialogue() -> bool:
 func _activateEffect(flag:String, duration:int = 8, annoying:bool = true) -> void:
 	var ae:ActiveEffect = ActiveEffect.instantiateEffect(flag, duration, annoying)
 	add_child(ae)
+
+func _queueInstantSpawn(pieceName:StringName) -> void:
+	pass
+
+func _board_instantSpawn(board:Board, pieceName:StringName, playTrapSound:bool = true) -> void:
+	print("Trying to instant-spawn an ",pieceName)
+	board.createPiece(pieceName, null, {}, true)
+	if playTrapSound:
+		SoundManager.play("trap")
+
+func _board_queueEnchantment(board:Board, enchantmentName:StringName) -> void:
+	print("Trying to make ", enchantmentName)
+	pass
 
 func _fade() -> void:
 	Overlay.doFade(1.5, 1.5)
@@ -182,3 +212,29 @@ func triggerEffectByName(effectName:StringName) -> bool: ## Returns true on succ
 			fx.triggerFn.call()
 			return true
 	return false
+
+# === Static Board Functions ===
+static func getNextValidBufferedBoardEffect(board:Board, context:Array[StringName] = []) -> BoardEffect:
+	var ret:bool = false
+	for fx in bufferedBoardEffects:
+		if fx and fx.boardCanTriggerFn.call(board) and fx.matchesContext(context):
+			print("Got board fx ", fx)
+			return fx
+	return null
+
+static func tryToTriggerNextBoardEffect(board:Board, context:Array[StringName] = []) -> BoardEffect: ## Returns triggered state item on success
+	if FlagManager.isFlagSet("gameover"):
+		return null
+
+	var fx:BoardEffect = getNextValidBufferedBoardEffect(board, context)
+	if fx:
+		# No verification needed since next effect is guaranteed valid
+		fx.boardTriggerFn.call(board)
+		bufferedBoardEffects.erase(fx)
+		return fx
+	else:
+		print("no fx was valid")
+	return null
+
+static func hasValidBufferedBoardEvent(board:Board) -> bool:
+	return getNextValidBufferedBoardEffect(board) != null
