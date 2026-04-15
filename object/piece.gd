@@ -283,6 +283,7 @@ signal movement_requested(piece:Piece, direction:Vector2i, movementType:int)
 signal new_cells_requested(piece:Piece, cells:Array[Vector2i])
 signal ghost_cells_requested(piece:Piece, ghostPiece:GhostPiece)
 signal focus_lost()
+signal trap_activated(stateItem:DracominoHandler.StateItem)
 
 #==== Virtuals ======
 func _ready() -> void:
@@ -346,11 +347,13 @@ func makeActive():
 		if context and context.data and context.data.tags.has("trap") and not context.usedTrapLink:
 			_sendTrapLink(context.data.internalName)
 			context.usedTrapLink = true
+			trap_activated.emit(context)
 		var attachedModifier:DracominoHandler.StateItem = attachedEffects.get("modifier")
 		if attachedModifier is DracominoHandler.StateItem and not attachedModifier.usedTrapLink:
 			# Prepare to send a trap link if this is an enchantment
 			_sendTrapLink("enchantment_curse" if rarity == "curse" else "enchantment")
 			attachedModifier.usedTrapLink = true
+			trap_activated.emit(attachedModifier)
 
 func _sendTrapLink(trapInternalName:StringName) -> void:
 	var trapLinkAlias:String = CONSTANTS.TRAP_ALIASES.get(trapInternalName, "")

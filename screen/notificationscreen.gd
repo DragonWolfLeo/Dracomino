@@ -57,6 +57,12 @@ func _on_Board_effect_activated(item: DracominoHandler.StateItem) -> void:
 		gameName = item.gameName,
 	}
 	if item.isLocal:
-		showNotification("Triggered your own {itemName}!".format(formatValues), CONSTANTS.COLOR.TRAP)
+		if FlagManager.isFlagSet("trap_link"):
+			showNotification("Sent your own {itemName} to your friends!".format(formatValues), CONSTANTS.COLOR.TRAP)
+		else:
+			showNotification("Triggered your own {itemName}!".format(formatValues), CONSTANTS.COLOR.TRAP)
 	else:
-		showNotification("Triggered {itemName} from {senderName}'s {gameName}!".format(formatValues), CONSTANTS.COLOR.TRAP)
+		if FlagManager.isFlagSet("trap_link"):
+			showNotification("Sent {itemName} from {senderName} to your friends!".format(formatValues), CONSTANTS.COLOR.TRAP)
+		else:
+			showNotification("Triggered {itemName} from {senderName}'s {gameName}!".format(formatValues), CONSTANTS.COLOR.TRAP)

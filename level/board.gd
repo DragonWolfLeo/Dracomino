@@ -296,6 +296,7 @@ func spawnPiece(piece:Piece):
 		piece.new_cells_requested.connect(_on_Piece_new_cells_requested)
 		piece.ghost_cells_requested.connect(_on_Piece_ghost_cells_requested)
 		piece.focus_lost.connect(_on_Piece_focus_lost.bind(piece))
+		piece.trap_activated.connect(effect_activated.emit)
 		piece.tree_exiting.connect(_on_Piece_tree_exiting.bind(piece))
 		piece.makeActive()
 		piece.currentPosition = SPAWN_POINT + piece.origin
@@ -337,6 +338,8 @@ func hold(index:int = -1):
 				piece.ghost_cells_requested.disconnect(_on_Piece_ghost_cells_requested)
 			if piece.focus_lost.is_connected(_on_Piece_focus_lost):
 				piece.focus_lost.disconnect(_on_Piece_focus_lost)
+			if piece.trap_activated.is_connected(effect_activated.emit):
+				piece.trap_activated.disconnect(effect_activated.emit)
 			if piece.tree_exiting.is_connected(_on_Piece_tree_exiting):
 				piece.tree_exiting.disconnect(_on_Piece_tree_exiting)
 			popped = holdStorage.pushPiece(piece, false, index)
