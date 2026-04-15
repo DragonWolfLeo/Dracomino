@@ -18,6 +18,24 @@ class COLOR:
 	static var SPECIAL =     Color8(0x55, 0xAA, 0x00)
 	static var ERROR =       Color8(0xFF, 0x55, 0x00)
 
+# Piece Color Ids
+var LEGACY_PIECE_COLOR_MAPPINGS:Array[int] = [
+	0,
+	1,
+	15,
+	2,
+	4,
+	6,
+	8,
+	10,
+	11,
+	12,
+	13,
+	14,
+]
+var NUMBER_OF_PIECE_COLORS_MIN = 1
+var NUMBER_OF_PIECE_COLORS_MAX = 16
+
 # Item + Location Data
 class Data:
 	static var OBJECT_TYPES:PackedStringArray = [

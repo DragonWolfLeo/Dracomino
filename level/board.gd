@@ -72,11 +72,6 @@ var _mappedpickups:Dictionary[Vector2i, ItemPickupContext] = {}
 
 var _waitingForPieceToGetOutOfTopRow:Piece = null
 
-static var random:RandomNumberGenerator = RandomNumberGenerator.new()
-static var randomSaveState:int = random.state
-static var rotate_random:RandomNumberGenerator = RandomNumberGenerator.new()
-static var rotate_randomSaveState:int = rotate_random.state
-
 signal lines_cleared(lines:Array)
 signal linesCleared_updated(num:int)
 signal game_over_earned()
@@ -283,16 +278,16 @@ func fillPreview(buffer:int = 0): ## This functions usually leads into createPie
 
 	pieces_requested.emit(createPiece, availableSpace)
 
-func createPiece(pieceName:StringName = "", pieceContext:DracominoHandler.StateItem = null, effects:Dictionary = {}, immediateSpawn:bool = false) -> void:
-	if pieceName.is_empty():
+func createPiece(pieceContext:DracominoHandler.PieceContext) -> void:
+	if pieceContext.name.is_empty():
 		return
 
 	var piece:Piece = PIECE_SCENE.instantiate()
-	piece.setPiece(pieceName, pieceContext, effects)
+	piece.setPiece(pieceContext)
 	add_child(piece)
 	game_started.connect(piece.queue_free)
 	
-	if previewStorage and not immediateSpawn:
+	if previewStorage and not pieceContext.instantSpawn:
 		previewStorage.pushPiece(piece, true)
 	else:
 		spawnPiece(piece)
@@ -606,8 +601,6 @@ func resetGame():
 	isGameOver = false
 	boardIsFresh = true
 	linesCleared = 0
-	random.state = randomSaveState
-	rotate_random.state = rotate_randomSaveState
 	clearingChunks.clear()
 	resetFlagHolder()
 
@@ -934,12 +927,6 @@ func _on_DracominoState_missing_pickup_coordinates_updated(map:Dictionary[Vector
 				itemPickups[k].node = null
 			itemPickups.erase(k)
 	_on_DracominoState_line_mappings_updated()
-
-func _on_DracominoState_slot_context_hash_updated(ctx:int) -> void:
-	random.seed = ctx
-	randomSaveState = random.state
-	rotate_random.seed = ctx+1
-	rotate_randomSaveState = rotate_random.state
 
 func _on_activePieces_changed():
 	var a:float = 1.0

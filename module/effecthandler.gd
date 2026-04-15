@@ -69,7 +69,7 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 	random_trap = Effect.new(_randomTrap),
 
 	# == Board Effects ==
-	egg = BoardEffect.new(_board_instantSpawn.bind("Egg")).setCanTriggerFn(_canSpawnMoreShapes.unbind(1)),
+	egg = BoardEffect.new(_board_instantSpawn.bind("egg")).setCanTriggerFn(_canSpawnMoreShapes.unbind(1)),
 	enchantment_curse = BoardEffect.new(_board_queueEnchantment.bind("enchantment_curse")),
 	enchantment_curse_gravity = BoardEffect.new(_board_queueEnchantment.bind("enchantment_curse_gravity")),
 	enchantment_curse_movement = BoardEffect.new(_board_queueEnchantment.bind("enchantment_curse_movement")),
@@ -105,9 +105,9 @@ func _activateEffect(flag:String, duration:int = 8, annoying:bool = true) -> voi
 func _queueInstantSpawn(pieceName:StringName) -> void:
 	pass
 
-func _board_instantSpawn(board:Board, pieceName:StringName, playTrapSound:bool = true) -> void:
-	print("Trying to instant-spawn an ",pieceName)
-	board.createPiece(pieceName, null, {}, true)
+func _board_instantSpawn(board:Board, internalName:StringName, playTrapSound:bool = true) -> void:
+	print("Trying to instant-spawn an ", internalName)
+	board.createPiece(DracominoHandler.PieceContext.new(DracominoHandler.StateItem.fromInternalName(internalName)).setInstantSpawn())
 	if playTrapSound:
 		SoundManager.play("trap")
 

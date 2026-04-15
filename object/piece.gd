@@ -218,22 +218,6 @@ enum MOVEMENT {
 	FORCED_SHOVE,
 }
 
-static var LEGACY_COLOR_MAPPINGS:Array[int] = [
-	0,
-	1,
-	15,
-	2,
-	4,
-	6,
-	8,
-	10,
-	11,
-	12,
-	13,
-	14,
-]
-static var NUMBER_OF_COLORS_MIN = 1
-static var NUMBER_OF_COLORS_MAX = 16
 var pieceDefinition:PieceDefinition
 var localCells:Array[Vector2i] = []
 var globalCells:Array[Vector2i] = []
@@ -367,14 +351,10 @@ func makeLimbo():
 	if flagHolder: flagHolder.monitoring = false
 	hide()
 
-func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects:Dictionary = {}) -> void:
-	prettyName = pieceName
-	pieceDefinition = PIECES.get(pieceName)
-	if FlagManager.isFlagSet("legacy_piece_colors"):
-		id = LEGACY_COLOR_MAPPINGS[Board.random.randi_range(0, LEGACY_COLOR_MAPPINGS.size() - 1)]
-	else:
-		id = Board.random.randi_range(NUMBER_OF_COLORS_MIN, NUMBER_OF_COLORS_MAX - 1)
-	var orientation:int = Board.rotate_random.randi_range(0,3)
+func setPiece(pieceContext:DracominoHandler.PieceContext) -> void:
+	prettyName = pieceContext.name
+	pieceDefinition = PIECES.get(pieceContext.name)
+	id = pieceContext.colorId
 	if pieceDefinition:
 		if not ghost:
 			ghost = GHOSTPIECE_SCENE.instantiate()
@@ -385,9 +365,9 @@ func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects
 		can180 = pieceDefinition.can180
 		origin = pieceDefinition.offset
 		preferCCW = pieceDefinition.preferCCW
-		context = pieceContext
+		context = pieceContext.stateItem
 		if FlagManager.isFlagSet("randomize_orientations"):
-			match orientation:
+			match pieceContext.orientationId:
 				1:
 					if can180:
 						rotateClockwise(true)
@@ -405,19 +385,19 @@ func setPiece(pieceName, pieceContext:DracominoHandler.StateItem = null, effects
 						rotateClockwise(true)
 				_: updateTiles()
 		elif pieceDefinition.horizontallyAmbiguous and not FlagManager.isFlagSet("legacy_orientations"):
-			match orientation:
+			match pieceContext.orientationId:
 				1, 3: flipHorizontal(true)
 				_: updateTiles()
 		else:
 			updateTiles()
 
-		attachedEffects.merge(effects, true)
+		attachedEffects.merge(pieceContext.effects, true)
 		var attachedModifier:DracominoHandler.StateItem = attachedEffects.get("modifier")
 		if attachedModifier is DracominoHandler.StateItem and attachedModifier.data:
 			applyEnchantmentByName(attachedModifier.data.internalName)
 	else:
 		# TODO: Here we can accept custom pieces
-		printerr("Piece.setPiece:", pieceName, " does not exist!")
+		printerr("Piece.setPiece:", pieceContext.name, " does not exist!")
 		queue_free()
 
 func applyEnchantmentByName(enchantmentName:StringName) -> void:

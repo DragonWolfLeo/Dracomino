@@ -32,6 +32,11 @@ var seedFlagHolder:FlagHolder
 var retroFlagHolder:FlagHolder
 var effectHandler:EffectHandler
 
+var color_random:RandomNumberGenerator = RandomNumberGenerator.new()
+var color_randomSaveState:int = color_random.state
+var rotate_random:RandomNumberGenerator = RandomNumberGenerator.new()
+var rotate_randomSaveState:int = rotate_random.state
+
 var isJustConnected:bool = false
 var VERSION_WARNING_DIALOG_SCENE:PackedScene = load("res://ui/versionwarning_dialog.tscn")
 var DELAYED_EFFECT_CONTEXT_DURATION:float = 0.5 # Shorter than board's
@@ -91,6 +96,36 @@ class Streak:
 	var size:int = 0
 	static var NOTABLE_THRESHOLD:int = 4
 
+class PieceContext:
+	var name:StringName
+	var stateItem:StateItem
+	var effects:Dictionary[StringName, StateItem] = {}
+	var colorId:int = -1
+	var orientationId:int = -1
+	var instantSpawn:bool = false
+	static var fallbackRandom:RandomNumberGenerator = RandomNumberGenerator.new()
+	func _init(_stateItem:StateItem) -> void:
+		stateItem = _stateItem
+		if stateItem.data:
+			name = stateItem.data.prettyName
+		randomizeColor()
+		randomizeOrientation()
+	func randomizeColor(random:RandomNumberGenerator = fallbackRandom) -> PieceContext:
+		if FlagManager.isFlagSet("legacy_piece_colors"):
+			colorId = CONSTANTS.LEGACY_PIECE_COLOR_MAPPINGS[random.randi_range(0, CONSTANTS.LEGACY_PIECE_COLOR_MAPPINGS.size() - 1)]
+		else:
+			colorId = random.randi_range(CONSTANTS.NUMBER_OF_PIECE_COLORS_MIN, CONSTANTS.NUMBER_OF_PIECE_COLORS_MAX - 1)
+		return self
+	func randomizeOrientation(random:RandomNumberGenerator = fallbackRandom) -> PieceContext:
+		orientationId = random.randi_range(0,3)
+		return self
+	func setEffects(_effects:Dictionary[StringName, StateItem]) -> PieceContext:
+		effects.merge(_effects, true)
+		return self
+	func setInstantSpawn(_instantSpawn:bool = true) -> PieceContext:
+		instantSpawn = _instantSpawn
+		return self
+
 #===== Virtuals =====
 func _ready() -> void:
 	Archipelago.connected.connect(_on_connected)
@@ -122,6 +157,9 @@ func reset():
 	seedFlagHolder.count("shapes_left", "subtracted", 0)
 	gotLines.clear()
 	lineMappings.clear()
+	# Reset randoms
+	color_random.state = color_randomSaveState
+	rotate_random.state = rotate_randomSaveState
 	# Fill visible line mappings
 	for i in range(Board.BOUNDS.size.y):
 		lineMappings[i] = i
@@ -142,6 +180,11 @@ func newSeedReset():
 	missingPickups.clear()
 	hintedRotateAbilities.clear()
 	resetSeedFlagHolder()
+	# Reset randoms
+	color_random.seed = slotContextHash
+	color_randomSaveState = color_random.state
+	rotate_random.seed = slotContextHash+1
+	rotate_randomSaveState = rotate_random.state
 	# Reset when everything is loaded
 	await started
 	SignalBus.getSignal("restartGame").emit()
@@ -155,7 +198,7 @@ func resetSeedFlagHolder():
 	add_child(seedFlagHolder)
 	add_child(retroFlagHolder)
 
-func getNextPiece() -> Dictionary:
+func getNextPiece() -> PieceContext:
 	var numItems := collectedItems.size()
 	# Iterate through all items
 	while currentIndex < numItems:
@@ -175,15 +218,11 @@ func getNextPiece() -> Dictionary:
 									_effectBuffer.erase(fx)
 					currentIndex += 1
 					seedFlagHolder.count("shapes_left", "subtracted", -1, true)
-					return {
-						name = item.prettyName,
-						stateItem = stateItem,
-						effects = effects,
-					}
+					return PieceContext.new(stateItem).randomizeColor(color_random).randomizeOrientation(rotate_random).setEffects(effects)
 				"on_lock", "modifier", "on_spawn":
 					_effectBuffer.append(stateItem)
 		currentIndex += 1
-	return {}
+	return null
 
 func sendLocation(loc_id:int):
 	# Send the location
@@ -421,9 +460,10 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	}))
 
 	# Check if this is a brand new seed, player, and team, and do a full reset
-	if slotContextHash != _conn_ctx: newSeedReset()
+	if slotContextHash != _conn_ctx:
+		slotContextHash = _conn_ctx
+		newSeedReset()
 
-	slotContextHash = _conn_ctx
 	goal = conn.slot_data.get("goal", -1)
 
 	# Set death link
@@ -616,12 +656,12 @@ func _on_remove_location(loc_id:int):
 
 func _on_Board_pieces_requested(callback:Callable, num:int) -> void:
 	for i:int in range(num):
-		var nextPiece:Dictionary = getNextPiece()
+		var nextPiece:PieceContext = getNextPiece()
 		if nextPiece:
-			callback.call(nextPiece.get("name", ""), nextPiece.get("stateItem"), nextPiece.get("effects", {}))
+			callback.call(nextPiece)
 		else:
 			print("Outta pieces!")
-			break;
+			break
 
 func _on_Board_game_started() -> void:
 	reset()

@@ -224,7 +224,6 @@ layout_mode = 2
 [connection signal="missingLines_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_lines_updated"]
 [connection signal="missingPickupCoordinates_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_pickup_coordinates_updated"]
 [connection signal="notification_signal" from="Main/SubViewport/DracominoHandler" to="NotificationScreen" method="_on_DracominoHandler_notification_signal"]
-[connection signal="slotContextHash_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_slot_context_hash_updated"]
 [connection signal="started" from="Main/SubViewport/DracominoHandler" to="Main" method="_on_DracominoHandler_started"]
 [connection signal="resized" from="Main/SubViewport/PuzzleMode/SubViewportContainer" to="Main/SubViewport/PuzzleMode" method="_on_SubViewportContainer_resized"]
 [connection signal="deathlink_earned" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="Main/SubViewport/DracominoHandler" method="_on_Board_deathlink_earned"]
