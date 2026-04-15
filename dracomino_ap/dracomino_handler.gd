@@ -118,6 +118,7 @@ func _ready() -> void:
 #===== Functions =====
 func reset():
 	currentIndex = 0
+	_effectBuffer.clear()
 	seedFlagHolder.count("shapes_left", "subtracted", 0)
 	gotLines.clear()
 	lineMappings.clear()
