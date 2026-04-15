@@ -203,7 +203,9 @@ var RANDOM_TRAP_CHOICES:Array[StringName] = [
 var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	# DRACOMINO TRAPS
 	"Crystal Trap"            : "crystal_trap",
+	"Curse Trap"              : "curse",
 	"Egg Trap"                : "egg",
+	"Enchantment Trap"        : "enchantment",
 	"Fracture Trap"           : "fracture_trap",
 	"Impatience Trap"         : "impatience_trap",
 	# "Premium Trap"            : "premium_trap",
