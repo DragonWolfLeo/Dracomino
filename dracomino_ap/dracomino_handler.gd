@@ -212,8 +212,12 @@ func getNextPiece() -> PieceContext:
 				"shape":
 					# Apply any effects from the effect buffer first
 					var effects:Dictionary[StringName, StateItem] = {}
+					var isTrap:bool = item.tags.has(&"trap")
 					for fx:StateItem in _effectBuffer.duplicate():
 						var fx_item := CONSTANTS.ITEMS[fx.id]
+						if isTrap and fx_item.type == "modifier":
+							# Don't enchant traps
+							continue
 						match fx_item.type:
 							"on_lock", "modifier", "on_spawn":
 								if not effects.get(fx_item.type):
