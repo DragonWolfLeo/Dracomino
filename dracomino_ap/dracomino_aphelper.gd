@@ -5,9 +5,6 @@ var btn_deathOnRestart:CheckButton
 var optionBtn_deathLinkGroup:OptionButton
 var lineEdit_deathLinkGroup:LineEdit
 var btn_allowUnfocusedInputs:CheckButton
-var btn_gravityAmt_reset:Button
-var label_gravityAmt:Label
-var slider_gravityAmt:Slider
 var slider_masterVol:Slider
 var slider_musicVol:Slider
 var slider_sfxVol:Slider
@@ -55,16 +52,6 @@ func _ready() -> void:
 		lineEdit_deathLinkGroup.focus_exited.connect(func(): _on_lineEdit_deathLinkGroup_text_submitted(lineEdit_deathLinkGroup.text))
 		lineEdit_deathLinkGroup.text_submitted.connect(_on_lineEdit_deathLinkGroup_text_submitted)
 	_on_deathLinkGroup_setting_changed()
-
-	# Gravity slider
-	slider_gravityAmt = get_parent().find_child("HSlider_GravityAmt")
-	if slider_gravityAmt:
-		label_gravityAmt = get_parent().find_child("Label_GravityAmt")
-		slider_gravityAmt.value_changed.connect(_on_slider_gravityAmt_value_changed)
-		slider_gravityAmt.value = Config.getSetting("gravity", 1.0)
-		btn_gravityAmt_reset = get_parent().find_child("Btn_GravityAmt_reset")
-		if btn_gravityAmt_reset:
-			btn_gravityAmt_reset.pressed.connect(slider_gravityAmt.set.bind("value", Config.getDefaultSetting("gravity", 1.0)))
 
 	slider_masterVol = get_parent().find_child("HSlider_MasterVol")
 	if slider_masterVol:
@@ -151,11 +138,6 @@ func _on_optionBtn_deathLinkGroup_item_selected(index:int):
 
 func _on_lineEdit_deathLinkGroup_text_submitted(new_text:String):
 	Config.changeSetting("deathLinkGroup_custom", new_text)
-
-func _on_slider_gravityAmt_value_changed(value:float) -> void:
-	Config.changeSetting("gravity", value)
-	if label_gravityAmt:
-		label_gravityAmt.text = str(value)
 
 # Volume stuff
 func _on_slider_value_changed(value:float, settingName:String, busName:String, testSoundType:String=""):

@@ -1,10 +1,11 @@
-[gd_scene load_steps=9 format=3 uid="uid://c7613bp0awts"]
+[gd_scene load_steps=10 format=3 uid="uid://c7613bp0awts"]
 
 [ext_resource type="Script" uid="uid://bdt3egg4vj746" path="res://dracomino_ap/dracomino_console_window_container.gd" id="1_vsama"]
 [ext_resource type="Script" uid="uid://coc8hh7uywptt" path="res://dracomino_ap/dracomino_aphelper.gd" id="2_prof0"]
 [ext_resource type="PackedScene" uid="uid://dhya6ucgf72i8" path="res://godot_ap/ui/hints_tab.tscn" id="3_prof0"]
 [ext_resource type="PackedScene" uid="uid://c1pyfyn3ax5u2" path="res://dracomino_ap/dracomino_console_tab.tscn" id="3_vsama"]
 [ext_resource type="PackedScene" uid="uid://dp2yir3r1061y" path="res://godot_ap/ui/settings_tab.tscn" id="4_vsama"]
+[ext_resource type="PackedScene" uid="uid://bdby1xnydrw5r" path="res://dracomino_ap/slidersetting.tscn" id="7_ewm2l"]
 [ext_resource type="Script" uid="uid://cfbgk8vq58w0h" path="res://dracomino_ap/option_toggle_button.gd" id="7_s3ubo"]
 [ext_resource type="Script" uid="uid://bi07x0bnmtu8d" path="res://dracomino_ap/flag_toggle_button.gd" id="8_s3ubo"]
 
@@ -123,41 +124,10 @@ text = "Trap Link"
 script = ExtResource("8_s3ubo")
 flag = "trap_link"
 
-[node name="Container_Gravity" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
+[node name="SliderSetting_Gravity" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer" instance=ExtResource("7_ewm2l")]
 layout_mode = 2
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
-
-[node name="GridContainer" type="GridContainer" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_Gravity"]
-layout_mode = 2
-theme_override_constants/h_separation = 5
-theme_override_constants/v_separation = 5
-columns = 4
-
-[node name="Label" type="Label" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_Gravity/GridContainer"]
-layout_mode = 2
-text = "Gravity Speed"
-
-[node name="HSlider_GravityAmt" type="HSlider" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_Gravity/GridContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-min_value = 0.5
-max_value = 4.0
-step = 0.1
-value = 1.0
-
-[node name="Label_GravityAmt" type="Label" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_Gravity/GridContainer"]
-clip_contents = true
-custom_minimum_size = Vector2(40, 0)
-layout_mode = 2
-text = "1.0"
-
-[node name="Btn_GravityAmt_reset" type="Button" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer/Container_Gravity/GridContainer"]
-layout_mode = 2
-text = "Reset"
+targetSetting = &"gravity"
+settingName = "Gravity Speed"
 
 [node name="Btn_AllowUnfocusedInputs" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Game/VBoxContainer"]
 layout_mode = 2
