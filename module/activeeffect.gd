@@ -18,7 +18,7 @@ var _cooldownTimer:SceneTreeTimer
 var EFFECT_DURATION_TICK_COOLDOWN:float = 2.0
 
 # === Static functions ===
-static func instantiateEffect(flag:String, duration:int = -1, annoying:bool = true) -> ActiveEffect:
+static func instantiateEffect(flag:String, duration:int = -1, annoying:bool = true, removalAction:String = "dispel") -> ActiveEffect:
 	var ae := ActiveEffect.new()
 	ae.priority = FlagHolder.PRIORITY.OBJECT
 	ae.durationLeft = duration
@@ -28,10 +28,21 @@ static func instantiateEffect(flag:String, duration:int = -1, annoying:bool = tr
 		if annoying:
 			ae.count("annoying_effects_active", flag, 1)
 			SignalBus.getSignal("dispel_annoying_effects").connect(ae._on_dispelled)
+			SignalBus.getSignal("dispel_annoying_effects_free").connect(ae.clearEffect)
 	ae.tree_entered.connect(_setflags, CONNECT_ONE_SHOT)
-	SignalBus.getSignal("dispel_"+flag).connect(ae._on_dispelled)
+	# Priced versions
+	SignalBus.getSignal(removalAction+"_"+flag).connect(ae._on_dispelled)
+	SignalBus.getSignal(removalAction+"_effects").connect(ae._on_dispelled)
 	SignalBus.getSignal("dispel_all_effects").connect(ae._on_dispelled)
+	# Free versions
+	SignalBus.getSignal(removalAction+"_"+flag+"_free").connect(ae.clearEffect)
+	SignalBus.getSignal(removalAction+"_effects_free").connect(ae.clearEffect)
+	SignalBus.getSignal("dispel_all_effects_free").connect(ae.clearEffect)
 	return ae
+
+func clearEffect() -> void:
+	SoundManager.play("untrap")
+	queue_free()
 
 # === Events ===
 func _on_effect_duration_down() -> void:
@@ -72,5 +83,4 @@ func _on_dispelled() -> void:
 
 func _on_successful_dispel() -> void:
 	FlagManager.setFlag("last_mana_transaction_succeeded")
-	SoundManager.play("untrap")
-	queue_free()
+	clearEffect()
