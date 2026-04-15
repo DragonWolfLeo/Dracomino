@@ -1,5 +1,7 @@
 class_name ActiveEffect extends FlagHolder
 
+signal duration_changed(remaining:int)
+
 var durationLeft:int = -1:
 	set(value):
 		if durationLeft == value:
@@ -52,6 +54,7 @@ func _on_effect_duration_down() -> void:
 	if durationLeft <= 0:
 		queue_free()
 	else:
+		duration_changed.emit(durationLeft)
 		_cooldownTimer = get_tree().create_timer(EFFECT_DURATION_TICK_COOLDOWN, true)
 		_cooldownTimer.timeout.connect(set.bind("_cooldownTimer", null))
 
