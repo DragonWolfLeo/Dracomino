@@ -86,7 +86,17 @@ static var PIECES:Dictionary[StringName, PieceDefinition] = {
 
 class Enchantment:
 	var rarity:StringName
+	var prettyName:String:
+		get():
+			return RARITY_NAMES.get(rarity, "Enchanted")
 	var modifiers:Array[Modifier] = []
+	static var RARITY_NAMES:Dictionary[StringName, String] = {
+		curse = "Cursed",
+		uncommon = "Medium-Rare",
+		rare = "Rare",
+		epic = "Epic",
+		legendary = "Legendary",
+	}
 	func _init(_rarity:StringName = "", _modifiers:Array[Modifier] = []) -> void:
 		rarity = _rarity
 		modifiers.append_array(_modifiers)
@@ -410,6 +420,8 @@ func applyEnchantmentByName(enchantmentName:StringName) -> void:
 		if enchantment.rarity.is_empty() or enchantment.rarity == "random":
 			enchantment = RANDOM_ENCHANTMENT_CHOICES.pick_random() as Enchantment
 		rarity = enchantment.rarity
+		if context:
+			context.prettyName = enchantment.prettyName + " " + context.name
 		var eligibleMods:Array[Modifier] = []
 		for mod in enchantment.modifiers:
 			if mod.isEligible.call():

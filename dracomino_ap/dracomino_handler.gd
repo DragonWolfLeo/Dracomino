@@ -98,6 +98,9 @@ class Streak:
 
 class PieceContext:
 	var name:StringName
+	var prettyName:String:
+		get():
+			return name as String if prettyName.is_empty() else prettyName
 	var stateItem:StateItem
 	var effects:Dictionary[StringName, StateItem] = {}
 	var colorId:int = -1
@@ -716,7 +719,7 @@ func _on_Board_deathlink_earned(deathContext:DracominoUtil.DeathContext) -> void
 			contextTags.append("LOCAL_ITEM" if stateItem.isLocal else "NONLOCAL_ITEM")
 			var item := CONSTANTS.ITEMS[stateItem.id]
 			formatValues.merge({
-				item = (item.prettyName as String) if item else "Unknown Piece",
+				item = itemctx.prettyName,
 				sender = stateItem.senderName,
 				location = stateItem.locationName,
 				game = stateItem.gameName,
