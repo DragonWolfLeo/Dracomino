@@ -510,7 +510,12 @@ func gravityDrop():
 	if not moveLock:
 		moveLock = true
 		canRotate = false
-		_on_GravityTimer_timeout()
+		if gravityTimer:
+			var gravityDelay = getGravityDelay()
+			gravityTimer.start(min(gravityTimer.time_left, gravityDelay))
+			gravityTimer.wait_time = gravityDelay
+		if gravityLockDelayed:
+			movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.GRAVITY_LOCK)
 
 func move(direction:Vector2i, isRotate:bool = false):
 	currentPosition += direction
@@ -530,7 +535,7 @@ func resetGravityTimer() -> void:
 		gravityTimer.start()
 
 func getGravityDelay() -> float:
-	var gravSpeed = Config.getSetting("gravity", 1.0)*modifiers.get("gravity", 1.0)
+	var gravSpeed = Config.getSetting("gravity", 1.0)* (1.0 if moveLock else modifiers.get("gravity", 1.0))
 	return GRAVITY_WAIT_TIME/gravSpeed
 
 # Events
