@@ -182,6 +182,12 @@ func getFocusPiece() -> Piece:
 			return piece
 	return null
 
+func getCameraFocus() -> Piece:
+	for piece in activePieces:
+		if piece.isFocus or (piece.moveLock and FlagManager.isFlagSet("hard_drop")):
+			return piece
+	return null
+
 func chooseNewFocusPiece(requestIfNone:bool = false) -> void:
 	var focusPiece:Piece = null
 	for piece in activePieces:
@@ -189,7 +195,7 @@ func chooseNewFocusPiece(requestIfNone:bool = false) -> void:
 			piece.isFocus = true
 			focusPiece = piece
 			# Make focus camera follow with a bit of a delay
-			if activePieces.size() and piece == activePieces.front():
+			if piece == getCameraFocus():
 				var tween:Tween = piece.create_tween()
 				var delay:float = 1.0 if clearingChunks.size() else 0.5
 				tween.tween_callback(focusCamera.set.bind("global_position", piece.global_position)).set_delay(delay)
@@ -297,7 +303,7 @@ func spawnPiece(piece:Piece):
 		placeOnHighestRow(piece)
 		if not checkForFailure(piece):
 			activePieces_changed.emit()
-			if piece == activePieces.front():
+			if piece == getCameraFocus():
 				focusCamera.global_position = piece.global_position
 			if piece.isFocus:
 				forceShoveOtherPiecesDown(piece)
@@ -443,7 +449,7 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 					if nudgeResult: blocked = true
 		if not blocked:
 			piece.move(direction)
-			if activePieces.size() and piece == activePieces.front():
+			if piece == getCameraFocus():
 				focusCamera.global_position = piece.global_position
 			tryToMakePiecesCollible()
 			checkIfWaitingToChooseNewFocusPiece()
