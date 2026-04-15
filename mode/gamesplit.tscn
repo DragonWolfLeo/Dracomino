@@ -157,10 +157,14 @@ size_flags_vertical = 9
 focus_mode = 0
 text = "Quit"
 
-[node name="DracominoClient" parent="." instance=ExtResource("3_ygsa4")]
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
 custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+follow_focus = true
+
+[node name="DracominoClient" parent="ScrollContainer" instance=ExtResource("3_ygsa4")]
 layout_mode = 2
 
 [node name="GameOverlay" parent="." instance=ExtResource("4_8ai7d")]
 
-[connection signal="pressed" from="HBoxContainer/ButtonBarContainer/ButtonBar/Btn_SidePanel" to="DracominoClient" method="_on_APButton_pressed"]
+[connection signal="pressed" from="HBoxContainer/ButtonBarContainer/ButtonBar/Btn_SidePanel" to="ScrollContainer/DracominoClient" method="_on_APButton_pressed"]

@@ -1,46 +1,51 @@
 [gd_scene format=3 uid="uid://behnhtqv3gcyw"]
 
-[node name="Audio" type="MarginContainer"]
+[node name="Audio" type="ScrollContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+follow_focus = true
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
 metadata/_tab_index = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/margin_left = 5
 theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 5
 
-[node name="GridContainer" type="GridContainer" parent="VBoxContainer/MarginContainer"]
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/VBoxContainer/MarginContainer"]
 layout_mode = 2
 theme_override_constants/h_separation = 5
 theme_override_constants/v_separation = 5
 columns = 2
 
-[node name="Label_MasterVol" type="Label" parent="VBoxContainer/MarginContainer/GridContainer"]
+[node name="Label_MasterVol" type="Label" parent="MarginContainer/VBoxContainer/MarginContainer/GridContainer"]
 layout_mode = 2
 text = "Master Volume"
 
-[node name="HSlider_MasterVol" type="HSlider" parent="VBoxContainer/MarginContainer/GridContainer"]
+[node name="HSlider_MasterVol" type="HSlider" parent="MarginContainer/VBoxContainer/MarginContainer/GridContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 step = 5.0
 value = 100.0
 
-[node name="Label_MusicVol" type="Label" parent="VBoxContainer/MarginContainer/GridContainer"]
+[node name="Label_MusicVol" type="Label" parent="MarginContainer/VBoxContainer/MarginContainer/GridContainer"]
 visible = false
 layout_mode = 2
 text = "Music Volume"
 
-[node name="HSlider_MusicVol" type="HSlider" parent="VBoxContainer/MarginContainer/GridContainer"]
+[node name="HSlider_MusicVol" type="HSlider" parent="MarginContainer/VBoxContainer/MarginContainer/GridContainer"]
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
@@ -48,22 +53,22 @@ size_flags_vertical = 4
 step = 5.0
 value = 100.0
 
-[node name="Label_SfxVol" type="Label" parent="VBoxContainer/MarginContainer/GridContainer"]
+[node name="Label_SfxVol" type="Label" parent="MarginContainer/VBoxContainer/MarginContainer/GridContainer"]
 layout_mode = 2
 text = "Sound Volume"
 
-[node name="HSlider_SfxVol" type="HSlider" parent="VBoxContainer/MarginContainer/GridContainer"]
+[node name="HSlider_SfxVol" type="HSlider" parent="MarginContainer/VBoxContainer/MarginContainer/GridContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 step = 5.0
 value = 100.0
 
-[node name="Label_VoiceVol" type="Label" parent="VBoxContainer/MarginContainer/GridContainer"]
+[node name="Label_VoiceVol" type="Label" parent="MarginContainer/VBoxContainer/MarginContainer/GridContainer"]
 layout_mode = 2
 text = "Voice Volume"
 
-[node name="HSlider_VoiceVol" type="HSlider" parent="VBoxContainer/MarginContainer/GridContainer"]
+[node name="HSlider_VoiceVol" type="HSlider" parent="MarginContainer/VBoxContainer/MarginContainer/GridContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4

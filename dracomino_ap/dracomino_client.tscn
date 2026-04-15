@@ -59,14 +59,17 @@ button_group = SubResource("ButtonGroup_1wnfu")
 [node name="Game" parent="Tabs/Settings/Margin/Tabs" index="2" instance=ExtResource("6_s3ubo")]
 visible = false
 layout_mode = 2
+metadata/_tab_index = 1
 
 [node name="Audio" parent="Tabs/Settings/Margin/Tabs" index="3" instance=ExtResource("7_ewm2l")]
 visible = false
 layout_mode = 2
+metadata/_tab_index = 2
 
 [node name="Debug" parent="Tabs/Settings/Margin/Tabs" index="4" instance=ExtResource("8_euklm")]
 visible = false
 layout_mode = 2
+metadata/_tab_index = 3
 
 [node name="Bounds" type="Control" parent="."]
 layout_mode = 2
