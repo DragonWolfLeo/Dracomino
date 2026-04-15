@@ -266,6 +266,23 @@ var gravityLockDelayed:bool = false: ## Prevent from locking for a bit
 			if gravityLockDelayed:
 				if not moveLock: gravityTimer.start(GRAVITY_LOCK_DELAY)
 var collidible:bool = false ## Enable when piece doesn't overlap with another
+var placed:bool = false: ## When this is an entity that is placed on the board
+	set(value):
+		if placed == value: return
+		placed = value
+		if flagHolder:
+			flagHolder.clearFlag("shapes_active" if placed else "entities_active")
+			flagHolder.count("entities_active" if placed else "shapes_active", "amount", 1)
+		if placed:
+			if gravityTimer: gravityTimer.stop()
+			if softDropTimer: softDropTimer.stop()
+			if horizontalTimer: horizontalTimer.stop()
+			if rotateTimer: rotateTimer.stop()
+			isFocus = false
+			ghost.queue_free()
+			ghost = null
+			piece_placed.emit()
+
 var playHardDropSound:bool = false
 var isFocus:bool: ## Decides whether or not piece listens to inputs
 	set(value):
@@ -284,6 +301,7 @@ signal new_cells_requested(piece:Piece, cells:Array[Vector2i])
 signal ghost_cells_requested(piece:Piece, ghostPiece:GhostPiece)
 signal focus_lost()
 signal trap_activated(stateItem:DracominoHandler.StateItem)
+signal piece_placed()
 
 #==== Virtuals ======
 func _ready() -> void:

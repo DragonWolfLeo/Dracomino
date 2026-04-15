@@ -40,6 +40,7 @@ static var SET_TILE_ATLAS_ROW:int = 1
 @onready var focusCamera:Camera2D = $FocusCamera
 
 var activePieces:Array[Piece] = []
+var entities:Array[Piece] = []
 
 var clearingChunks:Array[ClearingChunk] = []
 var isGameOver:bool = false:
@@ -372,8 +373,16 @@ func hold(index:int = -1):
 			activePieces_changed.emit()
 			SoundManager.play("hold")
 
-func isTileOccupied(coords:Vector2i) -> bool:
-	return get_cell_source_id(coords) != -1
+func isTileFilled(cell:Vector2i) -> bool:
+	return get_cell_source_id(cell) != -1
+
+func isTileOccupied(cell:Vector2i) -> bool:
+	var isFilled:bool = isTileFilled(cell)
+	if isFilled: return true
+	for ent:Piece in entities:
+		if ent.globalCells.has(cell):
+			return true
+	return false
 
 func placeOnHighestRow(piece:Piece):
 	var greatestY:int = 0
@@ -631,7 +640,7 @@ func lockPiece(piece:Piece):
 	for cell in piece.globalCells:
 		if BOUNDS.has_point(cell):
 			var mapCoord:Vector2i = cell
-			set_cell(mapCoord, 0, Vector2i(piece.colorId, SET_TILE_ATLAS_ROW))
+			if not piece.isEntity: set_cell(mapCoord, 0, Vector2i(piece.colorId, SET_TILE_ATLAS_ROW))
 			var pickup:ItemPickupContext = _mappedpickups.get(mapCoord)
 			if pickup:
 				pickedUpItem = true
@@ -657,7 +666,12 @@ func lockPiece(piece:Piece):
 		else:
 			if onLockEffect: effectHandler.tryToTriggerEffect(onLockEffect)
 	
-	deletePiece(piece)
+	if piece.isEntity:
+		piece.placed = true
+		activePieces.erase(piece)
+		entities.append(piece)
+	else:
+		deletePiece(piece)
 	var fx = effectHandler.getEffectObject(onLockEffect)
 	if fx and fx.blockRequestPiece and not isGameOver:
 		pass
@@ -675,7 +689,7 @@ func getFullRows() -> Array[int]:
 		# Check if row is full
 		var full:bool = true
 		for x in range(BOUNDS.position.x, BOUNDS.end.x):
-			if not isTileOccupied(Vector2i(x, y)):
+			if not isTileFilled(Vector2i(x, y)):
 				full = false
 				break
 		if full:
@@ -886,6 +900,7 @@ func _on_Piece_focus_lost(piece:Piece):
 
 func _on_Piece_tree_exiting(piece:Piece): # Fallback if piece didn't delete properly
 	activePieces.erase(piece)
+	entities.erase(piece)
 
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	conn.deathlink.connect(_on_deathlink)
@@ -943,14 +958,7 @@ func _on_DracominoState_missing_pickup_coordinates_updated(map:Dictionary[Vector
 	_on_DracominoState_line_mappings_updated()
 
 func _on_activePieces_changed():
-	var a:float = 1.0
 	chooseNewFocusPiece(true)
-	for piece in activePieces:
-		## Make ghosts have a gradient
-		if piece.ghost:
-			piece.ghost.modulate.a = clamp(a, 0.0, 1.0)
-			if not piece.isFocus and not piece.moveLock:
-				a -= OPACITY_REDUCTION_PER_GHOST
 
 func _on_mode_enabled():
 	inputTimer.reset()
