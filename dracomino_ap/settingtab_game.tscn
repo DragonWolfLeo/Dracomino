@@ -4,31 +4,36 @@
 [ext_resource type="PackedScene" uid="uid://bdby1xnydrw5r" path="res://dracomino_ap/slidersetting.tscn" id="2_mtsfg"]
 [ext_resource type="Script" uid="uid://cfbgk8vq58w0h" path="res://dracomino_ap/option_toggle_button.gd" id="3_fprr2"]
 
-[node name="Game" type="MarginContainer"]
+[node name="Game" type="ScrollContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+follow_focus = true
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 metadata/_tab_index = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Btn_DeathLink" type="CheckButton" parent="VBoxContainer"]
+[node name="Btn_DeathLink" type="CheckButton" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 tooltip_text = "When you game over, everyone else with Death Link enabled dies. Of course, the reverse is true too."
 text = "Death Link"
 
-[node name="Btn_DeathOnRestart" type="CheckButton" parent="VBoxContainer"]
+[node name="Btn_DeathOnRestart" type="CheckButton" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 tooltip_text = "When Death Link is enabled, send a death whenever you reset your board"
 text = "Death On Restart
 "
 
-[node name="Container_DeathLinkGroup" type="MarginContainer" parent="VBoxContainer"]
+[node name="Container_DeathLinkGroup" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 tooltip_text = "Send deaths to and receive deaths from only a specific group"
 theme_override_constants/margin_left = 5
@@ -36,17 +41,17 @@ theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 5
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/Container_DeathLinkGroup"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/Container_DeathLinkGroup"]
 layout_mode = 2
 
-[node name="HBoxContainer" type="HFlowContainer" parent="VBoxContainer/Container_DeathLinkGroup/VBoxContainer"]
+[node name="HBoxContainer" type="HFlowContainer" parent="MarginContainer/VBoxContainer/Container_DeathLinkGroup/VBoxContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/Container_DeathLinkGroup/VBoxContainer/HBoxContainer"]
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/Container_DeathLinkGroup/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 text = "Death Link Group:"
 
-[node name="OptionButton_DeathLinkGroup" type="OptionButton" parent="VBoxContainer/Container_DeathLinkGroup/VBoxContainer/HBoxContainer"]
+[node name="OptionButton_DeathLinkGroup" type="OptionButton" parent="MarginContainer/VBoxContainer/Container_DeathLinkGroup/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 selected = 0
 item_count = 3
@@ -57,13 +62,13 @@ popup/item_1/id = 1
 popup/item_2/text = "Custom"
 popup/item_2/id = 2
 
-[node name="LineEdit_DeathLinkGroup" type="LineEdit" parent="VBoxContainer/Container_DeathLinkGroup/VBoxContainer/HBoxContainer"]
+[node name="LineEdit_DeathLinkGroup" type="LineEdit" parent="MarginContainer/VBoxContainer/Container_DeathLinkGroup/VBoxContainer/HBoxContainer"]
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 
-[node name="Btn_EnergyLink" type="CheckButton" parent="VBoxContainer"]
+[node name="Btn_EnergyLink" type="CheckButton" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 tooltip_text = "Share your generated mana to other players as Energy"
 text = "Energy Link
@@ -71,22 +76,52 @@ text = "Energy Link
 script = ExtResource("1_08t7n")
 flag = "energy_link"
 
-[node name="Btn_TrapLink" type="CheckButton" parent="VBoxContainer"]
+[node name="Btn_TrapLink" type="CheckButton" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 tooltip_text = "Send your traps to other players in your multiworld, as well as receive theirs"
 text = "Trap Link"
 script = ExtResource("1_08t7n")
 flag = "trap_link"
 
-[node name="SliderSetting_Gravity" parent="VBoxContainer" instance=ExtResource("2_mtsfg")]
-layout_mode = 2
-targetSetting = &"gravity"
-settingName = "Gravity Speed"
-
-[node name="Btn_AllowUnfocusedInputs" type="CheckButton" parent="VBoxContainer"]
+[node name="Btn_AllowUnfocusedInputs" type="CheckButton" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 tooltip_text = "Allow controller inputs to be accepted if game window is not focused"
 text = "Allow Unfocused Inputs
 "
 script = ExtResource("3_fprr2")
 optionKey = "allowUnfocusedInputs"
+
+[node name="SliderSetting_Gravity" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_mtsfg")]
+layout_mode = 2
+targetSetting = &"gravity"
+settingName = "Gravity Speed"
+
+[node name="SliderSetting_LockDelay" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_mtsfg")]
+layout_mode = 2
+tooltip_text = "Lock Delay (Requires Lock Delay to be unlocked)"
+targetSetting = &"lockDelay"
+settingName = "Lock Delay"
+
+[node name="SliderSetting_SoftDropSpeed" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_mtsfg")]
+layout_mode = 2
+tooltip_text = "Soft Drop Speed"
+targetSetting = &"softDrop_speed"
+settingName = "S.D. Speed"
+
+[node name="SliderSetting_HorizontalSpeed" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_mtsfg")]
+layout_mode = 2
+tooltip_text = "Horizontal Movement Speed"
+targetSetting = &"horizontal_speed"
+settingName = "H. Speed"
+
+[node name="SliderSetting_SoftDropRepeatDelay" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_mtsfg")]
+layout_mode = 2
+tooltip_text = "Soft Drop Repeat Delay"
+targetSetting = &"softDrop_repeatDelay"
+settingName = "S.D. Repeat Delay"
+
+[node name="SliderSetting_HorizontalRepeatDelay" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_mtsfg")]
+layout_mode = 2
+tooltip_text = "Horizontal Repeat Delay"
+targetSetting = &"horizontal_repeatDelay"
+settingName = "H. Repeat Delay"

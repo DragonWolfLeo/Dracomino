@@ -23,6 +23,11 @@ const DEFAULT_SETTINGS:Dictionary[StringName, Variant] = {
 	volume_voice = 100.0,
 	# Game
 	gravity = 1.0,
+	lockDelay = 1.0,
+	softDrop_speed = 1.0,
+	horizontal_speed = 1.0,
+	softDrop_repeatDelay = 1.0,
+	horizontal_repeatDelay = 1.0,
 	allowUnfocusedInputs = false,
 }
 var settings:Dictionary[StringName, Variant] = DEFAULT_SETTINGS.duplicate()

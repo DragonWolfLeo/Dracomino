@@ -178,14 +178,24 @@ static var ENCHANTMENTS:Dictionary[StringName, Enchantment] = {
 
 @onready var GRAVITY_WAIT_TIME:float = gravityTimer.wait_time
 var HARD_DROP_WAIT_TIME:float = 0.01
-@onready var SOFT_DROP_WAIT_TIME:float = softDropTimer.wait_time
-var SOFT_DROP_REPEAT_WAIT_TIME:float = .04
-var SOFT_DROP_LOCK_DELAY:float = 0.4
+@onready var SOFT_DROP_WAIT_TIME:float = softDropTimer.wait_time:
+	get():
+		return SOFT_DROP_WAIT_TIME * modifiers.get("movement", 1.0) * Config.getSetting("softDrop_repeatDelay", 1.0)
+var SOFT_DROP_REPEAT_WAIT_TIME:float = .04:
+	get():
+		return SOFT_DROP_REPEAT_WAIT_TIME / Config.getSetting("softDrop_speed", 1.0)
+var SOFT_DROP_LOCK_DELAY:float = 0.4:
+	get():
+		return SOFT_DROP_LOCK_DELAY * Config.getSetting("lockDelay", 1.0)
 var GRAVITY_LOCK_DELAY:float = 0.6:
 	get():
-		return max(getGravityDelay(), GRAVITY_LOCK_DELAY)
-@onready var HORIZONTAL_WAIT_TIME:float = horizontalTimer.wait_time
-var HORIZONTAL_REPEAT_WAIT_TIME:float = .075
+		return max(getGravityDelay(), GRAVITY_LOCK_DELAY * Config.getSetting("lockDelay", 1.0) )
+@onready var HORIZONTAL_WAIT_TIME:float = horizontalTimer.wait_time:
+	get():
+		return HORIZONTAL_WAIT_TIME * modifiers.get("movement", 1.0) * Config.getSetting("horizontal_repeatDelay", 1.0)
+var HORIZONTAL_REPEAT_WAIT_TIME:float = .075:
+	get():
+		return HORIZONTAL_REPEAT_WAIT_TIME / Config.getSetting("horizontal_speed", 1.0)
 @onready var ROTATE_WAIT_TIME:float = rotateTimer.wait_time
 var USE_ALT_ROTATE:bool = true # TODO: Make an option
 
@@ -293,17 +303,17 @@ func _unhandled_input(event: InputEvent) -> void:
 			rotateClockwise()
 			get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("moveLeft") and Input.is_action_just_pressed("moveLeft"):
-		horizontalTimer.start(HORIZONTAL_WAIT_TIME * modifiers.get("movement", 1))
+		horizontalTimer.start(HORIZONTAL_WAIT_TIME)
 		movement_requested.emit(self, Vector2i.LEFT, MOVEMENT.HORIZONTAL)
 		get_viewport().set_input_as_handled()
 		return
 	elif event.is_action_pressed("moveRight") and Input.is_action_just_pressed("moveRight"):
-		horizontalTimer.start(HORIZONTAL_WAIT_TIME * modifiers.get("movement", 1))
+		horizontalTimer.start(HORIZONTAL_WAIT_TIME)
 		movement_requested.emit(self, Vector2i.RIGHT, MOVEMENT.HORIZONTAL)
 		get_viewport().set_input_as_handled()
 		return
 	elif event.is_action_pressed("moveDown") and Input.is_action_just_pressed("moveDown") and FlagManager.isFlagSet("soft_drop"):
-		softDropTimer.start(SOFT_DROP_WAIT_TIME * modifiers.get("movement", 1))
+		softDropTimer.start(SOFT_DROP_WAIT_TIME)
 		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP_LOCK)
 		# Avoid falling too soon
 		resetGravityTimer()
@@ -532,7 +542,7 @@ func _on_HorizontalTimer_timeout():
 	elif Input.is_action_pressed("moveRight"):
 		moved = Vector2i.RIGHT
 	else:
-		horizontalTimer.wait_time = HORIZONTAL_WAIT_TIME * modifiers.get("movement", 1)
+		horizontalTimer.wait_time = HORIZONTAL_WAIT_TIME
 		return
 	horizontalTimer.wait_time = HORIZONTAL_REPEAT_WAIT_TIME * modifiers.get("movement", 1)
 	horizontalTimer.start()
