@@ -29,7 +29,7 @@ var RESIST_DURATION:float = 2.5
 var CHARGE_DURATION:float = 1.5
 var RESET_DURATION:float = 0.3
 var FISHGET_DURATION:float = 3.0
-var FISH_STRENGTH_DAMPEN:float = 0.95
+var FISH_STRENGTH_DAMPEN:float = 0.93
 var ANIMATION_ROTATION_OFFSET:float = -9.0 ## Since big piece is rotate, rotate to match big piece
 
 var tween:Tween
@@ -152,7 +152,7 @@ func startReel():
 	if fishingHook.hooked:
 		var hooked:FishPiece = fishingHook.hooked
 		# Apply a random force at a random direction anywhere from up clockwise to down+left
-		var force:Vector2 = Vector2.from_angle(randf_range(-PI/2, PI*3/4)) * randf() * hooked.speed
+		var force:Vector2 = Vector2.from_angle(randf_range(-PI/2, PI*3/4)) * randf_range(0.2, 0.7) * hooked.speed
 		var resistTween:Tween = hooked.create_tween()
 		resistTween.tween_method(resist.bind(force), 1.0, 0.0, RESIST_DURATION).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_QUAD)
 		if hooked.speed > hooked.SPEED_MIN:
