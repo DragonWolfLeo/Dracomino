@@ -512,6 +512,8 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 				else:
 					lockPiece(piece)
 					SoundManager.play("drop")
+			Piece.MOVEMENT.FALL:
+				pass
 			_:
 				lockPiece(piece)
 				SoundManager.play("drop")
@@ -619,8 +621,11 @@ func resetGame():
 	# Delete current pieces
 	for piece in activePieces:
 		deletePiece(piece)
+	for piece in entities:
+		deletePiece(piece)
 	activePieces_changed.emit()
 	activePieces.clear() # Clear now to avoid weird race condition
+	entities.clear()
 
 	# Clear previews and hold
 	if previewStorage: previewStorage.clear()
@@ -721,6 +726,14 @@ func isPieceOnTopRow(piece:Piece) -> bool:
 			return true
 	return false
 
+func isPieceBottomOnRow(piece:Piece, row:int) -> bool:
+	if not piece or not piece.globalCells.size(): return false
+	var lowestY = BOUNDS.position.y
+	for cell:Vector2i in piece.globalCells:
+		if cell.y > lowestY:
+			lowestY = cell.y
+	return row == lowestY
+
 func isInDanger() -> bool:
 	for y in range(DANGER_ZONE.position.y, DANGER_ZONE.end.y):
 		for x in range(DANGER_ZONE.position.x, DANGER_ZONE.end.x):
@@ -733,6 +746,10 @@ func pushDownRows(clearedChunk:ClearingChunk) -> void:
 	for y in range(clearedChunk.row, BOUNDS.position.y -1, -1):
 		for x in range(BOUNDS.position.x, BOUNDS.end.x):
 			set_cell(Vector2i(x,y), 0, get_cell_atlas_coords(Vector2i(x, y - 1)))
+		# Move entities down
+		for ent:Piece in entities:
+			if isPieceBottomOnRow(ent,y-1):
+				ent.move(Vector2i.DOWN)
 
 	activatedTileHandler.pushDownRows(clearedChunk.row)
 			

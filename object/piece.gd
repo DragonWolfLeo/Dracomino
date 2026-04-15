@@ -229,6 +229,7 @@ enum MOVEMENT {
 	HARD_DROP,
 	SHOVE,
 	FORCED_SHOVE,
+	FALL,
 }
 
 var pieceDefinition:PieceDefinition
@@ -274,7 +275,7 @@ var placed:bool = false: ## When this is an entity that is placed on the board
 			flagHolder.clearFlag("shapes_active" if placed else "entities_active")
 			flagHolder.count("entities_active" if placed else "shapes_active", "amount", 1)
 		if placed:
-			if gravityTimer: gravityTimer.stop()
+			resetGravityTimer()
 			if softDropTimer: softDropTimer.stop()
 			if horizontalTimer: horizontalTimer.stop()
 			if rotateTimer: rotateTimer.stop()
@@ -555,6 +556,7 @@ func gravityDrop():
 
 func move(direction:Vector2i, isRotate:bool = false):
 	currentPosition += direction
+	if placed: return
 	if moveLock:
 		playHardDropSound = true
 	if isRotate:
@@ -566,7 +568,7 @@ func move(direction:Vector2i, isRotate:bool = false):
 			gravityLockDelayed = false
 
 func resetGravityTimer() -> void:
-	if not moveLock and gravityTimer:
+	if (placed or not moveLock) and gravityTimer:
 		gravityTimer.wait_time = getGravityDelay()
 		gravityTimer.start()
 
@@ -601,14 +603,15 @@ func _on_SoftDropTimer_timeout():
 		lockDelayed = false
 
 func _on_GravityTimer_timeout():
-	if moveLock or (
+	if moveLock or placed or (
 		(FlagManager.isFlagSet("gravity") and not modifiers.get("antigravity")) # Antigravity cancels out gravity
 		or modifiers.get("gravity", 1) > 1 # Otherwise if gravity is set at all, it's enabled whether it's unlocked or not
 	) or not isFocus:
 		movement_requested.emit(
 			self,
 			Vector2i.DOWN,
-			MOVEMENT.HARD_DROP if playHardDropSound
+			MOVEMENT.FALL if placed
+			else MOVEMENT.HARD_DROP if playHardDropSound
 			else MOVEMENT.GRAVITY_LOCK if gravityLockDelayed or moveLock
 			else MOVEMENT.GRAVITY
 		)
