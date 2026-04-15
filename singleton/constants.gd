@@ -84,7 +84,7 @@ class LocationData extends Data: pass
 	[215, "Fracture Trap",            "fracture_trap",              [ "trap", "on_spawn" ] ],
 	[216, "Zoom Trap",                "zoom_trap",                  [ "trap", "on_lock" ] ],
 	[217, "Impatience Trap",          "impatience_trap",            [ "trap", "on_spawn" ] ],
-	[218, "In Space!",               "commitment_trap",            [ "trap", "on_spawn"] ],
+	[218, "In Space!",                "space_trap",                 [ "trap", "on_spawn"] ],
 
 	# # Ones that might just be effects only, dunno
 	# [000, "Premium Trap",             "", [ "trap" ] ],
