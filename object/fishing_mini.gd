@@ -117,7 +117,8 @@ func retrieve():
 		fishCaughtTween.tween_property(hooked, "rotation_degrees", rotationOffset, 0.25).from(rotationOffset-30).set_ease(Tween.EASE_IN_OUT)
 		hooked.z_index = 3
 		SoundManager.play("fishget")
-		DialogueManager.showNotification("You just caught a {name}!".format({name = hooked.piece.prettyName}))
+		var prettyName = hooked.piece.context.prettyName if hooked.piece.context else hooked.piece.prettyName
+		DialogueManager.showNotification("You just caught a {name}!".format({name = prettyName}))
 		await DialogueManager.dialogue_ended
 		fishCaughtTween.kill()
 		fishCaughtTween = null
