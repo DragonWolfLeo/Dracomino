@@ -1,72 +1,57 @@
-Version 0.3.0 (traps-rc1)
- - Add Well Done!
- - Add Time for Fishing!
+Version 0.3.0
+New Items
  - Add Tutorial and Logic Tutorial
- - Add more piece colors, and no longer use white, for a total of 15 colors
- - Add Trap Link. (Receiving is backwards-compatible, but must be manually set in the settings)
+ - Add Time for Fishing!
+ - Add Pixellation Trap
+ - Add Crystal Trap
+ - Add Fracture Trap
+ - Add Water Trap
+ - Add Invert Colors Trap
+ - Add Well Done!
  - Add Zoom Trap
  - Add Impatience Trap
  - Add In Space!
- - Add enchantments and curses
- - Add Eggs
- - Add currency bar
+ - Add Enchantments
+ - Add Curses
+ - Add Egg
+Changes
+ - Add Trap Link. (Receiving is backwards-compatible, but must be manually set in the settings)
+ - Add more piece colors, and no longer use white, for a total of 15 colors. Takes effect on new generations.
+ - V Pentomino, W Pentomino, and L Tromino randomize horizontal flip regardless of randomize orientations setting. Takes effect on new generations.
  - Fix inconsistent offsets with symmetrical pieces with randomize orientations setting
- - V Pentomino, W Pentomino, and L Tromino randomize horizontal flip regardless of randomize orientations setting
  - Gravity is affected by lock delay
  - Add piece behavior options
  - Add manual scaling option
-
-Version 0.2.4 (dev-beta3)
- - Fix wrong amount of energy being sent
- - Reset lock delay when rotating
-
-Version 0.2.4 (dev-beta2)
- - Tweak line clear animation
- - Tweak kick behavior
- - Add Lock Delay
- - Fix bug where pieces could spawn inside another
- - Add Energy Link. 1 block sends 2e6J to the energy pool
-
-Version 0.2.4 (dev-beta1)
- - Prevent topping out when top line is filled
- - Fix visual pixel bug that can happen when resizing the window
- - Fix bugs when clearing lines during line clear animation
-
-Version 0.2.4 (traps-alpha2)
+ - Add Mana. Clearing 1 block = 4 Mana = 4e6J Energy. Half of your Mana/Energy is contributed to the energy storage when Energy Link is enabled.
+   - Mana doesn't do much yet, but it has one hidden use
+ - Add currency bar that shows Coins, Mana, and sometimes Energy
+ - Add Debug settings tab
  - Add 6-bit palette option
 
-Version 0.2.4 (dev-alpha3)
- - Turn Vertical Shove and Horizontal Shove into abilities
- - Horizontal Shove is disabled
- - Spawn next piece even if another is still dropping
- - Make active pieces shovable
- - Allow only a single piece control at a time
- - Next piece spawns happen instantly even during Soft Drop line clear animation
- - Non-focused pieces are always affected by gravity
- - Line clears burst into magic crystals
- - Add rotate failure sound
-
-Version 0.2.4 (dev-alpha2)
- - Pieces avoid being placed in each other
+Version 0.2.4 (Pre-release only)
+Multiple-Piece Functionality
+ - Multiple active pieces is supported
  - Pieces can be shoved by other pieces
- - Prevent dropping and losing control of your last piece
-
-Version 0.2.4 (dev-alpha1)
- - Switch binding of Z and X
- - Fix issues with piece spawning and Next Piece Slots filling
- - Improve multiple-piece tech
- - Next piece now spawns immediately after a hard drop
+ - Next piece now spawns immediately
  - Allow dropping with gravity
- - Fix notification duration not shortening when queued
+Hold Slot Improvements
  - Empty Hold Slots are visible
- - Specific Hold Slots can be used with number keys
  - Hold Slots can be cycled with right controller stick
  - Hold cooldown only activates when pulling a piece from a Hold Slot
+ - Specific Hold Slots can be used with number keys
+Changes
  - Add Kick ability
-
-Version 0.2.4 (traps-alpha1)
- - Add overlay effects: Pixel, Crystal, Fracture, Water, Invert
- - Add debug tab with overlay toggles. Priority depends on order toggled.
+ - Add Lock Delay
+ - Add Energy Link. 1 block sends 2e6J to the energy pool
+ - Switch rotate binding of Z and X
+ - Add rotate failure sound
+ - Line clears burst into magic crystals
+Fixes
+ - Fix issues with piece spawning and Next Piece Slots filling
+ - Fix notification duration not shortening when queued
+ - Fix bugs when clearing lines during line clear animation
+ - Fix visual pixel bug that can happen when resizing the window
+ - Prevent topping out when top line is filled
 
 Version 0.2.3.7
  - Add option for Death Link Group
