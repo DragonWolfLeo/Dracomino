@@ -194,7 +194,7 @@ func getCameraFocus() -> Piece:
 func chooseNewFocusPiece(requestIfNone:bool = false) -> void:
 	var focusPiece:Piece = null
 	for piece in activePieces:
-		if not piece.moveLock and not focusPiece:
+		if not piece.moveLock and not piece.placed and not focusPiece:
 			piece.isFocus = true
 			focusPiece = piece
 			# Make focus camera follow with a bit of a delay
