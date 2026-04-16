@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://x3o7m2cjwxgc"]
 
 [ext_resource type="Theme" uid="uid://cf3iwfpvnpy25" path="res://resource/style/dialoguebox.tres" id="1_b7xun"]
-[ext_resource type="Script" uid="uid://dmjefss1xerhm" path="res://ui/choicelabel.gd" id="2"]
+[ext_resource type="Script" uid="uid://dab2w58wl0uhi" path="res://ui/choicelabel.gd" id="2"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_n8v73"]
 content_margin_left = 24.0
