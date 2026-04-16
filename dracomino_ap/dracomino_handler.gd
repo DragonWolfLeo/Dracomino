@@ -225,7 +225,11 @@ func getNextPiece() -> PieceContext:
 									_effectBuffer.erase(fx)
 					currentIndex += 1
 					seedFlagHolder.count("shapes_left", "subtracted", -1, true)
-					return PieceContext.new(stateItem).randomizeColor(color_random).randomizeOrientation(rotate_random).setEffects(effects)
+					var pieceContext:PieceContext = PieceContext.new(stateItem).randomizeColor(color_random).randomizeOrientation(rotate_random).setEffects(effects)
+					if isTrap and stateItem.used:
+						# Don't repeat shape traps. Yes, we went through making its entire context so we can let the random do its thing
+						continue
+					return pieceContext
 				"on_lock", "modifier", "on_spawn":
 					_effectBuffer.append(stateItem)
 		currentIndex += 1

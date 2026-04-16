@@ -662,7 +662,9 @@ func lockPiece(piece:Piece):
 	for cell in piece.globalCells:
 		if BOUNDS.has_point(cell):
 			var mapCoord:Vector2i = cell
+			# Lock cells if not entity
 			if not piece.isEntity: set_cell(mapCoord, 0, Vector2i(piece.colorId, SET_TILE_ATLAS_ROW))
+			# Pick up coins touched
 			var pickup:ItemPickupContext = _mappedpickups.get(mapCoord)
 			if pickup:
 				pickedUpItem = true
@@ -673,10 +675,14 @@ func lockPiece(piece:Piece):
 	if pickedUpItem:
 		SoundManager.play("itempickup")
 
+	# Allow board to send death on restart
 	boardIsFresh = false
 
 	var onLockEffect:DracominoHandler.StateItem = piece.attachedEffects.get("on_lock")
 	if not isGameOver:
+		# If this was a trap, mark it as used
+		piece.markEffectsAsUsed()
+		# Check which rows are fill and prepare to clear them
 		var fullRows:Array[int] = getFullRows()
 		if fullRows.size() > 0:
 			if onLockEffect: effectHandler.bufferEffect(onLockEffect)
@@ -688,12 +694,15 @@ func lockPiece(piece:Piece):
 		else:
 			if onLockEffect: effectHandler.tryToTriggerEffect(onLockEffect)
 	
+	# Convert to active pieces to entity when applickable, otherwise delete
 	if piece.isEntity:
 		piece.placed = true
 		activePieces.erase(piece)
 		entities.append(piece)
 	else:
 		deletePiece(piece)
+	
+	# Check if requesting next piece is blocked (because you'll get another as a result of a minigame)
 	var fx = effectHandler.getEffectObject(onLockEffect)
 	if fx and fx.blockRequestPiece and not isGameOver:
 		pass

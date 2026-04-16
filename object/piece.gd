@@ -434,7 +434,7 @@ func setPiece(pieceContext:DracominoHandler.PieceContext) -> void:
 
 	attachedEffects.merge(pieceContext.effects, true)
 	var attachedModifier:DracominoHandler.StateItem = attachedEffects.get("modifier")
-	if attachedModifier is DracominoHandler.StateItem and attachedModifier.data:
+	if attachedModifier is DracominoHandler.StateItem and attachedModifier.data and not attachedModifier.used:
 		applyEnchantmentByName(attachedModifier.data.internalName)
 
 func applyEnchantmentByName(enchantmentName:StringName) -> Enchantment:
@@ -580,6 +580,12 @@ func getGravityDelay() -> float:
 func getLandedOnBy(piece:Piece, movementType:int = MOVEMENT.NONE) -> void:
 	landed_on_by.emit(piece, movementType)
 
+func markEffectsAsUsed() -> void: ## Prevent repeating trap shapes and enchantments
+	if stateItem:
+		stateItem.used = true
+	var attachedModifier:DracominoHandler.StateItem = attachedEffects.get("modifier")
+	if attachedModifier is DracominoHandler.StateItem:
+		attachedModifier.used = true
 # Events
 func _on_HorizontalTimer_timeout():
 	if not isFocus: return
