@@ -11,7 +11,7 @@ var DANGER_ZONE := BOUNDS.grow_individual(-2, 0, -2, -17)
 var ALLOW_GRAVITY_DROP:bool = true # TODO: Make an option
 var OPACITY_REDUCTION_PER_GHOST:float = 1/3 # 
 var MAX_PIECES:int = 8
-var EFFECT_IMPATIENCE_NUM_PIECES_TO_SPAWN:int = 3
+var EFFECT_IMPATIENCE_NUM_PIECES_TO_SPAWN:int = 2
 var DELAYED_EFFECT_CONTEXT_DURATION:float = 1.3
 
 static var ACTIVE_TILE_ATLAS_ROW:int = 0
