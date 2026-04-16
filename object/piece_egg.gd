@@ -1,6 +1,7 @@
 extends Piece
 
 static var EGGSHARDPARTICLES_SCENE:PackedScene = load("res://object/eggshardparticles.tscn")
+static var HATCHLING_SCENE:PackedScene = load("res://object/hatchling.tscn")
 @onready var crackFrames:Sprite2D = $CrackFrames
 var EFFECT_DURATION:int = 32
 var activeEffect:ActiveEffect
@@ -12,6 +13,11 @@ func _ready():
 
 func hatch():
 	if is_queued_for_deletion(): return
+	# Make hatchling
+	var hatchling:Sprite2D = HATCHLING_SCENE.instantiate()
+	add_sibling(hatchling)
+	hatchling.global_position = crackFrames.global_position
+	# Make egg shards
 	var eggshards:CPUParticles2D = EGGSHARDPARTICLES_SCENE.instantiate()
 	add_sibling(eggshards)
 	eggshards.global_position = crackFrames.global_position
