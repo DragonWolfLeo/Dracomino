@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://eb7omf02s6oc"]
+[gd_scene load_steps=15 format=3 uid="uid://eb7omf02s6oc"]
 
 [ext_resource type="Script" uid="uid://celwdodq1ovmq" path="res://ui/hud_container.gd" id="1_3knna"]
 [ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="1_8igwg"]
@@ -10,6 +10,8 @@
 [ext_resource type="Texture2D" uid="uid://cuvxsetataxu4" path="res://assets/art/icons/gravity.png" id="7_6swh8"]
 [ext_resource type="Texture2D" uid="uid://c6vhet4yyaup8" path="res://assets/art/icons/softdrop.png" id="8_daflg"]
 [ext_resource type="Texture2D" uid="uid://g81y46tu318g" path="res://assets/art/icons/harddrop.png" id="9_s6eb1"]
+[ext_resource type="Texture2D" uid="uid://mr17cdso8884" path="res://assets/art/icons/kick.png" id="11_8v834"]
+[ext_resource type="Texture2D" uid="uid://bfc1gu6my7eac" path="res://assets/art/icons/lockdelay.png" id="12_c37wy"]
 
 [sub_resource type="Theme" id="Theme_d5o15"]
 default_font = ExtResource("1_8igwg")
@@ -131,3 +133,29 @@ flag = "existing_hard_drop"
 [node name="FlagColorRect" parent="VBoxContainer/AbilityBar/HardDrop" instance=ExtResource("5_c37wy")]
 layout_mode = 1
 flag = "hard_drop"
+
+[node name="Kick" type="TextureRect" parent="VBoxContainer/AbilityBar"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Kick"
+texture = ExtResource("11_8v834")
+stretch_mode = 3
+script = ExtResource("5_3knna")
+flag = "existing_kick"
+
+[node name="FlagColorRect" parent="VBoxContainer/AbilityBar/Kick" instance=ExtResource("5_c37wy")]
+layout_mode = 1
+flag = "kick"
+
+[node name="LockDelay" type="TextureRect" parent="VBoxContainer/AbilityBar"]
+custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+tooltip_text = "Lock Delay"
+texture = ExtResource("12_c37wy")
+stretch_mode = 3
+script = ExtResource("5_3knna")
+flag = "existing_lock_delay"
+
+[node name="FlagColorRect" parent="VBoxContainer/AbilityBar/LockDelay" instance=ExtResource("5_c37wy")]
+layout_mode = 1
+flag = "lock_delay"
