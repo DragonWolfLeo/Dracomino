@@ -499,25 +499,36 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 		match movementType:
 			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE:
 				lockPiece(piece)
+				checkIfLandedOnEntity(piece, movementType)
 				SoundManager.play("harddrop")
 			Piece.MOVEMENT.SOFT_DROP:
 				if FlagManager.isFlagSet("lock_delay"):
 					piece.lockDelayed = true
 				else:
 					lockPiece(piece)
+					checkIfLandedOnEntity(piece, movementType)
 					SoundManager.play("drop")
 			Piece.MOVEMENT.GRAVITY:
 				if FlagManager.isFlagSet("lock_delay"):
 					piece.gravityLockDelayed = true
 				else:
 					lockPiece(piece)
+					checkIfLandedOnEntity(piece, movementType)
 					SoundManager.play("drop")
 			Piece.MOVEMENT.FALL:
 				pass
 			_:
 				lockPiece(piece)
+				checkIfLandedOnEntity(piece, movementType)
 				SoundManager.play("drop")
 	return true
+
+func checkIfLandedOnEntity(piece:Piece, movement:int) -> void: ## Send signals to pieces landed on
+	var belowCells:Array[Vector2i] = getCellsDifference(getTranslatedCells(piece.globalCells, Vector2i.DOWN), piece.globalCells)
+	for ent:Piece in entities:
+		for cell in belowCells:
+			if ent.globalCells.has(cell):
+				ent.getLandedOnBy(piece, movement)
 
 func tryToMakePiecesCollible() -> void: ## Check if all noncollible pieces are in a free space to turn them collidible
 	for piece:Piece in activePieces:
@@ -663,7 +674,7 @@ func lockPiece(piece:Piece):
 		SoundManager.play("itempickup")
 
 	boardIsFresh = false
-	
+
 	var onLockEffect:DracominoHandler.StateItem = piece.attachedEffects.get("on_lock")
 	if not isGameOver:
 		var fullRows:Array[int] = getFullRows()

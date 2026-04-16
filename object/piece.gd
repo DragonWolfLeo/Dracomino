@@ -303,6 +303,7 @@ signal ghost_cells_requested(piece:Piece, ghostPiece:GhostPiece)
 signal focus_lost()
 signal trap_activated(stateItem:DracominoHandler.StateItem)
 signal piece_placed()
+signal landed_on_by(piece:Piece, movementType:int)
 
 #==== Virtuals ======
 func _ready() -> void:
@@ -575,6 +576,9 @@ func resetGravityTimer() -> void:
 func getGravityDelay() -> float:
 	var gravSpeed = Config.getSetting("gravity", 1.0)* (1.0 if moveLock else modifiers.get("gravity", 1.0))
 	return GRAVITY_WAIT_TIME/gravSpeed
+
+func getLandedOnBy(piece:Piece, movementType:int = MOVEMENT.NONE) -> void:
+	landed_on_by.emit(piece, movementType)
 
 # Events
 func _on_HorizontalTimer_timeout():

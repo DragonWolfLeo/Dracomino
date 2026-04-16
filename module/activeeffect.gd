@@ -16,8 +16,8 @@ var durationLeft:int = -1:
 				sig.disconnect(_on_effect_duration_down)
 
 var dispelCost:float = CONSTANTS.DISPEL_MANA_COST
+var effectDurationTick_cooldown:float = 2.0
 var _cooldownTimer:SceneTreeTimer
-var EFFECT_DURATION_TICK_COOLDOWN:float = 2.0
 
 # === Static functions ===
 static func instantiateEffect(flag:String, duration:int = -1, annoying:bool = true, removalAction:String = "dispel") -> ActiveEffect:
@@ -46,17 +46,21 @@ func clearEffect() -> void:
 	SoundManager.play("untrap")
 	queue_free()
 
-# === Events ===
-func _on_effect_duration_down() -> void:
-	if _cooldownTimer:
+func tickDuration(amount:int, affectedByCooldown:bool = true) -> void:
+	if affectedByCooldown and _cooldownTimer:
 		return
-	durationLeft -= 1
+	durationLeft -= amount
 	if durationLeft <= 0:
 		queue_free()
 	else:
 		duration_changed.emit(durationLeft)
-		_cooldownTimer = get_tree().create_timer(EFFECT_DURATION_TICK_COOLDOWN, true)
+		_cooldownTimer = get_tree().create_timer(effectDurationTick_cooldown, true)
 		_cooldownTimer.timeout.connect(set.bind("_cooldownTimer", null))
+	pass
+
+# === Events ===
+func _on_effect_duration_down() -> void:
+	tickDuration(1)
 
 func _on_dispelled() -> void:
 	FlagManager.clearFlag("last_mana_transaction_succeeded")
