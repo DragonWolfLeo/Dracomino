@@ -22,6 +22,7 @@ const DEFAULT_SETTINGS:Dictionary[StringName, Variant] = {
 	volume_sfx = 100.0,
 	volume_voice = 100.0,
 	# Game
+	auto_scaling = true,
 	gravity = 1.0,
 	lockDelay = 1.0,
 	softDrop_speed = 1.0,

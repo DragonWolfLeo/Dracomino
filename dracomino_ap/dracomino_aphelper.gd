@@ -4,6 +4,8 @@ var btn_deathLink:CheckButton
 var btn_deathOnRestart:CheckButton
 var optionBtn_deathLinkGroup:OptionButton
 var lineEdit_deathLinkGroup:LineEdit
+var optionBtn_scaling:OptionButton
+var sliderSetting_scaleAmount:Control
 var btn_allowUnfocusedInputs:CheckButton
 var slider_masterVol:Slider
 var slider_musicVol:Slider
@@ -17,7 +19,10 @@ enum DEATH_LINK_GROUP {
 	DRACOMINO,
 	CUSTOM,
 }
-	
+enum SCALING {
+	AUTO,
+	MANUAL,
+}
 func _ready() -> void:
 	if OS.is_debug_build():
 		Archipelago.cmd_manager.debug_hidden = false
@@ -52,6 +57,14 @@ func _ready() -> void:
 		lineEdit_deathLinkGroup.focus_exited.connect(func(): _on_lineEdit_deathLinkGroup_text_submitted(lineEdit_deathLinkGroup.text))
 		lineEdit_deathLinkGroup.text_submitted.connect(_on_lineEdit_deathLinkGroup_text_submitted)
 	_on_deathLinkGroup_setting_changed()
+	# Scaling
+	optionBtn_scaling = get_parent().find_child("OptionButton_Scaling")
+	if optionBtn_scaling:
+		optionBtn_scaling.select(SCALING.AUTO if Config.getSetting("auto_scaling", true) else SCALING.MANUAL)
+		optionBtn_scaling.item_selected.connect(_on_optionBtn_auto_scaling_item_selected)
+	sliderSetting_scaleAmount = get_parent().find_child("SliderSetting_ScaleAmount")
+	if sliderSetting_scaleAmount:
+		sliderSetting_scaleAmount.visible = not Config.getSetting("auto_scaling", true)
 
 	slider_masterVol = get_parent().find_child("HSlider_MasterVol")
 	if slider_masterVol:
@@ -132,6 +145,12 @@ func _on_deathLinkGroup_setting_changed():
 
 func _on_deathLinkGroup_custom_setting_changed():
 	Archipelago.set_deathlink_group(Config.getSetting("deathLinkGroup_custom", ""))
+
+func _on_optionBtn_auto_scaling_item_selected(index:int):
+	var value:bool = index == SCALING.AUTO
+	Config.changeSetting("auto_scaling", value)
+	if sliderSetting_scaleAmount:
+		sliderSetting_scaleAmount.visible = !value
 
 func _on_optionBtn_deathLinkGroup_item_selected(index:int):
 	Config.changeSetting("deathLinkGroup", index)

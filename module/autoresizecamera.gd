@@ -11,6 +11,8 @@ func _enter_tree() -> void:
 	if not masterControl:
 		masterControl = get_viewport().get_parent() as Control
 
+	SignalBus.getSignal("setting_changed", "auto_scaling").connect(_on_resized)
+	SignalBus.getSignal("setting_changed", "scale_amount").connect(_on_resized)
 	if masterControl is Control:
 		masterControl.resized.connect(_on_resized)
 		_on_resized()
@@ -31,5 +33,8 @@ func _ready() -> void:
 func _on_resized() -> void:
 	await get_tree().process_frame
 	var rect = get_viewport_rect()
-	var scaleMultiplier:int = max(1, floor(rect.size.y*zoomMultiplier/ heightThreshold))
+	var scaleMultiplier:float = (
+		max(1, floor(rect.size.y*zoomMultiplier/ heightThreshold)) if Config.getSetting("auto_scaling", true)
+		else zoomMultiplier*Config.getSetting("scale_amount", 1.0)
+	)
 	zoom = Vector2(scaleMultiplier, scaleMultiplier)

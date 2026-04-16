@@ -91,6 +91,42 @@ text = "Allow Unfocused Inputs
 script = ExtResource("3_fprr2")
 optionKey = "allowUnfocusedInputs"
 
+[node name="Container_Scaling" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "Send deaths to and receive deaths from only a specific group"
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/Container_Scaling"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HFlowContainer" parent="MarginContainer/VBoxContainer/Container_Scaling/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/Container_Scaling/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Scaling:"
+
+[node name="OptionButton_Scaling" type="OptionButton" parent="MarginContainer/VBoxContainer/Container_Scaling/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+selected = 0
+item_count = 2
+popup/item_0/text = "Auto"
+popup/item_0/id = 0
+popup/item_1/text = "Manual"
+popup/item_1/id = 1
+
+[node name="SliderSetting_ScaleAmount" parent="MarginContainer/VBoxContainer/Container_Scaling/VBoxContainer/HBoxContainer" instance=ExtResource("2_mtsfg")]
+layout_mode = 2
+size_flags_horizontal = 3
+targetSetting = &"scale_amount"
+settingName = "Scale:"
+minValue = 0.5
+maxValue = 4.0
+step = 0.5
+
 [node name="SliderSetting_Gravity" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_mtsfg")]
 layout_mode = 2
 targetSetting = &"gravity"
