@@ -1,5 +1,6 @@
 extends Piece
 
+static var EGGSHARDPARTICLES_SCENE:PackedScene = load("res://object/eggshardparticles.tscn")
 @onready var crackFrames:Sprite2D = $CrackFrames
 var EFFECT_DURATION:int = 32
 var activeEffect:ActiveEffect
@@ -9,11 +10,19 @@ func _ready():
 	piece_placed.connect(_on_piece_placed)
 	landed_on_by.connect(_on_landed_on_by)
 
+func hatch():
+	var eggshards:CPUParticles2D = EGGSHARDPARTICLES_SCENE.instantiate()
+	add_sibling(eggshards)
+	eggshards.global_position = crackFrames.global_position
+	eggshards.finished.connect(eggshards.queue_free)
+	eggshards.emitting = true
+	queue_free()
+
 func _on_piece_placed():
 	if activeEffect:
 		printerr("Piece_Egg._on_piece_placed: There's already an active effect")
 	activeEffect = ActiveEffect.instantiateEffect("egg_active", EFFECT_DURATION-(6 if playHardDropSound else 0), false, "hatch")
-	activeEffect.tree_exiting.connect(queue_free)
+	activeEffect.tree_exiting.connect(hatch)
 	activeEffect.tree_exiting.connect(set.bind("activeEffect", null))
 	activeEffect.duration_changed.connect(_on_activeEffect_duration_changed)
 	add_child(activeEffect)
