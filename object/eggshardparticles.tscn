@@ -13,6 +13,7 @@ offsets = PackedFloat32Array(0.725275, 1)
 colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
 
 [node name="EggShardParticles" type="CPUParticles2D"]
+process_mode = 3
 material = SubResource("CanvasItemMaterial_mcgrm")
 emitting = false
 amount = 20
