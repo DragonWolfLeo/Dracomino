@@ -1,74 +1,430 @@
 extends Node
 
+# Constants
+var MANA_TO_ENERGY_RATIO:float = 1e6
+var MANA_PER_BLOCK:float = 4
+var ENERGY_LINK_SHARE:float = 0.5
+
+var DISPEL_MANA_COST:float = MANA_PER_BLOCK * 50 # 5 lines worth
+
+# Colors
+class COLOR:
+	static var PROGUSEFUL =  Color8(0xFF, 0xAA, 0x00)
+	static var PROGRESSION = Color8(0xAA, 0x55, 0xAA)
+	static var USEFUL =      Color8(0x55, 0x55, 0xFF)
+	static var FILLER =      Color8(0x55, 0xAA, 0xFF)
+	static var TRAP =        Color8(0xFF, 0x55, 0x00)
+	static var DEATH =       Color8(0xFF, 0x00, 0x00)
+	static var SPECIAL =     Color8(0x55, 0xAA, 0x00)
+	static var ERROR =       Color8(0xFF, 0x55, 0x00)
+
+# Piece Color Ids
+var LEGACY_PIECE_COLOR_MAPPINGS:Array[int] = [
+	0,
+	1,
+	15,
+	2,
+	4,
+	6,
+	8,
+	10,
+	11,
+	12,
+	13,
+	14,
+]
+var NUMBER_OF_PIECE_COLORS_MIN = 1
+var NUMBER_OF_PIECE_COLORS_MAX = 16
+
 # Item + Location Data
 class Data:
+	static var OBJECT_TYPES:PackedStringArray = [
+		"shape",
+		"ability",
+		"on_spawn",
+		"on_lock",
+		"modifier",
+		"line_clear",
+		"item_pickup",
+	]
 	var id:int
 	var prettyName:StringName
+	var internalName:StringName
 	var tags:Dictionary[StringName, bool]
+	var type:StringName
 	func _init(arr=[]):
-		arr.resize(3)
+		arr.resize(4)
 		id = arr[0] as int
 		prettyName = arr[1] as StringName
-		for tag in arr[2] as Array:
+		internalName = (arr[2] if arr[2] else prettyName.to_snake_case()) as StringName
+		for tag in arr[3] as Array:
 			tags[tag as StringName] = true
+		for tag in OBJECT_TYPES:
+			if tags.get(tag, false):
+				type = tag
+				break
 
 class ItemData extends Data: pass
 class LocationData extends Data: pass
 
 @onready var ITEMS:Dictionary[int, ItemData] = [
 	# Abilities (1-100)
-	[1,   "Gravity",                  [ "useful", "ability" ] ],
-	[2,   "Soft Drop",                [ "useful", "ability" ] ],
-	[3,   "Hard Drop",                [ "useful", "ability" ] ],
-	[4,   "Rotate Clockwise",         [ "progression", "ability", "rotate" ] ],
-	[5,   "Rotate Counterclockwise",  [ "progression", "ability", "rotate" ] ],
-	[6,   "Ghost Piece",              [ "useful", "ability" ] ],
+	[1,   "Gravity",                  "gravity",                    [ "useful", "trap", "ability", "classic", "drop" ] ],
+	[2,   "Soft Drop",                "soft_drop",                  [ "useful", "ability", "classic", "drop" ] ],
+	[3,   "Hard Drop",                "hard_drop",                  [ "useful", "ability", "classic", "drop" ] ],
+	[4,   "Rotate Clockwise",         "rotate_clockwise",           [ "progression", "useful", "ability", "classic", "rotate" ] ],
+	[5,   "Rotate Counterclockwise",  "rotate_counterclockwise",    [ "progression", "useful", "ability", "classic", "rotate" ] ],
+	[6,   "Ghost Piece",              "ghost_piece",                [ "useful", "ability", "classic" ] ],
+	[7,   "Kick",                     "kick",                       [ "useful", "ability", "classic" ] ],
+	# [8,   "Vertical Shove",           "vertical_shove",             [ "useful", "ability" ] ],
+	# [9,   "Horizontal Shove",         "horizontal_shove",           [ "useful", "trap", "ability" ] ],
+	[10,  "Lock Delay",               "lock_delay",                 [ "useful", "ability", "classic" ] ],
 
 	# Progressive Items (101-200)
-	[101, "Next Piece Slot",          [ "useful", "ability", "progressive" ] ],
-	[102, "Hold Slot",                [ "useful", "ability", "progressive" ] ],
+	[101, "Next Piece Slot",          "next_piece_slot",            [ "useful", "ability", "progressive" ] ],
+	[102, "Hold Slot",                "hold_slot",                  [ "useful", "ability", "progressive" ] ],
 	
 	# Traps Items (201-300)
-	[201, "UNIMPLEMENTED TRAP",         [ "trap" ] ],
+	[201, "Tutorial",                 "tutorial",                   [ "trap", "useful", "on_lock" ] ],
+	[202, "Logic Tutorial",           "logic_tutorial",             [ "trap", "useful", "on_lock" ] ],
+	[203, "Time to Fish!",            "fishing",                    [ "trap", "on_lock" ] ],
+	[204, "Egg",                      "egg",                        [ "trap", "shape"] ],
+	[205, "Curse",                    "enchantment_curse",          [ "trap", "modifier" ] ],
+	[206, "Legendary Enchantment",    "enchantment_legendary",      [ "trap", "modifier" ] ],
+	[207, "Epic Enchantment",         "enchantment_epic",           [ "trap", "modifier" ] ],
+	[208, "Rare Enchantment",         "enchantment_rare",           [ "trap", "modifier"] ],
+	[209, "Medium-Rare Enchantment",  "enchantment_uncommon",       [ "trap", "modifier"] ],
+	[210, "Well Done!",               "welldone",                   [ "trap", "on_lock"] ],
+	[211, "Crystal Trap",             "crystal_trap",               [ "trap", "on_spawn"] ],
+	[212, "Invert Colors Trap",       "invertcolors_trap",          [ "trap", "on_spawn"] ],
+	[213, "Water Trap",               "water_trap",                 [ "trap", "on_spawn" ] ],
+	[214, "Pixellation Trap",         "pixellation_trap",           [ "trap", "on_spawn"] ],
+	[215, "Fracture Trap",            "fracture_trap",              [ "trap", "on_spawn" ] ],
+	[216, "Zoom Trap",                "zoom_trap",                  [ "trap", "on_lock" ] ],
+	[217, "Impatience Trap",          "impatience_trap",            [ "trap", "on_spawn" ] ],
+	[218, "In Space!",                "space_trap",                 [ "trap", "on_spawn"] ],
+
+	# # Ones that might just be effects only, dunno
+	# [000, "Premium Trap",             "", [ "trap" ] ],
+	# [000, "Cutscene",                 "", [ "trap", "uncommon" ] ],
+	# [000, "Transformation Trap",      "", [ "trap" ] ],
+	# [000, "Momentum Trap",            "", [ "trap" ] ],
+	# [000, "Glue Trap",                "", [ "trap" ] ],
+	# [000, "Shatter Trap",             "", [ "trap" ] ],
+	# [000, "Fire Trap",                "", [ "trap" ] ],
+	# [000, "Camera Rotate Trap",       "", [ "trap" ] ],
+	# [000, "Board Wipe Trap",          "", [ "trap" ] ],
+	# [000, "Reverse Controls Trap",    "", [ "trap" ] ],
+	# [000, "Latency Trap",             "", [ "trap" ] ],
+	# [000, "Disable Rotate Trap",      "", [ "trap" ] ],
+	# [000, "Disable Hold Trap",        "", [ "trap" ] ],
+	# [000, "Dummy Trap",               "", [ "trap" ] ],
+	# [000, "Flip Trap",                "", [ "trap" ] ],
+	# [000, "Upside-Down Trap",         "", [ "trap" ] ],
+	# [000, "Ice Trap",                 "", [ "trap" ] ],
+	# [000, "Shuffle Trap",             "", [ "trap" ] ],
+	# [000, "Ghost Trap",               "", [ "trap" ] ],
+	# [000, "Static Trap",              "", [ "trap" ] ],
+	# [000, "Quiz Trap",                "", [ "trap" ] ],
+	# [000, "I Trap",                   "", [ "trap" ] ],
+	# [000, "Sleep Trap",               "", [ "trap" ] ],
+	# [000, "Wyrmino Trap",             "", [ "trap" ] ],
+	# [000, "Tutorial",                 "", [ "trap" ] ],
 	
-	# Shapes (301-)
-	[301, "Monomino",       [ "progression", "shape", "monomino" ] ],
+	# Shapes (301-)                                                                     Last two values are poor height, safe height
+	[301, "Monomino",       "", [ "progression_skip_balancing", "shape", "monomino" ],                                             1, 1],
 
-	[302, "Domino",         [ "progression", "shape", "domino" ] ],
+	[302, "Domino",         "", [ "progression_skip_balancing", "shape", "domino" ],                                               1, 2],
 
-	[303, "I Tromino",      [ "progression", "shape", "tromino" ] ],
-	[304, "L Tromino",      [ "progression", "shape", "tromino", "has_corner_gap" ] ],
+	[303, "I Tromino",      "", [ "progression_skip_balancing", "shape", "tromino" ],                                              1, 3],
+	[304, "L Tromino",      "", [ "progression_skip_balancing", "shape", "tromino", "has_corner_gap" ],                            1, 2],
 
-	[305, "I Tetromino",    [ "progression", "shape", "tetromino" ] ],
-	[306, "O Tetromino",    [ "progression", "shape", "tetromino" ] ],
-	[307, "T Tetromino",    [ "progression", "shape", "tetromino", "has_corner_gap" ] ],
-	[308, "J Tetromino",    [ "progression", "shape", "tetromino", "has_corner_gap", "has_second_tile_gap" ] ],
-	[309, "L Tetromino",    [ "progression", "shape", "tetromino", "has_corner_gap", "has_second_tile_gap" ] ],
-	[310, "S Tetromino",    [ "progression", "shape", "tetromino", "has_corner_gap" ] ],
-	[311, "Z Tetromino",    [ "progression", "shape", "tetromino", "has_corner_gap" ] ],
+	[305, "I Tetromino",    "", [ "progression_skip_balancing", "shape", "tetromino" ],                                            1, 4],
+	[306, "O Tetromino",    "", [ "progression_skip_balancing", "shape", "tetromino" ],                                            2, 2],
+	[307, "T Tetromino",    "", [ "progression_skip_balancing", "shape", "tetromino", "has_corner_gap" ],                          1, 3],
+	[308, "J Tetromino",    "", [ "progression_skip_balancing", "shape", "tetromino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[309, "L Tetromino",    "", [ "progression_skip_balancing", "shape", "tetromino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[310, "S Tetromino",    "", [ "progression_skip_balancing", "shape", "tetromino", "has_corner_gap" ],                          1, 2],
+	[311, "Z Tetromino",    "", [ "progression_skip_balancing", "shape", "tetromino", "has_corner_gap" ],                          1, 2],
 
-	 [312, "I Pentomino",    [ "progression", "shape", "pentomino" ] ],
-	 [313, "U Pentomino",    [ "progression", "shape", "pentomino", "has_second_tile_gap" ] ],
-	 [314, "T Pentomino",    [ "progression", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ] ],
-	 [315, "X Pentomino",    [ "progression", "shape", "pentomino", "has_corner_gap" ] ],
-	 [316, "V Pentomino",    [ "progression", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ] ],
-	 [317, "W Pentomino",    [ "progression", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ] ],
-	 [318, "L Pentomino",    [ "progression", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ] ],
-	 [319, "J Pentomino",    [ "progression", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ] ],
-	 [320, "S Pentomino",    [ "progression", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ] ],
-	 [321, "Z Pentomino",    [ "progression", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ] ],
-	 [322, "F Pentomino",    [ "progression", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ] ],
-	 [323, "F' Pentomino",   [ "progression", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ] ],
-	 [324, "N Pentomino",    [ "progression", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ] ],
-	 [325, "N' Pentomino",   [ "progression", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ] ],
-	 [326, "P Pentomino",    [ "progression", "shape", "pentomino", "has_corner_gap" ] ],
-	 [327, "Q Pentomino",    [ "progression", "shape", "pentomino", "has_corner_gap" ] ],
-	 [328, "Y Pentomino",    [ "progression", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ] ],
-	 [329, "Y' Pentomino",   [ "progression", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ] ],
+	[312, "I Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino" ],                                            1, 5],
+	[313, "U Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_second_tile_gap" ],                     2, 3],
+	[314, "T Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   2, 3],
+	[315, "X Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap" ],                          2, 2],
+	[316, "V Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[317, "W Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   2, 3],
+	[318, "L Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 4],
+	[319, "J Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 4],
+	[320, "S Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[321, "Z Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[322, "F Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[323, "F' Pentomino",   "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[324, "N Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[325, "N' Pentomino",   "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[326, "P Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap" ],                          2, 3],
+	[327, "Q Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap" ],                          2, 3],
+	[328, "Y Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+	[329, "Y' Pentomino",   "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
 ].reduce(_generateDataTable.bind(ItemData.new), {} as Dictionary[int, ItemData])
 
 @onready var LOCATIONS:Dictionary[int, LocationData] = (_generateLocationConstants().reduce(_generateDataTable.bind(LocationData.new), {} as Dictionary[int, LocationData]))
 
+@onready var ITEM_NAME_TO_ID:Dictionary[StringName, int] = ITEMS.values().reduce(
+	func(acc:Dictionary[StringName, int], itemData:ItemData):
+		acc[itemData.internalName] = itemData.id
+		return acc,
+	{} as Dictionary[StringName, int]
+)
+
+# === Trap Link ===
+var TRAP_ALIASES:Dictionary[StringName, String] = {
+	# DRACOMINO TRAPS 
+	crystal_trap            = "Crystal Trap",
+	egg                     = "Egg Trap",
+	enchantment             = "Enchantment Trap",
+	enchantment_curse       = "Curse Trap",
+	fracture_trap           = "Fracture Trap",
+	impatience_trap         = "Impatience Trap",
+	# premium_trap           = "Premium Trap", # Might scrap
+	space_trap              = "Space Trap",
+	# unrandomization_trap    = "Unrandomization Trap",
+	welldone                = "Well Done Trap",
+
+	# EXISTING TRAPS
+	fishing                 = "Fishing Trap",
+	invertcolors_trap       = "Invert Colors Trap",
+	logic_tutorial          = "Tutorial Trap",
+	pixellation_trap        = "Pixellation Trap",
+	# Random Cutscene         = "Cutscene Trap",
+	tutorial                = "Tutorial Trap",
+	water_trap              = "Underwater Trap",
+	zoom_trap               = "Zoom Trap",
+
+	# FAKE TRAPS (Shouldn't be sent, but giving them a display name)
+	enchantment_curse_gravity        = "Curse Trap",
+	enchantment_curse_movement       = "Curse Trap",
+	enchantment_legendary_movement   = "Enchantment Trap",
+	enchantment_legendary_spin       = "Enchantment Trap",
+	enchantment_random               = "Random Enchantment",
+	fade                             = "Fake Transition",
+	mini_jumpscare                   = "Mini Jumpscare",
+	random_trap                      = "Random Trap",
+}
+var RANDOM_TRAP_CHOICES:Array[StringName] = [
+	"crystal_trap",
+	"fracture_trap",
+	"welldone",
+	"fishing",
+	"invertcolors_trap",
+	"water_trap",
+	"pixellation_trap",
+	"space_trap",
+]
+var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
+	# DRACOMINO TRAPS
+	"Crystal Trap"            : "crystal_trap",
+	"Curse Trap"              : "curse",
+	"Egg Trap"                : "egg",
+	"Enchantment Trap"        : "enchantment",
+	"Fracture Trap"           : "fracture_trap",
+	"Impatience Trap"         : "impatience_trap",
+	# "Premium Trap"            : "premium_trap",
+	"Space Trap"              : "space_trap",
+	# "Unrandomization Trap"    : "unrandomization_trap",
+	"Well Done Trap"          : "welldone",
+
+	# OTHER TRAPS
+	"144p Trap"               : "pixellation_trap",
+	"Aaa Trap"                : "mini_jumpscare",
+	# "Animal Trap"             : "Transform Trap",
+	"Animal Bonus Trap"       : "fishing",
+	"Army Trap"               : "impatience_trap",
+	"Bald Trap"               : "egg",
+	# "Banana Peel Trap"        : "momemtum_trap",
+	# "Banana Trap"             : "momemtum_trap",
+	"Banner Trap"             : "enchantment",
+	# "Bee Trap"                : "glue_trap",
+	# "Blue Balls Curse"        : "shatter_trap",
+	# "Bomb"                    : "shatter_trap",
+	# "Bomb Trap"               : "shatter_trap",
+	"Bonk Trap"               : "impatience_trap",
+	"Breakout Trap"           : "fishing",
+	"Bubble Trap"             : "water_trap",
+	"Bullet Time Trap"        : "enchantment_curse_movement",
+	# "Burn Trap"               : "fire_trap",
+	"Buyon Trap"              : "egg",
+	# "Camera Rotate Trap"      : "Camera Rotate Trap",
+	"Chaos Trap"              : "crystal_trap",
+	"Chaos Control Trap"      : ["invertcolors_trap", "enchantment_curse_movement"],
+	"Chart Modifier Trap"     : "enchantment_random",
+	# "Chaser Trap"             : "shatter_trap",
+	# "Clear Image Trap"        : "Board Wipe Trap",
+	# "Confound Trap"           : "Reverse Controls Trap",
+	# "Confuse Trap"            : "Reverse Controls Trap",
+	# "Confusion Trap"          : "Reverse Controls Trap",
+	"Control Ball Trap"       : "zoom_trap",
+	# "Controller Drift Trap"   : "Latency Trap",
+	"Cursed Ball Trap"        : "enchantment_curse",
+	"Cutscene Trap"           : "logic_tutorial", # "Random Cutscene",
+	# "Damage Trap"             : "shatter_trap",
+	# "Deisometric Trap"        : "Camera Rotate Trap",
+	"Depletion Trap"          : "enchantment_curse",
+	# "Disable A Trap"          : "Disable Rotate Trap",
+	# "Disable B Trap"          : "Disable Rotate Trap",
+	# "Disable C Up Trap"       : "Disable Rotate Trap",
+	# "Disable Tag Trap"        : "Disable Hold Trap",
+	# "Disable Z Trap"          : "Disable Hold Trap",
+	# "Disarm Trap"             : "Disable Hold+Disable Rotate Trap",
+	"Double Damage"           : "enchantment_curse_gravity",
+	# "Dry Trap"                : "Board Wipe Trap",
+	"Eject Ability"           : "impatience_trap",
+	"Electrocution Trap"      : "enchantment_legendary_spin",
+	# "Empty Item Box Trap"     : "Board Wipe Trap", # TODO: Empty Hold Slots
+	"Enemy Ball Trap"         : "egg",
+	"Energy Drain Trap"       : "enchantment_curse_movement",
+	# "Expensive Stocks"        : "premium_trap",
+	# "Explosion Trap"          : "shatter_trap",
+	"Exposition Trap"         : "logic_tutorial", # "Random Cutscene",
+	"Extreme Chaos Mode"      : ["crystal_trap", "fracture_trap"],
+	"Fake Transition"         : "fade",
+	"Fast Trap"               : "enchantment_legendary_movement",
+	"Fear Trap"               : "zoom_trap",
+	# "fire_trap"               : "fire_trap",
+	"Fish Eye Trap"           : "zoom_trap",
+	"Fishing Trap"            : "fishing",
+	"Fishin' Boo Trap"        : "fishing",
+	# "Flip Horizontal Trap"    : "Flip Trap",
+	# "Flip Trap"               : "Flip/Upside-Down Trap",
+	# "Flip Vertical Trap"      : "Upside-Down Trap",
+	"Frame Slime Trap"        : "enchantment_curse_movement",
+	# "Freeze Trap"             : "Ice Trap",
+	"Frog Trap"               : "fishing",
+	"Frost Trap"              : "water_trap", #"Ice Trap",
+	# "Frozen Trap"             : "Ice Trap",
+	"Fuzzy Trap"              : "pixellation_trap",
+	# "Gadget Shuffle Trap"     : "unrandomization_trap",
+	# "Gas Trap"                : "Reverse Controls Trap",
+	"Get Out Trap"            : "enchantment_curse_gravity",
+	"Ghost"                   : "invertcolors_trap", #"Ghost Trap",
+	# "Ghost Chat"              : "Dummy Trap",
+	"Gooey Bag"               : "egg",
+	"Gravity Trap"            : "enchantment_curse_gravity",
+	"Help Trap"               : "tutorial",
+	"Hey! Trap"               : "welldone",
+	"Hiccup Trap"             : "impatience_trap",
+	"Home Trap"               : "tutorial",
+	# "Honey Trap"              : "glue_trap",
+	# "Ice Floor Trap"          : "momemtum_trap",
+	# "Ice Trap"                : "Ice Trap",
+	"Icy Hot Pants Trap"      : "enchantment_legendary_movement",
+	"Input Sequence Trap"     : "fishing",
+	"Instant Crystal Trap"    : "crystal_trap",
+	# "Instant Death Trap"      : "Board Wipe Trap",
+	"Invert Colors Trap"      : "invertcolors_trap",
+	# "Inverted Mouse Trap"     : "Reverse Controls Trap",
+	"Invisiball Trap"         : "invertcolors_trap", #"Ghost Trap",
+	"Invisible Trap"          : "invertcolors_trap", #"Ghost Trap",
+	"Invisibility Trap"       : "invertcolors_trap", #"Ghost Trap",
+	"Iron Boots Trap"         : "enchantment_curse_movement",
+	# "Items to Bombs"          : "shatter_trap",
+	"Jump Trap"               : "impatience_trap",
+	"Jumping Jacks Trap"      : "impatience_trap",
+	"Laughter Trap"           : "welldone",
+	# "Light Up Path Trap"      : "Static Trap",
+	"Literature Trap"         : "logic_tutorial", # "Random Cutscene",
+	"Mana Drain Trap"         : "enchantment_curse",
+	# "Market Crash Trap"       : "premium_trap",
+	"Math Quiz Trap"          : "logic_tutorial",
+	"Meteor Trap"             : "enchantment_curse_gravity",
+	"Metronome Trap"          : "random_trap",
+	# "Mirror Trap"             : "Flip Trap",
+	"Monkey Mash Trap"        : "impatience_trap",
+	"My Turn! Trap"           : "impatience_trap",
+	"Ninja Trap"              : "egg",
+	"No Guarding"             : "enchantment_curse",
+	"No Petals"               : "enchantment_curse",
+	"No Revivals"             : "enchantment_curse",
+	"No Stocks"               : "enchantment_curse",
+	# "No Vac Trap"             : "Disable Hold+Disable Rotate Trap",
+	"Number Sequence Trap"    : "fishing",
+	# "Nut Trap"                : "shatter_trap",
+	"OmoTrap"                 : "tutorial",
+	"One Hit KO"              : "enchantment_curse_gravity",
+	# "Paper Trap"              : "I Trap",
+	"Paralyze Trap"           : "enchantment_curse_movement",
+	"Paralysis Trap"          : "enchantment_curse_movement",
+	"Person Trap"             : "impatience_trap",
+	"Phone Trap"              : "tutorial",
+	"Pie Trap"                : "egg",
+	"Pinball Trap"            : "egg",
+	"Pixelate Trap"           : "pixellation_trap",
+	"Pixellation Trap"        : "pixellation_trap",
+	"Poison Mushroom"         : "enchantment_curse",
+	"Poison Trap"             : "enchantment_curse",
+	"Pokemon Count Trap"      : "logic_tutorial",
+	"Pokemon Trivia Trap"     : "logic_tutorial",
+	"Police Trap"             : "impatience_trap",
+	"PONG Challenge"          : "egg",
+	"Pong Trap"               : "egg",
+	# "Posession Trap"          : "Reverse Controls Trap",
+	"PowerPoint Trap"         : "enchantment_curse_movement",
+	"Push Trap"               : "impatience_trap",
+	# "Radiation Trap"          : "fire_trap",
+	# "Rail Trap"               : "momemtum_trap",
+	"Ranch Trap"              : "tutorial",
+	"Random Status Trap"      : "enchantment_random",
+	"Resistance Trap"         : "enchantment_curse",
+	# "Reversal Trap"           : "Reverse Controls Trap",
+	# "Reverse Controls Trap"   : "Reverse Controls Trap",
+	# "Reverse Trap"            : "Reverse Controls Trap",
+	"Rockfall Trap"           : "impatience_trap",
+	"Sandstorm Trap"          : "fracture_trap",
+	# "Screen Flip Trap"        : "Flip Trap",
+	"Shake Trap"              : "fracture_trap",
+	"Shuffle Trap"            : "unrandomization_trap",
+	# "Sleep Trap"              : "Sleep Trap",
+	"Slip Trap"               : "impatience_trap",
+	"Slow Trap"               : "enchantment_curse_movement",
+	"Slowness Trap"           : "enchantment_curse_movement",
+	# "Snake Trap"              : "Wyrmino Trap",
+	"Spam Trap"               : "tutorial",
+	# "Spike Ball Trap"         : "shatter_trap",
+	"Spooky Time"             : "invertcolors_trap",
+	"Spotlight Trap"          : "zoom_trap",
+	"Spring Trap"             : "impatience_trap",
+	# "Squash Trap"             : "I Trap",
+	# "Sticky Floor Trap"       : "glue_trap",
+	# "Sticky Hands Trap"       : "Disable Hold Trap",
+	"Stun Trap"               : "enchantment_curse_movement",
+	"SvC Effect"              : "enchantment_random",
+	# "Swap Trap"               : "Swap Trap",
+	"Syntax Jumpscare Trap"   : "mini_jumpscare",
+	# "Tarr Trap"               : "glue_trap",
+	"Teleport Trap"           : "impatience_trap",
+	"Text Trap"               : "tutorial", # "Random Cutscene",
+	"Thwimp Trap"             : "enchantment_curse_gravity",
+	"Time Limit"              : "enchantment_curse_gravity",
+	"Time Warp Trap"          : "enchantment_curse_gravity",
+	"Timer Trap"              : "enchantment_curse_gravity",
+	"Tiny Trap"               : "zoom_trap",
+	"Tip Trap"                : "tutorial",
+	# "TNT Barrel Trap"         : "shatter_trap",
+	# "TNT Trap"                : "shatter_trap",
+	# "Tool Swap Trap"          : "Swap Trap",
+	"Trivia Trap"             : "logic_tutorial",
+	"Tutorial Trap"           : "tutorial",
+	"Underwater Trap"         : "water_trap",
+	# "Undo Trap"               : "Dummy Trap",
+	"UNO Challenge"           : "fishing",
+	# "W I D E Trap"            : "I Trap",
+	"Whirlpool Trap"          : "enchantment_legendary_spin",
+	"Whoops! Trap"            : "impatience_trap",
+	"Zoom In Trap"            : "zoom_trap",
+	"Zoom Out Trap"           : "zoom_trap",
+	"Zoom Trap"               : "zoom_trap",
+}
+
+# === Death Link Messages ===
 func _addDLMessageTemplate(message:String) -> DracominoUtil.DeathLinkMessageTemplate:
 	return DracominoUtil.DeathLinkMessageTemplate.new(message)
 
@@ -212,12 +568,31 @@ var CONTEXT_TAGS:Dictionary[StringName, Dictionary] = {
 static func _generateLocationConstants() -> Array:
 	var arr = []
 	for i in range(1,1001):
-		arr.append([i,        "Line %s Cleared"%i, [ "line_clear" ]])
+		arr.append([i,        "Line %s Cleared"%i, "", [ "line_clear" ]])
 	for i in range(1,10001):
-		arr.append([i + 10000, "Coin %s"%i, [ "item_pickup" ]])
+		arr.append([i + 10000, "Coin %s"%i, "", [ "item_pickup" ]])
 	return arr
 
 static func _generateDataTable(dict:Dictionary, arr:Array, new_fn:Callable) -> Dictionary:
 	var data:Data = new_fn.call(arr)
 	dict[data.id] = data
 	return dict
+
+	
+# Storage space for mods to use if they want to facilitate compatibility stuff
+var CUSTOM_DATA:Dictionary = {}
+
+### Constants
+func _IconLabel(id:String, label:String="") -> String:
+	return "[img]res://assets/art/emoji/{id}.png[/img]{label}".format({
+		id = id,
+		label = "[b]"+label+"[/b]" if label.length() else "",
+	})
+var	DIALOGUE_FORMAT_TEMPLATE = {
+	heart = _IconLabel("heart"),
+	coin = _IconLabel("coin"),
+	mana = _IconLabel("mana"),
+	COIN = _IconLabel("coin","Coin"),
+	MANA = _IconLabel("mana","Mana"),
+}
+

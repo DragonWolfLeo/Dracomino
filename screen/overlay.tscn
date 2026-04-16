@@ -1,0 +1,118 @@
+[gd_scene load_steps=3 format=3 uid="uid://3jevvou6slg2"]
+
+[ext_resource type="Script" uid="uid://bemp7m05rfi26" path="res://screen/overlay.gd" id="1_8fhn2"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_osm8g"]
+bg_color = Color(0.913725, 0.913725, 0.901961, 1)
+expand_margin_left = 24.0
+expand_margin_top = 24.0
+expand_margin_right = 24.0
+expand_margin_bottom = 24.0
+shadow_color = Color(0, 0, 0, 0.235294)
+shadow_size = 6
+shadow_offset = Vector2(2, 4)
+
+[node name="Overlay" type="CanvasLayer"]
+layer = 4
+script = ExtResource("1_8fhn2")
+
+[node name="Faders" type="CanvasLayer" parent="."]
+layer = 5
+
+[node name="Black" type="ColorRect" parent="Faders"]
+visible = false
+modulate = Color(0, 0, 0, 0)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="FocusMask" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 1
+
+[node name="ImageOverlay" type="Control" parent="."]
+visible = false
+texture_filter = 2
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ImageOffset" type="Control" parent="ImageOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ImageContainer" type="PanelContainer" parent="ImageOverlay/ImageOffset"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.25
+anchor_top = 0.138889
+anchor_right = 0.75
+anchor_bottom = 0.805556
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_osm8g")
+metadata/_edit_group_ = true
+metadata/_edit_use_anchors_ = true
+
+[node name="TextureRect" type="TextureRect" parent="ImageOverlay/ImageOffset/ImageContainer"]
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ColorRect" type="ColorRect" parent="ImageOverlay/ImageOffset/ImageContainer/TextureRect"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.262745, 0.262745, 0.262745, 1)
+
+[node name="ObjectOverlay" type="Control" parent="."]
+texture_filter = 2
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ObjectContainer" type="Control" parent="ObjectOverlay"]
+layout_mode = 1
+anchor_left = 0.25
+anchor_top = 0.138889
+anchor_right = 0.75
+anchor_bottom = 0.805556
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+metadata/_edit_group_ = true
+metadata/_edit_use_anchors_ = true
+
+[node name="CutsceneContainer" type="CanvasLayer" parent="."]
+
+[connection signal="gui_input" from="FocusMask" to="." method="_on_focus_mask_gui_input"]

@@ -4,18 +4,31 @@ signal setting_changed(setting:StringName)
 
 @onready var versionNum:String = getVersionNum()
 var versionCompatible:String = "0.0.0"
-var debugMode := false
+var debugMode:bool:
+	set(value):
+		changeSetting("debug", false, false)
+	get():
+		return getSetting("debug", false)
 var showHints := true
 @onready var isWeb:bool = OS.get_name() == "Web"
 var SAVEFILEPATH = "user://auto.save"
 var CONFIGPATH = "user://config.json"
 const DEFAULT_SETTINGS:Dictionary[StringName, Variant] = {
+	# Debug
+	debug = false,
 	# Audio
 	volume = 80.0,
 	volume_music = 100.0,
 	volume_sfx = 100.0,
+	volume_voice = 100.0,
 	# Game
+	auto_scaling = true,
 	gravity = 1.0,
+	lockDelay = 1.0,
+	softDrop_speed = 1.0,
+	horizontal_speed = 1.0,
+	softDrop_repeatDelay = 1.0,
+	horizontal_repeatDelay = 1.0,
 	allowUnfocusedInputs = false,
 }
 var settings:Dictionary[StringName, Variant] = DEFAULT_SETTINGS.duplicate()
@@ -37,9 +50,10 @@ func loadConfig():
 	UserData.upgradeDataToCurrentVersion(data, VERSION_UPGRADES)
 	import(data)
 	
-	DracominoUtil.setVolume("Master", getSetting("volume", 100.0))
-	DracominoUtil.setVolume("Music", getSetting("volume_music", 100.0))
-	DracominoUtil.setVolume("Sfx", getSetting("volume_sfx", 100.0))
+	SoundManager.setVolume("Master", getSetting("volume", 100.0))
+	SoundManager.setVolume("Music", getSetting("volume_music", 100.0))
+	SoundManager.setVolume("Sfx", getSetting("volume_sfx", 100.0))
+	SoundManager.setVolume("Voice", getSetting("volume_voice", 100.0))
 	
 func saveConfig():
 	UserData.saveDataToFile(export(), CONFIGPATH)
@@ -63,15 +77,12 @@ func exportVersion() -> Dictionary:
 	}
 
 func export() -> Dictionary:
-	var ret: = {
-		debug = debugMode,
-	}
+	var ret: = {}
 	ret.merge(settings)
 	ret.merge(exportVersion(), true)
 	return ret
 
 func import(data:Dictionary):
-	if data.has("debug"): debugMode = data.debug
 	settings.merge(data, true)
 
 func changeSetting(key:StringName, value:Variant, saveAfterwards:bool = true) -> void:

@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://dywdnij6lw5gp"]
+
+[ext_resource type="TileSet" uid="uid://bog40a6pcaq6t" path="res://resource/tileset/outline_uncommon.tres" id="1_dx58b"]
+[ext_resource type="Script" uid="uid://tytc2y4lkci0" path="res://module/outlinetilemap.gd" id="2_y2cam"]
+
+[node name="OutlineTileMap" type="TileMapLayer"]
+tile_set = ExtResource("1_dx58b")
+occlusion_enabled = false
+collision_enabled = false
+navigation_enabled = false
+script = ExtResource("2_y2cam")
+metadata/_custom_type_script = "uid://tytc2y4lkci0"

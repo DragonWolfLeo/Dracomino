@@ -4,5 +4,9 @@
 [ext_resource type="Script" uid="uid://db8fbesqfm3hl" path="res://object/ghostpiece.gd" id="2_3bsli"]
 
 [node name="GhostPiece" type="TileMapLayer"]
+z_index = -2
 tile_set = ExtResource("1_3bsli")
+occlusion_enabled = false
+collision_enabled = false
+navigation_enabled = false
 script = ExtResource("2_3bsli")

@@ -1,0 +1,54 @@
+[gd_resource type="Theme" load_steps=10 format=3 uid="uid://cf3iwfpvnpy25"]
+
+[ext_resource type="StyleBox" uid="uid://d14sb2lh1pwo6" path="res://resource/style/choicebutton_hover.tres" id="1_cte3o"]
+[ext_resource type="StyleBox" uid="uid://d1md4t06ii6lo" path="res://resource/style/choicebutton.tres" id="2_cte3o"]
+[ext_resource type="FontFile" uid="uid://g3itr7tagcaw" path="res://resource/font/ChakraPetch-Regular.ttf" id="3_0cb63"]
+[ext_resource type="FontFile" uid="uid://dsmco8aopu3b6" path="res://resource/font/ChakraPetch-Bold.ttf" id="4_0cb63"]
+[ext_resource type="FontFile" uid="uid://bae7bms4iig3b" path="res://resource/font/ChakraPetch-Italic.ttf" id="5_cte3o"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_vn44y"]
+content_margin_left = 24.0
+content_margin_top = 4.0
+content_margin_right = 24.0
+
+[sub_resource type="StyleBoxFlat" id="3"]
+bg_color = Color(0, 0, 0.333333, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.333333, 0.333333, 0.666667, 1)
+corner_detail = 1
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0cb63"]
+bg_color = Color(0.172549, 0.164706, 0.309804, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.431373, 0.415686, 0.501961, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_woviq"]
+content_margin_left = 24.0
+content_margin_right = 24.0
+
+[resource]
+default_font = ExtResource("3_0cb63")
+default_font_size = 20
+Button/styles/focus = ExtResource("1_cte3o")
+Button/styles/hover = ExtResource("1_cte3o")
+Button/styles/normal = ExtResource("2_cte3o")
+Button/styles/pressed = ExtResource("2_cte3o")
+Label/constants/line_spacing = 0
+Label/font_sizes/font_size = 24
+Label/fonts/font = ExtResource("3_0cb63")
+Label/styles/normal = SubResource("StyleBoxEmpty_vn44y")
+Panel/styles/panel = SubResource("3")
+PanelContainer/styles/panel = SubResource("StyleBoxFlat_0cb63")
+RichTextLabel/fonts/bold_font = ExtResource("4_0cb63")
+RichTextLabel/fonts/italics_font = ExtResource("5_cte3o")
+RichTextLabel/styles/normal = SubResource("StyleBoxEmpty_woviq")

@@ -3,11 +3,16 @@ class_name Board extends TileMapLayer
 @onready var PIECE_SCENE:PackedScene = load("res://object/piece.tscn")
 @onready var LINENUMBER_SCENE:PackedScene = load("res://ui/linenumber.tscn")
 @onready var ITEMPICKUP_SCENE:PackedScene = load("res://object/itempickup.tscn")
+@onready var ACTIVATEDTILE_SCENE:PackedScene = load("res://object/activatedtile.tscn")
 
 const BOUNDS := Rect2i(0, 0, 10, 20)
 const SPAWN_POINT := BOUNDS.position + Vector2i(BOUNDS.size.x / 2, 0)
 var DANGER_ZONE := BOUNDS.grow_individual(-2, 0, -2, -17)
-var USE_ALT_ROTATE:bool = true # TODO: Make an option
+var ALLOW_GRAVITY_DROP:bool = true # TODO: Make an option
+var OPACITY_REDUCTION_PER_GHOST:float = 1/3 # 
+var MAX_PIECES:int = 8
+var EFFECT_IMPATIENCE_NUM_PIECES_TO_SPAWN:int = 2
+var DELAYED_EFFECT_CONTEXT_DURATION:float = 1.3
 
 static var ACTIVE_TILE_ATLAS_ROW:int = 0
 static var SET_TILE_ATLAS_ROW:int = 1
@@ -21,30 +26,31 @@ static var SET_TILE_ATLAS_ROW:int = 1
 		if previewStorage and not previewStorage.storageSlots_updated.is_connected(fillPreview):
 			previewStorage.storageSlots_updated.connect(fillPreview)
 
-@export var holdStorage:PieceStorage
+@export var holdStorage:PieceStorage:
+	set(value):
+		if holdStorage == value: return
+		if holdStorage and holdStorage.slot_triggered.is_connected(hold):
+			holdStorage.slot_triggered.disconnect(hold)
+		holdStorage = value
+		if holdStorage and not holdStorage.slot_triggered.is_connected(hold):
+			holdStorage.slot_triggered.connect(hold)
 
+@onready var activatedTileHandler:ActivatedTileHandler = $ActivatedTileHandler
 @onready var masterCoin:Node2D = $MasterCoin
-@onready var sfx_rotate:AudioStreamPlayer = $SFX_Rotate
-@onready var sfx_move:AudioStreamPlayer = $SFX_Move
-@onready var sfx_moveDown:AudioStreamPlayer = $SFX_MoveDown
-@onready var sfx_drop:AudioStreamPlayer = $SFX_Drop
-@onready var sfx_hardDrop:AudioStreamPlayer = $SFX_HardDrop
-@onready var sfx_hold:AudioStreamPlayer = $SFX_Hold
-@onready var sfx_itemPickup:AudioStreamPlayer = $SFX_ItemPickup
-@onready var sfx_lineClear:AudioStreamPlayer = $SFX_LineClear
-@onready var sfx_lineClearCheck:AudioStreamPlayer = $SFX_LineClearCheck
-@onready var sfx_gameOver:AudioStreamPlayer = $SFX_GameOver
+@onready var focusCamera:Camera2D = $FocusCamera
 
-var currentPiece:Piece
+var activePieces:Array[Piece] = []
+var entities:Array[Piece] = []
 
-var currentPreview:Array[Vector2i]
-var currentPreviewTileNumber:int
-
-var rowsToClear = []
-var blocksToClear = []
-var animation_timer = 0.0
-var animation_started = false
-var isGameOver:bool = false
+var clearingChunks:Array[ClearingChunk] = []
+var isGameOver:bool = false:
+	set(value):
+		isGameOver = value
+		if flagHolder:
+			if value:
+				flagHolder.setFlag("gameover")
+			else:
+				flagHolder.clearFlag("gameover")
 var sendDeathOnRestart:bool = false
 var boardIsFresh:bool = true
 var hasOfflineDeath:bool = false
@@ -53,51 +59,108 @@ var itemPickups:Dictionary[Vector2i, ItemPickupContext] = {}
 var linesCleared:int = 0:
 	set(value):
 		linesCleared = value
+		if flagHolder: flagHolder.setFlag("lines_cleared", linesCleared)
 		linesCleared_updated.emit(linesCleared)
-var holdOnCooldown:bool = false: set = _on_holdOnCooldown_set
-var _lastHeldPieceContext:DracominoHandler.StateItem ## For deathlink message context
+var flagHolder:FlagHolder
+var effectHandler:EffectHandler
+
+var _lastHeldPieceContext:DracominoHandler.PieceContext ## For deathlink message context; TODO: Obsolete
 
 var _linemappings:Dictionary[int, int] = {}
 var _missinglines:Dictionary[int, bool] = {}
 var _missingpickups:Dictionary[Vector2i, int] = {}
 var _mappedpickups:Dictionary[Vector2i, ItemPickupContext] = {}
 
-static var random:RandomNumberGenerator = RandomNumberGenerator.new()
-static var randomSaveState:int = random.state
-static var rotate_random:RandomNumberGenerator = RandomNumberGenerator.new()
-static var rotate_randomSaveState:int = rotate_random.state
+var _waitingForPieceToGetOutOfTopRow:Piece = null
 
 signal lines_cleared(lines:Array)
 signal linesCleared_updated(num:int)
 signal game_over_earned()
 signal game_started()
-signal piece_requested(board:Board)
-signal piece_spawned(piece:Piece)
+signal pieces_requested(callback:Callable, num:int)
 signal item_pickedup(loc_id:int)
-signal rowClearAnimation_finished()
 signal deathlink_earned(deathContext:DracominoUtil.DeathContext)
+signal activePieces_changed()
+signal effect_activated(item:DracominoHandler.StateItem) ## Relayed from EffectHandler
 
 class ItemPickupContext:
 	var node:Node2D
 	var coord:Vector2i
 	var loc_id:int
 
+class ClearingChunk:
+	signal completed()
+	signal tile_shattered(cell:Vector2i)
+	var row:int
+	var tilesToActivate:Array[Vector2i]
+	var mappedLine:int
+	static var flip:bool = false
+	func _init(_row:int) -> void:
+		row = _row
+		var arr:Array = range(BOUNDS.position.x, BOUNDS.end.x).map(func(x): return Vector2i(x, row))
+		if flip: arr.reverse() # Make alternating chunks flip
+		flip = !flip
+		tilesToActivate.append_array(arr)
+		mappedLine = BOUNDS.end.y - row - 1
+	func pushDown() -> void:
+		# Remap data when rows get pushed down
+		row += 1
+		for i in range(tilesToActivate.size()):
+			tilesToActivate[i].y += 1
+		mappedLine -= 1
+
 var inputTimer:ActivityTimer ## For death context
 var pieceTimer:ActivityTimer ## For death context
 
+@onready var holdSlotCycleTimer:Timer = $HoldSlotCycleTimer
+
+#===== Static Functions ======
+static func getTranslatedCells(cells:Array[Vector2i], offset:Vector2i) -> Array[Vector2i]:
+	var ret:Array[Vector2i] = []
+	ret.append_array(cells.map(func(cell:Vector2i): return cell + offset))
+	return ret
+
+static func mergeCells(destination:Array[Vector2i], cells:Array[Vector2i]) -> void:
+	for cell in cells:
+		if not destination.has(cell):
+			destination.append(cell)
+
+static func getCellsDifference(cells:Array[Vector2i], subtracted:Array[Vector2i]) -> Array[Vector2i]:
+	var newCells = cells.duplicate()
+	for cell:Vector2i in subtracted:
+		newCells.erase(cell)
+	return newCells
+
 #===== Virtuals ======
 func _ready():
-	masterCoin.visible = false # Master coin is just a reference for the rest of the coins and should be hidden
+	# Set up flag holder
+	resetFlagHolder()
+	# Set up effect handler
+	effectHandler = EffectHandler.new()
+	add_child(effectHandler)
+	effectHandler.effect_activated.connect(effect_activated.emit)
+	effectHandler.effect_activated.connect(_on_effected_activated)
+	 # Master coin is just a reference for the rest of the coins and should be hidden 
+	masterCoin.visible = false
+	# Set up input timers
 	inputTimer = ActivityTimer.new(); add_child(inputTimer)
 	inputTimer.afk_threshold = 10.0
 	pieceTimer = ActivityTimer.new(); add_child(pieceTimer)
-	game_started.emit()
+	#
+	game_started.emit.call_deferred()
 	
-	requestPiece.call_deferred()
 	Archipelago.connected.connect(_on_connected)
 	SignalBus.getSignal("restartGame").connect(resetGame)
 	SignalBus.getSignal("deathOnRestart_enabled").connect(set.bind("sendDeathOnRestart", true))
 	SignalBus.getSignal("deathOnRestart_disabled").connect(set.bind("sendDeathOnRestart", false))
+	SignalBus.getSignal("stateflag_changed", "shapes").connect(_on_newPieceObtained, CONNECT_DEFERRED)
+	activePieces_changed.connect(_on_activePieces_changed)
+	var mode:Mode = DracominoUtil.getParentMode(self)
+	if mode:
+		mode.mode_enabled.connect(_on_mode_enabled)
+	# Effect signals
+	SignalBus.getSignal("effect_impatience").connect(_on_effect_impatience)
+	SignalBus.getSignal("boardeffect_queued").connect(_on_boardeffect_queued)
 
 	# Make line numbers labels
 	for i:int in range(BOUNDS.end.y):
@@ -108,148 +171,398 @@ func _ready():
 		scn.position = map_to_local(Vector2i(BOUNDS.position.x, BOUNDS.end.y-i ))
 		$LineNumberBar.add_child(scn)
 
-func _process(delta):
-	# TODO: Replace with tween
-	if rowsToClear.size() > 0:
-		blockRemoveAnimationStep(delta)
 
 #===== Functions ======
-func blockRemoveAnimationStep(delta):
-	if !animation_started and blocksToClear.size() == 0:
-		for x in range(BOUNDS.position.x, BOUNDS.end.x):
-			blocksToClear.append(x)
-		animation_started = true
-	
-	animation_timer += delta
-	
-	if animation_timer >= 0.08: 	#this number controls at which speed blocks get removed
-		animation_timer = 0
-		for y in rowsToClear:
-			set_cell(Vector2i(blocksToClear.front(),y))
-			set_cell(Vector2i(blocksToClear.back(),y))
-		blocksToClear.pop_front()
-		blocksToClear.pop_back()
-	
-	if animation_started and blocksToClear.size() == 0: 	#Animation has finished
-		for i in rowsToClear:
-			pushDownRows(i)
-		rowsToClear = []
-		animation_started = false
-		rowClearAnimation_finished.emit()
+func resetFlagHolder():
+	if flagHolder: flagHolder.queue_free()
+	flagHolder = FlagHolder.new(FlagHolder.PRIORITY.LEVEL)
+	FlagManager.HANDLERS.LEVEL.setAsFlagHolder(flagHolder)
+	add_child(flagHolder)
+
+func getFocusPiece() -> Piece:
+	for piece in activePieces:
+		if piece.isFocus:
+			return piece
+	return null
+
+func getCameraFocus() -> Piece:
+	for piece in activePieces:
+		if piece.isFocus or (piece.moveLock and FlagManager.isFlagSet("hard_drop")):
+			return piece
+	return null
+
+func chooseNewFocusPiece(requestIfNone:bool = false) -> void:
+	var focusPiece:Piece = null
+	for piece in activePieces:
+		if not piece.moveLock and not piece.placed and not focusPiece:
+			piece.isFocus = true
+			focusPiece = piece
+			# Make focus camera follow with a bit of a delay
+			if piece == getCameraFocus():
+				var tween:Tween = piece.create_tween()
+				var delay:float = 1.0 if clearingChunks.size() else 0.5
+				tween.tween_callback(focusCamera.set.bind("global_position", piece.global_position)).set_delay(delay)
+				piece.movement_requested.connect(tween.kill.unbind(3), CONNECT_ONE_SHOT)
+		else:
+			piece.isFocus = false
+	if requestIfNone and not focusPiece:
+		requestPiece(true)
+
+func countNonlockedPieces() -> int:
+	var num = activePieces.reduce(
+		func(accum:int, piece:Piece):
+			return accum + (0 if piece.moveLock else 1),
+			0
+		)
+	return num
+
+func processClearingChunk(chunk:ClearingChunk) -> void:	
+	chunk.tile_shattered.connect(set_cell)
+	activatedTileHandler.activateChunk(chunk, 
+		func():					
+			clearingChunks.erase(chunk)
+			chunk.completed.emit()
+			pushDownRows(chunk)
+			lines_cleared.emit([chunk.mappedLine])
+			if not clearingChunks.size():
+				checkForEvent(["line_clear"])
+	)
+
+func checkForEvent(context:Array[StringName] = []):
+	var nextEffect = effectHandler.tryToTriggerNextEffect(context)
+	if not effectHandler.willBlockRequestPiece(nextEffect, true):
 		requestPiece()
 
-func requestPieceCreation(): ## This functions usually leads into createPiece being called, if there's pieces available
-	if isGameOver: return
-	piece_requested.emit(self)
-	if not currentPiece or (previewStorage and previewStorage.isEmpty()):
-		waitForItem()
-
-func requestPiece():
-	if isGameOver: return
-	if currentPiece and (not previewStorage or previewStorage.isFull()):
-		# We can end up at this point if preview is filled through state update
+func requestPiece(allowMultiplePieces:bool = false):
+	if (
+		isGameOver # Obviously don't make pieces when game over'd
+		or activePieces.size() > MAX_PIECES # No making pieces when the max is reached
+		or (countNonlockedPieces() and not allowMultiplePieces) # No making multiple pieces if disallowed
+	):
 		return
-	var storedPiece:Piece
+	if effectHandler.hasValidBufferedEvent():
+		if clearingChunks.size():
+			return
+		checkForEvent()
+		return
+
+	# Try to trigger board effect if valid
+	var boardEffect:EffectHandler.BoardEffect = EffectHandler.tryToTriggerNextBoardEffect(self)
+	if boardEffect and boardEffect.makesPiece:
+		# Cancel piece since we spawned one
+		return
+	
+	# Try to spawn delayed thing
+	var tween:Tween = effectHandler.create_tween()
+	tween.tween_callback(effectHandler.tryToTriggerNextEffect.bind(["delayed"] as Array[StringName]))\
+	.set_delay(DELAYED_EFFECT_CONTEXT_DURATION/Config.getSetting("gravity", 1.0))
+	game_started.connect(tween.kill)
+
+	fillPreview(2) # Generate one extra because we're gonna use it, and another so gravity drop can work
+	if clearingChunks.size() or (activePieces.size() and activePieces[0].moveLock):
+		var nextPiece = previewStorage.nextPiece()
+		if not nextPiece or not canSafelySpawnPiece(nextPiece):
+			return
+	var poppedPiece:Piece
 	if previewStorage:
-		storedPiece = previewStorage.popPiece()
-	if storedPiece:
+		poppedPiece = previewStorage.popPiece()
+	if poppedPiece:
 		print("Spawned {pieceName} from {sender}'s {location} in {game}".format({
-			pieceName = storedPiece.prettyName,
-			sender = "self" if storedPiece.context.isLocal else storedPiece.context.senderName,
-			location = storedPiece.context.locationName,
-			game = storedPiece.context.gameName,
+			pieceName = poppedPiece.prettyName,
+			sender = "self" if poppedPiece.stateItem.isLocal else poppedPiece.stateItem.senderName,
+			location = poppedPiece.stateItem.locationName,
+			game = poppedPiece.stateItem.gameName,
 		}))
-		spawnPiece(storedPiece)
-		fillPreview()
-	else:
-		requestPieceCreation()
+		spawnPiece(poppedPiece)
+		var onSpawnEffect:DracominoHandler.StateItem = poppedPiece.attachedEffects.get("on_spawn")
+		if onSpawnEffect: effectHandler.tryToTriggerEffect(onSpawnEffect)
+		# Check for any queued board effects for on_spawn
+		EffectHandler.tryToTriggerNextBoardEffect(self, ["on_spawn"])
 
-func fillPreview():
-	if previewStorage and not previewStorage.isFull():
-		requestPieceCreation()
+func fillPreview(buffer:int = 0): ## This functions usually leads into createPiece being called, if there's pieces available
+	if isGameOver: return
 
-func createPiece(pieceName:StringName = "", pieceContext:DracominoHandler.StateItem = null) -> void:
-	if pieceName.is_empty():
+	var availableSpace:int = 0
+	if previewStorage: availableSpace += previewStorage.getAvailableSpace(buffer)
+
+	if availableSpace <= 0: return
+
+	pieces_requested.emit(createPiece, availableSpace)
+
+func createPiece(pieceContext:DracominoHandler.PieceContext) -> void:
+	if pieceContext.name.is_empty():
 		return
-	cancel_waitForItem()
 
-	var piece:Piece = PIECE_SCENE.instantiate()
-	piece.setPiece(pieceName, pieceContext)
+	# Look for a special scene for this before making a generic one
+	var pieceScene:PackedScene = PIECE_SCENE
+	var respath:String = "res://object/piece_"+pieceContext.stateItem.data.internalName+".tscn"
+	if ResourceLoader.exists(respath):
+		var res:Resource = load(respath)
+		if res is PackedScene:
+			pieceScene = res
+		else:
+			printerr("Board.createPiece: %s is not PackedScene"%respath)
+
+	var piece:Piece = pieceScene.instantiate()
+	piece.setPiece(pieceContext)
 	add_child(piece)
 	game_started.connect(piece.queue_free)
 	
-	if currentPiece:
-		if previewStorage and not previewStorage.isFull():
-			previewStorage.pushPiece(piece)
-		else:
-			# Store this piece for now
-			printerr("Piece is eaten!")
-			piece.queue_free()
+	if previewStorage and not pieceContext.instantSpawn:
+		previewStorage.pushPiece(piece, true)
 	else:
 		spawnPiece(piece)
-		print("Spawned {pieceName} from {sender}'s {location} in {game}".format({
-			pieceName = piece.prettyName,
-			sender = "self" if piece.context.isLocal else piece.context.senderName,
-			location = piece.context.locationName,
-			game = piece.context.gameName,
-		}))
-	fillPreview()
 
 func spawnPiece(piece:Piece):
-	currentPiece = piece
-	currentPiece.movement_requested.connect(_on_Piece_movement_requested)
-	currentPiece.new_cells_requested.connect(_on_Piece_new_cells_requested)
-	currentPiece.ghost_cells_requested.connect(_on_Piece_ghost_cells_requested)
-	currentPiece.makeActive()
-	currentPiece.currentPosition = SPAWN_POINT + currentPiece.origin
-	pieceTimer.reset()
-	placeOnHighestRow(piece)
-	if not checkForFailure(piece):
-		piece_spawned.emit(currentPiece)
+	if not activePieces.has(piece):
+		activePieces.append(piece)
+		piece.movement_requested.connect(_on_Piece_movement_requested)
+		piece.new_cells_requested.connect(_on_Piece_new_cells_requested)
+		piece.ghost_cells_requested.connect(_on_Piece_ghost_cells_requested)
+		piece.focus_lost.connect(_on_Piece_focus_lost.bind(piece))
+		piece.trap_activated.connect(effect_activated.emit)
+		piece.tree_exiting.connect(_on_Piece_tree_exiting.bind(piece))
+		piece.makeActive()
+		piece.currentPosition = SPAWN_POINT + piece.origin
+		pieceTimer.reset()
+		placeOnHighestRow(piece)
+		if not checkForFailure(piece):
+			activePieces_changed.emit()
+			if piece == getCameraFocus():
+				focusCamera.global_position = piece.global_position
+			if piece.isFocus:
+				forceShoveOtherPiecesDown(piece)
+			else:
+				placeAboveOtherPieces(piece)
+				sortActivePieces()
+			tryToMakePiecesCollible()
 
-func hold():
-	if currentPiece and currentPiece.moveLock:
-		# Don't hold if hard dropping
+func deletePiece(piece:Piece): ## Remove a piece without emitting activePieces_changed
+	if piece.focus_lost.is_connected(_on_Piece_focus_lost):
+		piece.focus_lost.disconnect(_on_Piece_focus_lost)
+	activePieces.erase(piece)
+	piece.queue_free()
+
+func hold(index:int = -1):
+	var piece:Piece = getFocusPiece()
+	if piece and (piece.moveLock or piece.holdLock):
+		# Don't hold if hard dropping or hold-locked
 		return
-	if holdStorage and not holdOnCooldown:
-		sfx_hold.play()
-		holdOnCooldown = true
+	if holdStorage:
+		var succeeded:bool = piece != null
 		var popped:Piece
-		if currentPiece:
+		if piece:
+			piece.holdLock = true # Prevent from being held again
 			# Cleanup
-			if currentPiece.movement_requested.is_connected(_on_Piece_movement_requested):
-				currentPiece.movement_requested.disconnect(_on_Piece_movement_requested)
-			if currentPiece.new_cells_requested.is_connected(_on_Piece_new_cells_requested):
-				currentPiece.new_cells_requested.disconnect(_on_Piece_new_cells_requested)
-			if currentPiece.ghost_cells_requested.is_connected(_on_Piece_ghost_cells_requested):
-				currentPiece.ghost_cells_requested.disconnect(_on_Piece_ghost_cells_requested)
-			popped = holdStorage.pushPiece(currentPiece)
-			currentPiece = null
+			if piece.movement_requested.is_connected(_on_Piece_movement_requested):
+				piece.movement_requested.disconnect(_on_Piece_movement_requested)
+			if piece.new_cells_requested.is_connected(_on_Piece_new_cells_requested):
+				piece.new_cells_requested.disconnect(_on_Piece_new_cells_requested)
+			if piece.ghost_cells_requested.is_connected(_on_Piece_ghost_cells_requested):
+				piece.ghost_cells_requested.disconnect(_on_Piece_ghost_cells_requested)
+			if piece.focus_lost.is_connected(_on_Piece_focus_lost):
+				piece.focus_lost.disconnect(_on_Piece_focus_lost)
+			if piece.trap_activated.is_connected(effect_activated.emit):
+				piece.trap_activated.disconnect(effect_activated.emit)
+			if piece.tree_exiting.is_connected(_on_Piece_tree_exiting):
+				piece.tree_exiting.disconnect(_on_Piece_tree_exiting)
+			popped = holdStorage.pushPiece(piece, false, index)
+			activePieces.erase(piece)
 		else:
-			popped = holdStorage.popPiece()
+			popped = holdStorage.popPiece(index)
 		if popped:
+			succeeded = true
 			spawnPiece(popped)
 		else:
-			requestPiece()
+			requestPiece(true)
+		if succeeded:
+			activePieces_changed.emit()
+			SoundManager.play("hold")
 
-func isTileOccupied(coords:Vector2i) -> bool:
-	return get_cell_atlas_coords(coords).y == SET_TILE_ATLAS_ROW
+func isTileFilled(cell:Vector2i) -> bool:
+	return get_cell_source_id(cell) != -1
 
-func placeOnHighestRow(piece:Piece = currentPiece):
+func isTileOccupied(cell:Vector2i) -> bool:
+	var isFilled:bool = isTileFilled(cell)
+	if isFilled: return true
+	for ent:Piece in entities:
+		if ent.globalCells.has(cell):
+			return true
+	return false
+
+func placeOnHighestRow(piece:Piece):
 	var greatestY:int = 0
-	for cell in piece.localCells:
-		var pos:Vector2i = piece.currentPosition + cell
-		if greatestY < pos.y:
-			greatestY = pos.y
+	for cell in piece.globalCells:
+		if greatestY < cell.y:
+			greatestY = cell.y
 	if greatestY > 0:
 		# If reach below top-most row, nudge up
 		piece.move(Vector2i.UP)
 		placeOnHighestRow(piece)
 
-func checkForFailure(piece:Piece = currentPiece) -> bool:
-	for cell in piece.localCells:
-		var pos:Vector2i = piece.currentPosition + cell
-		if isTileOccupied(pos):
+func getCellsTranslatedOntoHighestRow(cells:Array[Vector2i]) -> Array[Vector2i]:
+	var greatestY:int = 0
+	for cell in cells:
+		if greatestY < cell.y:
+			greatestY = cell.y
+	if greatestY > 0:
+		# If reach below top-most row, nudge up
+		cells = getTranslatedCells(cells, Vector2i.UP)
+		return getCellsTranslatedOntoHighestRow(cells)
+	return cells
+
+func placeRandomHorizontally(piece:Piece):
+	var rect:Rect2i
+	rect.position = piece.currentPosition
+	for cell:Vector2i in piece.globalCells:
+		rect = rect.expand(cell)
+	piece.move(Vector2i(randi_range(-rect.position.x, BOUNDS.end.x-rect.end.x-1),0))
+
+func placeAboveOtherPieces(piece:Piece):
+	placeRandomHorizontally(piece)
+	for cell:Vector2i in piece.globalCells:
+		for activePiece:Piece in activePieces:
+			if activePiece != piece and not activePiece.moveLock:
+				if activePiece.globalCells.has(cell):
+					piece.move(Vector2i.UP)
+					placeAboveOtherPieces(piece)
+					return
+
+func forceShoveOtherPiecesDown(piece:Piece):
+	var lowerPieces:Array[Piece] = []
+	for activePiece:Piece in activePieces:
+		if activePiece == piece:
+			break
+		lowerPieces.append(activePiece)
+	for lowerPiece:Piece in activePieces:
+		if lowerPiece != piece and lowerPiece.moveLock:
+			var nudgeResult:bool = nudgePiece(piece.globalCells, lowerPiece, Vector2i.DOWN, true)
+			if nudgeResult:
+				# Can't move, so lock pieces, and instantly lose
+				lockPiece(piece)
+				lockPiece(lowerPiece)
+
+func nudgePiece(cells:Array[Vector2i], piece:Piece, direction:Vector2i, force:bool = false) -> bool: ## false = unblocked; true = blocked
+	for cell:Vector2i in cells:
+		if piece.globalCells.has(cell):
+			var blocked:bool = tryMovePiece(piece, direction, Piece.MOVEMENT.FORCED_SHOVE if force else Piece.MOVEMENT.SHOVE)
+			if activePieces.has(piece) and not blocked:
+				return nudgePiece(cells, piece, direction, force)
+			return blocked
+	return false
+
+func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ## false = unblocked; true = blocked
+	# Check if a non-collidible piece isn't inside another piece
+	if not piece.collidible and getCollidingPiece(piece.globalCells, piece) != null:
+		return true
+	# Check tiles the piece want to move
+	var translatedCells := getCellsDifference(getTranslatedCells(piece.globalCells, direction), piece.globalCells)
+	if areCellsOpen(translatedCells, [], true):
+		var blocked:bool = false
+		# Prevent going through activated lines
+		if direction == Vector2i.DOWN:
+			var lowestY:int = BOUNDS.position.y
+			for cell in translatedCells:
+				if cell.y > lowestY:
+					lowestY = cell.y
+			if isRowClearing(lowestY):
+				return true
+		var forceful:bool = movementType == Piece.MOVEMENT.FORCED_SHOVE or Piece.MOVEMENT.HARD_DROP
+		piece.collidible = true # Allow collision now that we know it's in a free space
+		var collidingPieces:Array[Piece] = getAllCollidingPieces(translatedCells, piece)
+		if collidingPieces.size():
+			match movementType:
+				Piece.MOVEMENT.HORIZONTAL: 
+					if not FlagManager.isFlagSet("horizontal_shove"):
+						blocked = true
+				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
+					if not FlagManager.isFlagSet("vertical_shove"):
+						blocked = true
+			if not blocked:
+				for collidingPiece:Piece in collidingPieces:
+					var nudgeResult = nudgePiece(translatedCells, collidingPiece, direction, forceful)
+					if nudgeResult: blocked = true
+		if not blocked:
+			piece.move(direction)
+			if piece == getCameraFocus():
+				focusCamera.global_position = piece.global_position
+			tryToMakePiecesCollible()
+			checkIfWaitingToChooseNewFocusPiece()
+			match movementType:
+				Piece.MOVEMENT.HORIZONTAL:
+					SoundManager.play("move")
+				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
+					SoundManager.play("move_down")
+		return blocked
+	elif direction == Vector2i.DOWN:
+		# Lock piece
+		match movementType:
+			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE:
+				lockPiece(piece)
+				checkIfLandedOnEntity(piece, movementType)
+				SoundManager.play("harddrop")
+			Piece.MOVEMENT.SOFT_DROP:
+				if FlagManager.isFlagSet("lock_delay"):
+					piece.lockDelayed = true
+				else:
+					lockPiece(piece)
+					checkIfLandedOnEntity(piece, movementType)
+					SoundManager.play("drop")
+			Piece.MOVEMENT.GRAVITY:
+				if FlagManager.isFlagSet("lock_delay"):
+					piece.gravityLockDelayed = true
+				else:
+					lockPiece(piece)
+					checkIfLandedOnEntity(piece, movementType)
+					SoundManager.play("drop")
+			Piece.MOVEMENT.FALL:
+				pass
+			_:
+				lockPiece(piece)
+				checkIfLandedOnEntity(piece, movementType)
+				SoundManager.play("drop")
+	return true
+
+func checkIfLandedOnEntity(piece:Piece, movement:int) -> void: ## Send signals to pieces landed on
+	var belowCells:Array[Vector2i] = getCellsDifference(getTranslatedCells(piece.globalCells, Vector2i.DOWN), piece.globalCells)
+	for ent:Piece in entities:
+		for cell in belowCells:
+			if ent.globalCells.has(cell):
+				ent.getLandedOnBy(piece, movement)
+
+func tryToMakePiecesCollible() -> void: ## Check if all noncollible pieces are in a free space to turn them collidible
+	for piece:Piece in activePieces:
+		if not piece.collidible and getCollidingPiece(piece.globalCells, piece) == null:
+			piece.collidible = true
+
+func checkIfWaitingToChooseNewFocusPiece() -> void: ## Wait for a dropped piece to get out the way before spawning a new one
+	if not _waitingForPieceToGetOutOfTopRow:
+		return
+	for piece:Piece in activePieces:
+		if isPieceOnTopRow(piece):
+			return
+	if is_instance_valid(_waitingForPieceToGetOutOfTopRow):
+		chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(_waitingForPieceToGetOutOfTopRow.attachedEffects.get("on_lock")))
+	else:
+		chooseNewFocusPiece(true)
+
+	_waitingForPieceToGetOutOfTopRow = null
+
+func sortActivePieces():
+	activePieces.sort_custom(
+		func(a:Piece, b:Piece):
+			if a.isFocus: return true
+			if b.isFocus: return false
+			if a.moveLock and not b.moveLock:
+				return true
+			if b.moveLock and not a.moveLock:
+				return false
+			return a.currentPosition.y >= b.currentPosition.y
+	)
+
+func checkForFailure(piece:Piece) -> bool:
+	for cell in piece.globalCells:
+		if isTileOccupied(cell):
 			# Trigger game over
 			var deathContext := DracominoUtil.DeathContext.new(
 				"TOP_NO_INPUT" if inputTimer.isAFK() else "TOP",
@@ -259,18 +572,23 @@ func checkForFailure(piece:Piece = currentPiece) -> bool:
 			return true
 	return false
 
+func canSafelySpawnPiece(piece:Piece) -> bool:
+	if not piece: return false
+	var cells:Array[Vector2i] = getCellsTranslatedOntoHighestRow(getTranslatedCells(piece.localCells, SPAWN_POINT + piece.origin))
+	for cell in cells:
+		if isTileOccupied(cell):
+			return false
+	return true
+
 func gameOver(deathContext:DracominoUtil.DeathContext = null):
 	if isGameOver:
 		print("You already died!")
 		return
-	sfx_gameOver.play()
+	SoundManager.play("gameover")
 	isGameOver = true
-	lockPiece()
-	if currentPiece:
-		currentPiece.queue_free()
-	currentPiece = null
+	for piece in activePieces:
+		lockPiece(piece)
 	game_over_earned.emit()
-	cancel_waitForItem()
 	if deathContext and Archipelago.is_deathlink():
 		if Archipelago.conn:
 			sendDeathLink(deathContext)
@@ -282,17 +600,18 @@ func sendDeathLink(deathContext:DracominoUtil.DeathContext):
 		deathlink_earned.emit(deathContext) # For DracominoHandler to handle
 
 func resetGame():
+	var focusPiece:Piece = getFocusPiece()
 	# Send deathlink message
 	if sendDeathOnRestart and not isGameOver and not boardIsFresh:
-		sfx_gameOver.play()
+		SoundManager.play("gameover")
 		var deathContext := DracominoUtil.DeathContext.new(
 			# category
-			"RESTART_NEAR_GAME_OVER" if currentPiece and isInDanger()
-			else "RESTART_WITH_PIECES" if currentPiece
-			else "RESTART_HELD_PIECE" if holdOnCooldown and _lastHeldPieceContext
+			"RESTART_NEAR_GAME_OVER" if focusPiece and isInDanger()
+			else "RESTART_WITH_PIECES" if focusPiece
+			else "RESTART_HELD_PIECE" if _lastHeldPieceContext # TODO: Not possible anymore
 			else "RESTART",
 			# itemContext
-			currentPiece.context if currentPiece
+			focusPiece.context if focusPiece
 			else _lastHeldPieceContext
 		)
 		if not deathContext.itemContext and pieceTimer.isAFK():
@@ -307,10 +626,17 @@ func resetGame():
 			itemPickups[k].node = null
 		itemPickups.erase(k)
 
-	# Delete current piece
-	if currentPiece:
-		currentPiece.queue_free()
-	currentPiece = null
+	# Clear effects and queue
+	effectHandler.on_board_reset()
+
+	# Delete current pieces
+	for piece in activePieces:
+		deletePiece(piece)
+	for piece in entities:
+		deletePiece(piece)
+	activePieces_changed.emit()
+	activePieces.clear() # Clear now to avoid weird race condition
+	entities.clear()
 
 	# Clear previews and hold
 	if previewStorage: previewStorage.clear()
@@ -320,28 +646,25 @@ func resetGame():
 	isGameOver = false
 	boardIsFresh = true
 	linesCleared = 0
-	random.state = randomSaveState
-	rotate_random.state = rotate_randomSaveState
-	holdOnCooldown = false
+	clearingChunks.clear()
+	resetFlagHolder()
 
 	# Clear board
-	for y in range(BOUNDS.position.y, BOUNDS.end.y):
-		for x in range(BOUNDS.position.x, BOUNDS.end.x):
-			set_cell(Vector2i(x, y))
+	activatedTileHandler.clear()
+	clear()
 	game_started.emit()
 
 	# Create new piece
 	requestPiece.call_deferred()
 
-func lockPiece(piece:Piece = currentPiece):
-	if piece == null: return
-	# var pieceIsHardDropped:bool = piece.moveLock
-	holdOnCooldown = false
+func lockPiece(piece:Piece):
 	var pickedUpItem:bool = false
-	for pos in piece.localCells:
-		if BOUNDS.has_point(piece.currentPosition + pos):
-			var mapCoord:Vector2i = piece.currentPosition + pos
-			set_cell(mapCoord, 0, Vector2i(piece.id, SET_TILE_ATLAS_ROW))
+	for cell in piece.globalCells:
+		if BOUNDS.has_point(cell):
+			var mapCoord:Vector2i = cell
+			# Lock cells if not entity
+			if not piece.isEntity: set_cell(mapCoord, 0, Vector2i(piece.colorId, SET_TILE_ATLAS_ROW))
+			# Pick up coins touched
 			var pickup:ItemPickupContext = _mappedpickups.get(mapCoord)
 			if pickup:
 				pickedUpItem = true
@@ -349,31 +672,55 @@ func lockPiece(piece:Piece = currentPiece):
 					pickup.node.queue_free()
 					pickup.node = null
 				item_pickedup.emit(pickup.loc_id)
-				
 	if pickedUpItem:
-		sfx_itemPickup.play()
-	if currentPiece == piece:
-		currentPiece = null
-	piece.queue_free()
-	boardIsFresh = false
-	
-	if not isGameOver:
-		var fullRows = checkForFullRows()
-		if fullRows.size() > 0:
-			linesCleared += fullRows.size()
-			rowsToClear = fullRows # TODO: Replace this with a tween
-			var clearedlines = fullRows.map(func(lineNum): return BOUNDS.end.y - lineNum -1)
-			await rowClearAnimation_finished
-			lines_cleared.emit(clearedlines)
-		else:
-			requestPiece.call_deferred()
+		SoundManager.play("itempickup")
 
-func checkForFullRows() -> Array:
-	var fullRows = []
+	# Allow board to send death on restart
+	boardIsFresh = false
+
+	var onLockEffect:DracominoHandler.StateItem = piece.attachedEffects.get("on_lock")
+	if not isGameOver:
+		# If this was a trap, mark it as used
+		piece.markEffectsAsUsed()
+		# Check which rows are fill and prepare to clear them
+		var fullRows:Array[int] = getFullRows()
+		if fullRows.size() > 0:
+			if onLockEffect: effectHandler.bufferEffect(onLockEffect)
+			linesCleared += fullRows.size()
+			for row:int in fullRows:
+				var chunk := ClearingChunk.new(row)
+				clearingChunks.append(chunk)
+				processClearingChunk(chunk)
+		else:
+			if onLockEffect: effectHandler.tryToTriggerEffect(onLockEffect)
+	
+	# Convert to active pieces to entity when applickable, otherwise delete
+	if piece.isEntity:
+		piece.placed = true
+		activePieces.erase(piece)
+		entities.append(piece)
+	else:
+		deletePiece(piece)
+	
+	# Check if requesting next piece is blocked (because you'll get another as a result of a minigame)
+	var fx = effectHandler.getEffectObject(onLockEffect)
+	if fx and fx.blockRequestPiece and not isGameOver:
+		pass
+	else:
+		activePieces_changed.emit()
+
+	SignalBus.getSignal("effect_duration_down").emit() # Used to count down effect duration
+
+func getFullRows() -> Array[int]:
+	var fullRows:Array[int] = []
 	for y in range(BOUNDS.position.y, BOUNDS.end.y):
+		# Ignore chunks that are already recognized as clearing
+		if isRowClearing(y):
+			continue
+		# Check if row is full
 		var full:bool = true
 		for x in range(BOUNDS.position.x, BOUNDS.end.x):
-			if not isTileOccupied(Vector2i(x, y)):
+			if not isTileFilled(Vector2i(x, y)):
 				full = false
 				break
 		if full:
@@ -384,8 +731,28 @@ func checkForFullRows() -> Array:
 		for i in fullRows:
 			var line:int = _linemappings.get(BOUNDS.end.y - i - 1, 0) 
 			isMissingLineCheck = _missinglines.get(line, false)
-		(sfx_lineClearCheck if isMissingLineCheck else sfx_lineClear).play()
+		SoundManager.play("lineclear_check" if isMissingLineCheck else "lineclear")
 	return fullRows
+
+func isRowClearing(row:int) -> bool:
+	for chunk in clearingChunks:
+		if chunk.row == row:
+			return true
+	return false
+
+func isPieceOnTopRow(piece:Piece) -> bool:
+	for cell in piece.globalCells:
+		if cell.y <= BOUNDS.position.y:
+			return true
+	return false
+
+func isPieceBottomOnRow(piece:Piece, row:int) -> bool:
+	if not piece or not piece.globalCells.size(): return false
+	var lowestY = BOUNDS.position.y
+	for cell:Vector2i in piece.globalCells:
+		if cell.y > lowestY:
+			lowestY = cell.y
+	return row == lowestY
 
 func isInDanger() -> bool:
 	for y in range(DANGER_ZONE.position.y, DANGER_ZONE.end.y):
@@ -394,33 +761,56 @@ func isInDanger() -> bool:
 				return true
 	return false
 
-func pushDownRows(full_row):
-	for y in range(full_row, BOUNDS.position.y -1, -1):
+func pushDownRows(clearedChunk:ClearingChunk) -> void:
+	# Move tiles down
+	for y in range(clearedChunk.row, BOUNDS.position.y -1, -1):
 		for x in range(BOUNDS.position.x, BOUNDS.end.x):
-			var aboveCell := Vector2i(x, y - 1)
-			var target_id = get_cell_source_id(aboveCell)
-			var target_atlas = get_cell_atlas_coords(aboveCell)
-			set_cell(Vector2i(x,y), 0, target_atlas)
+			set_cell(Vector2i(x,y), 0, get_cell_atlas_coords(Vector2i(x, y - 1)))
+		# Move entities down
+		for ent:Piece in entities:
+			if isPieceBottomOnRow(ent,y-1):
+				ent.move(Vector2i.DOWN)
 
-func areCellsValid(cells:Array[Vector2i], offset:Vector2i) -> bool:
+	activatedTileHandler.pushDownRows(clearedChunk.row)
+			
+	# Move clearing chunks down
+	for chunk in clearingChunks:
+		if chunk.row < clearedChunk.row:
+			chunk.pushDown()
+
+	# Update ghosts
+	updateAllGhosts()
+
+func areCellsOpen(cells:Array[Vector2i], invalidCells:Array[Vector2i] = [], clearingRowsAreOpen:bool = false) -> bool:
 	for cell in cells:
-		var pos:Vector2i = offset + cell
+		if clearingRowsAreOpen and isRowClearing(cell.y):
+			continue
 		if (
-			isTileOccupied(pos)
-			or pos.x < BOUNDS.position.x or pos.x >= BOUNDS.end.x # Check horizontal bounds
-			or pos.y >= BOUNDS.end.y # Check if reached bottom
+			isTileOccupied(cell)
+			or cell.x < BOUNDS.position.x or cell.x >= BOUNDS.end.x # Check horizontal bounds
+			or cell.y >= BOUNDS.end.y # Check if reached bottom
+			or invalidCells.has(cell)
 		):
 			return false
 	return true
 
-func waitForItem():
-	if not currentPiece:
-		if Archipelago.conn and not Archipelago.conn.obtained_item.is_connected(_on_obtained_item):
-			Archipelago.conn.obtained_item.connect(_on_obtained_item.unbind(1), CONNECT_ONE_SHOT)
+func getCollidingPiece(cells:Array[Vector2i], sourcePiece:Piece) -> Piece:
+	for piece:Piece in activePieces:
+		if piece != sourcePiece and piece.collidible:
+			for cell:Vector2i in cells:
+				if piece.globalCells.has(cell):
+					return piece
+	return null
 
-func cancel_waitForItem():
-	if Archipelago.conn and Archipelago.conn.obtained_item.is_connected(_on_obtained_item):
-		Archipelago.conn.obtained_item.disconnect(_on_obtained_item)
+func getAllCollidingPieces(cells:Array[Vector2i], sourcePiece:Piece) -> Array[Piece]:
+	var ret:Array[Piece] = []
+	for piece:Piece in activePieces:
+		if piece != sourcePiece and piece.collidible:
+			for cell:Vector2i in cells:
+				if piece.globalCells.has(cell):
+					ret.append(piece)
+					break
+	return ret
 
 func setAnimBasedOnMasterCoinAndLine(node:Node2D, line:int = 0) -> void:
 	var animPlayer:AnimationPlayer = node.get_node_or_null("AnimationPlayer")
@@ -432,77 +822,128 @@ func setAnimBasedOnMasterCoinAndLine(node:Node2D, line:int = 0) -> void:
 	while targetSeek < 0: targetSeek += animPlayer_master.current_animation_length
 	animPlayer.seek(targetSeek)
 
+func updateAllGhosts():
+	var floatingPieces:Array[Piece] = []
+	var invalidCells:Array[Vector2i] = []
+	var relativePosition:Vector2i = Vector2i.ZERO
+	for piece in activePieces:
+		if piece.ghost:
+			floatingPieces.append(piece)
+	while floatingPieces.size():
+		var somethingLanded:bool = false
+		for piece:Piece in floatingPieces.duplicate():
+			if not areCellsOpen(getTranslatedCells(piece.globalCells, relativePosition + Vector2i.DOWN), invalidCells, false):
+				piece.ghost.relativePosition = relativePosition
+				floatingPieces.erase(piece)
+				mergeCells(invalidCells, getTranslatedCells(piece.globalCells, piece.ghost.relativePosition))
+				somethingLanded = true
+		if not somethingLanded:
+			relativePosition += Vector2i.DOWN
+
 #==== Events =====
+func _input(event: InputEvent) -> void:
+	if event.is_action_type():
+		inputTimer.reset()
+
 func _unhandled_input(event: InputEvent) -> void:
+	var focusPiece:Piece = getFocusPiece()
 	if not isGameOver:
-		if event.is_action_pressed("hold"):
-			if DracominoHandler.activeAbilities.get("Hold Slot", 0):
+		if Config.getSetting("debug", false) and event.is_action_pressed("spawn"):
+			requestPiece(true)
+			get_viewport().set_input_as_handled()
+			return
+		elif event.is_action_pressed("hold"):
+			if FlagManager.isFlagSet("hold_slot"):
 				hold()
-		elif not currentPiece:
+				get_viewport().set_input_as_handled()
+				return
+		elif not focusPiece:
 			if event.is_action_pressed("ui_accept"):
 				requestPiece.call_deferred()
-				inputTimer.reset()
 				get_viewport().set_input_as_handled()
-	if currentPiece == null: return
-	if (event.is_action_pressed("moveRight") 
-	or event.is_action_pressed("moveLeft")
-	or event.is_action_pressed("moveDown")
-	):
-		pass
-		# # TODO: This doesn't do anything due to piece handling it
-		# # I know there's Input.get_vector, but a controller that can't reset perfectly to zero needs per-axis deadzones
-		# var inputVector:Vector2 = Vector2(
-		# 	Input.get_action_strength("moveRight") - Input.get_action_strength("moveLeft"),
-		# 	Input.get_action_strength("moveDown") if DracominoHandler.activeAbilities.get("Soft Drop", 0) else 0.0
-		# )
+				return
 		
-		# if inputVector.length_squared() < MIN_VELOCITY_LENGTH_SQUARED:
-		# 	inputVector = Vector2.ZERO
+		# Cycle hold slots
+		if holdStorage and holdStorage.storageSlots > 1 and (event.is_action("scrollUp") or event.is_action("scrollDown")):
+			var strength:float = Input.get_action_strength("scrollDown") - Input.get_action_strength("scrollUp")
+			if strength == 0:
+				holdSlotCycleTimer.stop()
+				if holdSlotCycleTimer.timeout.is_connected(_on_holdSlotCycleTimer_timeout):
+					holdSlotCycleTimer.timeout.disconnect(_on_holdSlotCycleTimer_timeout)
+			elif holdSlotCycleTimer.is_stopped():
+				var fn:Callable = holdStorage.cycleUp if strength < 0 else holdStorage.cycleDown
+				fn.call()
+				holdSlotCycleTimer.start()
+				if not holdSlotCycleTimer.timeout.is_connected(_on_holdSlotCycleTimer_timeout):
+					holdSlotCycleTimer.timeout.connect(_on_holdSlotCycleTimer_timeout.bind(fn))
+			get_viewport().set_input_as_handled()
+			return
 
-	elif event.is_action_pressed("rotateClockwise"):
-		if DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
-			sfx_rotate.play()
-			currentPiece.rotateClockwise()
-		elif USE_ALT_ROTATE and DracominoHandler.activeAbilities.get("Rotate Counterclockwise", 0):
-			sfx_rotate.play()
-			currentPiece.rotateCounterclockwise()
-	elif event.is_action_pressed("rotateCounterclockwise"):
-		if DracominoHandler.activeAbilities.get("Rotate Counterclockwise", 0):
-			sfx_rotate.play()
-			currentPiece.rotateCounterclockwise()
-		elif USE_ALT_ROTATE and DracominoHandler.activeAbilities.get("Rotate Clockwise", 0):
-			sfx_rotate.play()
-			currentPiece.rotateClockwise()
-	elif event.is_action_pressed("hardDrop") and Input.is_action_just_pressed("hardDrop"): # Double check to ignore events from slight axis movement
-		if DracominoHandler.activeAbilities.get("Hard Drop", 0):
-			currentPiece.hardDrop()
+	if focusPiece == null: return
+	
+	# Stuff that requires an active piece
+	if event.is_action_pressed("hardDrop") and Input.is_action_just_pressed("hardDrop"): # Double check to ignore events from slight axis movement
+		if FlagManager.isFlagSet("hard_drop"):
+			focusPiece.hardDrop()
+		elif (
+			ALLOW_GRAVITY_DROP 
+			and FlagManager.isFlagSet("gravity")
+			and activePieces.size() < MAX_PIECES
+			and (countNonlockedPieces() > 1 or (previewStorage and previewStorage.getNumStored()))
+		):
+			# Only gravity drop if it's not your last piece
+			focusPiece.gravityDrop()
 	else:
 		return
 	
-	inputTimer.reset()
 	get_viewport().set_input_as_handled()
 
+func _on_holdSlotCycleTimer_timeout(callback:Callable):
+	callback.call()
+
 func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:int):
-	if areCellsValid(piece.localCells, piece.currentPosition + direction):
-		match movementType:
-			Piece.MOVEMENT.HORIZONTAL: sfx_move.play()
-			Piece.MOVEMENT.SOFT_DROP: sfx_moveDown.play()
-		piece.move(direction)
-	elif direction == Vector2i.DOWN:
-		match movementType:
-			Piece.MOVEMENT.HARD_DROP: sfx_hardDrop.play()
-			_: sfx_drop.play()
-		lockPiece(piece)
+	tryMovePiece(piece, direction, movementType)
 
 func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
-	if areCellsValid(cells, piece.currentPosition):
-		piece.setCells(cells)
+	var dirs:Array[Vector2i] = [Vector2i.ZERO]
+	if FlagManager.isFlagSet("kick"):
+		# Add more directions to push when kick is active
+		dirs.append_array([
+			Vector2i.DOWN,
+			Vector2i.LEFT,
+			Vector2i.RIGHT,
+			Vector2i.DOWN+Vector2i.LEFT,
+			Vector2i.DOWN+Vector2i.RIGHT,
+			(Vector2i.DOWN*2)+Vector2i.RIGHT,
+			(Vector2i.DOWN*2)+Vector2i.LEFT,
+			Vector2i.UP,
+		])
+		
+	for dir:Vector2i in dirs:
+		var translatedCells := getTranslatedCells(cells, piece.currentPosition + dir)
+		if areCellsOpen(translatedCells) and not getCollidingPiece(translatedCells, piece):
+			piece.setCells(cells)
+			piece.move(dir, true)
+			SoundManager.play("rotate")
+			if dir.x != 0:
+				SoundManager.play("move")
+			elif dir.y != 0:
+				SoundManager.play("move_down")
+			return
+	SoundManager.play("rotate_fail")
 
-func _on_Piece_ghost_cells_requested(piece:Piece, ghost:GhostPiece):
-	var relativePosition:Vector2i = Vector2i.ZERO
-	while areCellsValid(piece.localCells, piece.currentPosition+ relativePosition + Vector2i.DOWN):
-		relativePosition += Vector2i.DOWN
-	ghost.relativePosition = relativePosition
+func _on_Piece_ghost_cells_requested(_piece:Piece, _ghost:GhostPiece):
+	updateAllGhosts()			
+
+func _on_Piece_focus_lost(piece:Piece):
+	if FlagManager.isFlagSet("hard_drop") and is_instance_valid(piece) and isPieceOnTopRow(piece):
+		_waitingForPieceToGetOutOfTopRow = piece
+	else:
+		chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(piece.attachedEffects.get("on_lock")))
+
+func _on_Piece_tree_exiting(piece:Piece): # Fallback if piece didn't delete properly
+	activePieces.erase(piece)
+	entities.erase(piece)
 
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	conn.deathlink.connect(_on_deathlink)
@@ -510,17 +951,12 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		hasOfflineDeath = false
 		sendDeathLink(DracominoUtil.DeathContext.new("OFFLINE"))
 
-	waitForItem()
-
 func _on_deathlink(_source, _cause, _json):
 	gameOver()
 
-func _on_obtained_item():
-	if currentPiece == null and not isGameOver:
-		requestPiece.call_deferred()
-
-func _on_Btn_Restart_pressed() -> void:
-	resetGame()
+func _on_newPieceObtained():
+	fillPreview()
+	requestPiece()
 
 func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemappings) -> void:
 	_linemappings = lineMappings
@@ -529,7 +965,7 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 		# Re-number the labels
 		var line:int = lineMappings.get(i, 0)
 		lineNumberLabels[i].text = str(line + 1)
-		lineNumberLabels[i].modulate.a = 1.0 if _missinglines.get(line, false) else 0.2 # Make transparent if collected
+		lineNumberLabels[i].modulate = Color.WHITE if _missinglines.get(line, false) else Color8(0x55,0x55,0x55) # Make dark if collected
 
 		# Organize the pickups
 		for j:int in range(BOUNDS.size.x):
@@ -564,13 +1000,36 @@ func _on_DracominoState_missing_pickup_coordinates_updated(map:Dictionary[Vector
 			itemPickups.erase(k)
 	_on_DracominoState_line_mappings_updated()
 
-func _on_DracominoState_slot_context_hash_updated(ctx:int) -> void:
-	random.seed = ctx
-	randomSaveState = random.state
-	rotate_random.seed = ctx+1
-	rotate_randomSaveState = rotate_random.state
+func _on_activePieces_changed():
+	chooseNewFocusPiece(true)
 
-func _on_holdOnCooldown_set(value):
-	## For deathlink message context
-	_lastHeldPieceContext = currentPiece.context if (value and currentPiece) else null
-	holdOnCooldown = value
+func _on_mode_enabled():
+	inputTimer.reset()
+	pieceTimer.isAFK()
+	requestPiece()
+
+func _on_FishingBoard_piece_selected(piece:Piece) -> void:
+	if previewStorage:
+		var popped = previewStorage.popPieceByPiece(piece)
+		if popped:
+			print("Fished up a %s"%piece.prettyName)
+			spawnPiece(popped)
+			return
+	requestPiece()
+
+func _on_effected_activated(item:DracominoHandler.StateItem):
+	if FlagManager.isFlagSet("trap_link") and item and item.data and not item.usedTrapLink:
+		var trapLinkAlias:String = CONSTANTS.TRAP_ALIASES.get(item.data.internalName, "")
+		if trapLinkAlias and Archipelago.conn:
+			item.usedTrapLink = true
+			Archipelago.conn.send_traplink(trapLinkAlias)
+			print("Board: Sending trap: ", trapLinkAlias)
+
+func _on_effect_impatience():
+	var tween:Tween = create_tween().set_parallel()
+	SoundManager.play("trap")
+	for i in range(EFFECT_IMPATIENCE_NUM_PIECES_TO_SPAWN):
+		tween.tween_callback(requestPiece.bind(true)).set_delay(i*0.5)
+
+func _on_boardeffect_queued():
+	EffectHandler.tryToTriggerNextBoardEffect(self)

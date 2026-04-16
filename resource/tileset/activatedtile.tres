@@ -1,0 +1,16 @@
+[gd_resource type="TileSet" load_steps=5 format=3 uid="uid://srgsm3d17kp8"]
+
+[ext_resource type="PackedScene" uid="uid://bqbrxme55446w" path="res://object/activatedtile.tscn" id="1_soh2d"]
+[ext_resource type="Texture2D" uid="uid://b1ycr243kmd45" path="res://assets/art/tile/activatedtile.png" id="2_soh2d"]
+
+[sub_resource type="TileSetScenesCollectionSource" id="TileSetScenesCollectionSource_khjol"]
+scenes/1/scene = ExtResource("1_soh2d")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_bpvsr"]
+texture = ExtResource("2_soh2d")
+1:0/0 = 0
+2:0/0 = 0
+
+[resource]
+sources/0 = SubResource("TileSetScenesCollectionSource_khjol")
+sources/1 = SubResource("TileSetAtlasSource_bpvsr")

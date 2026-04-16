@@ -1,0 +1,47 @@
+[gd_scene load_steps=2 format=3 uid="uid://bdby1xnydrw5r"]
+
+[ext_resource type="Script" uid="uid://d3ycgwrjm03rb" path="res://dracomino_ap/slidersetting.gd" id="1_o1y7d"]
+
+[node name="SliderSetting" type="MarginContainer"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 41.0
+grow_horizontal = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+script = ExtResource("1_o1y7d")
+
+[node name="HFlowContainer" type="HFlowContainer" parent="."]
+layout_mode = 2
+theme_override_constants/h_separation = 5
+theme_override_constants/v_separation = 5
+
+[node name="Label_SettingName" type="Label" parent="HFlowContainer"]
+layout_mode = 2
+text = "Setting Name"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HFlowContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HSlider_Amt" type="HSlider" parent="HFlowContainer/HBoxContainer"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.2
+max_value = 8.0
+step = 0.1
+value = 1.0
+
+[node name="Label_Amt" type="Label" parent="HFlowContainer/HBoxContainer"]
+clip_contents = true
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = "1.0"
+
+[node name="Btn_Reset" type="Button" parent="HFlowContainer/HBoxContainer"]
+layout_mode = 2
+text = "Reset"

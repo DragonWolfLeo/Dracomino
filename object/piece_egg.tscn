@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=4 uid="uid://crmrk48te3jq6"]
+
+[ext_resource type="PackedScene" uid="uid://176sbvua7a5x" path="res://object/piece.tscn" id="1_d4y6y"]
+[ext_resource type="Script" uid="uid://c6mqic1epdc1v" path="res://object/piece_egg.gd" id="2_7nymy"]
+[ext_resource type="PackedScene" uid="uid://dyaxcur1ermgq" path="res://object/ghostpiece.tscn" id="2_jq0dp"]
+[ext_resource type="Texture2D" uid="uid://d4hr8hd68oveh" path="res://assets/art/eggcrack.png" id="4_swvkc"]
+
+[node name="Piece_Egg" node_paths=PackedStringArray("ghost") instance=ExtResource("1_d4y6y")]
+tile_map_data = PackedByteArray("AAAAAAAAAQABAAIAAAD///7/AQAAAAAAAAD/////AQAAAAEAAAD//wAAAQAAAAIAAAD//wEAAQAAAAMAAAAAAP7/AQABAAAAAAAAAP//AQABAAEAAAAAAAEAAQABAAMAAAABAP7/AQACAAAAAAABAP//AQACAAEAAAABAAAAAQACAAIAAAABAAEAAQACAAMAAAA=")
+script = ExtResource("2_7nymy")
+canRotate = false
+canFlip = false
+can180 = false
+uniquePiece = true
+isEntity = true
+ghost = NodePath("GhostPiece")
+
+[node name="GhostPiece" parent="." index="4" instance=ExtResource("2_jq0dp")]
+tile_map_data = PackedByteArray("AAD///7/AQAAAAAAAAD/////AQAAAAEAAAD//wAAAQAAAAIAAAD//wEAAQAAAAMAAAAAAP7/AQABAAAAAAAAAP//AQABAAEAAAAAAAAAAQABAAIAAAAAAAEAAQABAAMAAAABAP7/AQACAAAAAAABAP//AQACAAEAAAABAAAAAQACAAIAAAABAAEAAQACAAMAAAA=")
+uniquePiece = true
+
+[node name="CrackFrames" type="Sprite2D" parent="." index="5"]
+position = Vector2(8, 0)
+texture = ExtResource("4_swvkc")
+hframes = 6

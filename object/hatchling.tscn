@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://d0jb7nflulkk3"]
+
+[ext_resource type="Texture2D" uid="uid://cwndhdyfwyiri" path="res://assets/art/hatchling.png" id="1_ipj1k"]
+[ext_resource type="Script" uid="uid://34icgmqvijly" path="res://object/hatchling.gd" id="2_aknyq"]
+
+[node name="Hatchling" type="Sprite2D"]
+texture = ExtResource("1_ipj1k")
+hframes = 2
+script = ExtResource("2_aknyq")

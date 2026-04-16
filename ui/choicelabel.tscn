@@ -1,0 +1,33 @@
+[gd_scene load_steps=4 format=3 uid="uid://x3o7m2cjwxgc"]
+
+[ext_resource type="Theme" uid="uid://cf3iwfpvnpy25" path="res://resource/style/dialoguebox.tres" id="1_b7xun"]
+[ext_resource type="Script" uid="uid://dab2w58wl0uhi" path="res://ui/choicelabel.gd" id="2"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_n8v73"]
+content_margin_left = 24.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+
+[node name="ChoiceLabel" type="RichTextLabel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -960.0
+offset_bottom = -693.0
+theme = ExtResource("1_b7xun")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_n8v73")
+bbcode_enabled = true
+text = "Choice"
+fit_content = true
+scroll_active = false
+script = ExtResource("2")
+
+[node name="Button" type="Button" parent="."]
+show_behind_parent = true
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[connection signal="gui_input" from="Button" to="." method="_on_button_gui_input"]
+[connection signal="pressed" from="Button" to="." method="_on_Button_pressed"]

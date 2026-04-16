@@ -1,309 +1,238 @@
-[gd_scene load_steps=18 format=3 uid="uid://dq05pcnj58yp0"]
+[gd_scene load_steps=17 format=3 uid="uid://c5lm3ikyfckvp"]
 
-[ext_resource type="PackedScene" uid="uid://boraki5ygsa0g" path="res://level/board.tscn" id="1_q3k4m"]
-[ext_resource type="Script" uid="uid://c5jgcsxvnygnn" path="res://mode/main.gd" id="1_svssi"]
-[ext_resource type="Script" uid="uid://daewoikmtskpi" path="res://dracomino_ap/dracomino_handler.gd" id="2_gpyk6"]
-[ext_resource type="Script" uid="uid://dutbiv2hgugwn" path="res://module/piecestorage.gd" id="4_q3k4m"]
-[ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="5_kwn67"]
-[ext_resource type="PackedScene" uid="uid://c7613bp0awts" path="res://dracomino_ap/dracomino_client.tscn" id="5_svssi"]
-[ext_resource type="FontFile" uid="uid://c8dwaeydyfv6j" path="res://resource/font/PressStart2P-Regular.ttf" id="6_svssi"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q3k4m"]
-bg_color = Color(0.0562916, 0.0562916, 0.0562916, 1)
-
-[sub_resource type="Theme" id="Theme_d5o15"]
-default_font = ExtResource("5_kwn67")
-default_font_size = 12
-
-[sub_resource type="LabelSettings" id="LabelSettings_rni7d"]
-font_size = 20
-font_color = Color(1, 1, 0.129412, 1)
-outline_size = 6
-outline_color = Color(0.0646965, 0.0646965, 0.0646965, 1)
-
-[sub_resource type="LabelSettings" id="LabelSettings_svssi"]
-font_color = Color(1, 1, 0, 1)
-
-[sub_resource type="LabelSettings" id="LabelSettings_q3k4m"]
-font = ExtResource("6_svssi")
-font_size = 24
+[ext_resource type="Script" uid="uid://c5jgcsxvnygnn" path="res://mode/main.gd" id="1_gx2q7"]
+[ext_resource type="PackedScene" uid="uid://txbrdml6vs6n" path="res://screen/ui.tscn" id="2_yivgv"]
+[ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="3_yivgv"]
+[ext_resource type="Script" uid="uid://daewoikmtskpi" path="res://dracomino_ap/dracomino_handler.gd" id="4_d6dmn"]
+[ext_resource type="PackedScene" uid="uid://0ung6f7krjet" path="res://screen/notificationscreen.tscn" id="5_d6dmn"]
+[ext_resource type="PackedScene" uid="uid://3jevvou6slg2" path="res://screen/overlay.tscn" id="5_yivgv"]
+[ext_resource type="PackedScene" uid="uid://c81i6wg82i8yk" path="res://screen/backgroundlayer.tscn" id="6_ckgpy"]
+[ext_resource type="PackedScene" uid="uid://ckv6tnuoxlxgw" path="res://screen/level_overlay.tscn" id="6_w0fxs"]
+[ext_resource type="Script" uid="uid://c5w663oymc2oy" path="res://module/hide_with_mode.gd" id="8_jjnvi"]
+[ext_resource type="PackedScene" uid="uid://boraki5ygsa0g" path="res://level/board.tscn" id="8_wule5"]
+[ext_resource type="Script" uid="uid://dutbiv2hgugwn" path="res://module/piecestorage.gd" id="9_3joyb"]
+[ext_resource type="PackedScene" uid="uid://eb7omf02s6oc" path="res://ui/hud_container.tscn" id="9_m1ejn"]
+[ext_resource type="PackedScene" uid="uid://rd6em7cjqrum" path="res://level/fishingboard.tscn" id="10_jc8m0"]
+[ext_resource type="Script" uid="uid://uaf4h6orb4o4" path="res://mode/mode.gd" id="10_jjnvi"]
+[ext_resource type="Script" uid="uid://3hyxsaj4myy1" path="res://module/play_sound_on_visible.gd" id="14_m1ejn"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_gpyk6"]
-font = ExtResource("5_kwn67")
+font = ExtResource("3_yivgv")
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gpyk6"]
-content_margin_left = 4.0
-content_margin_top = 2.0
-content_margin_right = 4.0
-content_margin_bottom = 2.0
-bg_color = Color(0.436422, 0.672116, 0.773563, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.00146531, 0.112594, 0.137529, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-shadow_size = 1
-shadow_offset = Vector2(1, 1)
+[node name="MainSplit" type="VSplitContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+split_offset = -40
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_svssi"]
-content_margin_left = 4.0
-content_margin_top = 2.0
-content_margin_right = 4.0
-content_margin_bottom = 2.0
-bg_color = Color(0.186976, 0.658807, 0.804138, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.00146531, 0.112594, 0.137529, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-shadow_size = 1
-shadow_offset = Vector2(1, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gx2q7"]
-content_margin_left = 4.0
-content_margin_top = 2.0
-content_margin_right = 4.0
-content_margin_bottom = 2.0
-bg_color = Color(0.525081, 0.745393, 0.841889, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.00146531, 0.112594, 0.137529, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-shadow_size = 1
-shadow_offset = Vector2(1, 1)
-
-[sub_resource type="Theme" id="Theme_gpyk6"]
-Button/colors/font_color = Color(0, 0, 0, 1)
-Button/colors/font_hover_color = Color(0, 0, 0, 1)
-Button/colors/font_pressed_color = Color(0, 0, 0, 1)
-Button/styles/hover = SubResource("StyleBoxFlat_gpyk6")
-Button/styles/normal = SubResource("StyleBoxFlat_svssi")
-Button/styles/pressed = SubResource("StyleBoxFlat_gx2q7")
-
-[node name="Main" type="Control"]
+[node name="Main" type="SubViewportContainer" parent="."]
 process_mode = 3
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_neighbor_left = NodePath(".")
+focus_neighbor_top = NodePath(".")
+focus_neighbor_right = NodePath(".")
+focus_neighbor_bottom = NodePath(".")
+stretch = true
+script = ExtResource("1_gx2q7")
+
+[node name="SubViewport" type="SubViewport" parent="Main"]
+handle_input_locally = false
+snap_2d_transforms_to_pixel = true
+canvas_item_default_texture_filter = 3
+size = Vector2i(960, 488)
+render_target_update_mode = 4
+
+[node name="DracominoHandler" type="Node" parent="Main/SubViewport"]
+script = ExtResource("4_d6dmn")
+
+[node name="UI" parent="Main/SubViewport" instance=ExtResource("2_yivgv")]
+unique_name_in_owner = true
+
+[node name="Overlay" parent="Main/SubViewport" instance=ExtResource("5_yivgv")]
+
+[node name="LevelOverlay" parent="Main/SubViewport" instance=ExtResource("6_w0fxs")]
+process_mode = 1
+
+[node name="BackgroundLayer" parent="Main/SubViewport" instance=ExtResource("6_ckgpy")]
+
+[node name="PuzzleMode" type="Control" parent="Main/SubViewport"]
+unique_name_in_owner = true
+process_mode = 1
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+size_flags_horizontal = 3
 focus_mode = 2
-script = ExtResource("1_svssi")
+mouse_filter = 1
+script = ExtResource("10_jjnvi")
+modeName = &"puzzle"
 
-[node name="DracominoHandler" type="Node" parent="."]
-script = ExtResource("2_gpyk6")
+[node name="PuzzleHUD" type="CanvasLayer" parent="Main/SubViewport/PuzzleMode"]
+layer = 3
+script = ExtResource("8_jjnvi")
 
-[node name="MainSplit" type="HSplitContainer" parent="."]
+[node name="HoldContainer" type="MarginContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 16
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HoldContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+horizontal_scroll_mode = 0
+
+[node name="HoldBar" type="VBoxContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HoldContainer/ScrollContainer"]
+layout_mode = 2
+
+[node name="HoldLabel" type="Label" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HoldContainer/ScrollContainer/HoldBar"]
+layout_mode = 2
+text = "Hold"
+label_settings = SubResource("LabelSettings_gpyk6")
+horizontal_alignment = 1
+
+[node name="PreviewContainer" type="MarginContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 16
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/PreviewContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+horizontal_scroll_mode = 0
+
+[node name="PreviewBar" type="VBoxContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/PreviewContainer/ScrollContainer"]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 10
+
+[node name="PreviewLabel" type="Label" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/PreviewContainer/ScrollContainer/PreviewBar"]
+layout_mode = 2
+text = "Next"
+label_settings = SubResource("LabelSettings_gpyk6")
+horizontal_alignment = 1
+
+[node name="HUDContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD" instance=ExtResource("9_m1ejn")]
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="Main/SubViewport/PuzzleMode"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/split_bar_background = SubResource("StyleBoxFlat_q3k4m")
-split_offset = 900
-
-[node name="HBoxContainer" type="HBoxContainer" parent="MainSplit"]
-layout_mode = 2
-
-[node name="LevelContainer" type="PanelContainer" parent="MainSplit/HBoxContainer"]
-unique_name_in_owner = true
-process_mode = 1
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 1
-
-[node name="SubViewportContainer" type="SubViewportContainer" parent="MainSplit/HBoxContainer/LevelContainer"]
-layout_mode = 2
 stretch = true
 
-[node name="SubViewport" type="SubViewport" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer"]
+[node name="SubViewport" type="SubViewport" parent="Main/SubViewport/PuzzleMode/SubViewportContainer"]
+transparent_bg = true
 handle_input_locally = false
+snap_2d_transforms_to_pixel = true
 canvas_item_default_texture_filter = 3
-size = Vector2i(504, 540)
+size = Vector2i(960, 488)
 render_target_update_mode = 4
 
-[node name="Board" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport" node_paths=PackedStringArray("previewStorage", "holdStorage") instance=ExtResource("1_q3k4m")]
+[node name="Board" parent="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport" node_paths=PackedStringArray("previewStorage", "holdStorage") instance=ExtResource("8_wule5")]
 unique_name_in_owner = true
 previewStorage = NodePath("PreviewStorage")
 holdStorage = NodePath("HoldStorage")
 
-[node name="PreviewStorage" type="Node" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" node_paths=PackedStringArray("targetControl")]
-script = ExtResource("4_q3k4m")
-targetControl = NodePath("../../../../PreviewContainer/ScrollContainer/PreviewBar")
-storageSlots = 5
+[node name="PreviewStorage" type="Node" parent="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" node_paths=PackedStringArray("targetControl")]
+script = ExtResource("9_3joyb")
+targetControl = NodePath("../../../../PuzzleHUD/PreviewContainer/ScrollContainer/PreviewBar")
 slotAbilityName = "Next Piece Slot"
+addToPieceTotal = true
 
-[node name="HoldStorage" type="Node" parent="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" node_paths=PackedStringArray("targetControl")]
-script = ExtResource("4_q3k4m")
-targetControl = NodePath("../../../../HoldContainer/ScrollContainer/HoldBar")
+[node name="HoldStorage" type="Node" parent="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" node_paths=PackedStringArray("targetControl")]
+script = ExtResource("9_3joyb")
+targetControl = NodePath("../../../../PuzzleHUD/HoldContainer/ScrollContainer/HoldBar")
 slotAbilityName = "Hold Slot"
+emptyFill = true
+useNumberedSlots = true
 
-[node name="MarginContainer" type="MarginContainer" parent="MainSplit/HBoxContainer/LevelContainer"]
-layout_mode = 2
-theme_override_constants/margin_top = 30
-theme_override_constants/margin_bottom = 30
-
-[node name="VBoxContainer" type="VBoxContainer" parent="MainSplit/HBoxContainer/LevelContainer/MarginContainer"]
-layout_mode = 2
-theme = SubResource("Theme_d5o15")
-
-[node name="LinesLabel" type="Label" parent="MainSplit/HBoxContainer/LevelContainer/MarginContainer/VBoxContainer"]
+[node name="FishingMode" type="Control" parent="Main/SubViewport"]
 unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 0
-text = "Lines: 0"
-label_settings = SubResource("LabelSettings_rni7d")
-horizontal_alignment = 1
+process_mode = 1
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 1
+script = ExtResource("10_jjnvi")
+modeName = &"fishing"
 
-[node name="PiecesLabel" type="Label" parent="MainSplit/HBoxContainer/LevelContainer/MarginContainer/VBoxContainer"]
+[node name="SubViewportContainer" type="SubViewportContainer" parent="Main/SubViewport/FishingMode"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="Main/SubViewport/FishingMode/SubViewportContainer"]
+transparent_bg = true
+handle_input_locally = false
+snap_2d_transforms_to_pixel = true
+canvas_item_default_texture_filter = 3
+size = Vector2i(960, 488)
+render_target_update_mode = 0
+
+[node name="FishingBoard" parent="Main/SubViewport/FishingMode/SubViewportContainer/SubViewport" node_paths=PackedStringArray("board") instance=ExtResource("10_jc8m0")]
+board = NodePath("../../../../PuzzleMode/SubViewportContainer/SubViewport/Board")
+
+[node name="PlaySoundOnVisible" type="Node2D" parent="Main/SubViewport/FishingMode"]
+script = ExtResource("14_m1ejn")
+soundName = "trap"
+
+[node name="EffectDurationTicker" type="Timer" parent="Main"]
 unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 2
-theme = SubResource("Theme_d5o15")
-text = "Pieces Left: 0"
-label_settings = SubResource("LabelSettings_rni7d")
-horizontal_alignment = 1
+process_mode = 1
+wait_time = 5.0
+autostart = true
 
-[node name="NotificationLabel" type="Label" parent="MainSplit/HBoxContainer/LevelContainer/MarginContainer/VBoxContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(20, 0)
-layout_mode = 2
-size_flags_vertical = 8
-text = "Notification Text"
-label_settings = SubResource("LabelSettings_svssi")
-horizontal_alignment = 1
-autowrap_mode = 2
-
-[node name="CenterContainer" type="CenterContainer" parent="MainSplit/HBoxContainer/LevelContainer"]
-layout_mode = 2
-
-[node name="CenterLabel" type="Label" parent="MainSplit/HBoxContainer/LevelContainer/CenterContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "GAME
-OVER"
-label_settings = SubResource("LabelSettings_q3k4m")
-
-[node name="HoldContainer" type="MarginContainer" parent="MainSplit/HBoxContainer/LevelContainer"]
-layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 16
-
-[node name="ScrollContainer" type="ScrollContainer" parent="MainSplit/HBoxContainer/LevelContainer/HoldContainer"]
-layout_mode = 2
-size_flags_horizontal = 0
-horizontal_scroll_mode = 0
-
-[node name="HoldBar" type="VBoxContainer" parent="MainSplit/HBoxContainer/LevelContainer/HoldContainer/ScrollContainer"]
-layout_mode = 2
-
-[node name="HoldLabel" type="Label" parent="MainSplit/HBoxContainer/LevelContainer/HoldContainer/ScrollContainer/HoldBar"]
-layout_mode = 2
-text = "Hold"
-label_settings = SubResource("LabelSettings_gpyk6")
-horizontal_alignment = 1
-
-[node name="PreviewContainer" type="MarginContainer" parent="MainSplit/HBoxContainer/LevelContainer"]
-layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 16
-
-[node name="ScrollContainer" type="ScrollContainer" parent="MainSplit/HBoxContainer/LevelContainer/PreviewContainer"]
-layout_mode = 2
-size_flags_horizontal = 8
-horizontal_scroll_mode = 0
-
-[node name="PreviewBar" type="VBoxContainer" parent="MainSplit/HBoxContainer/LevelContainer/PreviewContainer/ScrollContainer"]
-clip_contents = true
-layout_mode = 2
-size_flags_horizontal = 10
-
-[node name="PreviewLabel" type="Label" parent="MainSplit/HBoxContainer/LevelContainer/PreviewContainer/ScrollContainer/PreviewBar"]
-layout_mode = 2
-text = "Next"
-label_settings = SubResource("LabelSettings_gpyk6")
-horizontal_alignment = 1
-
-[node name="MarginContainer" type="MarginContainer" parent="MainSplit/HBoxContainer"]
-layout_mode = 2
-theme_override_constants/margin_top = 4
-theme_override_constants/margin_bottom = 4
-
-[node name="ButtonBar" type="VBoxContainer" parent="MainSplit/HBoxContainer/MarginContainer"]
-layout_mode = 2
-theme = SubResource("Theme_gpyk6")
-
-[node name="Btn_AP" type="Button" parent="MainSplit/HBoxContainer/MarginContainer/ButtonBar"]
-layout_mode = 2
-size_flags_vertical = 0
-focus_mode = 0
-text = "Archipelago"
-
-[node name="Btn_Changelog" type="Button" parent="MainSplit/HBoxContainer/MarginContainer/ButtonBar"]
-layout_mode = 2
-size_flags_vertical = 2
-focus_mode = 0
-text = "Changelog"
-
-[node name="Btn_Restart" type="Button" parent="MainSplit/HBoxContainer/MarginContainer/ButtonBar"]
-layout_mode = 2
-size_flags_vertical = 9
-focus_mode = 0
-text = "Restart"
-
-[node name="Btn_Quit" type="Button" parent="MainSplit/HBoxContainer/MarginContainer/ButtonBar"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 9
-focus_mode = 0
-text = "Quit"
-
-[node name="DracominoClient" parent="MainSplit" instance=ExtResource("5_svssi")]
+[node name="NotificationScreen" parent="." instance=ExtResource("5_d6dmn")]
 process_mode = 3
-custom_minimum_size = Vector2(340, 0)
 layout_mode = 2
 
-[connection signal="activeAbilities_updated" from="DracominoHandler" to="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/PreviewStorage" method="_on_DracominoHandler_active_abilities_updated"]
-[connection signal="activeAbilities_updated" from="DracominoHandler" to="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/HoldStorage" method="_on_DracominoHandler_active_abilities_updated"]
-[connection signal="goal_updated" from="DracominoHandler" to="." method="_on_DracominoState_goal_updated"]
-[connection signal="lineMappings_updated" from="DracominoHandler" to="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_line_mappings_updated"]
-[connection signal="missingLines_updated" from="DracominoHandler" to="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_lines_updated"]
-[connection signal="missingPickupCoordinates_updated" from="DracominoHandler" to="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_pickup_coordinates_updated"]
-[connection signal="notification_signal" from="DracominoHandler" to="." method="_on_DracominoState_notification_signal"]
-[connection signal="piecesLeft_updated" from="DracominoHandler" to="." method="_on_DracominoState_pieces_left_updated"]
-[connection signal="slotContextHash_updated" from="DracominoHandler" to="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_slot_context_hash_updated"]
-[connection signal="started" from="DracominoHandler" to="." method="_on_DracominoHandler_started"]
-[connection signal="resized" from="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer" to="." method="_on_SubViewportContainer_resized"]
-[connection signal="deathlink_earned" from="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_deathlink_earned"]
-[connection signal="game_over_earned" from="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_game_over_earned"]
-[connection signal="game_started" from="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_game_started"]
-[connection signal="game_started" from="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_game_started"]
-[connection signal="item_pickedup" from="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_item_pickedup"]
-[connection signal="linesCleared_updated" from="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="." method="_on_Board_lines_cleared_updated"]
-[connection signal="linesCleared_updated" from="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_lines_cleared_updated"]
-[connection signal="lines_cleared" from="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_lines_cleared"]
-[connection signal="piece_requested" from="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" to="DracominoHandler" method="_on_Board_piece_requested"]
-[connection signal="numStored_changed" from="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board/PreviewStorage" to="." method="_on_PreviewStorage_num_stored_changed"]
-[connection signal="pressed" from="MainSplit/HBoxContainer/MarginContainer/ButtonBar/Btn_AP" to="MainSplit/DracominoClient" method="_on_APButton_pressed"]
-[connection signal="pressed" from="MainSplit/HBoxContainer/MarginContainer/ButtonBar/Btn_Changelog" to="." method="_on_BtnChangelog_pressed"]
-[connection signal="pressed" from="MainSplit/HBoxContainer/MarginContainer/ButtonBar/Btn_Restart" to="MainSplit/HBoxContainer/LevelContainer/SubViewportContainer/SubViewport/Board" method="_on_Btn_Restart_pressed"]
-[connection signal="pressed" from="MainSplit/HBoxContainer/MarginContainer/ButtonBar/Btn_Quit" to="." method="_on_Btn_Quit_pressed"]
+[connection signal="lineMappings_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_line_mappings_updated"]
+[connection signal="missingLines_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_lines_updated"]
+[connection signal="missingPickupCoordinates_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_pickup_coordinates_updated"]
+[connection signal="notification_signal" from="Main/SubViewport/DracominoHandler" to="NotificationScreen" method="_on_DracominoHandler_notification_signal"]
+[connection signal="started" from="Main/SubViewport/DracominoHandler" to="Main" method="_on_DracominoHandler_started"]
+[connection signal="resized" from="Main/SubViewport/PuzzleMode/SubViewportContainer" to="Main/SubViewport/PuzzleMode" method="_on_SubViewportContainer_resized"]
+[connection signal="deathlink_earned" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="Main/SubViewport/DracominoHandler" method="_on_Board_deathlink_earned"]
+[connection signal="effect_activated" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="NotificationScreen" method="_on_Board_effect_activated"]
+[connection signal="game_started" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="Main" method="_on_Board_game_started"]
+[connection signal="game_started" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="Main/SubViewport/DracominoHandler" method="_on_Board_game_started"]
+[connection signal="item_pickedup" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="Main/SubViewport/DracominoHandler" method="_on_Board_item_pickedup"]
+[connection signal="linesCleared_updated" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="Main/SubViewport/DracominoHandler" method="_on_Board_lines_cleared_updated"]
+[connection signal="lines_cleared" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="Main/SubViewport/DracominoHandler" method="_on_Board_lines_cleared"]
+[connection signal="pieces_requested" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="Main/SubViewport/DracominoHandler" method="_on_Board_pieces_requested"]
+[connection signal="resized" from="Main/SubViewport/FishingMode/SubViewportContainer" to="Main/SubViewport/PuzzleMode" method="_on_SubViewportContainer_resized"]
+[connection signal="piece_selected" from="Main/SubViewport/FishingMode/SubViewportContainer/SubViewport/FishingBoard" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_FishingBoard_piece_selected"]

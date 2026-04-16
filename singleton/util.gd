@@ -55,10 +55,10 @@ static func generateDeathlinkMessage(category:String = "TOP", contextTags:Array 
 
 class DeathContext:
 	var category:String
-	var itemContext:DracominoHandler.StateItem
+	var itemContext:DracominoHandler.PieceContext
 	var contextTags:Array[String]
 	var formatValues:Dictionary = {}
-	func _init(_category:String, _itemContext:DracominoHandler.StateItem = null) -> void:
+	func _init(_category:String, _itemContext:DracominoHandler.PieceContext = null) -> void:
 		if _category in CONSTANTS.DEATHLINK_MESSAGE_TEMPLATES:
 			category = _category
 		else:
@@ -78,7 +78,128 @@ class DeathContext:
 			addContext(tag)
 		return self
 
-# Volume set helper
-static func setVolume(busName:String, percent:float):
-	var weight:float = percent/100
-	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(busName), lerpf(-60, 0, weight))
+# Mode stuff
+static func getParentMode(node:Node) -> Mode:
+	while node and not node is Mode:
+		node = node.get_parent()
+	return node
+
+# Energy Link Stuff
+class EnergyLinkTransactionContext:
+	var manaCost:float = 0
+	var onSuccess:Callable
+	func _init(_manaCost:float, _onSuccess:Callable) -> void:
+		manaCost = _manaCost
+		onSuccess = _onSuccess
+
+static var _bufferedTransactionFns:Array[EnergyLinkTransactionContext]
+static var _bufferedTransactionLifetimeTween:Tween
+static func tryEnergyLinkManaTransaction(manaCost:float, onSuccess:Callable) -> void:
+	if Archipelago.conn and FlagManager.isFlagSet("energy_link"):
+		# Defer a check for bank balance and decide if we can make transaction
+		Archipelago.conn.retrieve.call_deferred("EnergyLink" + str(Archipelago.conn.team_id), makeEnergyLinkTransaction)
+		# Add to the buffer and make lifetime tween
+		_bufferedTransactionFns.append(EnergyLinkTransactionContext.new(manaCost, onSuccess))
+		if _bufferedTransactionLifetimeTween:
+			_bufferedTransactionLifetimeTween.kill()
+		_bufferedTransactionLifetimeTween = Game.create_tween()
+		_bufferedTransactionLifetimeTween.tween_callback(_bufferedTransactionFns.clear).set_delay(5.0)
+	else:
+		_bufferedTransactionFns.clear()
+		print("EnergyLink transaction failed: not connected or EnergyLink is disabled!")
+
+static func makeEnergyLinkTransaction(energyBankBalance:Variant) -> void:
+	FlagManager.HANDLERS.WORLD.clearFlag("mana_cost")
+	FlagManager.HANDLERS.WORLD.clearFlag("energy_cost")
+	if not(energyBankBalance is float or energyBankBalance is int):
+		return
+	FlagManager.setFlag("last_known_energy_bank_balance", energyBankBalance)
+	SignalBus.getSignal("display_energy").emit()
+	SignalBus.getSignal("display_mana").emit()
+	if not _bufferedTransactionFns.size():
+		return
+	_bufferedTransactionLifetimeTween.kill()
+	var bufferedTransactionFns = _bufferedTransactionFns.duplicate()
+	_bufferedTransactionFns.clear()
+	var approvedSuccessFns:Array[Callable] = []
+
+	# Get energy cost all added up
+	var energyCost:float = 0
+	var manaCost:float = 0
+	var attemptedEnergyCost:float = 0
+	var attemptedManaCost:float = 0
+	var storedMana:float = FlagManager.getTotalCountAmount("mana")
+	for transaction:EnergyLinkTransactionContext in bufferedTransactionFns:
+		if not transaction.onSuccess.is_valid():
+			# The parent node will freed before we had to chance to call this
+			continue
+
+		# Figure out how much mana will be spent on this
+		var manaBudget:float = min(transaction.manaCost, storedMana-manaCost)
+
+		# If we don't have the mana budget, pay remaining cost as an energy transaction
+		var transactionEnergyCost:float = (transaction.manaCost-manaBudget) * CONSTANTS.MANA_TO_ENERGY_RATIO
+		
+		attemptedEnergyCost += max(0, transactionEnergyCost)
+		attemptedManaCost += max(0, manaBudget)
+
+		if energyBankBalance < energyCost + transactionEnergyCost:
+			# Can't afford the thing
+			continue
+		energyCost += max(0, transactionEnergyCost)
+		manaCost += max(0, manaBudget)
+		approvedSuccessFns.append(transaction.onSuccess)
+
+	if energyCost == 0 and manaCost == 0:
+		FlagManager.HANDLERS.WORLD.count.call_deferred("mana_cost", "cost", attemptedManaCost, true)
+		FlagManager.HANDLERS.WORLD.count.call_deferred("energy_cost", "cost", attemptedEnergyCost, true)
+		SignalBus.getSignal("display_mana_cost").emit.call_deferred()
+		SignalBus.getSignal("display_energy_cost").emit.call_deferred()
+		print("EnergyLink transaction failed: no transaction was approved")
+
+	if energyCost > 0:
+		SignalBus.getSignal("display_energy_cost").emit.call_deferred()
+		FlagManager.HANDLERS.WORLD.count.call_deferred("energy_cost", "cost", energyCost, true)
+		# Send the withdrawal request
+		var args = {
+			"key": "EnergyLink" + str(Archipelago.conn.team_id),
+			"default": 0,
+			"operations": [
+				{"operation": "add", "value": -energyCost},
+				{"operation": "max", "value": 0},
+			]
+		}
+		Archipelago.send_command("Set", args)
+		# We'll call that a success. I don't think we need the reply for this(?) But maybe it will be good if we want to guarantee an accurate bank balance
+		print.call_deferred("Energy transaction succeeded: spent %s energy, predicted bank balance %s"%[energyCost, energyBankBalance-energyCost])
+	
+	FlagManager.setFlag("last_known_energy_bank_balance", energyBankBalance-energyCost)
+	
+	if manaCost > 0:
+		SignalBus.getSignal("display_mana_cost").emit.call_deferred()
+		FlagManager.HANDLERS.WORLD.count.call_deferred("mana_cost", "cost", manaCost, true)
+		FlagManager.HANDLERS.WORLD.count.call_deferred("mana", "spent", -manaCost, true) 
+		print.call_deferred("Mana spent: %s; Mana left: %s"%[manaCost, FlagManager.getTotalCountAmount("mana")])
+
+	for fn in approvedSuccessFns:
+		fn.call()
+
+# Use unit prefixes for big numbers
+static func getSimplifiedNumberString(num:float) -> String:
+		var units:float = num
+		var idx:int = 0
+		var useScientificNotation:bool = false
+
+		while units > 1000:
+			units /= 1000
+			idx += 1
+			if idx >= UNIT_MULTIPLES.size():
+				useScientificNotation = true
+				break
+
+		if useScientificNotation:
+			return String.num_scientific(num)
+		else:
+			return String.num(units, 1 if idx > 0 else 0)+UNIT_MULTIPLES[idx]
+
+static var UNIT_MULTIPLES:Array[String] = ["", "k", "M", "G", "T"]

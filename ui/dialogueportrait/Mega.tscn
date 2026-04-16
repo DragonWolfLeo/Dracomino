@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://chko7c7y84xc7"]
+
+[ext_resource type="Texture2D" uid="uid://bhsf8qlw65fip" path="res://assets/art/dialogueportrait/mega.png" id="1_hurle"]
+[ext_resource type="Script" uid="uid://dxx2g1yh10cnf" path="res://ui/dialogueportrait_form.gd" id="2_f6nh8"]
+
+[node name="Mega" type="Sprite2D"]
+texture_filter = 1
+position = Vector2(0, -248)
+texture = ExtResource("1_hurle")
+centered = false
+script = ExtResource("2_f6nh8")
+metadata/_custom_type_script = "uid://dxx2g1yh10cnf"

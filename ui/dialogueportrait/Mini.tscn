@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://c6eii6ycdb123"]
+
+[ext_resource type="Texture2D" uid="uid://cow6qkci3y2hn" path="res://assets/art/dialogueportrait/mini.png" id="1_6u7xj"]
+[ext_resource type="Script" uid="uid://dxx2g1yh10cnf" path="res://ui/dialogueportrait_form.gd" id="2_b1bbs"]
+
+[node name="Mini" type="Sprite2D"]
+texture_filter = 1
+position = Vector2(0, -248)
+texture = ExtResource("1_6u7xj")
+centered = false
+script = ExtResource("2_b1bbs")
+metadata/_custom_type_script = "uid://dxx2g1yh10cnf"
