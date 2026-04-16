@@ -21,6 +21,8 @@ shadow_color = Color(0, 0, 0, 0.666667)
 [sub_resource type="LabelSettings" id="LabelSettings_tl1qv"]
 font_size = 12
 font_color = Color(1, 0.333333, 0.333333, 1)
+outline_size = 4
+outline_color = Color(0, 0, 0, 1)
 shadow_color = Color(0, 0, 0, 0.666667)
 
 [node name="CurrencyBar" type="HBoxContainer"]
