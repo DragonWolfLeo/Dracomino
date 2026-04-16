@@ -1,4 +1,4 @@
-Version 0.3.0 (traps-alpha3)
+Version 0.3.0 (traps-rc1)
  - Add Well Done!
  - Add Time for Fishing!
  - Add Tutorial and Logic Tutorial
@@ -8,6 +8,7 @@ Version 0.3.0 (traps-alpha3)
  - Add Impatience Trap
  - Add In Space!
  - Add enchantments and curses
+ - Add Eggs
  - Add currency bar
  - Fix inconsistent offsets with symmetrical pieces with randomize orientations setting
  - V Pentomino, W Pentomino, and L Tromino randomize horizontal flip regardless of randomize orientations setting
