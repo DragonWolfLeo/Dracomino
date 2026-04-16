@@ -11,6 +11,7 @@ func _ready():
 	landed_on_by.connect(_on_landed_on_by)
 
 func hatch():
+	if is_queued_for_deletion(): return
 	var eggshards:CPUParticles2D = EGGSHARDPARTICLES_SCENE.instantiate()
 	add_sibling(eggshards)
 	eggshards.global_position = crackFrames.global_position
