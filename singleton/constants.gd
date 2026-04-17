@@ -196,7 +196,6 @@ var TRAP_ALIASES:Dictionary[StringName, String] = {
 	logic_tutorial          = "Tutorial Trap",
 	pixellation_trap        = "Pixellation Trap",
 	# Random Cutscene         = "Cutscene Trap",
-	random_trap             = "Random Status Trap",
 	tutorial                = "Tutorial Trap",
 	water_trap              = "Underwater Trap",
 	zoom_trap               = "Zoom Trap",
