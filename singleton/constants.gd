@@ -215,7 +215,7 @@ var RANDOM_TRAP_CHOICES:Array[StringName] = [
 	"fracture_trap",
 	"welldone",
 	"fishing",
-	"invertcolors_trap",
+	# "invertcolors_trap",
 	"water_trap",
 	"pixellation_trap",
 	"space_trap",
