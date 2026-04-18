@@ -1,3 +1,6 @@
+Version 0.3.0.2
+ - Add icons for Kick and Lock Delay
+
 Version 0.3.0.1
  - Remove Invert Colors Trap
 
