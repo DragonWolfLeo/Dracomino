@@ -517,6 +517,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		seedFlagHolder.clearFlag("randomize_orientations")
 
 	# Reset collected items
+	seedFlagHolder.count("shapes_left", "collected", 0)
 	collectedItems.clear()
 	collectedAbilities.clear()
 	allLineLocations.clear()
