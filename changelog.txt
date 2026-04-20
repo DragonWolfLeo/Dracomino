@@ -1,3 +1,8 @@
+Version 0.3.0.2
+ - Add icons for Kick and Lock Delay
+ - Fix piece count not resetting after reconnecting
+ - Fix bug where fish pieces may not instantiate their collision
+
 Version 0.3.0.1
  - Remove Invert Colors Trap
 

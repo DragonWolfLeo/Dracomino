@@ -19,8 +19,8 @@ var collisionWait:float
 var time:float
 var waveFrequency:float = 5
 var waveAmplitude:float = 3
-var setupCompleted:bool = false
 var tileMapOffset:Vector2
+var collisionShapes:Array[CollisionPolygon2D] = []
 
 @onready var pieceTiles:PieceTiles = $PieceTiles
 @onready var bigPiece:BigPiece = $BigPiece
@@ -30,25 +30,9 @@ func _ready() -> void:
 	# Set initial speed and direction
 	direction = Vector2.RIGHT if randf() > 0.5 else Vector2.LEFT
 	speed = randf_range(SPEED_MIN, SPEED_MAX)
-	collisionWait = randf_range(COLLISION_WAIT_MIN, COLLISION_WAIT_MAX)
-
-	await get_tree().process_frame
-	# Copy tile collision into the collision body
-	var cells:Array[Vector2i] = pieceTiles.get_used_cells()
-	for cell:Vector2i in cells:
-		var data:TileData = pieceTiles.get_cell_tile_data(cell) 
-		if data.get_collision_polygons_count(0):
-			var points:PackedVector2Array = data.get_collision_polygon_points(0, 0) 
-			var collisionShape = CollisionPolygon2D.new()  
-			collisionShape.polygon = points
-			
-			collisionShape.position = pieceTiles.map_to_local(cell) + pieceTiles.position
-			add_child(collisionShape)
-	
-	setupCompleted = true
+	collisionWait = randf_range(COLLISION_WAIT_MIN, COLLISION_WAIT_MAX)	
 
 func _physics_process(delta: float) -> void:
-	# if not setupCompleted: return
 	time += delta
 	pieceTiles.position.y = waveAmplitude*sin(time*waveFrequency) + tileMapOffset.y
 	var col := move_and_collide(direction*speed*delta)
@@ -71,8 +55,26 @@ func renderPiece():
 		var rect:Rect2 = Rect2(pieceTiles.get_used_rect())
 		tileMapOffset = -rect.get_center() * Vector2(pieceTiles.tile_set.tile_size)
 		pieceTiles.position += tileMapOffset
+		buildCollision()
 	else:
 		printerr("FishPiece.renderPiece: pieceTiles is null for some reason")
+
+func buildCollision():
+	for shape in collisionShapes:
+		shape.queue_free()
+	collisionShapes.clear()
+	# Copy tile collision into the collision body
+	var cells:Array[Vector2i] = pieceTiles.get_used_cells()
+	for cell:Vector2i in cells:
+		var data:TileData = pieceTiles.get_cell_tile_data(cell) 
+		if data.get_collision_polygons_count(0):
+			var points:PackedVector2Array = data.get_collision_polygon_points(0, 0) 
+			var collisionShape = CollisionPolygon2D.new()  
+			collisionShape.polygon = points
+			
+			collisionShape.position = pieceTiles.map_to_local(cell) + pieceTiles.position
+			add_child(collisionShape)
+			collisionShapes.append(collisionShape)
 
 func beHooked():
 	# Disable further collisions
