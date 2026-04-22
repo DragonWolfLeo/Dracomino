@@ -1,3 +1,6 @@
+Version 0.3.0.3
+ - Eggs no longer requires pieces in your queue to spawn
+
 Version 0.3.0.2
  - Add icons for Kick and Lock Delay
  - Fix piece count not resetting after reconnecting
