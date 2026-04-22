@@ -263,6 +263,15 @@ func sendVictory():
 	victory = true
 	Archipelago.set_client_status(Archipelago.ClientStatus.CLIENT_GOAL)
 
+func giveMana(amount:float, shareThroughEnergyLink:bool = true) -> void:
+	# Send mana/energy
+	var manaEarned:float = amount
+	var sharedMana:float = 0.0
+	if shareThroughEnergyLink and FlagManager.isFlagSet("energy_link"):
+		sharedMana = manaEarned * CONSTANTS.ENERGY_LINK_SHARE
+		sendEnergy(round(sharedMana * CONSTANTS.MANA_TO_ENERGY_RATIO))
+	seedFlagHolder.count("mana", "earned", manaEarned - sharedMana, true)
+
 func sendEnergy(amount:int = 0):
 	amount += _energySendBuffer
 	_energySendBuffer = 0
@@ -691,17 +700,12 @@ func _on_Board_lines_cleared(lines:Array) -> void:
 
 	lineMappings_updated.emit(lineMappings)
 	
-	# Send mana/energy
-	var manaEarned:float = lines.size() * Board.BOUNDS.size.x * CONSTANTS.MANA_PER_BLOCK
-	var sharedMana:float = 0.0
-	if FlagManager.isFlagSet("energy_link"):
-		sharedMana = manaEarned * CONSTANTS.ENERGY_LINK_SHARE
-		sendEnergy(round(sharedMana * CONSTANTS.MANA_TO_ENERGY_RATIO))
-	seedFlagHolder.count("mana", "earned", manaEarned - sharedMana, true)
+	giveMana(lines.size() * Board.BOUNDS.size.x * CONSTANTS.MANA_PER_BLOCK)
 
 func _on_Board_item_pickedup(loc_id) -> void:
 	print("Picked up ", CONSTANTS.LOCATIONS[loc_id].prettyName)
 	sendLocation(loc_id)
+	giveMana(CONSTANTS.MANA_PER_COIN)
 
 func _on_Board_lines_cleared_updated(num:int) -> void:
 	# Make NO_ROTATE death context only happen when you're putting the effort

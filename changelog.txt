@@ -1,5 +1,6 @@
 Version 0.3.0.3
  - Eggs no longer requires pieces in your queue to spawn
+ - Coins now grant 20 mana / 20MJ energy each (divided by 2 with Energy Link enabled)
 
 Version 0.3.0.2
  - Add icons for Kick and Lock Delay
