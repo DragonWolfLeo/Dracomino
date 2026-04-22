@@ -307,7 +307,8 @@ func upgradeFeatures(generatedVersion:String = "0.0.0"): ## Add new features to 
 			if item:
 				collectedAbilities[item.id] = 1
 				if not seedFlagHolder.isFlagSet(item.internalName):
-					seedFlagHolder.count(item.internalName, "collected", 1)
+					var stateItem:StateItem = StateItem.fromInternalName(item.internalName)
+					giveItem(stateItem)
 					upgradeResult.retrofitted.append(item.prettyName)
 		
 		# Set legacy settings
