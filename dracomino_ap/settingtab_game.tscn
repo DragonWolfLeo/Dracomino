@@ -93,7 +93,7 @@ optionKey = "allowUnfocusedInputs"
 
 [node name="Container_Scaling" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-tooltip_text = "Send deaths to and receive deaths from only a specific group"
+tooltip_text = "Change scaling behavior for the game window"
 theme_override_constants/margin_left = 5
 theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 5
