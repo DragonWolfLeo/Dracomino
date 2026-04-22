@@ -24,6 +24,7 @@ outline_size = 6
 outline_color = Color(0.0646965, 0.0646965, 0.0646965, 1)
 
 [node name="HUDContainer" type="MarginContainer"]
+process_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
