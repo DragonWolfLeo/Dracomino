@@ -34,6 +34,7 @@ static var INPUT_MAPPINGS:Dictionary = {
 	"slot9":  "9",
 	"slot10": "0",
 }
+static var DEBUG_VISIBLE_BUFFER:bool = false
 
 var storage:Array[PiecePreview]
 
@@ -227,8 +228,8 @@ func _updatePreviews():
 	for i:int in range(storage.size()):
 		var preview:PiecePreview = storage[i]
 		var visibilityState = i < storageSlots
-		preview.visible = Config.debugMode or visibilityState
-		preview.modulate.a = 1.0 if visibilityState or not Config.debugMode else 0.33333
+		preview.visible = (Config.debugMode and DEBUG_VISIBLE_BUFFER) or visibilityState
+		preview.modulate.a = 1.0 if visibilityState or not (Config.debugMode and DEBUG_VISIBLE_BUFFER) else 0.33333
 
 		# Clear shortcuts
 		if useNumberedSlots:
