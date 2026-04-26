@@ -365,7 +365,7 @@ func triggerTrapLinkTrap(trapname:String, source:String = "") -> String: ## Trig
 
 	if not trapsToTrigger.size():
 		trapsToTrigger.append("random_trap")
-		print("There is no alias for %s so we'll randomly picked %s"%[trapname, trapsToTrigger[0]])
+		print("There is no alias for %s so we'll randomly pick %s"%[trapname, trapsToTrigger[0]])
 
 	for alias in trapsToTrigger:
 		var success = effectHandler.triggerEffectByName(alias)
@@ -443,7 +443,7 @@ func triggerEffect(stateItem:StateItem, context:Array[StringName] = []) -> bool:
 		if trapLinkAlias and Archipelago.conn and not stateItem.usedTrapLink:
 			stateItem.usedTrapLink = true
 			Archipelago.conn.send_traplink(trapLinkAlias)
-			print("DracominoHandler: Sending trap: ", trapLinkAlias)
+			print("Sending trap: ", trapLinkAlias)
 	return result
 
 func addLocationToCoinCurrency(loc_id): ## Add coins to currency (be careful not to use line locations here)
@@ -516,7 +516,6 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	else:
 		# Older gens are unaware of item counts, so assume the abilities
 		for abilityname in ["rotate_clockwise", "rotate_counterclockwise", "gravity", "soft_drop", "hard_drop"]:
-			print("existing_"+abilityname)
 			seedFlagHolder.setFlag("existing_"+abilityname)
 
 	# Set randomize orientations
@@ -652,8 +651,6 @@ func _on_obtained_item(item: NetworkItem):
 	giveItem(si)
 
 func _on_on_hint_update(hints: Array[NetworkHint]):
-	if hints.size():
-		print("Got hints! ", hints.map(func(hint:NetworkHint): return hint.as_plain_string()))
 	if Archipelago.conn:
 		for hint:NetworkHint in hints:
 			if hint.status == NetworkHint.Status.FOUND: continue
