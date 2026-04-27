@@ -163,7 +163,7 @@ func _ready():
 	if parts_cont:
 		parts_cont.child_entered_tree.connect(_on_new_message)
 
-func _on_new_message(node: Node) -> void:
+func _on_new_message(_node: Node) -> void:
 	if scroll_to_bottom_on_new_message:
 		await get_tree().create_timer(0.1).timeout
 		scroll_bottom()
