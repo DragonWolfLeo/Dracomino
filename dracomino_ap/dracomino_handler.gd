@@ -263,6 +263,15 @@ func sendVictory():
 	victory = true
 	Archipelago.set_client_status(Archipelago.ClientStatus.CLIENT_GOAL)
 
+func giveMana(amount:float, shareThroughEnergyLink:bool = true) -> void:
+	# Send mana/energy
+	var manaEarned:float = amount
+	var sharedMana:float = 0.0
+	if shareThroughEnergyLink and FlagManager.isFlagSet("energy_link"):
+		sharedMana = manaEarned * CONSTANTS.ENERGY_LINK_SHARE
+		sendEnergy(round(sharedMana * CONSTANTS.MANA_TO_ENERGY_RATIO))
+	seedFlagHolder.count("mana", "earned", manaEarned - sharedMana, true)
+
 func sendEnergy(amount:int = 0):
 	amount += _energySendBuffer
 	_energySendBuffer = 0
@@ -298,7 +307,8 @@ func upgradeFeatures(generatedVersion:String = "0.0.0"): ## Add new features to 
 			if item:
 				collectedAbilities[item.id] = 1
 				if not seedFlagHolder.isFlagSet(item.internalName):
-					seedFlagHolder.count(item.internalName, "collected", 1)
+					var stateItem:StateItem = StateItem.fromInternalName(item.internalName)
+					giveItem(stateItem)
 					upgradeResult.retrofitted.append(item.prettyName)
 		
 		# Set legacy settings
@@ -355,7 +365,7 @@ func triggerTrapLinkTrap(trapname:String, source:String = "") -> String: ## Trig
 
 	if not trapsToTrigger.size():
 		trapsToTrigger.append("random_trap")
-		print("There is no alias for %s so we'll randomly picked %s"%[trapname, trapsToTrigger[0]])
+		print("There is no alias for %s so we'll randomly pick %s"%[trapname, trapsToTrigger[0]])
 
 	for alias in trapsToTrigger:
 		var success = effectHandler.triggerEffectByName(alias)
@@ -433,7 +443,7 @@ func triggerEffect(stateItem:StateItem, context:Array[StringName] = []) -> bool:
 		if trapLinkAlias and Archipelago.conn and not stateItem.usedTrapLink:
 			stateItem.usedTrapLink = true
 			Archipelago.conn.send_traplink(trapLinkAlias)
-			print("DracominoHandler: Sending trap: ", trapLinkAlias)
+			print("Sending trap: ", trapLinkAlias)
 	return result
 
 func addLocationToCoinCurrency(loc_id): ## Add coins to currency (be careful not to use line locations here)
@@ -506,7 +516,6 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	else:
 		# Older gens are unaware of item counts, so assume the abilities
 		for abilityname in ["rotate_clockwise", "rotate_counterclockwise", "gravity", "soft_drop", "hard_drop"]:
-			print("existing_"+abilityname)
 			seedFlagHolder.setFlag("existing_"+abilityname)
 
 	# Set randomize orientations
@@ -642,8 +651,6 @@ func _on_obtained_item(item: NetworkItem):
 	giveItem(si)
 
 func _on_on_hint_update(hints: Array[NetworkHint]):
-	if hints.size():
-		print("Got hints! ", hints.map(func(hint:NetworkHint): return hint.as_plain_string()))
 	if Archipelago.conn:
 		for hint:NetworkHint in hints:
 			if hint.status == NetworkHint.Status.FOUND: continue
@@ -691,17 +698,12 @@ func _on_Board_lines_cleared(lines:Array) -> void:
 
 	lineMappings_updated.emit(lineMappings)
 	
-	# Send mana/energy
-	var manaEarned:float = lines.size() * Board.BOUNDS.size.x * CONSTANTS.MANA_PER_BLOCK
-	var sharedMana:float = 0.0
-	if FlagManager.isFlagSet("energy_link"):
-		sharedMana = manaEarned * CONSTANTS.ENERGY_LINK_SHARE
-		sendEnergy(round(sharedMana * CONSTANTS.MANA_TO_ENERGY_RATIO))
-	seedFlagHolder.count("mana", "earned", manaEarned - sharedMana, true)
+	giveMana(lines.size() * Board.BOUNDS.size.x * CONSTANTS.MANA_PER_BLOCK)
 
 func _on_Board_item_pickedup(loc_id) -> void:
 	print("Picked up ", CONSTANTS.LOCATIONS[loc_id].prettyName)
 	sendLocation(loc_id)
+	giveMana(CONSTANTS.MANA_PER_COIN)
 
 func _on_Board_lines_cleared_updated(num:int) -> void:
 	# Make NO_ROTATE death context only happen when you're putting the effort

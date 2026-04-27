@@ -64,7 +64,7 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 	fracture_trap = Effect.new(_activateEffect.bind("overlay_fracture")),
 	zoom_trap = Effect.new(_activateEffect.bind("effect_zoom", 4, false)), # Not "annoying" because doesn't affect the logic tutorial
 	impatience_trap = Effect.new(SignalBus.getSignal("effect_impatience").emit)\
-		.setCanTriggerFn(_canSpawnMoreShapes).addContext("delayed"),
+		.setCanTriggerFn(_canSpawnShapesFromQueue).addContext("delayed"),
 	space_trap = Effect.new(_activateEffect.bind("effect_space", 8, false)),
 	noop = Effect.new(_NOOP),
 
@@ -102,7 +102,10 @@ func _piecesAreLeft(amount:int) -> bool:
 	return FlagManager.getTotalCountAmount("shapes_left") >= amount
 
 func _canSpawnMoreShapes() -> bool:
-	return _piecesAreLeft(3) and FlagManager.getTotalCountAmount("shapes_active") < 5
+	return FlagManager.getTotalCountAmount("shapes_active") < 5
+
+func _canSpawnShapesFromQueue() -> bool:
+	return _piecesAreLeft(3) and _canSpawnMoreShapes()
 
 func _loadDialogue(dialogue:Variant) -> void:
 	DialogueManager.loadDialogue(dialogue)
