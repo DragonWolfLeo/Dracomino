@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3 uid="uid://gov6o57aw668"]
+[gd_scene load_steps=25 format=3 uid="uid://gov6o57aw668"]
 
 [ext_resource type="Script" uid="uid://cj7q6qijx22yq" path="res://singleton/soundmanager.gd" id="1_u1q4g"]
 [ext_resource type="AudioStream" uid="uid://0ovedth7jefi" path="res://assets/audio/sfx/rotate.wav" id="2_tb4q0"]
@@ -21,6 +21,7 @@
 [ext_resource type="AudioStream" uid="uid://dxkm0jv0vx662" path="res://assets/audio/voice/wowthatsgreat.wav" id="16_id3fu"]
 [ext_resource type="AudioStream" uid="uid://bpfpor6cvcau2" path="res://assets/audio/sfx/fishget.wav" id="16_pmnmq"]
 [ext_resource type="AudioStream" uid="uid://crgtl4vga5xna" path="res://assets/audio/sfx/select.wav" id="17_16vb8"]
+[ext_resource type="AudioStream" uid="uid://b87c1wrx32sm4" path="res://assets/audio/sfx/progressdialogue.wav" id="17_50rnd"]
 [ext_resource type="AudioStream" uid="uid://unibtnrcgx5x" path="res://assets/audio/voice/youdidit.wav" id="17_pmnmq"]
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_w3tpd"]
@@ -108,12 +109,17 @@ bus = &"Sfx"
 
 [node name="confirm" type="AudioStreamPlayer" parent="sfx"]
 stream = ExtResource("14_rsogl")
-volume_db = -8.49
+volume_db = -5.466
 bus = &"Sfx"
 
 [node name="select" type="AudioStreamPlayer" parent="sfx"]
 stream = ExtResource("17_16vb8")
-volume_db = -8.49
+volume_db = -5.466
+bus = &"Sfx"
+
+[node name="progressdialogue" type="AudioStreamPlayer" parent="sfx"]
+stream = ExtResource("17_50rnd")
+volume_db = -5.466
 bus = &"Sfx"
 
 [node name="fishget" type="AudioStreamPlayer" parent="sfx"]

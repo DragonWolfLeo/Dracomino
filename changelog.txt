@@ -1,5 +1,5 @@
 Version 0.3.1.1
- - Add new dialogue select and confirm sounds
+ - Add new dialogue sounds
  - Tutorials are available immediately as long as it's received
 
 Version 0.3.1

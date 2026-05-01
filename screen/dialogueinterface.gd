@@ -102,6 +102,7 @@ func updateDialogue(line):
 	# if line.body:
 	updatePortrait(line.speaker, line.expression)
 	panelDelayTimer.start()
+	SoundManager.play("progressdialogue")
 
 func completeDialoguePrint():
 	dialogueLabel.visible_characters = -1
