@@ -262,6 +262,6 @@ func _on_dialogue_ended():
 func _on_ChoiceLabel_pressed(data):
 	if !dialogue: return
 	grab_focus()
-	SoundManager.play("select")
+	SoundManager.play("confirm")
 	dialogue.selectChoice(data)
 		

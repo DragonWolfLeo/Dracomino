@@ -1,7 +1,6 @@
 [gd_scene load_steps=24 format=3 uid="uid://gov6o57aw668"]
 
 [ext_resource type="Script" uid="uid://cj7q6qijx22yq" path="res://singleton/soundmanager.gd" id="1_u1q4g"]
-[ext_resource type="AudioStream" uid="uid://744ni8gh6jx3" path="res://assets/audio/sfx/blip.wav" id="2_id3fu"]
 [ext_resource type="AudioStream" uid="uid://0ovedth7jefi" path="res://assets/audio/sfx/rotate.wav" id="2_tb4q0"]
 [ext_resource type="AudioStream" uid="uid://cknqj4jveeiuv" path="res://assets/audio/sfx/rotate_fail.wav" id="3_elp8i"]
 [ext_resource type="AudioStream" uid="uid://rybtdauvlffp" path="res://assets/audio/sfx/drop.wav" id="4_8si6r"]
@@ -16,11 +15,12 @@
 [ext_resource type="AudioStream" uid="uid://ck6v4k8cd4csd" path="res://assets/audio/sfx/trap.wav" id="13_j5l5k"]
 [ext_resource type="AudioStream" uid="uid://b52pnfu4o26vk" path="res://assets/audio/voice/congratulations.wav" id="13_rjk6y"]
 [ext_resource type="AudioStream" uid="uid://bup2j6vprmdye" path="res://assets/audio/voice/incredible.wav" id="14_j5l5k"]
-[ext_resource type="AudioStream" uid="uid://bawh5gku3xauv" path="res://assets/audio/sfx/select.wav" id="14_rsogl"]
+[ext_resource type="AudioStream" uid="uid://bawh5gku3xauv" path="res://assets/audio/sfx/confirm.wav" id="14_rsogl"]
 [ext_resource type="AudioStream" uid="uid://dvo67m5460o56" path="res://assets/audio/voice/wow.wav" id="15_rsogl"]
 [ext_resource type="AudioStream" uid="uid://cqm16hqnw1bps" path="res://assets/audio/sfx/untrap.wav" id="15_w3tpd"]
 [ext_resource type="AudioStream" uid="uid://dxkm0jv0vx662" path="res://assets/audio/voice/wowthatsgreat.wav" id="16_id3fu"]
 [ext_resource type="AudioStream" uid="uid://bpfpor6cvcau2" path="res://assets/audio/sfx/fishget.wav" id="16_pmnmq"]
+[ext_resource type="AudioStream" uid="uid://crgtl4vga5xna" path="res://assets/audio/sfx/select.wav" id="17_16vb8"]
 [ext_resource type="AudioStream" uid="uid://unibtnrcgx5x" path="res://assets/audio/voice/youdidit.wav" id="17_pmnmq"]
 
 [sub_resource type="AudioStreamRandomizer" id="AudioStreamRandomizer_w3tpd"]
@@ -42,7 +42,7 @@ bus = &"Sfx"
 process_mode = 3
 
 [node name="test" type="AudioStreamPlayer" parent="sfx"]
-stream = ExtResource("2_id3fu")
+stream = ExtResource("17_16vb8")
 volume_db = -4.838
 bus = &"Sfx"
 
@@ -106,8 +106,13 @@ stream = ExtResource("15_w3tpd")
 pitch_scale = 1.33
 bus = &"Sfx"
 
-[node name="select" type="AudioStreamPlayer" parent="sfx"]
+[node name="confirm" type="AudioStreamPlayer" parent="sfx"]
 stream = ExtResource("14_rsogl")
+volume_db = -8.49
+bus = &"Sfx"
+
+[node name="select" type="AudioStreamPlayer" parent="sfx"]
+stream = ExtResource("17_16vb8")
 volume_db = -8.49
 bus = &"Sfx"
 
