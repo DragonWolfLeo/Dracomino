@@ -52,7 +52,7 @@ class BoardEffect extends Effect:
 var EFFECTS:Dictionary[StringName, Effect] = {
 	tutorial = Effect.new(_loadDialogue.bind("tutorial"))\
 		.setCanTriggerFn(_canLoadNewDialogue),
-	logic_tutorial = Effect.new(_loadDialogue.bind("tutorial_logic"))\
+	tutorial_logic = Effect.new(_loadDialogue.bind("tutorial_logic"))\
 		.setCanTriggerFn(_canLoadNewDialogue),
 	fishing = Effect.new(_setMode.bind("fishing"))\
 		.setCanTriggerFn(combineFunctions.bind(_piecesAreLeft.bind(2), FlagManager.isFlagSet.bind("!mode=fishing"))).setBlockRequestPiece(),
