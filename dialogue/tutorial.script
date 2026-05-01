@@ -194,7 +194,7 @@ Mini (happy): With more Dracominos, we could reach further! Which means getting 
 
 // === Done ===
 [Response Tutorial_Done]
-Mini (happy): And that it for my lesson! Now you can help me and my partner with our goal of collecting as much gold and mana as we can!
+Mini (happy): And that's it for my lesson! Now you can help me and my partner with our goal of collecting as much gold and mana as we can!
 Mini: Before we get back to it, do you have any questions?
 [SetWorldFlag explained_done]
 
