@@ -113,8 +113,8 @@ class PieceMovement:
 	var board:Board
 	var direction:Vector2i
 	var blocked:bool = false
-	var locked:bool = false
 	var clump:Array[Piece] = []
+	var lockedPieces:Array[Piece] = []
 
 	func _init(_board:Board, _direction:Vector2i) -> void:
 		board = _board
@@ -150,9 +150,9 @@ class PieceMovement:
 		var translatedCells := Board.getCellsDifference(Board.getTranslatedCells(piece.globalCells, direction), piece.globalCells)
 		
 		# Check if clump is blocked
-		if not blocked and isMovementBlockedByBounds(translatedCells):
+		if isMovementBlockedByBounds(translatedCells):
 			blocked = true
-			locked = true
+			lockedPieces.append(piece)
 		
 		# Check if temporarily blocked by clearing line
 		if not blocked and isMovementBlockedByAnimation(translatedCells):
@@ -182,7 +182,6 @@ class PieceMovement:
 							else:
 								blocked = true
 							break
-					if blocked: break
 
 	func isMovementBlockedByBounds(translatedCells:Array[Vector2i]) -> bool:
 		return not board.areCellsOpen(translatedCells, [], true)
@@ -200,10 +199,15 @@ class PieceMovement:
 
 	func tryMovePiece(piece:Piece, movementType:int) -> bool: ## false = unblocked; true = blocked
 		addPieceToClump(piece, movementType)
+		var hasLockedPiece:bool = false
+		for lockedPiece:Piece in lockedPieces:
+			if tryLockPiece(lockedPiece, movementType):
+				hasLockedPiece = true
+		
 		for clumpedPiece:Piece in clump:
-			if locked:
-				tryLockPiece(clumpedPiece, movementType)
-			elif not blocked:
+			if direction == Vector2i.DOWN and piece != clumpedPiece and (hasLockedPiece or not blocked):
+				clumpedPiece.restartGravityTimer()
+			if not blocked:
 				clumpedPiece.collidible = true # Allow collision now that we know it's in a free space
 				clumpedPiece.move(direction)
 				if clumpedPiece == board.getCameraFocus():
@@ -216,9 +220,9 @@ class PieceMovement:
 					SoundManager.play("move")
 				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
 					SoundManager.play("move_down")
-		return locked or blocked
+		return blocked
 	
-	func tryLockPiece(piece:Piece, movementType:int) -> void:
+	func tryLockPiece(piece:Piece, movementType:int) -> bool: ## Return true on locked
 		if direction == Vector2i.DOWN:
 			# Lock piece
 			match movementType:
@@ -226,6 +230,7 @@ class PieceMovement:
 					board.lockPiece(piece)
 					board.checkIfLandedOnEntity(piece, movementType)
 					SoundManager.play("harddrop")
+					return true
 				Piece.MOVEMENT.SOFT_DROP:
 					if FlagManager.isFlagSet("lock_delay"):
 						piece.lockDelayed = true
@@ -233,6 +238,7 @@ class PieceMovement:
 						board.lockPiece(piece)
 						board.checkIfLandedOnEntity(piece, movementType)
 						SoundManager.play("drop")
+						return true
 				Piece.MOVEMENT.GRAVITY:
 					if FlagManager.isFlagSet("lock_delay"):
 						piece.gravityLockDelayed = true
@@ -240,12 +246,15 @@ class PieceMovement:
 						board.lockPiece(piece)
 						board.checkIfLandedOnEntity(piece, movementType)
 						SoundManager.play("drop")
+						return true
 				Piece.MOVEMENT.FALL:
 					pass
 				_:
 					board.lockPiece(piece)
 					board.checkIfLandedOnEntity(piece, movementType)
 					SoundManager.play("drop")
+					return true
+		return false
 
 var inputTimer:ActivityTimer ## For death context
 var pieceTimer:ActivityTimer ## For death context
