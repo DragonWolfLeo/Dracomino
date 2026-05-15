@@ -109,6 +109,144 @@ class ClearingChunk:
 			tilesToActivate[i].y += 1
 		mappedLine -= 1
 
+class PieceMovement:
+	var board:Board
+	var direction:Vector2i
+	var blocked:bool = false
+	var locked:bool = false
+	var clump:Array[Piece] = []
+
+	func _init(_board:Board, _direction:Vector2i) -> void:
+		board = _board
+		direction = _direction
+	
+	func forceShoveOtherPieces(piece:Piece) -> void:
+		var lowerPieces:Array[Piece] = []
+		for activePiece:Piece in board.activePieces:
+			if activePiece == piece:
+				break
+			lowerPieces.append(activePiece)
+		for lowerPiece:Piece in board.activePieces.duplicate():
+			if lowerPiece != piece and lowerPiece.moveLock:
+				nudgePiece(piece.globalCells, lowerPiece)
+				if blocked:
+					# Can't move, so lock pieces, and instantly lose
+					board.lockPiece(piece)
+					board.lockPiece(lowerPiece)
+	
+	func nudgePiece(occupiedCells:Array[Vector2i], piece:Piece) -> void: ## Attempt to move piece below cells
+		for cell:Vector2i in occupiedCells:
+			if piece.globalCells.has(cell):
+				tryMovePiece(piece, Piece.MOVEMENT.FORCED_SHOVE)
+				if board.activePieces.has(piece) and not blocked:
+					var pm:PieceMovement = PieceMovement.new(board, direction)
+					pm.nudgePiece(occupiedCells, piece)
+				return
+
+	func addPieceToClump(piece:Piece, movementType:int) -> void:
+		if clump.has(piece):
+			return
+		clump.append(piece)
+		var translatedCells := Board.getCellsDifference(Board.getTranslatedCells(piece.globalCells, direction), piece.globalCells)
+		
+		# Check if clump is blocked
+		if not blocked and isMovementBlockedByBounds(translatedCells):
+			blocked = true
+			locked = true
+		
+		# Check if temporarily blocked by clearing line
+		if not blocked and isMovementBlockedByAnimation(translatedCells):
+			blocked = true
+
+		# If not blocked, clump other pieces that are in the way
+		if not blocked:
+			var unclumpedPieces:Array[Piece] = []
+			for activePiece:Piece in board.activePieces:
+				if not clump.has(activePiece) and activePiece.collidible:
+					unclumpedPieces.append(activePiece)
+			var canShove:bool = true
+			match movementType:
+				Piece.MOVEMENT.HORIZONTAL: 
+					if not FlagManager.isFlagSet("horizontal_shove"):
+						canShove = false
+				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
+					if not FlagManager.isFlagSet("vertical_shove"):
+						canShove = false
+			
+			for unclumpedPiece:Piece in unclumpedPieces:
+				if not clump.has(unclumpedPiece): # Be absolutely certain this hasn't been clumped already (needed?)
+					for cell:Vector2i in translatedCells:
+						if unclumpedPiece.globalCells.has(cell):
+							if canShove:
+								addPieceToClump(unclumpedPiece, Piece.MOVEMENT.FORCED_SHOVE)
+							else:
+								blocked = true
+							break
+					if blocked: break
+
+	func isMovementBlockedByBounds(translatedCells:Array[Vector2i]) -> bool:
+		return not board.areCellsOpen(translatedCells, [], true)
+
+	func isMovementBlockedByAnimation(translatedCells:Array[Vector2i]) -> bool:
+		# Prevent going through activated lines
+		if direction == Vector2i.DOWN:
+			var lowestY:int = BOUNDS.position.y
+			for cell in translatedCells:
+				if cell.y > lowestY:
+					lowestY = cell.y
+			if board.isRowClearing(lowestY):
+				return true
+		return false
+
+	func tryMovePiece(piece:Piece, movementType:int) -> bool: ## false = unblocked; true = blocked
+		addPieceToClump(piece, movementType)
+		for clumpedPiece:Piece in clump:
+			if locked:
+				tryLockPiece(clumpedPiece, movementType)
+			elif not blocked:
+				clumpedPiece.collidible = true # Allow collision now that we know it's in a free space
+				clumpedPiece.move(direction)
+				if clumpedPiece == board.getCameraFocus():
+					board.focusCamera.global_position = clumpedPiece.global_position
+		if not blocked:
+			board.tryToMakePiecesCollible()
+			board.checkIfWaitingToChooseNewFocusPiece()
+			match movementType:
+				Piece.MOVEMENT.HORIZONTAL:
+					SoundManager.play("move")
+				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
+					SoundManager.play("move_down")
+		return locked or blocked
+	
+	func tryLockPiece(piece:Piece, movementType:int) -> void:
+		if direction == Vector2i.DOWN:
+			# Lock piece
+			match movementType:
+				Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE:
+					board.lockPiece(piece)
+					board.checkIfLandedOnEntity(piece, movementType)
+					SoundManager.play("harddrop")
+				Piece.MOVEMENT.SOFT_DROP:
+					if FlagManager.isFlagSet("lock_delay"):
+						piece.lockDelayed = true
+					else:
+						board.lockPiece(piece)
+						board.checkIfLandedOnEntity(piece, movementType)
+						SoundManager.play("drop")
+				Piece.MOVEMENT.GRAVITY:
+					if FlagManager.isFlagSet("lock_delay"):
+						piece.gravityLockDelayed = true
+					else:
+						board.lockPiece(piece)
+						board.checkIfLandedOnEntity(piece, movementType)
+						SoundManager.play("drop")
+				Piece.MOVEMENT.FALL:
+					pass
+				_:
+					board.lockPiece(piece)
+					board.checkIfLandedOnEntity(piece, movementType)
+					SoundManager.play("drop")
+
 var inputTimer:ActivityTimer ## For death context
 var pieceTimer:ActivityTimer ## For death context
 
@@ -429,99 +567,12 @@ func placeAboveOtherPieces(piece:Piece):
 					return
 
 func forceShoveOtherPiecesDown(piece:Piece):
-	var lowerPieces:Array[Piece] = []
-	for activePiece:Piece in activePieces:
-		if activePiece == piece:
-			break
-		lowerPieces.append(activePiece)
-	for lowerPiece:Piece in activePieces:
-		if lowerPiece != piece and lowerPiece.moveLock:
-			var nudgeResult:bool = nudgePiece(piece.globalCells, lowerPiece, Vector2i.DOWN, true)
-			if nudgeResult:
-				# Can't move, so lock pieces, and instantly lose
-				lockPiece(piece)
-				lockPiece(lowerPiece)
-
-func nudgePiece(cells:Array[Vector2i], piece:Piece, direction:Vector2i, force:bool = false) -> bool: ## false = unblocked; true = blocked
-	for cell:Vector2i in cells:
-		if piece.globalCells.has(cell):
-			var blocked:bool = tryMovePiece(piece, direction, Piece.MOVEMENT.FORCED_SHOVE if force else Piece.MOVEMENT.SHOVE)
-			if activePieces.has(piece) and not blocked:
-				return nudgePiece(cells, piece, direction, force)
-			return blocked
-	return false
+	var pm:PieceMovement = PieceMovement.new(self, Vector2i.DOWN)
+	pm.forceShoveOtherPieces(piece)
 
 func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ## false = unblocked; true = blocked
-	# Check if a non-collidible piece isn't inside another piece
-	if not piece.collidible and getCollidingPiece(piece.globalCells, piece) != null:
-		return true
-	# Check tiles the piece want to move
-	var translatedCells := getCellsDifference(getTranslatedCells(piece.globalCells, direction), piece.globalCells)
-	if areCellsOpen(translatedCells, [], true):
-		var blocked:bool = false
-		# Prevent going through activated lines
-		if direction == Vector2i.DOWN:
-			var lowestY:int = BOUNDS.position.y
-			for cell in translatedCells:
-				if cell.y > lowestY:
-					lowestY = cell.y
-			if isRowClearing(lowestY):
-				return true
-		var forceful:bool = movementType == Piece.MOVEMENT.FORCED_SHOVE or Piece.MOVEMENT.HARD_DROP
-		piece.collidible = true # Allow collision now that we know it's in a free space
-		var collidingPieces:Array[Piece] = getAllCollidingPieces(translatedCells, piece)
-		if collidingPieces.size():
-			match movementType:
-				Piece.MOVEMENT.HORIZONTAL: 
-					if not FlagManager.isFlagSet("horizontal_shove"):
-						blocked = true
-				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
-					if not FlagManager.isFlagSet("vertical_shove"):
-						blocked = true
-			if not blocked:
-				for collidingPiece:Piece in collidingPieces:
-					var nudgeResult = nudgePiece(translatedCells, collidingPiece, direction, forceful)
-					if nudgeResult: blocked = true
-		if not blocked:
-			piece.move(direction)
-			if piece == getCameraFocus():
-				focusCamera.global_position = piece.global_position
-			tryToMakePiecesCollible()
-			checkIfWaitingToChooseNewFocusPiece()
-			match movementType:
-				Piece.MOVEMENT.HORIZONTAL:
-					SoundManager.play("move")
-				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
-					SoundManager.play("move_down")
-		return blocked
-	elif direction == Vector2i.DOWN:
-		# Lock piece
-		match movementType:
-			Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE:
-				lockPiece(piece)
-				checkIfLandedOnEntity(piece, movementType)
-				SoundManager.play("harddrop")
-			Piece.MOVEMENT.SOFT_DROP:
-				if FlagManager.isFlagSet("lock_delay"):
-					piece.lockDelayed = true
-				else:
-					lockPiece(piece)
-					checkIfLandedOnEntity(piece, movementType)
-					SoundManager.play("drop")
-			Piece.MOVEMENT.GRAVITY:
-				if FlagManager.isFlagSet("lock_delay"):
-					piece.gravityLockDelayed = true
-				else:
-					lockPiece(piece)
-					checkIfLandedOnEntity(piece, movementType)
-					SoundManager.play("drop")
-			Piece.MOVEMENT.FALL:
-				pass
-			_:
-				lockPiece(piece)
-				checkIfLandedOnEntity(piece, movementType)
-				SoundManager.play("drop")
-	return true
+	var pm:PieceMovement = PieceMovement.new(self, direction)
+	return pm.tryMovePiece(piece, movementType)
 
 func checkIfLandedOnEntity(piece:Piece, movement:int) -> void: ## Send signals to pieces landed on
 	var belowCells:Array[Vector2i] = getCellsDifference(getTranslatedCells(piece.globalCells, Vector2i.DOWN), piece.globalCells)
