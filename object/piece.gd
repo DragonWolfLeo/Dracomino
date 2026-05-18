@@ -568,6 +568,9 @@ func move(direction:Vector2i, isRotate:bool = false):
 			lockDelayed = false
 			gravityLockDelayed = false
 
+func restartGravityTimer() -> void:
+	gravityTimer.start()
+	
 func resetGravityTimer() -> void:
 	if (placed or not moveLock) and gravityTimer:
 		gravityTimer.wait_time = getGravityDelay()

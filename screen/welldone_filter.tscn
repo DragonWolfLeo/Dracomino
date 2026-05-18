@@ -104,7 +104,7 @@ theme_override_constants/shadow_offset_x = 4
 theme_override_fonts/normal_font = ExtResource("3_bft8r")
 theme_override_font_sizes/normal_font_size = 72
 bbcode_enabled = true
-text = "[wave amp=130 freq=10][rainbow sat=1.0 val=1.0]Well Done!"
+text = "[wave amp=130 freq=10 connected=0][rainbow sat=1.0 val=1.0]Well Done!"
 fit_content = true
 scroll_active = false
 shortcut_keys_enabled = false

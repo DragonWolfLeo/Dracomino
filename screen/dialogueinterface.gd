@@ -102,6 +102,7 @@ func updateDialogue(line):
 	# if line.body:
 	updatePortrait(line.speaker, line.expression)
 	panelDelayTimer.start()
+	SoundManager.play("progressdialogue")
 
 func completeDialoguePrint():
 	dialogueLabel.visible_characters = -1
@@ -262,6 +263,6 @@ func _on_dialogue_ended():
 func _on_ChoiceLabel_pressed(data):
 	if !dialogue: return
 	grab_focus()
-	SoundManager.play("select")
+	SoundManager.play("confirm")
 	dialogue.selectChoice(data)
 		

@@ -32,10 +32,10 @@ var state:int = 0: set = changeState
 
 func _ready():
 	changeState(STATES.NORMAL)
-	SignalBus.getSignal("stateflag_set", "gameover").connect(bitsetState.bind(STATES.GAMEOVER))
-	SignalBus.getSignal("stateflag_cleared", "gameover").connect(bitclearState.bind(STATES.GAMEOVER))
-	SignalBus.getSignal("stateflag_set", "game_focus").connect(bitclearState.bind(STATES.NOT_FOCUSED))
-	SignalBus.getSignal("stateflag_cleared", "game_focus").connect(bitsetState.bind(STATES.NOT_FOCUSED))
+	SignalBus.getSignal("stateflag_set", "gameover").connect(bitsetState.bind(STATES.GAMEOVER), CONNECT_DEFERRED)
+	SignalBus.getSignal("stateflag_cleared", "gameover").connect(bitclearState.bind(STATES.GAMEOVER), CONNECT_DEFERRED)
+	SignalBus.getSignal("stateflag_set", "game_focus").connect(bitclearState.bind(STATES.NOT_FOCUSED), CONNECT_DEFERRED)
+	SignalBus.getSignal("stateflag_cleared", "game_focus").connect(bitsetState.bind(STATES.NOT_FOCUSED), CONNECT_DEFERRED)
 
 	DialogueManager.dialogue_updated.connect(SignalBus.getSignal("effect_duration_down").emit.unbind(2)) # Updating dialogue lowers trap duration
 	

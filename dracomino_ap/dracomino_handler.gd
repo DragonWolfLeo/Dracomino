@@ -381,6 +381,9 @@ func giveItem(item:StateItem):
 	if not item: return
 	collectedItems.append(item)
 	if item.data:
+		# Make tutorial selectable when just connecting
+		if isJustConnected and item.data.tags.get("tutorial"):
+			seedFlagHolder.setFlag(item.data.internalName)
 		match item.data.type:
 			# Detect shape streaks
 			"shape":
