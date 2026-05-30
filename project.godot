@@ -58,6 +58,10 @@ window/size/height=720
 naming/default_signal_callback_name="_on_{NodeName}_{signal_name}"
 export/convert_text_resources_to_binary=false
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/plain_text_resource/plugin.cfg")
+
 [importer_defaults]
 
 texture={
