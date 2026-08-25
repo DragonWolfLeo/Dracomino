@@ -25,7 +25,7 @@ flag = "effect_space"
 [node name="StarLayer" type="Parallax2D" parent="TextureRect"]
 repeat_size = Vector2(512, 512)
 autoscroll = Vector2(0, 40)
-repeat_times = 4
+repeat_times = 6
 
 [node name="Sprite2D" type="Sprite2D" parent="TextureRect/StarLayer"]
 material = SubResource("CanvasItemMaterial_087iq")
@@ -35,7 +35,7 @@ centered = false
 [node name="StarLayer2" type="Parallax2D" parent="TextureRect"]
 repeat_size = Vector2(512, 512)
 autoscroll = Vector2(0, 120)
-repeat_times = 4
+repeat_times = 6
 
 [node name="Sprite2D" type="Sprite2D" parent="TextureRect/StarLayer2"]
 material = SubResource("CanvasItemMaterial_087iq")
