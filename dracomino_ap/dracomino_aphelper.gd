@@ -4,6 +4,8 @@ var btn_deathLink:CheckButton
 var btn_deathOnRestart:CheckButton
 var optionBtn_deathLinkGroup:OptionButton
 var lineEdit_deathLinkGroup:LineEdit
+var optionBtn_trapLinkGroup:OptionButton
+var lineEdit_trapLinkGroup:LineEdit
 var optionBtn_scaling:OptionButton
 var sliderSetting_scaleAmount:Control
 var btn_allowUnfocusedInputs:CheckButton
@@ -14,7 +16,7 @@ var slider_voiceVol:Slider
 
 var _sfxSliderBeingDragged:bool = true # Set to true prevent triggering when loading
 
-enum DEATH_LINK_GROUP {
+enum LINK_GROUP {
 	DEFAULT,
 	DRACOMINO,
 	CUSTOM,
@@ -54,7 +56,7 @@ func _ready() -> void:
 	SignalBus.getSignal("setting_changed", "deathLinkGroup_custom").connect(_on_deathLinkGroup_custom_setting_changed)
 	optionBtn_deathLinkGroup = get_parent().find_child("OptionButton_DeathLinkGroup")
 	if optionBtn_deathLinkGroup:
-		optionBtn_deathLinkGroup.select(Config.getSetting("deathLinkGroup", DEATH_LINK_GROUP.DEFAULT))
+		optionBtn_deathLinkGroup.select(Config.getSetting("deathLinkGroup", LINK_GROUP.DEFAULT))
 		optionBtn_deathLinkGroup.item_selected.connect(_on_optionBtn_deathLinkGroup_item_selected)
 	lineEdit_deathLinkGroup = get_parent().find_child("LineEdit_DeathLinkGroup")
 	if lineEdit_deathLinkGroup:
@@ -62,6 +64,19 @@ func _ready() -> void:
 		lineEdit_deathLinkGroup.focus_exited.connect(func(): _on_lineEdit_deathLinkGroup_text_submitted(lineEdit_deathLinkGroup.text))
 		lineEdit_deathLinkGroup.text_submitted.connect(_on_lineEdit_deathLinkGroup_text_submitted)
 	_on_deathLinkGroup_setting_changed()
+	# Trap link group
+	SignalBus.getSignal("setting_changed", "trapLinkGroup").connect(_on_trapLinkGroup_setting_changed)
+	SignalBus.getSignal("setting_changed", "trapLinkGroup_custom").connect(_on_trapLinkGroup_custom_setting_changed)
+	optionBtn_trapLinkGroup = get_parent().find_child("OptionButton_TrapLinkGroup")
+	if optionBtn_trapLinkGroup:
+		optionBtn_trapLinkGroup.select(Config.getSetting("trapLinkGroup", LINK_GROUP.DEFAULT))
+		optionBtn_trapLinkGroup.item_selected.connect(_on_optionBtn_trapLinkGroup_item_selected)
+	lineEdit_trapLinkGroup = get_parent().find_child("LineEdit_TrapLinkGroup")
+	if lineEdit_trapLinkGroup:
+		lineEdit_trapLinkGroup.text = Config.getSetting("trapLinkGroup_custom", "")
+		lineEdit_trapLinkGroup.focus_exited.connect(func(): _on_lineEdit_trapLinkGroup_text_submitted(lineEdit_trapLinkGroup.text))
+		lineEdit_trapLinkGroup.text_submitted.connect(_on_lineEdit_trapLinkGroup_text_submitted)
+	_on_trapLinkGroup_setting_changed()
 	# Scaling
 	optionBtn_scaling = get_parent().find_child("OptionButton_Scaling")
 	if optionBtn_scaling:
@@ -137,19 +152,34 @@ func _on_btn_deathOnRestart_toggled(toggled_on:bool):
 	).emit()
 
 func _on_deathLinkGroup_setting_changed():
-	var _deathLinkGroupId:int = int(Config.getSetting("deathLinkGroup", DEATH_LINK_GROUP.DEFAULT))
+	var _linkGroupId:int = int(Config.getSetting("deathLinkGroup", LINK_GROUP.DEFAULT))
 	if lineEdit_deathLinkGroup:
-		lineEdit_deathLinkGroup.visible = _deathLinkGroupId == DEATH_LINK_GROUP.CUSTOM
-	match _deathLinkGroupId:
-		DEATH_LINK_GROUP.DEFAULT:
+		lineEdit_deathLinkGroup.visible = _linkGroupId == LINK_GROUP.CUSTOM
+	match _linkGroupId:
+		LINK_GROUP.DEFAULT:
 			Archipelago.set_deathlink_group("")
-		DEATH_LINK_GROUP.DRACOMINO:
+		LINK_GROUP.DRACOMINO:
 			Archipelago.set_deathlink_group("Dracomino")
-		DEATH_LINK_GROUP.CUSTOM:
+		LINK_GROUP.CUSTOM:
 			Archipelago.set_deathlink_group(Config.getSetting("deathLinkGroup_custom", ""))
 
 func _on_deathLinkGroup_custom_setting_changed():
 	Archipelago.set_deathlink_group(Config.getSetting("deathLinkGroup_custom", ""))
+
+func _on_trapLinkGroup_setting_changed():
+	var _linkGroupId:int = int(Config.getSetting("trapLinkGroup", LINK_GROUP.DEFAULT))
+	if lineEdit_trapLinkGroup:
+		lineEdit_trapLinkGroup.visible = _linkGroupId == LINK_GROUP.CUSTOM
+	match _linkGroupId:
+		LINK_GROUP.DEFAULT:
+			Archipelago.set_traplink_group("")
+		LINK_GROUP.DRACOMINO:
+			Archipelago.set_traplink_group("Dracomino")
+		LINK_GROUP.CUSTOM:
+			Archipelago.set_traplink_group(Config.getSetting("trapLinkGroup_custom", ""))
+
+func _on_trapLinkGroup_custom_setting_changed():
+	Archipelago.set_traplink_group(Config.getSetting("trapLinkGroup_custom", ""))
 
 func _on_optionBtn_auto_scaling_item_selected(index:int):
 	var value:bool = index == SCALING.AUTO
@@ -162,6 +192,12 @@ func _on_optionBtn_deathLinkGroup_item_selected(index:int):
 
 func _on_lineEdit_deathLinkGroup_text_submitted(new_text:String):
 	Config.changeSetting("deathLinkGroup_custom", new_text)
+
+func _on_optionBtn_trapLinkGroup_item_selected(index:int):
+	Config.changeSetting("trapLinkGroup", index)
+
+func _on_lineEdit_trapLinkGroup_text_submitted(new_text:String):
+	Config.changeSetting("trapLinkGroup_custom", new_text)
 
 # Volume stuff
 func _on_slider_value_changed(value:float, settingName:String, busName:String, testSoundType:String=""):

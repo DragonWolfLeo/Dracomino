@@ -35,7 +35,7 @@ text = "Death On Restart
 
 [node name="Container_DeathLinkGroup" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-tooltip_text = "Send deaths to and receive deaths from only a specific group"
+tooltip_text = "Send and receive linked deaths to and from a specific group"
 theme_override_constants/margin_left = 5
 theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 5
@@ -68,6 +68,48 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 
+[node name="Btn_TrapLink" type="CheckButton" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "Send your traps to other players in your multiworld, as well as receive theirs"
+text = "Trap Link"
+script = ExtResource("1_08t7n")
+flag = "trap_link"
+
+[node name="Container_TrapLinkGroup" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "Send and receive linked traps to and from a specific group"
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/Container_TrapLinkGroup"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HFlowContainer" parent="MarginContainer/VBoxContainer/Container_TrapLinkGroup/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/Container_TrapLinkGroup/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Trap Link Group:"
+
+[node name="OptionButton_TrapLinkGroup" type="OptionButton" parent="MarginContainer/VBoxContainer/Container_TrapLinkGroup/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+selected = 0
+item_count = 3
+popup/item_0/text = "Default"
+popup/item_0/id = 0
+popup/item_1/text = "Dracomino"
+popup/item_1/id = 1
+popup/item_2/text = "Custom"
+popup/item_2/id = 2
+
+[node name="LineEdit_TrapLinkGroup" type="LineEdit" parent="MarginContainer/VBoxContainer/Container_TrapLinkGroup/VBoxContainer/HBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
 [node name="Btn_EnergyLink" type="CheckButton" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 tooltip_text = "Share your generated mana to other players as Energy"
@@ -75,13 +117,6 @@ text = "Energy Link
 "
 script = ExtResource("1_08t7n")
 flag = "energy_link"
-
-[node name="Btn_TrapLink" type="CheckButton" parent="MarginContainer/VBoxContainer"]
-layout_mode = 2
-tooltip_text = "Send your traps to other players in your multiworld, as well as receive theirs"
-text = "Trap Link"
-script = ExtResource("1_08t7n")
-flag = "trap_link"
 
 [node name="Btn_AllowUnfocusedInputs" type="CheckButton" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
