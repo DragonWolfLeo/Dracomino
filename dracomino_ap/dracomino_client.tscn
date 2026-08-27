@@ -123,6 +123,61 @@ text = "Show Irrelevant Messages"
 script = ExtResource("6_ewm2l")
 optionKey = "showNonlocalItemSends"
 
+[node name="Container_Pronouns" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1/Container_Pronouns"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HFlowContainer" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Pronouns:"
+
+[node name="OptionButton_Pronouns" type="OptionButton" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+selected = 0
+item_count = 4
+popup/item_0/text = "They/Them/Their"
+popup/item_0/id = 0
+popup/item_1/text = "He/Him/His"
+popup/item_1/id = 1
+popup/item_2/text = "She/Her/Her"
+popup/item_2/id = 2
+popup/item_3/text = "Custom"
+popup/item_3/id = 3
+
+[node name="PronounInputGroup" type="HFlowContainer" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LineEdit_He_She_They" type="LineEdit" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer/PronounInputGroup"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+placeholder_text = "They"
+max_length = 20
+
+[node name="LineEdit_Him_Her_Them" type="LineEdit" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer/PronounInputGroup"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+placeholder_text = "Them"
+max_length = 20
+
+[node name="LineEdit_His_Her_Their" type="LineEdit" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer/PronounInputGroup"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+placeholder_text = "Their"
+max_length = 20
+
 [node name="Debug" parent="Tabs/Settings/Margin/Tabs" instance=ExtResource("8_euklm")]
 visible = false
 layout_mode = 2

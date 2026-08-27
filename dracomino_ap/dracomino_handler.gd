@@ -724,6 +724,7 @@ func _on_Board_deathlink_earned(deathContext:DracominoUtil.DeathContext) -> void
 			boardheight = str(Board.BOUNDS.size.y),
 			totalpieces = str(FlagManager.getTotalCountAmount("shapes")),
 		}
+		formatValues.merge(DracominoUtil.getPronouns(), true)
 		formatValues.merge(deathContext.formatValues, true)
 		var contextTags = deathContext.contextTags.duplicate()
 		var itemctx:PieceContext = deathContext.itemContext

@@ -13,12 +13,23 @@ var slider_masterVol:Slider
 var slider_musicVol:Slider
 var slider_sfxVol:Slider
 var slider_voiceVol:Slider
+var optionBtn_pronouns:OptionButton
+var group_pronounInput:Control
+var lineEdit_he_she_they:LineEdit
+var lineEdit_him_her_them:LineEdit
+var lineEdit_his_her_their:LineEdit
 
 var _sfxSliderBeingDragged:bool = true # Set to true prevent triggering when loading
 
 enum LINK_GROUP {
 	DEFAULT,
 	DRACOMINO,
+	CUSTOM,
+}
+enum PRONOUNS {
+	THEY_THEM_THEIR,
+	HE_HIM_HIS,
+	SHE_HER_HER,
 	CUSTOM,
 }
 enum SCALING {
@@ -126,6 +137,31 @@ func _ready() -> void:
 
 	_sfxSliderBeingDragged = false
 
+	# Pronouns
+	SignalBus.getSignal("setting_changed", "pronouns").connect(_on_pronouns_setting_changed)
+	optionBtn_pronouns = get_parent().find_child("OptionButton_Pronouns")
+	if optionBtn_pronouns:
+		optionBtn_pronouns.select(Config.getSetting("pronouns", PRONOUNS.THEY_THEM_THEIR))
+		optionBtn_pronouns.item_selected.connect(_on_optionBtn_pronouns_item_selected)
+	group_pronounInput = get_parent().find_child("PronounInputGroup")
+	if group_pronounInput:
+		group_pronounInput.visible = int(Config.getSetting("pronouns", PRONOUNS.THEY_THEM_THEIR)) == PRONOUNS.CUSTOM
+	lineEdit_he_she_they = get_parent().find_child("LineEdit_He_She_They")
+	if lineEdit_he_she_they:
+		lineEdit_he_she_they.text = Config.getSetting("pronouns_he_she_they", "")
+		lineEdit_he_she_they.focus_exited.connect(func(): _on_lineEdit_he_she_they_text_submitted(lineEdit_he_she_they.text))
+		lineEdit_he_she_they.text_submitted.connect(_on_lineEdit_he_she_they_text_submitted)
+	lineEdit_him_her_them = get_parent().find_child("LineEdit_Him_Her_Them")
+	if lineEdit_him_her_them:
+		lineEdit_him_her_them.text = Config.getSetting("pronouns_him_her_them", "")
+		lineEdit_him_her_them.focus_exited.connect(func(): _on_lineEdit_him_her_them_text_submitted(lineEdit_him_her_them.text))
+		lineEdit_him_her_them.text_submitted.connect(_on_lineEdit_him_her_them_text_submitted)
+	lineEdit_his_her_their = get_parent().find_child("LineEdit_His_Her_Their")
+	if lineEdit_his_her_their:
+		lineEdit_his_her_their.text = Config.getSetting("pronouns_his_her_their", "")
+		lineEdit_his_her_their.focus_exited.connect(func(): _on_lineEdit_his_her_their_text_submitted(lineEdit_his_her_their.text))
+		lineEdit_his_her_their.text_submitted.connect(_on_lineEdit_his_her_their_text_submitted)
+
 	# Select IP box on loading
 	var ipbox:LineEdit = get_parent().find_child("IP_Box")
 	if ipbox is LineEdit and ipbox.is_visible_in_tree():
@@ -198,6 +234,43 @@ func _on_optionBtn_trapLinkGroup_item_selected(index:int):
 
 func _on_lineEdit_trapLinkGroup_text_submitted(new_text:String):
 	Config.changeSetting("trapLinkGroup_custom", new_text)
+
+func _on_pronouns_setting_changed():
+	var _pronounId:int = int(Config.getSetting("pronouns", PRONOUNS.THEY_THEM_THEIR))
+	if group_pronounInput:
+		group_pronounInput.visible = _pronounId == PRONOUNS.CUSTOM
+	match _pronounId:
+		PRONOUNS.THEY_THEM_THEIR:
+			Config.changeSetting("pronouns_he_she_they", "They", false)
+			Config.changeSetting("pronouns_him_her_them", "Them", false)
+			Config.changeSetting("pronouns_his_her_their", "Their")
+		PRONOUNS.HE_HIM_HIS:
+			Config.changeSetting("pronouns_he_she_they", "He", false)
+			Config.changeSetting("pronouns_him_her_them", "Him", false)
+			Config.changeSetting("pronouns_his_her_their", "His")
+		PRONOUNS.SHE_HER_HER:
+			Config.changeSetting("pronouns_he_she_they", "She", false)
+			Config.changeSetting("pronouns_him_her_them", "Her", false)
+			Config.changeSetting("pronouns_his_her_their", "Her")
+		PRONOUNS.CUSTOM:
+			if lineEdit_he_she_they:
+				Config.changeSetting("pronouns_he_she_they", lineEdit_he_she_they.text, false)
+			if lineEdit_him_her_them:
+				Config.changeSetting("pronouns_him_her_them", lineEdit_him_her_them.text, false)
+			if lineEdit_his_her_their:
+				Config.changeSetting("pronouns_his_her_their", lineEdit_his_her_their.text)
+
+func _on_optionBtn_pronouns_item_selected(index:int):
+	Config.changeSetting("pronouns", index)
+
+func _on_lineEdit_he_she_they_text_submitted(new_text:String):
+	Config.changeSetting("pronouns_he_she_they", new_text)
+
+func _on_lineEdit_him_her_them_text_submitted(new_text:String):
+	Config.changeSetting("pronouns_him_her_them", new_text)
+
+func _on_lineEdit_his_her_their_text_submitted(new_text:String):
+	Config.changeSetting("pronouns_his_her_their", new_text)
 
 # Volume stuff
 func _on_slider_value_changed(value:float, settingName:String, busName:String, testSoundType:String=""):

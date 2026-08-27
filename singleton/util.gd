@@ -53,6 +53,17 @@ static func generateDeathlinkMessage(category:String = "TOP", contextTags:Array 
 	message = message.format(formatValues)
 	return message
 
+static func getPronouns() -> Dictionary: ## Get pronouns from settings
+	var ret:Dictionary = {
+		his_her_their = str(Config.getSetting("pronouns_his_her_their", "")).to_lower(),
+		him_her_them = str(Config.getSetting("pronouns_him_her_them", "")).to_lower(),
+		he_she_they = str(Config.getSetting("pronouns_he_she_they", "")).to_lower(),
+	}
+	if not ret.get("his_her_their"): ret["his_her_their"] = "their"
+	if not ret.get("him_her_them"): ret["him_her_them"] = "them"
+	if not ret.get("he_she_they"): ret["he_she_they"] = "they"
+	return ret
+
 class DeathContext:
 	var category:String
 	var itemContext:DracominoHandler.PieceContext
