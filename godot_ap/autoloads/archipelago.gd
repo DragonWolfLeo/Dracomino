@@ -544,15 +544,14 @@ func _handle_command(json: Dictionary) -> void: # Handle an incoming packet from
 			connect_step.emit("Connected!")
 			if AP_PRINT_ITEMS_ON_CONNECT:
 				_printout_recieved_items = true
-				await get_tree().create_timer(3).timeout
-				_printout_recieved_items = false
+				get_tree().create_timer(3).timeout.connect(func(): _printout_recieved_items = false)
 
 			conn._load_locations()
 			connected.emit(conn, json)
 		"PrintJSON":
 			_preparse_json(json)
 			var s: String = (output_console.printjson_command(json) if output_console
-				else BaseConsole.printjson_str(json["data"]))
+				else BaseConsole.printjson_out_str(json["data"]))
 			AP.log("[PRINT] %s" % s)
 			printjson.emit(json, s)
 		"DataPackage":
@@ -848,7 +847,7 @@ func load_console(console_scene: Node, as_child := true) -> bool:
 		if not output_console_container:
 			return false
 	if as_child: add_child.call_deferred(console_scene)
-	console_scene.ready.connect(func():
+	var connect_console := (func():
 		output_console = output_console_container.console
 		output_console_container.typing_bar.send_text.connect(func(s: String):
 			cmd_manager.call_cmd(s)
@@ -857,6 +856,10 @@ func load_console(console_scene: Node, as_child := true) -> bool:
 		output_console.tree_exiting.connect(close_console)
 		output_console_container.typing_bar.cmd_manager = cmd_manager
 		on_attach_console.emit())
+	if console_scene.is_node_ready():
+		connect_console.call()
+	else:
+		console_scene.ready.connect(connect_console)
 	return true
 ## Opens a default Archipelago text console popup
 func open_console() -> void:
