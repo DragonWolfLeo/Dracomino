@@ -1,5 +1,14 @@
 Version 0.3.3 (beta)
+Versus Mode
+ - Add Versus Mode setting
+ - When versus mode is active, received traps do not affect you (except eggs and enchantments), but are sent to other players via Trap Link.
+ - Deaths received via Death Link grant mana (not shared via Energy Link) instead of penalizing you.
+ - Recommended using Death/Trap Link Groups when using Versus Mode
+Changes
  - Add support for Trap Link Groups
+ - Add pronouns setting
+Fixes
+ - Fix next piece spawning when fishing for a piece after it
 
 Version 0.3.2
  - Add new dialogue sounds
