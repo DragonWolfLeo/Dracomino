@@ -376,15 +376,19 @@ func processClearingChunk(chunk:ClearingChunk) -> void:
 	)
 
 func checkForEvent(context:Array[StringName] = []):
-	var nextEffect = effectHandler.tryToTriggerNextEffect(context)
-	if not effectHandler.willBlockRequestPiece(nextEffect, true):
+	# Check if this will block next spawn before triggering it
+	var isBlockingSpawn:bool = effectHandler.willBlockRequestPiece(effectHandler.getNextValidBufferedEffect(context))
+	effectHandler.tryToTriggerNextEffect(context)
+	if not isBlockingSpawn:
 		requestPiece()
+	# TODO: I can't tell if this is actually blocking spawns, but seems redundant with the puzzle mode check anyway
 
 func requestPiece(allowMultiplePieces:bool = false):
 	if (
 		isGameOver # Obviously don't make pieces when game over'd
 		or activePieces.size() > MAX_PIECES # No making pieces when the max is reached
 		or (countNonlockedPieces() and not allowMultiplePieces) # No making multiple pieces if disallowed
+		or FlagManager.getFlagValue("mode") != "puzzle" # No making pieces when blocked, usually by fishing
 	):
 		return
 	if effectHandler.hasValidBufferedEvent():
