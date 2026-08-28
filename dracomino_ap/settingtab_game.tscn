@@ -112,7 +112,7 @@ size_flags_vertical = 4
 
 [node name="Btn_VersusMode" type="CheckButton" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-tooltip_text = "When versus mode is active, received traps do not affect you (except eggs and enchantments), but are sent to other players via Trap Link. Deaths received via Death Link grant mana instead of penalizing you. You may want to use Death/Trap Link Groups too."
+tooltip_text = "When versus mode is active, received traps do not affect you (except eggs and enchantments), but are sent to other players via Trap Link. Deaths received via Death Link grant mana (not shared via Energy Link) instead of penalizing you. You may want to use Death/Trap Link Groups too."
 text = "Versus Mode"
 script = ExtResource("3_fprr2")
 optionKey = "versusMode"

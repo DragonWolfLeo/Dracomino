@@ -626,8 +626,14 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	sendEnergy.call_deferred()
 
 func _on_deathlink(source: String, cause: String, json: Dictionary):
+	var vsmode:bool = Config.getSetting("versusMode")
 	if not cause: cause = "Died."
-	notification_signal.emit("{source}: {cause}".format({source=source, cause=cause}), CONSTANTS.COLOR.DEATH, true)
+	notification_signal.emit("{source}: {cause}".format({source=source, cause=cause}),
+		CONSTANTS.COLOR.SPECIAL if vsmode else CONSTANTS.COLOR.DEATH,
+		true
+	)
+	if vsmode:
+		giveMana(CONSTANTS.MANA_PER_VERSUS_DEFEAT, false)
 
 func _on_traplink(source: String, trapname: String, json: Dictionary):
 	if not trapname: return

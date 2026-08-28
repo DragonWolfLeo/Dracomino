@@ -1018,7 +1018,8 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		sendDeathLink(DracominoUtil.DeathContext.new("OFFLINE"))
 
 func _on_deathlink(_source, _cause, _json):
-	gameOver()
+	if not Config.getSetting("versusMode"):
+		gameOver()
 
 func _on_newPieceObtained():
 	fillPreview()
