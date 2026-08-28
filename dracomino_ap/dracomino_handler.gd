@@ -440,7 +440,11 @@ func giveItem(item:StateItem):
 func triggerEffect(stateItem:StateItem, context:Array[StringName] = []) -> bool: ## Return true on null or success (false means try again but delayed)
 	if not stateItem or not stateItem.data:
 		return true
-	var result = effectHandler.tryToTriggerEffect(stateItem, false, context)
+	var result:bool = false
+	if Config.getSetting("versusMode"):
+		result = true
+	else:
+		result = effectHandler.tryToTriggerEffect(stateItem, false, context)
 	if result and FlagManager.isFlagSet("trap_link"):
 		var trapLinkAlias:String = CONSTANTS.TRAP_ALIASES.get(stateItem.data.internalName, "")
 		if trapLinkAlias and Archipelago.conn and not stateItem.usedTrapLink:

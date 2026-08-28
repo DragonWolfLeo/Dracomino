@@ -287,6 +287,8 @@ func _ready():
 	add_child(effectHandler)
 	effectHandler.effect_activated.connect(effect_activated.emit)
 	effectHandler.effect_activated.connect(_on_effected_activated)
+	_on_versusMode_setting_changed()
+	SignalBus.getSignal("setting_changed", "versusMode").connect(_on_versusMode_setting_changed)
 	 # Master coin is just a reference for the rest of the coins and should be hidden 
 	masterCoin.visible = false
 	# Set up input timers
@@ -1097,3 +1099,6 @@ func _on_effect_impatience():
 
 func _on_boardeffect_queued():
 	EffectHandler.tryToTriggerNextBoardEffect(self)
+
+func _on_versusMode_setting_changed():
+	if effectHandler: effectHandler.allowTriggeringEffects = not Config.getSetting("versusMode", false)
