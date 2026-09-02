@@ -21,6 +21,7 @@ script = ExtResource("3_0sai4")
 flag = "effect_space"
 
 [node name="DracominoBoardTop" type="Sprite2D" parent="Background"]
+visible = false
 z_index = -1
 position = Vector2(80, -16)
 texture = ExtResource("13_80s4l")
