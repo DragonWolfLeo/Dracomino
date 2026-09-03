@@ -2,6 +2,11 @@ Version 0.3.3 (irregularboard-alpha)
  - (EXPERIMENTAL) Test irregular board shape. (There's no logic for this and may potentially be unbeatable!)
  - Fix not all blocks being moved down when rows are cleared
 
+Version 0.3.3 (beta2)
+ - Add space-like physics during In Space!
+ - Line numbers are hidden during In Space!
+ - Legendary pieces have low gravity when not affected by antigravity
+
 Version 0.3.3 (beta)
 Versus Mode
  - Add Versus Mode setting
