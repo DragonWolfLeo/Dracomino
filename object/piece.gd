@@ -220,6 +220,8 @@ var HORIZONTAL_REPEAT_WAIT_TIME:float = .075:
 @onready var ROTATE_WAIT_TIME:float = rotateTimer.wait_time
 var USE_ALT_ROTATE:bool = true # TODO: Make an option
 
+var MOMENTUM_GRAVITY_MODIFIER:float = 3 ## Multiplier on gravity when moving using momentum (during space effect)
+
 enum MOVEMENT {
 	NONE = -1,
 	HORIZONTAL,
@@ -284,6 +286,7 @@ var placed:bool = false: ## When this is an entity that is placed on the board
 			ghost.queue_free()
 			ghost = null
 			piece_placed.emit()
+var momentumDirection:Vector2i = Vector2i.ZERO ## When set, keep moving this direction; Controlled by gravity timer
 
 var playHardDropSound:bool = false
 var isFocus:bool: ## Decides whether or not piece listens to inputs
@@ -312,6 +315,7 @@ func _ready() -> void:
 	flagHolder.count("shapes_active", "amount", 1)
 	add_child(flagHolder)
 	SignalBus.getSignal("setting_changed", "gravity").connect(_on_gravity_setting_changed)
+	SignalBus.getSignal("stateflag_cleared", "effect_space").connect(_on_effect_space_stateflag_cleared)
 	_on_gravity_setting_changed()
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -334,16 +338,27 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("moveLeft") and Input.is_action_just_pressed("moveLeft"):
 		horizontalTimer.start(HORIZONTAL_WAIT_TIME)
 		movement_requested.emit(self, Vector2i.LEFT, MOVEMENT.HORIZONTAL)
+		if FlagManager.isFlagSet("effect_space"):
+			# Apply a momentum
+			momentumDirection = Vector2i.LEFT
+			resetGravityTimer()
 		get_viewport().set_input_as_handled()
 		return
 	elif event.is_action_pressed("moveRight") and Input.is_action_just_pressed("moveRight"):
 		horizontalTimer.start(HORIZONTAL_WAIT_TIME)
 		movement_requested.emit(self, Vector2i.RIGHT, MOVEMENT.HORIZONTAL)
+		if FlagManager.isFlagSet("effect_space"):
+			# Apply a momentum
+			momentumDirection = Vector2i.RIGHT
+			resetGravityTimer()
 		get_viewport().set_input_as_handled()
 		return
 	elif event.is_action_pressed("moveDown") and Input.is_action_just_pressed("moveDown") and FlagManager.isFlagSet("soft_drop"):
 		softDropTimer.start(SOFT_DROP_WAIT_TIME)
 		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP_LOCK)
+		if FlagManager.isFlagSet("effect_space"):
+			# Apply a momentum
+			momentumDirection = Vector2i.DOWN
 		# Avoid falling too soon
 		resetGravityTimer()
 		get_viewport().set_input_as_handled()
@@ -355,6 +370,7 @@ func makeActive():
 	set_process_unhandled_input(isFocus)
 	if flagHolder: flagHolder.monitoring = true
 	show()
+	momentumDirection = Vector2i.ZERO
 	# Avoid falling too soon
 	resetGravityTimer()
 	# Wait for pieces to get out of this one
@@ -540,6 +556,10 @@ func setCells(cells:Array[Vector2i]) -> void:
 
 func hardDrop():
 	if not moveLock:
+		# Do gravity drop instead of hard drop in space
+		if FlagManager.isFlagSet("effect_space"):
+			gravityDrop()
+			return
 		moveLock = true
 		canRotate = false
 		gravityTimer.wait_time = HARD_DROP_WAIT_TIME * modifiers.get("movement", 1)
@@ -549,6 +569,8 @@ func gravityDrop():
 	if not moveLock:
 		moveLock = true
 		canRotate = false
+		if FlagManager.isFlagSet("effect_space"):
+			momentumDirection = Vector2i.DOWN
 		if gravityTimer:
 			var gravityDelay = getGravityDelay()
 			gravityTimer.start(min(gravityTimer.time_left, gravityDelay))
@@ -578,7 +600,11 @@ func resetGravityTimer() -> void:
 		gravityTimer.start()
 
 func getGravityDelay() -> float:
-	var gravSpeed = Config.getSetting("gravity", 1.0)* (1.0 if moveLock else modifiers.get("gravity", 1.0))
+	var gravSpeed = (
+		Config.getSetting("gravity", 1.0)
+		* (1.0 if moveLock else modifiers.get("gravity", 1.0))
+		* (MOMENTUM_GRAVITY_MODIFIER if (momentumDirection != Vector2i.ZERO) else 1.0)
+	)
 	return GRAVITY_WAIT_TIME/gravSpeed
 
 func getLandedOnBy(piece:Piece, movementType:int = MOVEMENT.NONE) -> void:
@@ -592,7 +618,7 @@ func markEffectsAsUsed() -> void: ## Prevent repeating trap shapes and enchantme
 		attachedModifier.used = true
 # Events
 func _on_HorizontalTimer_timeout():
-	if not isFocus: return
+	if not isFocus or FlagManager.isFlagSet("effect_space"): return
 	var moved = Vector2i.ZERO
 	if Input.is_action_pressed("moveLeft"):
 		moved = Vector2i.LEFT
@@ -608,6 +634,14 @@ func _on_HorizontalTimer_timeout():
 func _on_SoftDropTimer_timeout():
 	if not isFocus: return
 	if Input.is_action_pressed("moveDown") and FlagManager.isFlagSet("soft_drop"):
+		# Apply a momentum in space; Needs to be done here too in case you're already holding down
+		if FlagManager.isFlagSet("effect_space"):
+			if momentumDirection == Vector2i.ZERO:
+				momentumDirection = Vector2i.DOWN
+				resetGravityTimer()
+			else:
+				# Don't repeat in space
+				return
 		softDropTimer.start(SOFT_DROP_REPEAT_WAIT_TIME)
 		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP_LOCK if lockDelayed else MOVEMENT.SOFT_DROP)
 		# Avoid falling too soon
@@ -617,13 +651,26 @@ func _on_SoftDropTimer_timeout():
 		lockDelayed = false
 
 func _on_GravityTimer_timeout():
-	if moveLock or placed or (
+	if not placed and not moveLock and FlagManager.isFlagSet("effect_space"):
+		# Move with space momentum instead of gravity
+		if momentumDirection != Vector2i.ZERO:
+			movement_requested.emit(
+				self,
+				momentumDirection,
+				(
+					MOVEMENT.GRAVITY_LOCK if gravityLockDelayed or moveLock
+					else MOVEMENT.GRAVITY
+				) if Input.is_action_pressed("moveDown")
+				else MOVEMENT.FALL
+			)
+	elif moveLock or placed or not isFocus or (
 		(FlagManager.isFlagSet("gravity") and not modifiers.get("antigravity")) # Antigravity cancels out gravity
 		or modifiers.get("gravity", 1) > 1 # Otherwise if gravity is set at all, it's enabled whether it's unlocked or not
-	) or not isFocus:
+	):
+		# Move with gravity/hard drop
 		movement_requested.emit(
 			self,
-			Vector2i.DOWN,
+			momentumDirection if momentumDirection != Vector2i.ZERO else Vector2i.DOWN,
 			MOVEMENT.FALL if placed
 			else MOVEMENT.HARD_DROP if playHardDropSound
 			else MOVEMENT.GRAVITY_LOCK if gravityLockDelayed or moveLock
@@ -643,4 +690,9 @@ func _setCurrentPosition(value:Vector2i):
 	updateTiles()
 
 func _on_gravity_setting_changed():
+	resetGravityTimer()
+
+func _on_effect_space_stateflag_cleared():
+	if not moveLock:
+		momentumDirection = Vector2i.ZERO
 	resetGravityTimer()

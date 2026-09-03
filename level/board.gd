@@ -167,10 +167,10 @@ class PieceMovement:
 			var canShove:bool = true
 			match movementType:
 				Piece.MOVEMENT.HORIZONTAL: 
-					if not FlagManager.isFlagSet("horizontal_shove"):
+					if not FlagManager.isFlagSet("horizontal_shove/effect_space"):
 						canShove = false
 				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
-					if not FlagManager.isFlagSet("vertical_shove"):
+					if not FlagManager.isFlagSet("vertical_shove/effect_space"):
 						canShove = false
 			
 			for unclumpedPiece:Piece in unclumpedPieces:
@@ -204,12 +204,14 @@ class PieceMovement:
 			if tryLockPiece(lockedPiece, movementType):
 				hasLockedPiece = true
 		
+		var _effect_space:bool = FlagManager.isFlagSet("effect_space")
 		for clumpedPiece:Piece in clump:
 			if direction == Vector2i.DOWN and piece != clumpedPiece and (hasLockedPiece or not blocked):
 				clumpedPiece.restartGravityTimer()
 			if not blocked:
 				clumpedPiece.collidible = true # Allow collision now that we know it's in a free space
 				clumpedPiece.move(direction)
+				if _effect_space: clumpedPiece.momentumDirection = direction
 				if clumpedPiece == board.getCameraFocus():
 					board.focusCamera.global_position = clumpedPiece.global_position
 		if not blocked:
@@ -220,6 +222,8 @@ class PieceMovement:
 					SoundManager.play("move")
 				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
 					SoundManager.play("move_down")
+		if blocked:
+			piece.momentumDirection = Vector2i.ZERO
 		return blocked
 	
 	func tryLockPiece(piece:Piece, movementType:int) -> bool: ## Return true on locked
@@ -340,7 +344,7 @@ func getFocusPiece() -> Piece:
 
 func getCameraFocus() -> Piece:
 	for piece in activePieces:
-		if piece.isFocus or (piece.moveLock and FlagManager.isFlagSet("hard_drop")):
+		if piece.isFocus or (piece.moveLock and FlagManager.isFlagSet("hard_drop+!effect_space")):
 			return piece
 	return null
 

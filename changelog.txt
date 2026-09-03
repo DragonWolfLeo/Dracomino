@@ -1,4 +1,5 @@
 Version 0.3.3 (beta2)
+ - Add space-like physics during In Space!
  - Line numbers are hidden during In Space!
  - Legendary pieces have low gravity when not affected by antigravity
 
