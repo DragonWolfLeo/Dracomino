@@ -127,7 +127,7 @@ static var MODIFIERS:Dictionary[StringName, Modifier] = {
 	gravity_uncommon = Modifier.new("gravity").setStrength(0.7).addCondition(_canUseGravityEnchantment).setAlwaysActive(),
 	gravity_rare = Modifier.new("gravity").setStrength(0.5).addCondition(_canUseGravityEnchantment).setAlwaysActive(),
 	gravity_epic = Modifier.new("gravity").setStrength(0.25).addCondition(_canUseGravityEnchantment).setAlwaysActive(),
-	gravity_legendary = Modifier.new("antigravity").setStrength(1).addCondition(_canUseGravityEnchantment).setAlwaysActive(),
+	antigravity = Modifier.new("antigravity").setStrength(1).addCondition(_canUseGravityEnchantment).setAlwaysActive(),
 
 	movement_curse = Modifier.new("movement").setStrength(4.0),
 	movement_uncommon = Modifier.new("movement").setStrength(0.8).setAlwaysActive(),
@@ -166,7 +166,8 @@ static var ENCHANTMENTS:Dictionary[StringName, Enchantment] = {
 		MODIFIERS.rotate_epic,
 	]),
 	enchantment_legendary = Enchantment.new("legendary", [
-		MODIFIERS.gravity_legendary,
+		MODIFIERS.antigravity,
+		MODIFIERS.gravity_epic,
 		MODIFIERS.movement_legendary,
 		MODIFIERS.rotate_legendary,
 	]),
