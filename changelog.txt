@@ -1,3 +1,7 @@
+Version 0.3.3 (irregularboard-alpha)
+ - (EXPERIMENTAL) Test irregular board shape. (There's no logic for this and may potentially be unbeatable!)
+ - Fix not all blocks being moved down when rows are cleared
+
 Version 0.3.3 (beta)
 Versus Mode
  - Add Versus Mode setting
