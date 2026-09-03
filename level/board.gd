@@ -320,6 +320,10 @@ func _ready():
 		scn.position = map_to_local(Vector2i(BOUNDS.position.x, BOUNDS.end.y-i ))
 		$LineNumberBar.add_child(scn)
 
+	# Make line number bar invisable during space trap
+	SignalBus.getSignal("stateflag_set", "effect_space").connect($LineNumberBar.hide)
+	SignalBus.getSignal("stateflag_cleared", "effect_space").connect($LineNumberBar.show)
+
 
 #===== Functions ======
 func resetFlagHolder():

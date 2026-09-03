@@ -1,3 +1,6 @@
+Version 0.3.3 (beta2)
+ - Line numbers are hidden during In Space!
+
 Version 0.3.3 (beta)
 Versus Mode
  - Add Versus Mode setting
