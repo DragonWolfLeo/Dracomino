@@ -853,7 +853,11 @@ func isInDanger() -> bool:
 func pushDownRows(clearedChunk:ClearingChunk) -> void:
 	# Move tiles down
 	for y in range(clearedChunk.row, BOUNDS.position.y -1, -1):
-		for x in range(rowOffsets.get(y, BOUNDS.position.x), rowEnds.get(y, BOUNDS.end.x)):
+		for x in range(
+			# Move the entire width of both affected rows combined
+			min(rowOffsets.get(y, BOUNDS.position.x), rowOffsets.get(y - 1, BOUNDS.position.x)),
+			max(rowEnds.get(y, BOUNDS.end.x), rowEnds.get(y - 1, BOUNDS.end.x))
+		):
 			set_cell(Vector2i(x,y), 0, get_cell_atlas_coords(Vector2i(x, y - 1)))
 		# Move entities down
 		for ent:Piece in entities:
