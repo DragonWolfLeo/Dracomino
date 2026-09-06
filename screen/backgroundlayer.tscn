@@ -1,9 +1,14 @@
-[gd_scene load_steps=6 format=3 uid="uid://c81i6wg82i8yk"]
+[gd_scene load_steps=9 format=3 uid="uid://c81i6wg82i8yk"]
 
 [ext_resource type="Script" uid="uid://sfgrdlrv7j48" path="res://module/show_on_flag_set.gd" id="1_087iq"]
 [ext_resource type="Texture2D" uid="uid://bnka6vb3oux8o" path="res://assets/art/background/starlayer1.png" id="2_c1cma"]
 [ext_resource type="Texture2D" uid="uid://rfcuwom8mrf7" path="res://assets/art/background/starlayer2.png" id="3_10feu"]
 [ext_resource type="Script" uid="uid://3hyxsaj4myy1" path="res://module/play_sound_on_visible.gd" id="4_c1cma"]
+[ext_resource type="Texture2D" uid="uid://ctgjmlu45cnia" path="res://assets/art/background/riptidelayer1.png" id="5_p2fre"]
+[ext_resource type="Texture2D" uid="uid://dulep48pi673e" path="res://assets/art/background/riptidelayer2.png" id="6_kdex0"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_c1cma"]
+blend_mode = 1
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_087iq"]
 blend_mode = 1
@@ -11,7 +16,9 @@ blend_mode = 1
 [node name="BackgroundLayer" type="CanvasLayer"]
 layer = -100
 
-[node name="TextureRect" type="ColorRect" parent="."]
+[node name="SpaceBackground" type="ColorRect" parent="."]
+visible = false
+material = SubResource("CanvasItemMaterial_c1cma")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -22,26 +29,62 @@ color = Color(0, 0, 0, 1)
 script = ExtResource("1_087iq")
 flag = "effect_space"
 
-[node name="StarLayer" type="Parallax2D" parent="TextureRect"]
+[node name="StarLayer" type="Parallax2D" parent="SpaceBackground"]
 repeat_size = Vector2(512, 512)
 autoscroll = Vector2(0, 40)
 repeat_times = 6
 
-[node name="Sprite2D" type="Sprite2D" parent="TextureRect/StarLayer"]
+[node name="Sprite2D" type="Sprite2D" parent="SpaceBackground/StarLayer"]
 material = SubResource("CanvasItemMaterial_087iq")
 texture = ExtResource("2_c1cma")
 centered = false
 
-[node name="StarLayer2" type="Parallax2D" parent="TextureRect"]
+[node name="StarLayer2" type="Parallax2D" parent="SpaceBackground"]
 repeat_size = Vector2(512, 512)
 autoscroll = Vector2(0, 120)
 repeat_times = 6
 
-[node name="Sprite2D" type="Sprite2D" parent="TextureRect/StarLayer2"]
+[node name="Sprite2D" type="Sprite2D" parent="SpaceBackground/StarLayer2"]
 material = SubResource("CanvasItemMaterial_087iq")
 texture = ExtResource("3_10feu")
 centered = false
 
-[node name="PlaySoundOnVisible" type="Node2D" parent="TextureRect"]
+[node name="PlaySoundOnVisible" type="Node2D" parent="SpaceBackground"]
+script = ExtResource("4_c1cma")
+soundName = "trap"
+
+[node name="RiptideBackground" type="ColorRect" parent="."]
+material = SubResource("CanvasItemMaterial_c1cma")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0.333333, 1)
+script = ExtResource("1_087iq")
+flag = "effect_riptide"
+
+[node name="RiptideLayer" type="Parallax2D" parent="RiptideBackground"]
+repeat_size = Vector2(512, 512)
+autoscroll = Vector2(-80, 0)
+repeat_times = 6
+
+[node name="Sprite2D" type="Sprite2D" parent="RiptideBackground/RiptideLayer"]
+material = SubResource("CanvasItemMaterial_087iq")
+texture = ExtResource("5_p2fre")
+centered = false
+
+[node name="RiptideLayer2" type="Parallax2D" parent="RiptideBackground"]
+repeat_size = Vector2(512, 512)
+autoscroll = Vector2(-960, 0)
+repeat_times = 6
+
+[node name="Sprite2D" type="Sprite2D" parent="RiptideBackground/RiptideLayer2"]
+material = SubResource("CanvasItemMaterial_087iq")
+texture = ExtResource("6_kdex0")
+centered = false
+
+[node name="PlaySoundOnVisible" type="Node2D" parent="RiptideBackground"]
 script = ExtResource("4_c1cma")
 soundName = "trap"

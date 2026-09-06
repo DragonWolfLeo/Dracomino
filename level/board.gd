@@ -165,13 +165,16 @@ class PieceMovement:
 				if not clump.has(activePiece) and activePiece.collidible:
 					unclumpedPieces.append(activePiece)
 			var canShove:bool = true
-			match movementType:
-				Piece.MOVEMENT.HORIZONTAL: 
-					if not FlagManager.isFlagSet("horizontal_shove"):
-						canShove = false
-				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
-					if not FlagManager.isFlagSet("vertical_shove"):
-						canShove = false
+			if piece.moveLock or movementType == Piece.MOVEMENT.FORCED_SHOVE:
+				canShove = true
+			else:
+				match movementType:
+					Piece.MOVEMENT.HORIZONTAL: 
+						if not FlagManager.isFlagSet("horizontal_shove"):
+							canShove = false
+					Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
+						if not FlagManager.isFlagSet("vertical_shove"):
+							canShove = false
 			
 			for unclumpedPiece:Piece in unclumpedPieces:
 				if not clump.has(unclumpedPiece): # Be absolutely certain this hasn't been clumped already (needed?)
@@ -179,6 +182,8 @@ class PieceMovement:
 						if unclumpedPiece.globalCells.has(cell):
 							if canShove or unclumpedPiece.momentumPhysics:
 								addPieceToClump(unclumpedPiece, Piece.MOVEMENT.FORCED_SHOVE)
+								if piece.moveLock:
+									unclumpedPiece.fallDirection = piece.fallDirection
 							else:
 								blocked = true
 							break
@@ -226,6 +231,12 @@ class PieceMovement:
 		return blocked
 	
 	func tryLockPiece(piece:Piece, movementType:int) -> bool: ## Return true on locked
+		# Make pieces change direction during a riptide
+		if direction == Vector2i.DOWN and FlagManager.isFlagSet("effect_riptide"):
+			piece.fallDirection = Vector2i.LEFT
+			piece.hardDrop()
+			return false
+		# Lock if not changing direction
 		if direction == piece.fallDirection:
 			# Lock piece
 			match movementType:
@@ -898,20 +909,23 @@ func setAnimBasedOnMasterCoinAndLine(node:Node2D, line:int = 0) -> void:
 func updateAllGhosts():
 	var floatingPieces:Array[Piece] = []
 	var invalidCells:Array[Vector2i] = []
-	var relativePosition:Vector2i = Vector2i.ZERO
+	var relativePositions:Dictionary[Piece, Vector2i]
 	for piece in activePieces:
 		if piece.ghost:
 			floatingPieces.append(piece)
+			relativePositions[piece] = Vector2i.ZERO
+
 	while floatingPieces.size():
 		var somethingLanded:bool = false
 		for piece:Piece in floatingPieces.duplicate():
-			if not areCellsOpen(getTranslatedCells(piece.globalCells, relativePosition + Vector2i.DOWN), invalidCells, false):
-				piece.ghost.relativePosition = relativePosition
+			if not areCellsOpen(getTranslatedCells(piece.globalCells, relativePositions[piece] + piece.fallDirection), invalidCells, false):
+				piece.ghost.relativePosition = relativePositions[piece]
 				floatingPieces.erase(piece)
 				mergeCells(invalidCells, getTranslatedCells(piece.globalCells, piece.ghost.relativePosition))
 				somethingLanded = true
 		if not somethingLanded:
-			relativePosition += Vector2i.DOWN
+			for piece:Piece in floatingPieces:
+				relativePositions[piece] += piece.fallDirection
 
 #==== Events =====
 func _input(event: InputEvent) -> void:

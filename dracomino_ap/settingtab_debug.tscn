@@ -97,3 +97,11 @@ script = ExtResource("2_5smlf")
 flag = "effect_space"
 ignoreExternalSignals = true
 debugOnly = true
+
+[node name="Btn_SpaceEffect2" type="CheckButton" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Riptide Effect"
+script = ExtResource("2_5smlf")
+flag = "effect_riptide"
+ignoreExternalSignals = true
+debugOnly = true

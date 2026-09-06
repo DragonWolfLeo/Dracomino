@@ -188,6 +188,7 @@ var TRAP_ALIASES:Dictionary[StringName, String] = {
 	fracture_trap           = "Fracture Trap",
 	impatience_trap         = "Impatience Trap",
 	# premium_trap           = "Premium Trap", # Might scrap
+	riptide_trap            = "Riptide Trap",
 	space_trap              = "Space Trap",
 	# unrandomization_trap    = "Unrandomization Trap",
 	welldone                = "Well Done Trap",
@@ -221,6 +222,7 @@ var RANDOM_TRAP_CHOICES:Array[StringName] = [
 	"water_trap",
 	"pixellation_trap",
 	"space_trap",
+	"riptide_trap",
 ]
 var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	# DRACOMINO TRAPS
@@ -231,6 +233,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"Fracture Trap"           : "fracture_trap",
 	"Impatience Trap"         : "impatience_trap",
 	# "Premium Trap"            : "premium_trap",
+	"Riptide Trap"            : "riptide_trap",
 	"Space Trap"              : "space_trap",
 	# "Unrandomization Trap"    : "unrandomization_trap",
 	"Well Done Trap"          : "welldone",
@@ -265,7 +268,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	# "Confuse Trap"            : "Reverse Controls Trap",
 	# "Confusion Trap"          : "Reverse Controls Trap",
 	"Control Ball Trap"       : "zoom_trap",
-	# "Controller Drift Trap"   : "Latency Trap",
+	"Controller Drift Trap"   : "space_trap",
 	"Cursed Ball Trap"        : "enchantment_curse",
 	"Cutscene Trap"           : "tutorial_logic", # "Random Cutscene",
 	# "Damage Trap"             : "shatter_trap",
@@ -372,7 +375,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"PowerPoint Trap"         : "enchantment_curse_movement",
 	"Push Trap"               : "impatience_trap",
 	# "Radiation Trap"          : "fire_trap",
-	# "Rail Trap"               : "momemtum_trap",
+	"Rail Trap"               : "space_trap",
 	"Ranch Trap"              : "tutorial",
 	"Random Status Trap"      : "enchantment_random",
 	"Resistance Trap"         : "enchantment_curse",
@@ -419,7 +422,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	# "Undo Trap"               : "Dummy Trap",
 	"UNO Challenge"           : "fishing",
 	# "W I D E Trap"            : "I Trap",
-	"Whirlpool Trap"          : "enchantment_legendary_spin",
+	"Whirlpool Trap"          : "riptide_trap",
 	"Whoops! Trap"            : "impatience_trap",
 	"Zoom In Trap"            : "zoom_trap",
 	"Zoom Out Trap"           : "zoom_trap",
