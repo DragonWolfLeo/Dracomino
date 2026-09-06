@@ -167,17 +167,17 @@ class PieceMovement:
 			var canShove:bool = true
 			match movementType:
 				Piece.MOVEMENT.HORIZONTAL: 
-					if not FlagManager.isFlagSet("horizontal_shove/effect_space"):
+					if not FlagManager.isFlagSet("horizontal_shove"):
 						canShove = false
 				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
-					if not FlagManager.isFlagSet("vertical_shove/effect_space"):
+					if not FlagManager.isFlagSet("vertical_shove"):
 						canShove = false
 			
 			for unclumpedPiece:Piece in unclumpedPieces:
 				if not clump.has(unclumpedPiece): # Be absolutely certain this hasn't been clumped already (needed?)
 					for cell:Vector2i in translatedCells:
 						if unclumpedPiece.globalCells.has(cell):
-							if canShove:
+							if canShove or unclumpedPiece.momentumPhysics:
 								addPieceToClump(unclumpedPiece, Piece.MOVEMENT.FORCED_SHOVE)
 							else:
 								blocked = true
@@ -204,14 +204,13 @@ class PieceMovement:
 			if tryLockPiece(lockedPiece, movementType):
 				hasLockedPiece = true
 		
-		var _effect_space:bool = FlagManager.isFlagSet("effect_space")
 		for clumpedPiece:Piece in clump:
-			if direction == Vector2i.DOWN and piece != clumpedPiece and (hasLockedPiece or not blocked):
+			if direction == piece.fallDirection and piece != clumpedPiece and (hasLockedPiece or not blocked):
 				clumpedPiece.restartGravityTimer()
 			if not blocked:
 				clumpedPiece.collidible = true # Allow collision now that we know it's in a free space
 				clumpedPiece.move(direction)
-				if _effect_space: clumpedPiece.momentumDirection = direction
+				if clumpedPiece.momentumPhysics: clumpedPiece.momentumDirection = direction
 				if clumpedPiece == board.getCameraFocus():
 					board.focusCamera.global_position = clumpedPiece.global_position
 		if not blocked:
@@ -227,7 +226,7 @@ class PieceMovement:
 		return blocked
 	
 	func tryLockPiece(piece:Piece, movementType:int) -> bool: ## Return true on locked
-		if direction == Vector2i.DOWN:
+		if direction == piece.fallDirection:
 			# Lock piece
 			match movementType:
 				Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE:
@@ -344,7 +343,7 @@ func getFocusPiece() -> Piece:
 
 func getCameraFocus() -> Piece:
 	for piece in activePieces:
-		if piece.isFocus or (piece.moveLock and FlagManager.isFlagSet("hard_drop+!effect_space")):
+		if piece.isFocus or (piece.moveLock and not piece.momentumPhysics and FlagManager.isFlagSet("hard_drop")):
 			return piece
 	return null
 
@@ -598,7 +597,7 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 	return pm.tryMovePiece(piece, movementType)
 
 func checkIfLandedOnEntity(piece:Piece, movement:int) -> void: ## Send signals to pieces landed on
-	var belowCells:Array[Vector2i] = getCellsDifference(getTranslatedCells(piece.globalCells, Vector2i.DOWN), piece.globalCells)
+	var belowCells:Array[Vector2i] = getCellsDifference(getTranslatedCells(piece.globalCells, piece.fallDirection), piece.globalCells)
 	for ent:Piece in entities:
 		for cell in belowCells:
 			if ent.globalCells.has(cell):
@@ -957,16 +956,19 @@ func _unhandled_input(event: InputEvent) -> void:
 	
 	# Stuff that requires an active piece
 	if event.is_action_pressed("hardDrop") and Input.is_action_just_pressed("hardDrop"): # Double check to ignore events from slight axis movement
-		if FlagManager.isFlagSet("hard_drop"):
-			focusPiece.hardDrop()
-		elif (
-			ALLOW_GRAVITY_DROP 
-			and FlagManager.isFlagSet("gravity")
-			and activePieces.size() < MAX_PIECES
-			and (countNonlockedPieces() > 1 or (previewStorage and previewStorage.getNumStored()))
-		):
-			# Only gravity drop if it's not your last piece
+		if focusPiece.momentumPhysics:
 			focusPiece.gravityDrop()
+		else:
+			if FlagManager.isFlagSet("hard_drop"):
+				focusPiece.hardDrop()
+			elif (
+				ALLOW_GRAVITY_DROP
+				and FlagManager.isFlagSet("gravity")
+				and activePieces.size() < MAX_PIECES
+				# Only gravity drop if it's not your last piece
+				and (countNonlockedPieces() > 1 or (previewStorage and previewStorage.getNumStored()))
+			):
+				focusPiece.gravityDrop()
 	else:
 		return
 	
@@ -1010,10 +1012,10 @@ func _on_Piece_ghost_cells_requested(_piece:Piece, _ghost:GhostPiece):
 	updateAllGhosts()			
 
 func _on_Piece_focus_lost(piece:Piece):
-	if FlagManager.isFlagSet("hard_drop") and is_instance_valid(piece) and isPieceOnTopRow(piece):
+	if not piece.momentumPhysics and FlagManager.isFlagSet("hard_drop") and is_instance_valid(piece) and isPieceOnTopRow(piece):
 		_waitingForPieceToGetOutOfTopRow = piece
 	else:
-		chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(piece.attachedEffects.get("on_lock")))
+		chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(null if not is_instance_valid(piece) else piece.attachedEffects.get("on_lock")))
 
 func _on_Piece_tree_exiting(piece:Piece): # Fallback if piece didn't delete properly
 	activePieces.erase(piece)
