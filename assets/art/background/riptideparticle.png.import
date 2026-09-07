@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ctgjmlu45cnia"
-path="res://.godot/imported/riptidelayer1.png-2cfb612800677c3ad26d58ecdf89af83.ctex"
+uid="uid://dulep48pi673e"
+path="res://.godot/imported/riptideparticle.png-bc7e657ed9e3a9911bed71b6f3ec64b7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/background/riptidelayer1.png"
-dest_files=["res://.godot/imported/riptidelayer1.png-2cfb612800677c3ad26d58ecdf89af83.ctex"]
+source_file="res://assets/art/background/riptideparticle.png"
+dest_files=["res://.godot/imported/riptideparticle.png-bc7e657ed9e3a9911bed71b6f3ec64b7.ctex"]
 
 [params]
 
