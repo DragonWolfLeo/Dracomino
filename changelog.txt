@@ -15,28 +15,28 @@ Changes
 Fixes
  - Fix next piece spawning when fishing for a piece after it
 
-Version 0.3.2
+Version 0.3.2 (2026 May 18)
  - Add new dialogue sounds
  - Tutorials are available immediately as long as it's received
  - Fix movement of interlocked pieces
  - Shoved pieces reset gravity timer
  - Add option to show irrelevant item-sends
 
-Version 0.3.1
+Version 0.3.1 (2026 April 27)
  - Eggs no longer requires pieces in your queue to spawn
  - Coins now grant 20 mana / 20MJ energy each (divided by 2 with Energy Link enabled)
  - Retrofitted Kick and Lock Delay icons show up
  - Fix setting hint priority
 
-Version 0.3.0.2
+Version 0.3.0.2 (2026 April 20)
  - Add icons for Kick and Lock Delay
  - Fix piece count not resetting after reconnecting
  - Fix bug where fish pieces may not instantiate their collision
 
-Version 0.3.0.1
+Version 0.3.0.1 (2026 April 17)
  - Remove Invert Colors Trap
 
-Version 0.3.0
+Version 0.3.0 (2026 April 16)
 New Items
  - Add Tutorial and Logic Tutorial
  - Add Time for Fishing!
@@ -91,42 +91,42 @@ Fixes
  - Fix visual pixel bug that can happen when resizing the window
  - Prevent topping out when top line is filled
 
-Version 0.2.3.7
+Version 0.2.3.7 (2026 March 17)
  - Add option for Death Link Group
 
-Version 0.2.3.6
+Version 0.2.3.6 (2026 February 26)
  - Fix issue with handling of cached datapackages
 
-Version 0.2.3.5
+Version 0.2.3.5 (2026 February 25)
  - Fix crash when game with invalid filename is in the multiworld
  - Add Allow Unfocused Inputs option (default false)
 
-Version 0.2.3.4
+Version 0.2.3.4 (2026 February 9)
  - Fix desync issue with coins
 
-Version 0.2.3.3
+Version 0.2.3.3 (2026 February 6)
  - Adjust notification color for Progression+Useful and Useful+Trap items
  - Pieces now always spawn on highest row
  - Gravity timer resets after soft dropping
 
-Version 0.2.3.2
+Version 0.2.3.2 (2026 January 30)
  - Prevent hard drop from activating multiple times due to slight joystick movement
 
-Version 0.2.3.1
+Version 0.2.3.1 (2026 January 29)
  - Remove unused file that caused game to not load on Chrome
 
-Version 0.2.3
+Version 0.2.3 (2026 January 25)
  - Add new animated coin graphics
  - Add sound effects
  - Reset gravity timer when respawning a held piece
 
-Version 0.2.2.1
+Version 0.2.2.1 (2026 January 9)
  - Set controller inputs to detect "all devices"
  - Re-adjust Gravity Speed option scaling so 1.0 is the default
  - Adjust default screen split position
  - Disable Quit button on web build
  
-Version 0.2.2
+Version 0.2.2 (2026 January 8)
 Changes
  - Add Gravity Speed option
  - Make default gravity faster
@@ -139,10 +139,10 @@ Fixes
  - Piece movement uses physics tick
  - Fix screen split resizing itself
 
-Version 0.2.1
+Version 0.2.1 (2026 January 5)
  - Update GodotAP to v0.4.1
    - Fix death links not being received after sending once
    - Fix lag when lot of text is printed in the console
 
-Version 0.2.0
+Version 0.2.0 (2026 January 2)
  - Initial release
