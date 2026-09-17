@@ -9,8 +9,10 @@ func _ready() -> void:
 	var changelogLabel:RichTextLabel = find_child("ChangeLog")
 	if changelogLabel is RichTextLabel:
 		scrollbar = changelogLabel.get_v_scroll_bar()
+		var changelogRes:Resource = load("res://changelog.txt")
+		if changelogRes is PlainTextResource:
+			changelogLabel.text = (changelogRes as PlainTextResource).text.replace("\r","")
 	close_requested.connect(queue_free)
-	loadChangelog()
 	
 func _process(_delta):
 	if scrollbar:
@@ -24,10 +26,6 @@ func _input(event: InputEvent) -> void:
 	
 	if event.is_action("ui_down") or event.is_action("ui_up"):
 		scrollStrength = Input.get_action_strength("ui_down") - Input.get_action_strength("ui_up")
-
-func loadChangelog():
-	var changelog:String = load("res://changelog.txt").text.replace("\r","")
-	find_child("ChangeLog").text = changelog
 
 func _on_focus_exited() -> void:
 	queue_free()
