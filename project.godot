@@ -15,7 +15,12 @@ run/main_scene="uid://c7xt6kfyk661l"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="dracomino"
 config/features=PackedStringArray("4.4")
+boot_splash/bg_color=Color(0, 0, 0, 1)
+boot_splash/fullsize=false
+boot_splash/use_filter=false
+boot_splash/image="uid://btj80lfrbqsxk"
 config/icon="uid://c8ic52s26ywh2"
+boot_splash/minimum_display_time=4000
 
 [audio]
 
