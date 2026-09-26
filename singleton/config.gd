@@ -99,10 +99,13 @@ func getSetting(key:StringName, fallback:Variant = null) -> Variant:
 func getDefaultSetting(key:StringName, fallback:Variant = null) -> Variant:
 	return DEFAULT_SETTINGS.get(key, fallback)
 
-func getVersionNum():
+func getVersionNum(getFullVersionInfo:bool = false) -> String: ## Get version number string from the top of the changelog
 	var changelog:String = load("res://changelog.txt").text
-	var regex := RegEx.create_from_string("\\S(\\.\\S)+") # Should get the version number
-	var rm := regex.search(changelog) 
-	var version = ""
-	if rm and rm.strings.size(): version = rm.strings[0]
-	return version
+	var regex := RegEx.create_from_string(
+		"(\\S| )+" if getFullVersionInfo # Get version number and date/patch
+		else "\\S(\\.\\S)+" # Get just the version number
+	)
+	var rm:RegExMatch = regex.search(changelog) 
+	if rm and rm.strings.size():
+		return rm.strings[0]
+	return ""
