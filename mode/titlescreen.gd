@@ -50,11 +50,8 @@ func showSubmenu(menu:Control = null) -> void:
 	grab_focus()
 	
 # === Events ===
-func _on_ButtonNew_pressed():
-	if UserData.doesSaveFileExist():
-		pass # TODO
-	else:
-		Game.newGame()
+func _on_ButtonPlay_pressed() -> void:
+	Game.newGame()
 
 func _on_ButtonExit_pressed():
 	get_tree().quit()
