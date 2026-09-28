@@ -302,7 +302,7 @@ func _ready():
 	effectHandler.effect_activated.connect(effect_activated.emit)
 	effectHandler.effect_activated.connect(_on_effected_activated)
 	_on_versusMode_setting_changed()
-	SignalBus.getSignal("setting_changed", "versusMode").connect(_on_versusMode_setting_changed)
+	SignalBus.getSignal("stateflag_changed", "versus_mode").connect(_on_versusMode_setting_changed)
 	 # Master coin is just a reference for the rest of the coins and should be hidden 
 	masterCoin.visible = false
 	# Set up input timers
@@ -1037,7 +1037,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		sendDeathLink(DracominoUtil.DeathContext.new("OFFLINE"))
 
 func _on_deathlink(_source, _cause, _json):
-	if not Config.getSetting("versusMode"):
+	if not FlagManager.isFlagSet("versus_mode"):
 		gameOver()
 
 func _on_newPieceObtained():
@@ -1121,4 +1121,4 @@ func _on_boardeffect_queued():
 	EffectHandler.tryToTriggerNextBoardEffect(self)
 
 func _on_versusMode_setting_changed():
-	if effectHandler: effectHandler.allowTriggeringEffects = not Config.getSetting("versusMode", false)
+	if effectHandler: effectHandler.allowTriggeringEffects = not FlagManager.isFlagSet("versus_mode")

@@ -2,6 +2,11 @@ Version 0.3.3 (beta2)
  - Add space-like physics during In Space!
  - Line numbers are hidden during In Space!
  - Legendary pieces have low gravity when not affected by antigravity
+ - Add Riptide Trap. Not available in the APWorld yet, but can trigger through Random Trap or Trap Link.
+ - Add support for new Trap Link names
+ - Add new animated hatchling sprites
+ - Versus Mode has been moved to the debug menu, and no longer persists between sessions
+ - Add new splash screen image
 
 Version 0.3.3 (beta)
 Versus Mode
