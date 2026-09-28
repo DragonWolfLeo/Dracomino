@@ -7,6 +7,7 @@ extends Control
 }
 
 var CHANGELOG_WINDOW_SCENE:PackedScene = load("res://ui/changelog_window.tscn")
+var LICENSES_WINDOW_SCENE:PackedScene = load("res://ui/licenses_window.tscn")
 
 # === Virtuals ===
 func _ready():
@@ -59,8 +60,12 @@ func _on_ButtonExit_pressed():
 	get_tree().quit()
 
 func _on_ButtonChangeLog_pressed():
-	var _changelogWindow:Window = CHANGELOG_WINDOW_SCENE.instantiate() as Window
-	_changelogWindow.popup_exclusive_centered(self)
+	var _window:Window = CHANGELOG_WINDOW_SCENE.instantiate() as Window
+	_window.popup_exclusive_centered(self)
+
+func _on_ButtonLicenses_pressed():
+	var _window:Window = LICENSES_WINDOW_SCENE.instantiate() as Window
+	_window.popup_exclusive_centered(self)
 
 func _on_ButtonContinue_pressed():
 	if not FileAccess.file_exists(Config.SAVEFILEPATH):

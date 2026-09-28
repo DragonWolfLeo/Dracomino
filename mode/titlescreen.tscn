@@ -195,18 +195,27 @@ grow_vertical = 0
 text = "{versionNum} {patchInfo}"
 label_settings = SubResource("LabelSettings_ywq08")
 
-[node name="Button_ChangeLog" type="Button" parent="TitleScreen/MainScreen/VersionLabel"]
+[node name="HBoxContainer" type="HBoxContainer" parent="TitleScreen/MainScreen/VersionLabel"]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_top = -63.0
-offset_right = 101.0
+offset_right = 168.0
 offset_bottom = -32.0
 grow_vertical = 0
+mouse_filter = 2
+
+[node name="Button_ChangeLog" type="Button" parent="TitleScreen/MainScreen/VersionLabel/HBoxContainer"]
+layout_mode = 2
 text = "Changelog"
+
+[node name="Button_Licenses" type="Button" parent="TitleScreen/MainScreen/VersionLabel/HBoxContainer"]
+layout_mode = 2
+text = "Licenses"
 
 [connection signal="pressed" from="TitleScreen/MainScreen/VBoxContainer/Button_Continue" to="TitleScreen" method="_on_ButtonContinue_pressed"]
 [connection signal="pressed" from="TitleScreen/MainScreen/VBoxContainer/Button_New" to="TitleScreen" method="_on_ButtonNew_pressed"]
 [connection signal="pressed" from="TitleScreen/MainScreen/VBoxContainer/Button_Exit" to="TitleScreen" method="_on_ButtonExit_pressed"]
-[connection signal="pressed" from="TitleScreen/MainScreen/VersionLabel/Button_ChangeLog" to="TitleScreen" method="_on_ButtonChangeLog_pressed"]
+[connection signal="pressed" from="TitleScreen/MainScreen/VersionLabel/HBoxContainer/Button_ChangeLog" to="TitleScreen" method="_on_ButtonChangeLog_pressed"]
+[connection signal="pressed" from="TitleScreen/MainScreen/VersionLabel/HBoxContainer/Button_Licenses" to="TitleScreen" method="_on_ButtonLicenses_pressed"]
