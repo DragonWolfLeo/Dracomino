@@ -51,6 +51,7 @@ func showSubmenu(menu:Control = null) -> void:
 	
 # === Events ===
 func _on_ButtonPlay_pressed() -> void:
+	SoundManager.play("confirm")
 	Game.newGame()
 
 func _on_ButtonExit_pressed():
@@ -65,6 +66,7 @@ func _on_ButtonLicenses_pressed():
 	_window.popup_exclusive_centered(self)
 
 func _on_ButtonContinue_pressed():
+	SoundManager.play("confirm")
 	if not FileAccess.file_exists(Config.SAVEFILEPATH):
 		print("There's no file to load!!!")
 		return # Error! We don't have a save to load.	
@@ -74,3 +76,6 @@ func _on_ButtonContinue_pressed():
 	# TODO: Check if version compatible
 	
 	Game.loadGameData(data)
+
+func _on_button_focus_entered() -> void:
+	SoundManager.play("select")

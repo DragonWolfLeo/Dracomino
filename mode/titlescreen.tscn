@@ -213,8 +213,11 @@ text = "Changelog"
 layout_mode = 2
 text = "Licenses"
 
+[connection signal="focus_entered" from="TitleScreen/MainScreen/VBoxContainer/Button_Continue" to="TitleScreen" method="_on_button_focus_entered"]
 [connection signal="pressed" from="TitleScreen/MainScreen/VBoxContainer/Button_Continue" to="TitleScreen" method="_on_ButtonContinue_pressed"]
+[connection signal="focus_entered" from="TitleScreen/MainScreen/VBoxContainer/Button_Play" to="TitleScreen" method="_on_button_focus_entered"]
 [connection signal="pressed" from="TitleScreen/MainScreen/VBoxContainer/Button_Play" to="TitleScreen" method="_on_ButtonPlay_pressed"]
+[connection signal="focus_entered" from="TitleScreen/MainScreen/VBoxContainer/Button_Exit" to="TitleScreen" method="_on_button_focus_entered"]
 [connection signal="pressed" from="TitleScreen/MainScreen/VBoxContainer/Button_Exit" to="TitleScreen" method="_on_ButtonExit_pressed"]
 [connection signal="pressed" from="TitleScreen/MainScreen/VersionLabel/HBoxContainer/Button_ChangeLog" to="TitleScreen" method="_on_ButtonChangeLog_pressed"]
 [connection signal="pressed" from="TitleScreen/MainScreen/VersionLabel/HBoxContainer/Button_Licenses" to="TitleScreen" method="_on_ButtonLicenses_pressed"]
