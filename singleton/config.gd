@@ -29,6 +29,7 @@ const DEFAULT_SETTINGS:Dictionary[StringName, Variant] = {
 	horizontal_speed = 1.0,
 	softDrop_repeatDelay = 1.0,
 	horizontal_repeatDelay = 1.0,
+	fishResisting = true,
 	allowUnfocusedInputs = false,
 }
 var settings:Dictionary[StringName, Variant] = DEFAULT_SETTINGS.duplicate()

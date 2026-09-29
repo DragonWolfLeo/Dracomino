@@ -118,6 +118,13 @@ text = "Energy Link
 script = ExtResource("1_08t7n")
 flag = "energy_link"
 
+[node name="Btn_FishResisting" type="CheckButton" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "Fish resist being reeled during fishing"
+text = "Fish Resisting"
+script = ExtResource("3_fprr2")
+optionKey = "fishResisting"
+
 [node name="Btn_AllowUnfocusedInputs" type="CheckButton" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 tooltip_text = "Allow controller inputs to be accepted if game window is not focused"
