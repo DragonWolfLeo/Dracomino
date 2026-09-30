@@ -1,4 +1,4 @@
-Version 0.3.3 (2026 September 29)
+Version 0.3.3 (2026 September 30)
 Changes
  - Add title screen (work in progress!)
  - Add licenses window
