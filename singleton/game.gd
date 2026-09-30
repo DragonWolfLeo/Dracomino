@@ -22,7 +22,7 @@ func _ready():
 
 func loadMainScene():
 	get_tree().change_scene_to_file("res://singleton/main.tscn") # Overwrite the previous version's scene
-	changeMode(load("res://mode/gamesplit.tscn"))
+	changeMode(load("res://mode/titlescreen.tscn"))
 
 func reset():
 	pass
@@ -48,7 +48,7 @@ func loadGameData(data:Dictionary):
 	
 	
 func newGame():
-	var packedScene = load("res://mode/main.tscn")
+	var packedScene = load("res://mode/gamesplit.tscn")
 	if packedScene == null: return
 	reset()
 	changeMode(packedScene)

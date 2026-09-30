@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://ckv6tnuoxlxgw"]
+[gd_scene load_steps=13 format=3 uid="uid://ckv6tnuoxlxgw"]
 
 [ext_resource type="Shader" uid="uid://bqohxdob6tubs" path="res://resource/shader/crystal.gdshader" id="1_qjtf7"]
 [ext_resource type="Script" uid="uid://dvj4uugycseke" path="res://module/overlayfilter.gd" id="2_5coou"]
@@ -6,6 +6,7 @@
 [ext_resource type="Shader" uid="uid://38rkwlxs4jwj" path="res://resource/shader/fracture.gdshader" id="4_5uhy6"]
 [ext_resource type="Shader" uid="uid://dobuvt43qhvwi" path="res://resource/shader/waterwave.gdshader" id="5_ogaaw"]
 [ext_resource type="PackedScene" uid="uid://dhqni4ryrpliy" path="res://screen/welldone_filter.tscn" id="7_74bbe"]
+[ext_resource type="PackedScene" uid="uid://bk4uliv6j16ps" path="res://screen/riptide_foreground.tscn" id="8_5uhy6"]
 [ext_resource type="Script" uid="uid://3hyxsaj4myy1" path="res://module/play_sound_on_visible.gd" id="9_ogaaw"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_m1ejn"]
@@ -123,3 +124,9 @@ soundName = "trap"
 copy_mode = 2
 
 [node name="WellDoneFilter" parent="." instance=ExtResource("7_74bbe")]
+
+[node name="RiptideForeground" parent="." instance=ExtResource("8_5uhy6")]
+
+[node name="PlaySoundOnVisible" type="Node2D" parent="RiptideForeground"]
+script = ExtResource("9_ogaaw")
+soundName = "trap"

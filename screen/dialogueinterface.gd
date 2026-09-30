@@ -44,6 +44,12 @@ var speakerAlignment:Dictionary[StringName, int] = {} ## To be modified using AL
 
 var _was_focused:bool = false
 
+static func _preprocessDialogueText(text:String = "") -> String:
+	# Enforce default params for shake so it's visible with the snapped 2d tranforms
+	text = text.replace("[shake]", "[shake rate=20 level=7 connected=0]")
+	text = text.replace("[wave]", "[wave connected=0]")
+	return text
+
 # === Virtuals===
 func _ready():
 	DialogueManager.dialogue_started.connect(_on_dialogue_started)
@@ -86,7 +92,7 @@ func updateDialogue(line):
 	state.textPrintDone = false if line.body else true
 	state.visibleCharacters = 0
 	state.targetLine = line.body.format(state.formatValues)
-	dialogueLabel.text = state.targetLine
+	dialogueLabel.text = _preprocessDialogueText(state.targetLine)
 	state.totalCharacters = dialogueLabel.get_total_character_count()
 	if state.targetLine.length():			
 		$DialogueGroup/DialoguePanel.show()

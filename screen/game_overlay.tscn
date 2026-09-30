@@ -99,3 +99,6 @@ vertical_alignment = 2
 [node name="PlaySoundOnVisible" type="Node2D" parent="MiniScream"]
 script = ExtResource("4_pwtad")
 soundName = "fishget"
+
+[node name="BackBufferCopy" type="BackBufferCopy" parent="MiniScream"]
+copy_mode = 2

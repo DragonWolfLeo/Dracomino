@@ -61,3 +61,7 @@ Dracomino does not support trackers. This game is designed to be played because 
 
 ## Libraries Used
   - [GodotAP](https://github.com/EmilyV99/GodotAP)
+
+# Was AI used to develop this?
+
+No.

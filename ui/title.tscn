@@ -1,0 +1,124 @@
+[gd_scene load_steps=10 format=3 uid="uid://i7wrqoanvm8e"]
+
+[ext_resource type="Texture2D" uid="uid://b1er0k5tsudci" path="res://assets/art/titlescreen/title.png" id="1_5w2xo"]
+[ext_resource type="Script" uid="uid://xldyedvsry42" path="res://module/bounce_and_fade_in.gd" id="2_8lx1x"]
+[ext_resource type="Script" uid="uid://by25um17gs20x" path="res://module/play_animation_on_signal.gd" id="3_k1m56"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_2xfe4"]
+blend_mode = 1
+
+[sub_resource type="Gradient" id="Gradient_2xfe4"]
+offsets = PackedFloat32Array(0, 0.519481, 1)
+colors = PackedColorArray(0, 0, 0, 1, 0.333333, 0.333333, 0.333333, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_45wws"]
+gradient = SubResource("Gradient_2xfe4")
+fill_from = Vector2(0.541284, 0.0733945)
+fill_to = Vector2(0.834862, 0.206422)
+
+[sub_resource type="Animation" id="Animation_45wws"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:visible")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath(".:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_2xfe4"]
+resource_name = "shine"
+length = 0.5
+step = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:visible")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [true, false]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath(".:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.5),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(-834, 0), Vector2(834, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_t5f1u"]
+_data = {
+&"RESET": SubResource("Animation_45wws"),
+&"shine": SubResource("Animation_2xfe4")
+}
+
+[node name="Title" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+mouse_filter = 2
+
+[node name="Title" type="TextureRect" parent="."]
+clip_children = 2
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -394.0
+offset_top = -144.5
+offset_right = 440.0
+offset_bottom = 144.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("1_5w2xo")
+stretch_mode = 5
+script = ExtResource("2_8lx1x")
+
+[node name="Shine" type="TextureRect" parent="Title"]
+visible = false
+material = SubResource("CanvasItemMaterial_2xfe4")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_45wws")
+
+[node name="PlayAnimationOnSignal" type="AnimationPlayer" parent="Title/Shine"]
+libraries = {
+&"": SubResource("AnimationLibrary_t5f1u")
+}
+script = ExtResource("3_k1m56")
+animationToPlay = &"shine"
+
+[connection signal="finished" from="Title" to="Title/Shine/PlayAnimationOnSignal" method="_on_signal"]

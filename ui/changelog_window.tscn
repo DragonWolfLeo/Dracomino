@@ -1,6 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://dwqk2myghef5e"]
+[gd_scene load_steps=5 format=3 uid="uid://dwqk2myghef5e"]
 
-[ext_resource type="Script" uid="uid://wkvxyyjs0jjo" path="res://ui/changelog_window.gd" id="1_6n3d8"]
+[ext_resource type="Script" uid="uid://wkvxyyjs0jjo" path="res://ui/infowindow.gd" id="1_6n3d8"]
+[ext_resource type="Script" uid="uid://d08h8hf8dnrec" path="res://ui/textresourcelabel.gd" id="2_wgoni"]
+[ext_resource type="Script" uid="uid://bnajk12b55sws" path="res://addons/plain_text_resource/plain_text_resource.gd" id="3_ggu1x"]
+[ext_resource type="Resource" uid="uid://do5kmug58c25n" path="res://changelog.txt" id="3_utyiu"]
 
 [node name="ChangelogWindow" type="Window"]
 process_mode = 3
@@ -33,11 +36,14 @@ theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="ChangeLog" type="RichTextLabel" parent="Panel/MarginContainer"]
+[node name="TextResourceLabel" type="RichTextLabel" parent="Panel/MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-text = "Change log text"
+text = "Will automatically display text resources: [Changelog]"
 autowrap_mode = 2
-
-[connection signal="focus_exited" from="." to="." method="_on_focus_exited"]
+script = ExtResource("2_wgoni")
+textResources = Dictionary[String, ExtResource("3_ggu1x")]({
+"Changelog": ExtResource("3_utyiu")
+})
+showTitles = false

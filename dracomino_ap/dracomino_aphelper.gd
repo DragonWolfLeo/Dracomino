@@ -4,6 +4,8 @@ var btn_deathLink:CheckButton
 var btn_deathOnRestart:CheckButton
 var optionBtn_deathLinkGroup:OptionButton
 var lineEdit_deathLinkGroup:LineEdit
+var optionBtn_trapLinkGroup:OptionButton
+var lineEdit_trapLinkGroup:LineEdit
 var optionBtn_scaling:OptionButton
 var sliderSetting_scaleAmount:Control
 var btn_allowUnfocusedInputs:CheckButton
@@ -11,12 +13,23 @@ var slider_masterVol:Slider
 var slider_musicVol:Slider
 var slider_sfxVol:Slider
 var slider_voiceVol:Slider
+var optionBtn_pronouns:OptionButton
+var group_pronounInput:Control
+var lineEdit_he_she_they:LineEdit
+var lineEdit_him_her_them:LineEdit
+var lineEdit_his_her_their:LineEdit
 
 var _sfxSliderBeingDragged:bool = true # Set to true prevent triggering when loading
 
-enum DEATH_LINK_GROUP {
+enum LINK_GROUP {
 	DEFAULT,
 	DRACOMINO,
+	CUSTOM,
+}
+enum PRONOUNS {
+	THEY_THEM_THEIR,
+	HE_HIM_HIS,
+	SHE_HER_HER,
 	CUSTOM,
 }
 enum SCALING {
@@ -54,7 +67,7 @@ func _ready() -> void:
 	SignalBus.getSignal("setting_changed", "deathLinkGroup_custom").connect(_on_deathLinkGroup_custom_setting_changed)
 	optionBtn_deathLinkGroup = get_parent().find_child("OptionButton_DeathLinkGroup")
 	if optionBtn_deathLinkGroup:
-		optionBtn_deathLinkGroup.select(Config.getSetting("deathLinkGroup", DEATH_LINK_GROUP.DEFAULT))
+		optionBtn_deathLinkGroup.select(Config.getSetting("deathLinkGroup", LINK_GROUP.DEFAULT))
 		optionBtn_deathLinkGroup.item_selected.connect(_on_optionBtn_deathLinkGroup_item_selected)
 	lineEdit_deathLinkGroup = get_parent().find_child("LineEdit_DeathLinkGroup")
 	if lineEdit_deathLinkGroup:
@@ -62,6 +75,19 @@ func _ready() -> void:
 		lineEdit_deathLinkGroup.focus_exited.connect(func(): _on_lineEdit_deathLinkGroup_text_submitted(lineEdit_deathLinkGroup.text))
 		lineEdit_deathLinkGroup.text_submitted.connect(_on_lineEdit_deathLinkGroup_text_submitted)
 	_on_deathLinkGroup_setting_changed()
+	# Trap link group
+	SignalBus.getSignal("setting_changed", "trapLinkGroup").connect(_on_trapLinkGroup_setting_changed)
+	SignalBus.getSignal("setting_changed", "trapLinkGroup_custom").connect(_on_trapLinkGroup_custom_setting_changed)
+	optionBtn_trapLinkGroup = get_parent().find_child("OptionButton_TrapLinkGroup")
+	if optionBtn_trapLinkGroup:
+		optionBtn_trapLinkGroup.select(Config.getSetting("trapLinkGroup", LINK_GROUP.DEFAULT))
+		optionBtn_trapLinkGroup.item_selected.connect(_on_optionBtn_trapLinkGroup_item_selected)
+	lineEdit_trapLinkGroup = get_parent().find_child("LineEdit_TrapLinkGroup")
+	if lineEdit_trapLinkGroup:
+		lineEdit_trapLinkGroup.text = Config.getSetting("trapLinkGroup_custom", "")
+		lineEdit_trapLinkGroup.focus_exited.connect(func(): _on_lineEdit_trapLinkGroup_text_submitted(lineEdit_trapLinkGroup.text))
+		lineEdit_trapLinkGroup.text_submitted.connect(_on_lineEdit_trapLinkGroup_text_submitted)
+	_on_trapLinkGroup_setting_changed()
 	# Scaling
 	optionBtn_scaling = get_parent().find_child("OptionButton_Scaling")
 	if optionBtn_scaling:
@@ -111,6 +137,31 @@ func _ready() -> void:
 
 	_sfxSliderBeingDragged = false
 
+	# Pronouns
+	SignalBus.getSignal("setting_changed", "pronouns").connect(_on_pronouns_setting_changed)
+	optionBtn_pronouns = get_parent().find_child("OptionButton_Pronouns")
+	if optionBtn_pronouns:
+		optionBtn_pronouns.select(Config.getSetting("pronouns", PRONOUNS.THEY_THEM_THEIR))
+		optionBtn_pronouns.item_selected.connect(_on_optionBtn_pronouns_item_selected)
+	group_pronounInput = get_parent().find_child("PronounInputGroup")
+	if group_pronounInput:
+		group_pronounInput.visible = int(Config.getSetting("pronouns", PRONOUNS.THEY_THEM_THEIR)) == PRONOUNS.CUSTOM
+	lineEdit_he_she_they = get_parent().find_child("LineEdit_He_She_They")
+	if lineEdit_he_she_they:
+		lineEdit_he_she_they.text = Config.getSetting("pronouns_he_she_they", "")
+		lineEdit_he_she_they.focus_exited.connect(func(): _on_lineEdit_he_she_they_text_submitted(lineEdit_he_she_they.text))
+		lineEdit_he_she_they.text_submitted.connect(_on_lineEdit_he_she_they_text_submitted)
+	lineEdit_him_her_them = get_parent().find_child("LineEdit_Him_Her_Them")
+	if lineEdit_him_her_them:
+		lineEdit_him_her_them.text = Config.getSetting("pronouns_him_her_them", "")
+		lineEdit_him_her_them.focus_exited.connect(func(): _on_lineEdit_him_her_them_text_submitted(lineEdit_him_her_them.text))
+		lineEdit_him_her_them.text_submitted.connect(_on_lineEdit_him_her_them_text_submitted)
+	lineEdit_his_her_their = get_parent().find_child("LineEdit_His_Her_Their")
+	if lineEdit_his_her_their:
+		lineEdit_his_her_their.text = Config.getSetting("pronouns_his_her_their", "")
+		lineEdit_his_her_their.focus_exited.connect(func(): _on_lineEdit_his_her_their_text_submitted(lineEdit_his_her_their.text))
+		lineEdit_his_her_their.text_submitted.connect(_on_lineEdit_his_her_their_text_submitted)
+
 	# Select IP box on loading
 	var ipbox:LineEdit = get_parent().find_child("IP_Box")
 	if ipbox is LineEdit and ipbox.is_visible_in_tree():
@@ -137,19 +188,34 @@ func _on_btn_deathOnRestart_toggled(toggled_on:bool):
 	).emit()
 
 func _on_deathLinkGroup_setting_changed():
-	var _deathLinkGroupId:int = int(Config.getSetting("deathLinkGroup", DEATH_LINK_GROUP.DEFAULT))
+	var _linkGroupId:int = int(Config.getSetting("deathLinkGroup", LINK_GROUP.DEFAULT))
 	if lineEdit_deathLinkGroup:
-		lineEdit_deathLinkGroup.visible = _deathLinkGroupId == DEATH_LINK_GROUP.CUSTOM
-	match _deathLinkGroupId:
-		DEATH_LINK_GROUP.DEFAULT:
+		lineEdit_deathLinkGroup.visible = _linkGroupId == LINK_GROUP.CUSTOM
+	match _linkGroupId:
+		LINK_GROUP.DEFAULT:
 			Archipelago.set_deathlink_group("")
-		DEATH_LINK_GROUP.DRACOMINO:
+		LINK_GROUP.DRACOMINO:
 			Archipelago.set_deathlink_group("Dracomino")
-		DEATH_LINK_GROUP.CUSTOM:
+		LINK_GROUP.CUSTOM:
 			Archipelago.set_deathlink_group(Config.getSetting("deathLinkGroup_custom", ""))
 
 func _on_deathLinkGroup_custom_setting_changed():
 	Archipelago.set_deathlink_group(Config.getSetting("deathLinkGroup_custom", ""))
+
+func _on_trapLinkGroup_setting_changed():
+	var _linkGroupId:int = int(Config.getSetting("trapLinkGroup", LINK_GROUP.DEFAULT))
+	if lineEdit_trapLinkGroup:
+		lineEdit_trapLinkGroup.visible = _linkGroupId == LINK_GROUP.CUSTOM
+	match _linkGroupId:
+		LINK_GROUP.DEFAULT:
+			Archipelago.set_traplink_group("")
+		LINK_GROUP.DRACOMINO:
+			Archipelago.set_traplink_group("Dracomino")
+		LINK_GROUP.CUSTOM:
+			Archipelago.set_traplink_group(Config.getSetting("trapLinkGroup_custom", ""))
+
+func _on_trapLinkGroup_custom_setting_changed():
+	Archipelago.set_traplink_group(Config.getSetting("trapLinkGroup_custom", ""))
 
 func _on_optionBtn_auto_scaling_item_selected(index:int):
 	var value:bool = index == SCALING.AUTO
@@ -162,6 +228,49 @@ func _on_optionBtn_deathLinkGroup_item_selected(index:int):
 
 func _on_lineEdit_deathLinkGroup_text_submitted(new_text:String):
 	Config.changeSetting("deathLinkGroup_custom", new_text)
+
+func _on_optionBtn_trapLinkGroup_item_selected(index:int):
+	Config.changeSetting("trapLinkGroup", index)
+
+func _on_lineEdit_trapLinkGroup_text_submitted(new_text:String):
+	Config.changeSetting("trapLinkGroup_custom", new_text)
+
+func _on_pronouns_setting_changed():
+	var _pronounId:int = int(Config.getSetting("pronouns", PRONOUNS.THEY_THEM_THEIR))
+	if group_pronounInput:
+		group_pronounInput.visible = _pronounId == PRONOUNS.CUSTOM
+	match _pronounId:
+		PRONOUNS.THEY_THEM_THEIR:
+			Config.changeSetting("pronouns_he_she_they", "They", false)
+			Config.changeSetting("pronouns_him_her_them", "Them", false)
+			Config.changeSetting("pronouns_his_her_their", "Their")
+		PRONOUNS.HE_HIM_HIS:
+			Config.changeSetting("pronouns_he_she_they", "He", false)
+			Config.changeSetting("pronouns_him_her_them", "Him", false)
+			Config.changeSetting("pronouns_his_her_their", "His")
+		PRONOUNS.SHE_HER_HER:
+			Config.changeSetting("pronouns_he_she_they", "She", false)
+			Config.changeSetting("pronouns_him_her_them", "Her", false)
+			Config.changeSetting("pronouns_his_her_their", "Her")
+		PRONOUNS.CUSTOM:
+			if lineEdit_he_she_they:
+				Config.changeSetting("pronouns_he_she_they", lineEdit_he_she_they.text, false)
+			if lineEdit_him_her_them:
+				Config.changeSetting("pronouns_him_her_them", lineEdit_him_her_them.text, false)
+			if lineEdit_his_her_their:
+				Config.changeSetting("pronouns_his_her_their", lineEdit_his_her_their.text)
+
+func _on_optionBtn_pronouns_item_selected(index:int):
+	Config.changeSetting("pronouns", index)
+
+func _on_lineEdit_he_she_they_text_submitted(new_text:String):
+	Config.changeSetting("pronouns_he_she_they", new_text)
+
+func _on_lineEdit_him_her_them_text_submitted(new_text:String):
+	Config.changeSetting("pronouns_him_her_them", new_text)
+
+func _on_lineEdit_his_her_their_text_submitted(new_text:String):
+	Config.changeSetting("pronouns_his_her_their", new_text)
 
 # Volume stuff
 func _on_slider_value_changed(value:float, settingName:String, busName:String, testSoundType:String=""):

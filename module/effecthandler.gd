@@ -1,6 +1,8 @@
 class_name EffectHandler extends Node
 
 var bufferedEffects:Array[DracominoHandler.StateItem] = []
+var allowTriggeringEffects:bool = true ## To turn off during versus mode
+
 static var _NOOP:Callable = func(_null:Variant = null): pass
 
 signal effect_activated(item:DracominoHandler.StateItem)
@@ -66,6 +68,7 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 	impatience_trap = Effect.new(SignalBus.getSignal("effect_impatience").emit)\
 		.setCanTriggerFn(_canSpawnShapesFromQueue).addContext("delayed"),
 	space_trap = Effect.new(_activateEffect.bind("effect_space", 8, false)),
+	riptide_trap = Effect.new(_activateEffect.bind("effect_riptide", 8, false)),
 	noop = Effect.new(_NOOP),
 
 	# == Trap Link Specific ==
@@ -206,7 +209,7 @@ func tryToTriggerNextEffect(context:Array[StringName] = []) -> DracominoHandler.
 	if nextEffect:
 		# No verification needed since next effect is guaranteed valid
 		var fx:Effect = getEffectObject(nextEffect)
-		fx.triggerFn.call()
+		if allowTriggeringEffects: fx.triggerFn.call()
 		nextEffect.used = true
 		effect_activated.emit(nextEffect)
 		bufferedEffects.erase(nextEffect)
@@ -221,13 +224,19 @@ func tryToTriggerEffect(stateItem:DracominoHandler.StateItem, bufferOnFailure:bo
 			return false
 		var fx:Effect = getEffectObject(stateItem)
 		if fx:
-			if fx.canTriggerFn.call() and fx.matchesContext(context):
-				fx.triggerFn.call()
+			if allowTriggeringEffects:
+				if fx.canTriggerFn.call() and fx.matchesContext(context):
+					fx.triggerFn.call()
+					stateItem.used = true
+					effect_activated.emit(stateItem)
+					return true
+				elif bufferOnFailure:
+					bufferedEffects.append(stateItem)
+			else:
+				# Versus mode - just pretend to activate
 				stateItem.used = true
 				effect_activated.emit(stateItem)
 				return true
-			elif bufferOnFailure:
-				bufferedEffects.append(stateItem)
 	return false
 
 

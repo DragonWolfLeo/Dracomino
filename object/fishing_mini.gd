@@ -152,12 +152,14 @@ func startReel():
 	
 	if fishingHook.hooked:
 		var hooked:FishPiece = fishingHook.hooked
-		# Apply a random force at a random direction anywhere from up clockwise to down+left
-		var force:Vector2 = Vector2.from_angle(randf_range(-PI/2, PI*3/4)) * randf_range(0.2, 0.7) * hooked.speed
-		var resistTween:Tween = hooked.create_tween()
-		resistTween.tween_method(resist.bind(force), 1.0, 0.0, RESIST_DURATION).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_QUAD)
-		if hooked.speed > hooked.SPEED_MIN:
-			tween.tween_callback(_lowerHookedFishSpeed).set_delay(0.8)
+
+		if Config.getSetting("fishResisting", true):
+			# Apply a random force at a random direction anywhere from up clockwise to down+left
+			var force:Vector2 = Vector2.from_angle(randf_range(-PI/2, PI*3/4)) * randf_range(0.2, 0.7) * hooked.speed
+			var resistTween:Tween = hooked.create_tween()
+			resistTween.tween_method(resist.bind(force), 1.0, 0.0, RESIST_DURATION).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_QUAD)
+			if hooked.speed > hooked.SPEED_MIN:
+				tween.tween_callback(_lowerHookedFishSpeed).set_delay(0.8)
 
 		# Wiggle when you reel
 		if fishReelTween: fishReelTween.kill()

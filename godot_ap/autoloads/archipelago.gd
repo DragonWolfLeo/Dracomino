@@ -215,6 +215,8 @@ var last_sent_traplink_time: float
 
 ## The group that is used for DeathLink for this connection
 var deathlink_group: String : set = set_deathlink_group, get = get_deathlink_group
+## The group that is used for TrapLink for this connection
+var traplink_group: String : set = set_traplink_group, get = get_traplink_group
 
 ## The current connection credentials to be used
 var creds: APCredentials = APCredentials.new()
@@ -544,15 +546,14 @@ func _handle_command(json: Dictionary) -> void: # Handle an incoming packet from
 			connect_step.emit("Connected!")
 			if AP_PRINT_ITEMS_ON_CONNECT:
 				_printout_recieved_items = true
-				await get_tree().create_timer(3).timeout
-				_printout_recieved_items = false
+				get_tree().create_timer(3).timeout.connect(func(): _printout_recieved_items = false)
 
 			conn._load_locations()
 			connected.emit(conn, json)
 		"PrintJSON":
 			_preparse_json(json)
 			var s: String = (output_console.printjson_command(json) if output_console
-				else BaseConsole.printjson_str(json["data"]))
+				else BaseConsole.printjson_out_str(json["data"]))
 			AP.log("[PRINT] %s" % s)
 			printjson.emit(json, s)
 		"DataPackage":
@@ -605,7 +606,7 @@ func _handle_command(json: Dictionary) -> void: # Handle an incoming packet from
 				var source: String = json["data"].get("source", "")
 				var cause: String = json["data"].get("cause", "")
 				conn.deathlink.emit(source, cause, json)
-			if tags.has("TrapLink"):
+			if tags.has(get_traplink_tag()):
 				var tstamp: float = json["data"].get("time", 0.0)
 				if absf(tstamp - last_sent_traplink_time) < 0.5:
 					return # Skip traps from self
@@ -848,7 +849,7 @@ func load_console(console_scene: Node, as_child := true) -> bool:
 		if not output_console_container:
 			return false
 	if as_child: add_child.call_deferred(console_scene)
-	console_scene.ready.connect(func():
+	var connect_console := (func():
 		output_console = output_console_container.console
 		output_console_container.typing_bar.send_text.connect(func(s: String):
 			cmd_manager.call_cmd(s)
@@ -857,6 +858,10 @@ func load_console(console_scene: Node, as_child := true) -> bool:
 		output_console.tree_exiting.connect(close_console)
 		output_console_container.typing_bar.cmd_manager = cmd_manager
 		on_attach_console.emit())
+	if console_scene.is_node_ready():
+		connect_console.call()
+	else:
+		console_scene.ready.connect(connect_console)
 	return true
 ## Opens a default Archipelago text console popup
 func open_console() -> void:
@@ -1277,7 +1282,7 @@ func set_tags(tags: Array[String]) -> void:
 		_update_tags()
 ## Sets the Archipelago connection tags (overwrites tags except supported tags 'DeathLink' / 'TrapLink')
 func set_misc_tags(tags: Array[String]) -> void:
-	var supported_tags: Array[String] = [get_deathlink_tag(), "TrapLink"]
+	var supported_tags: Array[String] = [get_deathlink_tag(), get_traplink_tag()]
 	tags = tags.duplicate()
 	for tag in supported_tags:
 		if tag in AP_GAME_TAGS:
@@ -1316,12 +1321,29 @@ func set_deathlink(state: bool) -> void:
 func is_deathlink() -> bool:
 	return has_tag(get_deathlink_tag())
 
+## Changes this connection's TrapLink group
+## Will only send/receive traps with other clients in the same group
+func set_traplink_group(group: String) -> void:
+	if group == traplink_group: return
+	var traplink := is_traplink()
+	if traplink:
+		set_traplink(false)
+	traplink_group = group
+	if traplink:
+		set_traplink(true)
+## Returns the current TrapLink group name
+## Will only send/receive traps with other clients in the same group
+func get_traplink_group() -> String:
+	return traplink_group
+## Returns the tag being used for TrapLink (including TrapLink group support)
+func get_traplink_tag() -> String:
+	return "TrapLink" + traplink_group
 ## Turn 'TrapLink' on or off
 func set_traplink(state: bool) -> void:
-	set_tag("TrapLink", state)
+	set_tag(get_traplink_tag(), state)
 ## Check if 'TrapLink' is on
 func is_traplink() -> bool:
-	return has_tag("TrapLink")
+	return has_tag(get_traplink_tag())
 
 ## Archipelago client statuses
 enum ClientStatus {

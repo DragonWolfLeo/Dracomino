@@ -165,20 +165,25 @@ class PieceMovement:
 				if not clump.has(activePiece) and activePiece.collidible:
 					unclumpedPieces.append(activePiece)
 			var canShove:bool = true
-			match movementType:
-				Piece.MOVEMENT.HORIZONTAL: 
-					if not FlagManager.isFlagSet("horizontal_shove"):
-						canShove = false
-				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
-					if not FlagManager.isFlagSet("vertical_shove"):
-						canShove = false
+			if piece.moveLock or movementType == Piece.MOVEMENT.FORCED_SHOVE:
+				canShove = true
+			else:
+				match movementType:
+					Piece.MOVEMENT.HORIZONTAL: 
+						if not FlagManager.isFlagSet("horizontal_shove"):
+							canShove = false
+					Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
+						if not FlagManager.isFlagSet("vertical_shove"):
+							canShove = false
 			
 			for unclumpedPiece:Piece in unclumpedPieces:
 				if not clump.has(unclumpedPiece): # Be absolutely certain this hasn't been clumped already (needed?)
 					for cell:Vector2i in translatedCells:
 						if unclumpedPiece.globalCells.has(cell):
-							if canShove:
+							if canShove or unclumpedPiece.momentumPhysics:
 								addPieceToClump(unclumpedPiece, Piece.MOVEMENT.FORCED_SHOVE)
+								if piece.moveLock:
+									unclumpedPiece.fallDirection = piece.fallDirection
 							else:
 								blocked = true
 							break
@@ -205,11 +210,12 @@ class PieceMovement:
 				hasLockedPiece = true
 		
 		for clumpedPiece:Piece in clump:
-			if direction == Vector2i.DOWN and piece != clumpedPiece and (hasLockedPiece or not blocked):
+			if direction == piece.fallDirection and piece != clumpedPiece and (hasLockedPiece or not blocked):
 				clumpedPiece.restartGravityTimer()
 			if not blocked:
 				clumpedPiece.collidible = true # Allow collision now that we know it's in a free space
 				clumpedPiece.move(direction)
+				if clumpedPiece.momentumPhysics: clumpedPiece.momentumDirection = direction
 				if clumpedPiece == board.getCameraFocus():
 					board.focusCamera.global_position = clumpedPiece.global_position
 		if not blocked:
@@ -220,10 +226,18 @@ class PieceMovement:
 					SoundManager.play("move")
 				Piece.MOVEMENT.SOFT_DROP, Piece.MOVEMENT.SOFT_DROP_LOCK:
 					SoundManager.play("move_down")
+		if blocked:
+			piece.momentumDirection = Vector2i.ZERO
 		return blocked
 	
 	func tryLockPiece(piece:Piece, movementType:int) -> bool: ## Return true on locked
-		if direction == Vector2i.DOWN:
+		# Make pieces change direction during a riptide
+		if direction == Vector2i.DOWN and FlagManager.isFlagSet("effect_riptide"):
+			piece.fallDirection = Vector2i.LEFT
+			piece.hardDrop()
+			return false
+		# Lock if not changing direction
+		if direction == piece.fallDirection:
 			# Lock piece
 			match movementType:
 				Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE:
@@ -287,6 +301,8 @@ func _ready():
 	add_child(effectHandler)
 	effectHandler.effect_activated.connect(effect_activated.emit)
 	effectHandler.effect_activated.connect(_on_effected_activated)
+	_on_versusMode_setting_changed()
+	SignalBus.getSignal("stateflag_changed", "versus_mode").connect(_on_versusMode_setting_changed)
 	 # Master coin is just a reference for the rest of the coins and should be hidden 
 	masterCoin.visible = false
 	# Set up input timers
@@ -318,7 +334,6 @@ func _ready():
 		scn.position = map_to_local(Vector2i(BOUNDS.position.x, BOUNDS.end.y-i ))
 		$LineNumberBar.add_child(scn)
 
-
 #===== Functions ======
 func resetFlagHolder():
 	if flagHolder: flagHolder.queue_free()
@@ -334,7 +349,7 @@ func getFocusPiece() -> Piece:
 
 func getCameraFocus() -> Piece:
 	for piece in activePieces:
-		if piece.isFocus or (piece.moveLock and FlagManager.isFlagSet("hard_drop")):
+		if piece.isFocus or (piece.moveLock and not piece.momentumPhysics and FlagManager.isFlagSet("hard_drop")):
 			return piece
 	return null
 
@@ -376,15 +391,19 @@ func processClearingChunk(chunk:ClearingChunk) -> void:
 	)
 
 func checkForEvent(context:Array[StringName] = []):
-	var nextEffect = effectHandler.tryToTriggerNextEffect(context)
-	if not effectHandler.willBlockRequestPiece(nextEffect, true):
+	# Check if this will block next spawn before triggering it
+	var isBlockingSpawn:bool = effectHandler.willBlockRequestPiece(effectHandler.getNextValidBufferedEffect(context))
+	effectHandler.tryToTriggerNextEffect(context)
+	if not isBlockingSpawn:
 		requestPiece()
+	# TODO: I can't tell if this is actually blocking spawns, but seems redundant with the puzzle mode check anyway
 
 func requestPiece(allowMultiplePieces:bool = false):
 	if (
 		isGameOver # Obviously don't make pieces when game over'd
 		or activePieces.size() > MAX_PIECES # No making pieces when the max is reached
 		or (countNonlockedPieces() and not allowMultiplePieces) # No making multiple pieces if disallowed
+		or FlagManager.getFlagValue("mode") != "puzzle" # No making pieces when blocked, usually by fishing
 	):
 		return
 	if effectHandler.hasValidBufferedEvent():
@@ -584,7 +603,7 @@ func tryMovePiece(piece:Piece, direction:Vector2i, movementType:int) -> bool: ##
 	return pm.tryMovePiece(piece, movementType)
 
 func checkIfLandedOnEntity(piece:Piece, movement:int) -> void: ## Send signals to pieces landed on
-	var belowCells:Array[Vector2i] = getCellsDifference(getTranslatedCells(piece.globalCells, Vector2i.DOWN), piece.globalCells)
+	var belowCells:Array[Vector2i] = getCellsDifference(getTranslatedCells(piece.globalCells, piece.fallDirection), piece.globalCells)
 	for ent:Piece in entities:
 		for cell in belowCells:
 			if ent.globalCells.has(cell):
@@ -885,20 +904,23 @@ func setAnimBasedOnMasterCoinAndLine(node:Node2D, line:int = 0) -> void:
 func updateAllGhosts():
 	var floatingPieces:Array[Piece] = []
 	var invalidCells:Array[Vector2i] = []
-	var relativePosition:Vector2i = Vector2i.ZERO
+	var relativePositions:Dictionary[Piece, Vector2i]
 	for piece in activePieces:
 		if piece.ghost:
 			floatingPieces.append(piece)
+			relativePositions[piece] = Vector2i.ZERO
+
 	while floatingPieces.size():
 		var somethingLanded:bool = false
 		for piece:Piece in floatingPieces.duplicate():
-			if not areCellsOpen(getTranslatedCells(piece.globalCells, relativePosition + Vector2i.DOWN), invalidCells, false):
-				piece.ghost.relativePosition = relativePosition
+			if not areCellsOpen(getTranslatedCells(piece.globalCells, relativePositions[piece] + piece.fallDirection), invalidCells, false):
+				piece.ghost.relativePosition = relativePositions[piece]
 				floatingPieces.erase(piece)
 				mergeCells(invalidCells, getTranslatedCells(piece.globalCells, piece.ghost.relativePosition))
 				somethingLanded = true
 		if not somethingLanded:
-			relativePosition += Vector2i.DOWN
+			for piece:Piece in floatingPieces:
+				relativePositions[piece] += piece.fallDirection
 
 #==== Events =====
 func _input(event: InputEvent) -> void:
@@ -943,16 +965,19 @@ func _unhandled_input(event: InputEvent) -> void:
 	
 	# Stuff that requires an active piece
 	if event.is_action_pressed("hardDrop") and Input.is_action_just_pressed("hardDrop"): # Double check to ignore events from slight axis movement
-		if FlagManager.isFlagSet("hard_drop"):
-			focusPiece.hardDrop()
-		elif (
-			ALLOW_GRAVITY_DROP 
-			and FlagManager.isFlagSet("gravity")
-			and activePieces.size() < MAX_PIECES
-			and (countNonlockedPieces() > 1 or (previewStorage and previewStorage.getNumStored()))
-		):
-			# Only gravity drop if it's not your last piece
+		if focusPiece.momentumPhysics:
 			focusPiece.gravityDrop()
+		else:
+			if FlagManager.isFlagSet("hard_drop"):
+				focusPiece.hardDrop()
+			elif (
+				ALLOW_GRAVITY_DROP
+				and FlagManager.isFlagSet("gravity")
+				and activePieces.size() < MAX_PIECES
+				# Only gravity drop if it's not your last piece
+				and (countNonlockedPieces() > 1 or (previewStorage and previewStorage.getNumStored()))
+			):
+				focusPiece.gravityDrop()
 	else:
 		return
 	
@@ -996,10 +1021,10 @@ func _on_Piece_ghost_cells_requested(_piece:Piece, _ghost:GhostPiece):
 	updateAllGhosts()			
 
 func _on_Piece_focus_lost(piece:Piece):
-	if FlagManager.isFlagSet("hard_drop") and is_instance_valid(piece) and isPieceOnTopRow(piece):
+	if not piece.momentumPhysics and FlagManager.isFlagSet("hard_drop") and is_instance_valid(piece) and isPieceOnTopRow(piece):
 		_waitingForPieceToGetOutOfTopRow = piece
 	else:
-		chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(piece.attachedEffects.get("on_lock")))
+		chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(null if not is_instance_valid(piece) else piece.attachedEffects.get("on_lock")))
 
 func _on_Piece_tree_exiting(piece:Piece): # Fallback if piece didn't delete properly
 	activePieces.erase(piece)
@@ -1012,7 +1037,8 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		sendDeathLink(DracominoUtil.DeathContext.new("OFFLINE"))
 
 func _on_deathlink(_source, _cause, _json):
-	gameOver()
+	if not FlagManager.isFlagSet("versus_mode"):
+		gameOver()
 
 func _on_newPieceObtained():
 	fillPreview()
@@ -1093,3 +1119,6 @@ func _on_effect_impatience():
 
 func _on_boardeffect_queued():
 	EffectHandler.tryToTriggerNextBoardEffect(self)
+
+func _on_versusMode_setting_changed():
+	if effectHandler: effectHandler.allowTriggeringEffects = not FlagManager.isFlagSet("versus_mode")

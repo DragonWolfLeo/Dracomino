@@ -1,0 +1,51 @@
+[gd_scene load_steps=5 format=3 uid="uid://bk4uliv6j16ps"]
+
+[ext_resource type="Script" uid="uid://dvj4uugycseke" path="res://module/overlayfilter.gd" id="1_s6g3t"]
+[ext_resource type="Texture2D" uid="uid://dulep48pi673e" path="res://assets/art/background/riptideparticle.png" id="2_ethj5"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_74bbe"]
+blend_mode = 1
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_s6g3t"]
+blend_mode = 1
+
+[node name="RiptideForeground" type="ColorRect"]
+process_mode = 3
+z_index = -1
+material = SubResource("CanvasItemMaterial_74bbe")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0.333333, 1)
+script = ExtResource("1_s6g3t")
+flag = "effect_riptide"
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="Control"]
+material = SubResource("CanvasItemMaterial_s6g3t")
+position = Vector2(128, 0)
+amount = 64
+texture = ExtResource("2_ethj5")
+lifetime = 0.5
+local_coords = true
+emission_shape = 3
+emission_rect_extents = Vector2(0, 1080)
+direction = Vector2(-1, 0)
+spread = 0.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 2000.0
+initial_velocity_max = 4000.0
+scale_amount_max = 2.0

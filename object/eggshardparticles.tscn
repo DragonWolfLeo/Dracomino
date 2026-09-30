@@ -14,6 +14,7 @@ colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
 
 [node name="EggShardParticles" type="CPUParticles2D"]
 process_mode = 3
+z_index = 4
 material = SubResource("CanvasItemMaterial_mcgrm")
 emitting = false
 amount = 20
