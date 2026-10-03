@@ -65,6 +65,8 @@ soundToPlay = &"trap"
 
 [node name="LineNumberBar" type="Node2D" parent="."]
 position = Vector2(-28.3333, 0)
+script = ExtResource("3_0sai4")
+flag = "effect_space"
 
 [node name="MasterCoin" parent="." instance=ExtResource("5_kcigw")]
 visible = false

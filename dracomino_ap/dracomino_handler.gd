@@ -441,7 +441,7 @@ func triggerEffect(stateItem:StateItem, context:Array[StringName] = []) -> bool:
 	if not stateItem or not stateItem.data:
 		return true
 	var result:bool = false
-	if Config.getSetting("versusMode"):
+	if FlagManager.isFlagSet("versus_mode"):
 		result = true
 	else:
 		result = effectHandler.tryToTriggerEffect(stateItem, false, context)
@@ -626,7 +626,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	sendEnergy.call_deferred()
 
 func _on_deathlink(source: String, cause: String, json: Dictionary):
-	var vsmode:bool = Config.getSetting("versusMode")
+	var vsmode:bool = FlagManager.isFlagSet("versus_mode")
 	if not cause: cause = "Died."
 	notification_signal.emit("{source}: {cause}".format({source=source, cause=cause}),
 		CONSTANTS.COLOR.SPECIAL if vsmode else CONSTANTS.COLOR.DEATH,

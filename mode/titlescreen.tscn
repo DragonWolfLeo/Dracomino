@@ -1,0 +1,223 @@
+[gd_scene load_steps=11 format=3 uid="uid://cm37gcyopdca4"]
+
+[ext_resource type="Script" uid="uid://bugig0un80q2l" path="res://mode/titlescreen.gd" id="1_ps0hi"]
+[ext_resource type="Material" uid="uid://ftvia48v2ph6" path="res://resource/shader/ega_object.tres" id="2_ikb7m"]
+[ext_resource type="Texture2D" uid="uid://clxqgu1juchlf" path="res://assets/art/titlescreen/background.png" id="2_pfup4"]
+[ext_resource type="PackedScene" uid="uid://i7wrqoanvm8e" path="res://ui/title.tscn" id="4_ikb7m"]
+[ext_resource type="FontFile" uid="uid://brbxrenwotboe" path="res://resource/font/Galindo-Regular.ttf" id="5_ikb7m"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pfup4"]
+content_margin_left = 20.0
+content_margin_top = 8.0
+content_margin_right = 20.0
+content_margin_bottom = 8.0
+bg_color = Color(0.333333, 0.333333, 0.666667, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.666667, 0.666667, 1, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+shadow_color = Color(0, 0, 0, 0.376471)
+shadow_size = 2
+shadow_offset = Vector2(2, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ikb7m"]
+content_margin_left = 20.0
+content_margin_top = 8.0
+content_margin_right = 20.0
+content_margin_bottom = 8.0
+bg_color = Color(0.333333, 0, 0.666667, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 0, 0.333333, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+shadow_color = Color(0, 0, 0, 0.376471)
+shadow_size = 2
+shadow_offset = Vector2(2, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2xfe4"]
+content_margin_left = 20.0
+content_margin_top = 8.0
+content_margin_right = 20.0
+content_margin_bottom = 8.0
+bg_color = Color(0.666667, 0.333333, 1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.666667, 0.666667, 1, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+shadow_color = Color(0, 0, 0, 0.376471)
+shadow_size = 2
+shadow_offset = Vector2(2, 3)
+
+[sub_resource type="Theme" id="Theme_uk7ab"]
+Button/colors/font_outline_color = Color(0.0745098, 0.160784, 0.317647, 1)
+Button/constants/outline_size = 4
+Button/font_sizes/font_size = 22
+Button/fonts/font = ExtResource("5_ikb7m")
+Button/styles/hover = SubResource("StyleBoxFlat_pfup4")
+Button/styles/normal = SubResource("StyleBoxFlat_ikb7m")
+Button/styles/pressed = SubResource("StyleBoxFlat_2xfe4")
+
+[sub_resource type="LabelSettings" id="LabelSettings_ywq08"]
+outline_size = 4
+outline_color = Color(0.129412, 0.12549, 0.219608, 1)
+
+[node name="TitleScreenLayer" type="CanvasLayer"]
+layer = 0
+
+[node name="TitleScreen" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 1
+script = ExtResource("1_ps0hi")
+
+[node name="AspectRatioContainer" type="AspectRatioContainer" parent="TitleScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+ratio = 1.7778
+
+[node name="BackgroundContainer" type="SubViewportContainer" parent="TitleScreen/AspectRatioContainer"]
+z_index = -999
+material = ExtResource("2_ikb7m")
+layout_mode = 2
+focus_mode = 0
+mouse_filter = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="TitleScreen/AspectRatioContainer/BackgroundContainer"]
+handle_input_locally = false
+snap_2d_transforms_to_pixel = true
+canvas_item_default_texture_filter = 3
+size = Vector2i(960, 539)
+size_2d_override = Vector2i(960, 540)
+size_2d_override_stretch = true
+render_target_update_mode = 4
+
+[node name="TitleBackground" type="TextureRect" parent="TitleScreen/AspectRatioContainer/BackgroundContainer/SubViewport"]
+z_index = -999
+texture_filter = 4
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_pfup4")
+expand_mode = 2
+stretch_mode = 5
+
+[node name="Title" parent="TitleScreen/AspectRatioContainer/BackgroundContainer/SubViewport/TitleBackground" instance=ExtResource("4_ikb7m")]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_top = 181.336
+offset_bottom = 181.336
+grow_horizontal = 2
+scale = Vector2(0.52, 0.52)
+
+[node name="MainScreen" type="Control" parent="TitleScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+metadata/_edit_lock_ = true
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TitleScreen/MainScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -84.0
+offset_top = -13.0
+offset_right = 84.0
+offset_bottom = 179.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = SubResource("Theme_uk7ab")
+theme_override_constants/separation = 4
+metadata/_edit_group_ = true
+
+[node name="Button_Continue" type="Button" parent="TitleScreen/MainScreen/VBoxContainer"]
+visible = false
+layout_mode = 2
+text = "Continue"
+
+[node name="Button_Play" type="Button" parent="TitleScreen/MainScreen/VBoxContainer"]
+layout_mode = 2
+text = "Play"
+
+[node name="Button_Exit" type="Button" parent="TitleScreen/MainScreen/VBoxContainer"]
+layout_mode = 2
+text = "Exit"
+
+[node name="VersionLabel" type="Label" parent="TitleScreen/MainScreen"]
+z_index = 999
+texture_filter = 2
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 21.0
+offset_top = -40.0
+offset_right = 517.0
+offset_bottom = -16.0
+grow_vertical = 0
+text = "{versionNum} {patchInfo}"
+label_settings = SubResource("LabelSettings_ywq08")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="TitleScreen/MainScreen/VersionLabel"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -63.0
+offset_right = 168.0
+offset_bottom = -32.0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="Button_ChangeLog" type="Button" parent="TitleScreen/MainScreen/VersionLabel/HBoxContainer"]
+layout_mode = 2
+text = "Changelog"
+
+[node name="Button_Licenses" type="Button" parent="TitleScreen/MainScreen/VersionLabel/HBoxContainer"]
+layout_mode = 2
+text = "Licenses"
+
+[connection signal="focus_entered" from="TitleScreen/MainScreen/VBoxContainer/Button_Continue" to="TitleScreen" method="_on_button_focus_entered"]
+[connection signal="pressed" from="TitleScreen/MainScreen/VBoxContainer/Button_Continue" to="TitleScreen" method="_on_ButtonContinue_pressed"]
+[connection signal="focus_entered" from="TitleScreen/MainScreen/VBoxContainer/Button_Play" to="TitleScreen" method="_on_button_focus_entered"]
+[connection signal="pressed" from="TitleScreen/MainScreen/VBoxContainer/Button_Play" to="TitleScreen" method="_on_ButtonPlay_pressed"]
+[connection signal="focus_entered" from="TitleScreen/MainScreen/VBoxContainer/Button_Exit" to="TitleScreen" method="_on_button_focus_entered"]
+[connection signal="pressed" from="TitleScreen/MainScreen/VBoxContainer/Button_Exit" to="TitleScreen" method="_on_ButtonExit_pressed"]
+[connection signal="pressed" from="TitleScreen/MainScreen/VersionLabel/HBoxContainer/Button_ChangeLog" to="TitleScreen" method="_on_ButtonChangeLog_pressed"]
+[connection signal="pressed" from="TitleScreen/MainScreen/VersionLabel/HBoxContainer/Button_Licenses" to="TitleScreen" method="_on_ButtonLicenses_pressed"]

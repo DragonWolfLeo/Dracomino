@@ -565,11 +565,10 @@ func setCells(cells:Array[Vector2i]) -> void:
 	updateTiles()
 
 func hardDrop():
-	if not moveLock:
-		moveLock = true
-		canRotate = false
-		gravityTimer.wait_time = HARD_DROP_WAIT_TIME * modifiers.get("movement", 1)
-		gravityTimer.start()
+	moveLock = true
+	canRotate = false
+	gravityTimer.wait_time = HARD_DROP_WAIT_TIME * modifiers.get("movement", 1)
+	gravityTimer.start()
 
 func gravityDrop():
 	if not moveLock:

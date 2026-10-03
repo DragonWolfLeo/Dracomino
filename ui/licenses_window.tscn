@@ -1,0 +1,139 @@
+[gd_scene load_steps=13 format=3 uid="uid://ci1kq3lt4srtq"]
+
+[ext_resource type="Script" uid="uid://wkvxyyjs0jjo" path="res://ui/infowindow.gd" id="1_o1bfe"]
+[ext_resource type="Script" uid="uid://d08h8hf8dnrec" path="res://ui/textresourcelabel.gd" id="2_rqxi2"]
+[ext_resource type="Script" uid="uid://bnajk12b55sws" path="res://addons/plain_text_resource/plain_text_resource.gd" id="3_vnrme"]
+[ext_resource type="Resource" uid="uid://ctikgkiwg82fo" path="res://LICENSE.txt" id="4_ojv7x"]
+[ext_resource type="Resource" uid="uid://bx0k2hccarepn" path="res://licenses/GodotEngine-LICENSE.txt" id="5_rqxi2"]
+[ext_resource type="Resource" uid="uid://cphddyn6ikfo5" path="res://licenses/GodotAP-LICENSE.txt" id="6_vnrme"]
+[ext_resource type="Resource" uid="uid://6vivgyfmfv6i" path="res://licenses/Chakra_Petch-OFL.txt" id="7_iax78"]
+[ext_resource type="Resource" uid="uid://cyys0gmordfep" path="res://licenses/Cousine-LICENSE.txt" id="8_jny2d"]
+[ext_resource type="Resource" uid="uid://dtrr7tuahbrds" path="res://licenses/Galindo-OFL.txt" id="9_1dawg"]
+[ext_resource type="Resource" uid="uid://dsaa6mjg5j8h8" path="res://licenses/Goldman-OFL.txt" id="10_nq1sp"]
+[ext_resource type="Resource" uid="uid://iwq2erp4qdkx" path="res://licenses/NotoFonts-OFL.txt" id="11_vgjct"]
+[ext_resource type="Resource" uid="uid://datgyxe1wh0j1" path="res://licenses/Press_Start_2P-OFL.txt" id="12_v4275"]
+
+[node name="LicensesWindow" type="Window" node_paths=PackedStringArray("autoFocusTarget")]
+process_mode = 3
+auto_translate_mode = 1
+title = "Licenses"
+position = Vector2i(0, 36)
+size = Vector2i(600, 400)
+transient = true
+exclusive = true
+script = ExtResource("1_o1bfe")
+autoFocusTarget = NodePath("Panel/TabContainer")
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TabContainer" type="TabContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+current_tab = 0
+
+[node name="Dracomino" type="MarginContainer" parent="Panel/TabContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+metadata/_tab_index = 0
+
+[node name="TextResouceLabel" type="RichTextLabel" parent="Panel/TabContainer/Dracomino"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+text = "Will automatically display text resources: [Dracomino]"
+autowrap_mode = 2
+script = ExtResource("2_rqxi2")
+textResources = Dictionary[String, ExtResource("3_vnrme")]({
+"Dracomino": ExtResource("4_ojv7x")
+})
+showTitles = false
+
+[node name="Godot Engine" type="MarginContainer" parent="Panel/TabContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+metadata/_tab_index = 1
+
+[node name="TextResouceLabel" type="RichTextLabel" parent="Panel/TabContainer/Godot Engine"]
+process_mode = 4
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+text = "Will automatically display text resources: [Godot Engine]"
+autowrap_mode = 2
+script = ExtResource("2_rqxi2")
+textResources = Dictionary[String, ExtResource("3_vnrme")]({
+"Godot Engine": ExtResource("5_rqxi2")
+})
+showTitles = false
+
+[node name="GodotAP" type="MarginContainer" parent="Panel/TabContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+metadata/_tab_index = 2
+
+[node name="TextResouceLabel" type="RichTextLabel" parent="Panel/TabContainer/GodotAP"]
+process_mode = 4
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+text = "Will automatically display text resources: [GodotAP]"
+autowrap_mode = 2
+script = ExtResource("2_rqxi2")
+textResources = Dictionary[String, ExtResource("3_vnrme")]({
+"GodotAP": ExtResource("6_vnrme")
+})
+showTitles = false
+
+[node name="Fonts" type="MarginContainer" parent="Panel/TabContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+metadata/_tab_index = 3
+
+[node name="TextResouceLabel" type="RichTextLabel" parent="Panel/TabContainer/Fonts"]
+process_mode = 4
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+text = "Will automatically display text resources: [Chakra Petch, Cousine, Galindo, Goldman, Noto, Press Start 2P]"
+autowrap_mode = 2
+script = ExtResource("2_rqxi2")
+textResources = Dictionary[String, ExtResource("3_vnrme")]({
+"Chakra Petch": ExtResource("7_iax78"),
+"Cousine": ExtResource("8_jny2d"),
+"Galindo": ExtResource("9_1dawg"),
+"Goldman": ExtResource("10_nq1sp"),
+"Noto": ExtResource("11_vgjct"),
+"Press Start 2P": ExtResource("12_v4275")
+})

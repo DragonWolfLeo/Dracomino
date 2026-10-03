@@ -27,6 +27,15 @@ text = "Debug Mode"
 script = ExtResource("1_2aojs")
 optionKey = "debug"
 
+[node name="Btn_VersusMode" type="CheckButton" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "When active, most received traps do not affect you, but are sent to other players via Trap Link.
+Deaths received via Death Link grant mana (not shared via Energy Link) instead of penalizing you.
+You may want to use Death/Trap Link Groups too."
+text = "Versus Mode (Experimental)"
+script = ExtResource("2_5smlf")
+flag = "versus_mode"
+
 [node name="Btn_EGAFilter" type="CheckButton" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Enforce 6-bit Palette"
@@ -95,5 +104,13 @@ layout_mode = 2
 text = "Space Effect"
 script = ExtResource("2_5smlf")
 flag = "effect_space"
+ignoreExternalSignals = true
+debugOnly = true
+
+[node name="Btn_SpaceEffect2" type="CheckButton" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Riptide Effect"
+script = ExtResource("2_5smlf")
+flag = "effect_riptide"
 ignoreExternalSignals = true
 debugOnly = true

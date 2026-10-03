@@ -68,6 +68,7 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 	impatience_trap = Effect.new(SignalBus.getSignal("effect_impatience").emit)\
 		.setCanTriggerFn(_canSpawnShapesFromQueue).addContext("delayed"),
 	space_trap = Effect.new(_activateEffect.bind("effect_space", 8, false)),
+	riptide_trap = Effect.new(_activateEffect.bind("effect_riptide", 8, false)),
 	noop = Effect.new(_NOOP),
 
 	# == Trap Link Specific ==
