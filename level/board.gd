@@ -36,7 +36,6 @@ static var SET_TILE_ATLAS_ROW:int = 1
 			holdStorage.slot_triggered.connect(hold)
 
 @onready var activatedTileHandler:ActivatedTileHandler = $ActivatedTileHandler
-@onready var masterCoin:Node2D = $MasterCoin
 @onready var focusCamera:Camera2D = $FocusCamera
 
 var activePieces:Array[Piece] = []
@@ -272,6 +271,7 @@ class PieceMovement:
 
 var inputTimer:ActivityTimer ## For death context
 var pieceTimer:ActivityTimer ## For death context
+var syncTimer:ActivityTimer ## For animation syncing
 
 @onready var holdSlotCycleTimer:Timer = $HoldSlotCycleTimer
 
@@ -303,12 +303,13 @@ func _ready():
 	effectHandler.effect_activated.connect(_on_effected_activated)
 	_on_versusMode_setting_changed()
 	SignalBus.getSignal("stateflag_changed", "versus_mode").connect(_on_versusMode_setting_changed)
-	 # Master coin is just a reference for the rest of the coins and should be hidden 
-	masterCoin.visible = false
 	# Set up input timers
 	inputTimer = ActivityTimer.new(); add_child(inputTimer)
 	inputTimer.afk_threshold = 10.0
 	pieceTimer = ActivityTimer.new(); add_child(pieceTimer)
+	# Set up sync timer
+	syncTimer = ActivityTimer.new(); add_child(syncTimer)
+	syncTimer.pausable = true
 	#
 	game_started.emit.call_deferred()
 	
@@ -891,16 +892,6 @@ func getAllCollidingPieces(cells:Array[Vector2i], sourcePiece:Piece) -> Array[Pi
 					break
 	return ret
 
-func setAnimBasedOnMasterCoinAndLine(node:Node2D, line:int = 0) -> void:
-	var animPlayer:AnimationPlayer = node.get_node_or_null("AnimationPlayer")
-	var animPlayer_master:AnimationPlayer = masterCoin.get_node_or_null("AnimationPlayer")
-	if not animPlayer or not animPlayer_master: printerr("setAnimBasedOnMasterCoinAndLine error: No AnimationPlayer!"); return
-	var WAVE_CYCLE:float = 40
-	var targetSeek:float = -(line/WAVE_CYCLE)*animPlayer_master.current_animation_length
-	targetSeek += animPlayer_master.current_animation_position
-	while targetSeek < 0: targetSeek += animPlayer_master.current_animation_length
-	animPlayer.seek(targetSeek)
-
 func updateAllGhosts():
 	var floatingPieces:Array[Piece] = []
 	var invalidCells:Array[Vector2i] = []
@@ -1065,7 +1056,9 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 				if itemPickups[vec].node == null:
 					itemPickups[vec].node = ITEMPICKUP_SCENE.instantiate()
 					add_child(itemPickups[vec].node)
-					setAnimBasedOnMasterCoinAndLine(itemPickups[vec].node, line)
+					var animSync:AnimationSyncConfig = itemPickups[vec].node.get_node_or_null("AnimationSyncConfig")
+					if animSync is AnimationSyncConfig:
+						animSync.syncAnim(syncTimer.time, line)
 				# Move into the proper place
 				var mapCoord = Vector2i(j + BOUNDS.position.x, BOUNDS.end.y - i -1)
 				itemPickups[vec].node.position = map_to_local(mapCoord)
