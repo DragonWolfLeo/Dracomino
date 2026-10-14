@@ -535,6 +535,7 @@ func hold(index:int = -1):
 				piece.tree_exiting.disconnect(_on_Piece_tree_exiting)
 			popped = holdStorage.pushPiece(piece, false, index)
 			activePieces.erase(piece)
+			piece.startBeamEffect()
 		else:
 			popped = holdStorage.popPiece(index)
 		if popped:

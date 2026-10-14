@@ -1,0 +1,39 @@
+[gd_scene load_steps=5 format=3 uid="uid://bhww4o0oes78p"]
+
+[ext_resource type="Script" uid="uid://cixfx3gvrj24l" path="res://object/beam.gd" id="1_3g2ki"]
+[ext_resource type="Texture2D" uid="uid://c8du5xjutq5cd" path="res://assets/art/object/beam.png" id="1_ls31p"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_k6mly"]
+size = Vector2(8, 64)
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_3g2ki"]
+blend_mode = 1
+
+[node name="Beam" type="Area2D"]
+monitoring = false
+monitorable = false
+script = ExtResource("1_3g2ki")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 32)
+shape = SubResource("RectangleShape2D_k6mly")
+
+[node name="BeamSprite" type="Sprite2D" parent="."]
+material = SubResource("CanvasItemMaterial_3g2ki")
+position = Vector2(-2, 0)
+texture = ExtResource("1_ls31p")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 4, 256)
+
+[node name="ExpirationTimer" type="Timer" parent="."]
+process_callback = 0
+one_shot = true
+autostart = true
+
+[node name="VisibleOnScreenNotifier2D" type="VisibleOnScreenNotifier2D" parent="."]
+position = Vector2(-2, 0)
+rect = Rect2(0, 0, 4, 256)
+
+[connection signal="timeout" from="ExpirationTimer" to="." method="_expire"]
+[connection signal="screen_exited" from="VisibleOnScreenNotifier2D" to="." method="_expire"]
