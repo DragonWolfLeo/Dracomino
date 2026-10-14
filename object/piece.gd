@@ -138,6 +138,8 @@ static var MODIFIERS:Dictionary[StringName, Modifier] = {
 	rotate_rare = Modifier.new("rotate").setStrength(1.0).addCondition(_canRotate),
 	rotate_epic = Modifier.new("rotate").setStrength(0.7).addCondition(_canRotate),
 	rotate_legendary = Modifier.new("rotate").setStrength(0.25),
+
+	afterimage = Modifier.new("afterimage").setAlwaysActive()
 }
 
 static func _canUseGravityEnchantment() -> bool:
@@ -170,6 +172,7 @@ static var ENCHANTMENTS:Dictionary[StringName, Enchantment] = {
 		MODIFIERS.gravity_epic,
 		MODIFIERS.movement_legendary,
 		MODIFIERS.rotate_legendary,
+		MODIFIERS.afterimage,
 	]),
 	enchantment_curse_gravity = Enchantment.new("curse", [MODIFIERS.gravity_curse]),
 	enchantment_curse_movement = Enchantment.new("curse", [MODIFIERS.movement_curse]),
@@ -408,16 +411,9 @@ func _sendTrapLink(trapInternalName:StringName) -> void:
 		Archipelago.conn.send_traplink(trapLinkAlias)
 		print("Piece: Sending trap: ", trapLinkAlias)
 
-func startBeamEffect() -> void:
+func startBeamEffect() -> void: ## Shoots up a beam attack
 	# After image
-	var fx:PieceTiles = PIECEAFTERIMAGE_EFFECT_SCENE.instantiate()
-	if fx is PieceTiles:
-		add_sibling(fx)
-		fx.global_position = global_position
-		fx.renderPiece(self)
-	else:
-		printerr("Piece.startBeamEffect error: piece afterimage effect node is not a PieceTiles")
-
+	createAfterImageEffect()
 	# Beam
 	var beam:CanvasItem = BEAM_SCENE.instantiate()
 	if beam is CanvasItem:
@@ -425,6 +421,15 @@ func startBeamEffect() -> void:
 		beam.position = position + getCenterPositionOffset()
 	else:
 		printerr("Piece.startBeamEffect error: beam node is not a CanvasItem")
+
+func createAfterImageEffect() -> void: ## Creates an afterimage in current location
+	var fx:PieceTiles = PIECEAFTERIMAGE_EFFECT_SCENE.instantiate()
+	if fx is PieceTiles:
+		add_sibling(fx)
+		fx.global_position = global_position
+		fx.renderPiece(self)
+	else:
+		printerr("Piece.createAfterImageEffect error: piece afterimage effect node is not a PieceTiles")
 
 func makeLimbo():
 	process_mode = Node.PROCESS_MODE_DISABLED
@@ -615,6 +620,9 @@ func move(direction:Vector2i, isRotate:bool = false):
 			softDropTimer.start(SOFT_DROP_LOCK_DELAY)
 			lockDelayed = false
 			gravityLockDelayed = false
+	elif direction != Vector2i.ZERO:
+		if modifiers.get("afterimage"):
+			createAfterImageEffect()
 
 func restartGravityTimer() -> void:
 	gravityTimer.start()

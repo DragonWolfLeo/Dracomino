@@ -6,6 +6,21 @@
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_c7d0u"]
 blend_mode = 1
 
+[sub_resource type="Animation" id="Animation_it70c"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
+}
+
 [sub_resource type="Animation" id="Animation_y72fm"]
 resource_name = "start"
 length = 0.25
@@ -23,21 +38,6 @@ tracks/0/keys = {
 "values": [Color(1, 1, 1, 1), Color(1, 1, 1, 0)]
 }
 
-[sub_resource type="Animation" id="Animation_it70c"]
-length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath(".:modulate")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Color(1, 1, 1, 1)]
-}
-
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_ff20b"]
 _data = {
 &"RESET": SubResource("Animation_it70c"),
@@ -45,6 +45,7 @@ _data = {
 }
 
 [node name="PieceAfterImageEffect" instance=ExtResource("1_t7j4h")]
+z_index = 0
 material = SubResource("CanvasItemMaterial_c7d0u")
 
 [node name="QueueFreeTargetOnSignal" type="Node" parent="." index="0" node_paths=PackedStringArray("target")]
