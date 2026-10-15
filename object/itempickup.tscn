@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://d0mgyh6oleq0m"]
+[gd_scene load_steps=6 format=3 uid="uid://d0mgyh6oleq0m"]
 
 [ext_resource type="Texture2D" uid="uid://xv8twcset8nu" path="res://assets/art/coin.png" id="1_lcvo8"]
+[ext_resource type="Script" uid="uid://d0khoq25o6yrt" path="res://module/animationsyncconfig.gd" id="2_5de8d"]
 
 [sub_resource type="Animation" id="Animation_5de8d"]
 length = 0.001
@@ -47,6 +48,10 @@ texture = ExtResource("1_lcvo8")
 hframes = 10
 vframes = 5
 frame = 10
+
+[node name="AnimationSyncConfig" type="Node" parent="."]
+script = ExtResource("2_5de8d")
+metadata/_custom_type_script = "uid://d0khoq25o6yrt"
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {

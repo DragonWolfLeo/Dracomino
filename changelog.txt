@@ -1,3 +1,7 @@
+Version 0.3.4 (beta)
+ - Add beam effect to Hold
+ - Add afterimage effect to legendary pieces
+
 Version 0.3.3 (2026 September 30)
 Changes
  - Add title screen (work in progress!)

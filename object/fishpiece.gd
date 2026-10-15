@@ -52,8 +52,7 @@ func renderPiece():
 	if pieceTiles:
 		pieceTiles.renderPiece(piece)
 		# Center piece
-		var rect:Rect2 = Rect2(pieceTiles.get_used_rect())
-		tileMapOffset = -rect.get_center() * Vector2(pieceTiles.tile_set.tile_size)
+		tileMapOffset = -pieceTiles.getCenterPositionOffset()
 		pieceTiles.position += tileMapOffset
 		buildCollision()
 	else:

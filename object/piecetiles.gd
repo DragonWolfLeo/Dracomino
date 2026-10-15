@@ -45,3 +45,7 @@ func renderPiece(piece:Piece):
 	if outline:
 		for cell in get_used_cells():
 			outline.setTile.call_deferred(cell)
+
+func getCenterPositionOffset() -> Vector2: ## Get the center of the piece relative to the piece's origin
+	var rect:Rect2 = Rect2(get_used_rect())
+	return rect.get_center() * Vector2(tile_set.tile_size)

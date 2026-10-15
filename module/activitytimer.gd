@@ -2,13 +2,20 @@ class_name ActivityTimer extends Node
 ## An auto-ticking node for detecting AFK amounts
 
 var time:float = 0
-var afk_threshold = 30
+@export var afk_threshold:float = 30
+@export var pausable:bool = false: # By default, keep going even if paused
+    set(value):
+        pausable = value
+        _on_pausable_changed()
 
 func _ready() -> void:
-    process_mode = PROCESS_MODE_ALWAYS # Keep going even if paused
+    _on_pausable_changed()
 
 func _process(delta: float) -> void:
     time += delta
+
+func _on_pausable_changed() -> void:
+    process_mode = PROCESS_MODE_INHERIT if pausable else PROCESS_MODE_ALWAYS
 
 func reset() -> void:
     time = 0
