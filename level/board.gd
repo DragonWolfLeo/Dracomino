@@ -2,7 +2,6 @@ class_name Board extends TileMapLayer
 
 @onready var PIECE_SCENE:PackedScene = load("res://object/piece.tscn")
 @onready var LINENUMBER_SCENE:PackedScene = load("res://ui/linenumber.tscn")
-@onready var ITEMPICKUP_SCENE:PackedScene = load("res://object/itempickup.tscn")
 @onready var ACTIVATEDTILE_SCENE:PackedScene = load("res://object/activatedtile.tscn")
 
 const BOUNDS := Rect2i(0, 0, 10, 20)
@@ -291,6 +290,20 @@ static func getCellsDifference(cells:Array[Vector2i], subtracted:Array[Vector2i]
 	for cell:Vector2i in subtracted:
 		newCells.erase(cell)
 	return newCells
+
+static func createBoardObject(objectName:String) -> Node2D: ## Instantiates a board object from res://object/boardobject/
+	var objectScenePath:String = "res://object/boardobject/%s.tscn"%objectName
+	if not ResourceLoader.exists(objectScenePath):
+		printerr("Board.createBoardObject error: %s not found"%objectScenePath)
+		objectScenePath = "res://object/boardobject/error.tscn"
+	
+	var node:Node = (load(objectScenePath) as PackedScene).instantiate()
+	if node is Node2D:
+		return node as Node2D
+	
+	printerr("Board.createBoardObject error: %s is not a Node2D"%objectScenePath)
+	node.queue_free()
+	return null
 
 #===== Virtuals ======
 func _ready():
@@ -1055,7 +1068,10 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 					itemPickups[vec].coord = vec
 					itemPickups[vec].loc_id = _missingpickups[vec]
 				if itemPickups[vec].node == null:
-					itemPickups[vec].node = ITEMPICKUP_SCENE.instantiate()
+					itemPickups[vec].node = createBoardObject("coin")
+					if itemPickups[vec].node == null:
+						# Shouldn't reach this point unless someone did something very wrong
+						continue
 					add_child(itemPickups[vec].node)
 					var animSync:AnimationSyncConfig = itemPickups[vec].node.get_node_or_null("AnimationSyncConfig")
 					if animSync is AnimationSyncConfig:

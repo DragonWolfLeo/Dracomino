@@ -1,3 +1,5 @@
+Version 0.3.4 (storymode-alpha)
+
 Version 0.3.4 (beta)
  - Add beam effect to Hold
  - Add afterimage effect to legendary pieces
