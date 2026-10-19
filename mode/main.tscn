@@ -220,9 +220,9 @@ autostart = true
 process_mode = 3
 layout_mode = 2
 
+[connection signal="boardObjects_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoHandler_board_objects_updated"]
 [connection signal="lineMappings_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_line_mappings_updated"]
 [connection signal="missingLines_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_lines_updated"]
-[connection signal="missingPickupCoordinates_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_pickup_coordinates_updated"]
 [connection signal="notification_signal" from="Main/SubViewport/DracominoHandler" to="NotificationScreen" method="_on_DracominoHandler_notification_signal"]
 [connection signal="started" from="Main/SubViewport/DracominoHandler" to="Main" method="_on_DracominoHandler_started"]
 [connection signal="resized" from="Main/SubViewport/PuzzleMode/SubViewportContainer" to="Main/SubViewport/PuzzleMode" method="_on_SubViewportContainer_resized"]

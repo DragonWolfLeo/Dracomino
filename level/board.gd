@@ -1085,11 +1085,16 @@ func _on_DracominoState_missing_lines_updated(lineLocs: Dictionary[int, bool]) -
 	_missinglines = lineLocs
 	_on_DracominoState_line_mappings_updated()
 
-func _on_DracominoState_missing_pickup_coordinates_updated(map:Dictionary[Vector2i, int]) -> void:
-	_missingpickups = map
+func _on_DracominoHandler_board_objects_updated(boardObjects:Array[DracominoHandler.StateBoardObject]) -> void:
+	_missingpickups.clear()
+	var occupiedTiles:Dictionary[Vector2i, bool] = {}
+	for sbo:DracominoHandler.StateBoardObject in boardObjects:
+		occupiedTiles[sbo.coordinates] = true
+		if sbo.isLocation:
+			_missingpickups[sbo.coordinates] = sbo.loc_id
 	# Remove anything that's disappeared
 	for k:Vector2i in itemPickups:
-		if not map.has(k):
+		if not occupiedTiles.has(k):
 			if itemPickups[k] and itemPickups[k].node:
 				itemPickups[k].node.queue_free()
 				itemPickups[k].node = null
