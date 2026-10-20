@@ -1,12 +1,16 @@
-[gd_scene load_steps=3 format=3 uid="uid://binx2s1s2fvf0"]
+[gd_scene load_steps=4 format=3 uid="uid://binx2s1s2fvf0"]
 
 [ext_resource type="Texture2D" uid="uid://s1sges7avk27" path="res://assets/art/crystalfragment.png" id="1_jqylm"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_jqylm"]
+blend_mode = 1
 
 [sub_resource type="Gradient" id="Gradient_jqylm"]
 colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0)
 
 [node name="CrystalParticle" type="CPUParticles2D"]
 z_index = 2
+material = SubResource("CanvasItemMaterial_jqylm")
 emitting = false
 amount = 1
 texture = ExtResource("1_jqylm")
