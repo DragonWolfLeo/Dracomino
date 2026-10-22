@@ -15,6 +15,7 @@ var DELAYED_EFFECT_CONTEXT_DURATION:float = 1.3
 
 static var ACTIVE_TILE_ATLAS_ROW:int = 0
 static var SET_TILE_ATLAS_ROW:int = 1
+static var BACKGROUND_TILE_ATLAS_COORD:Vector2i = Vector2i(1,2)
 
 @export var previewStorage:PieceStorage:
 	set(value):
@@ -36,6 +37,7 @@ static var SET_TILE_ATLAS_ROW:int = 1
 
 @onready var activatedTileHandler:ActivatedTileHandler = $ActivatedTileHandler
 @onready var focusCamera:Camera2D = $FocusCamera
+@onready var backgroundTileMap:TileMapLayer = $Background/BackgroundTileMap
 
 var activePieces:Array[Piece] = []
 var entities:Array[Piece] = []
@@ -66,8 +68,12 @@ var effectHandler:EffectHandler
 var _lastHeldPieceContext:DracominoHandler.PieceContext ## For deathlink message context; TODO: Obsolete
 
 var _linemappings:Dictionary[int, int] = {}
+var _lineoffsets:Dictionary[int, int] = {}
 var _missinglines:Dictionary[int, bool] = {}
 var _mappedTileSpaces:Dictionary[Vector2i, TileSpace] = {}
+
+var rowOffsets:Dictionary[int, int] = {}
+var rowEnds:Dictionary[int, int] = {}
 
 var _waitingForPieceToGetOutOfTopRow:Piece = null
 
@@ -137,9 +143,9 @@ class ClearingChunk:
 	var tilesToActivate:Array[Vector2i]
 	var mappedLine:int
 	static var flip:bool = false
-	func _init(_row:int) -> void:
+	func _init(_row:int, _offset:int = 0) -> void:
 		row = _row
-		var arr:Array = range(BOUNDS.position.x, BOUNDS.end.x).map(func(x): return Vector2i(x, row))
+		var arr:Array = range(BOUNDS.position.x, BOUNDS.end.x).map(func(x): return Vector2i(x + _offset, row))
 		if flip: arr.reverse() # Make alternating chunks flip
 		flip = !flip
 		tilesToActivate.append_array(arr)
@@ -383,13 +389,24 @@ func _ready():
 	SignalBus.getSignal("effect_impatience").connect(_on_effect_impatience)
 	SignalBus.getSignal("boardeffect_queued").connect(_on_boardeffect_queued)
 
-	# Make line numbers labels
+	# TODO: TEMP
+	# Create line offsets
+	var _line:int = 0
+	while _line < 110:
+		var segmentSize:int = randi_range(1,3)
+		var _offset:int = randi_range(-2, 2)
+		for i:int in range(_line, _line + segmentSize):
+			_lineoffsets[i] = _offset
+		_line += segmentSize
+
 	for i:int in range(BOUNDS.end.y):
+		# Make line numbers labels
+		var _row:int = BOUNDS.end.y-i
 		var scn:Node2D = LINENUMBER_SCENE.instantiate()
 		var label:Label = scn.get_node("Label") as Label
 		lineNumberLabels.append(label)
 		label.text = str(i + 1)
-		scn.position = map_to_local(Vector2i(BOUNDS.position.x, BOUNDS.end.y-i ))
+		scn.position = map_to_local(Vector2i(BOUNDS.position.x, _row))
 		$LineNumberBar.add_child(scn)
 
 #===== Functions ======
@@ -547,7 +564,7 @@ func spawnPiece(piece:Piece):
 		piece.trap_activated.connect(effect_activated.emit)
 		piece.tree_exiting.connect(_on_Piece_tree_exiting.bind(piece))
 		piece.makeActive()
-		piece.currentPosition = SPAWN_POINT + piece.origin
+		piece.currentPosition = SPAWN_POINT + piece.origin + Vector2i(rowOffsets.get(SPAWN_POINT.y, 0), 0)
 		pieceTimer.reset()
 		placeOnHighestRow(piece)
 		if not checkForFailure(piece):
@@ -712,7 +729,9 @@ func checkForFailure(piece:Piece) -> bool:
 
 func canSafelySpawnPiece(piece:Piece) -> bool:
 	if not piece: return false
-	var cells:Array[Vector2i] = getCellsTranslatedOntoHighestRow(getTranslatedCells(piece.localCells, SPAWN_POINT + piece.origin))
+	var cells:Array[Vector2i] = getCellsTranslatedOntoHighestRow(
+		getTranslatedCells(piece.localCells, SPAWN_POINT + piece.origin + Vector2i(rowOffsets.get(SPAWN_POINT.y, 0), 0))
+	)
 	for cell in cells:
 		if isTileOccupied(cell):
 			return false
@@ -795,7 +814,12 @@ func resetGame():
 func lockPiece(piece:Piece):
 	var pickedUpItem:bool = false
 	for cell in piece.globalCells:
-		if BOUNDS.has_point(cell):
+		if (
+			cell.y >= BOUNDS.position.y
+			and cell.y < BOUNDS.end.y
+			and cell.x >= rowOffsets.get(cell.y, BOUNDS.position.x)
+			and cell.x < rowEnds.get(cell.y, BOUNDS.end.x)
+		):
 			var mapCoord:Vector2i = cell
 			# Lock cells if not entity
 			if not piece.isEntity: set_cell(mapCoord, 0, Vector2i(piece.colorId, SET_TILE_ATLAS_ROW))
@@ -824,7 +848,7 @@ func lockPiece(piece:Piece):
 			if onLockEffect: effectHandler.bufferEffect(onLockEffect)
 			linesCleared += fullRows.size()
 			for row:int in fullRows:
-				var chunk := ClearingChunk.new(row)
+				var chunk := ClearingChunk.new(row, rowOffsets.get(row, BOUNDS.position.x))
 				clearingChunks.append(chunk)
 				processClearingChunk(chunk)
 		else:
@@ -855,7 +879,7 @@ func getFullRows() -> Array[int]:
 			continue
 		# Check if row is full
 		var full:bool = true
-		for x in range(BOUNDS.position.x, BOUNDS.end.x):
+		for x in range(rowOffsets.get(y, BOUNDS.position.x), rowEnds.get(y, BOUNDS.end.x)):
 			if not isTileFilled(Vector2i(x, y)):
 				full = false
 				break
@@ -900,7 +924,11 @@ func isInDanger() -> bool:
 func pushDownRows(clearedChunk:ClearingChunk) -> void:
 	# Move tiles down
 	for y in range(clearedChunk.row, BOUNDS.position.y -1, -1):
-		for x in range(BOUNDS.position.x, BOUNDS.end.x):
+		for x in range(
+			# Move the entire width of both affected rows combined
+			min(rowOffsets.get(y, BOUNDS.position.x), rowOffsets.get(y - 1, BOUNDS.position.x)),
+			max(rowEnds.get(y, BOUNDS.end.x), rowEnds.get(y - 1, BOUNDS.end.x))
+		):
 			set_cell(Vector2i(x,y), 0, get_cell_atlas_coords(Vector2i(x, y - 1)))
 		# Move entities down
 		for ent:Piece in entities:
@@ -921,9 +949,10 @@ func areCellsOpen(cells:Array[Vector2i], invalidCells:Array[Vector2i] = [], clea
 	for cell in cells:
 		if clearingRowsAreOpen and isRowClearing(cell.y):
 			continue
+		var clampedRow:int = max(cell.y, BOUNDS.position.y) # Treat rows above as highest visible
 		if (
 			isTileOccupied(cell)
-			or cell.x < BOUNDS.position.x or cell.x >= BOUNDS.end.x # Check horizontal bounds
+			or cell.x < rowOffsets.get(clampedRow, BOUNDS.position.x) or cell.x >= rowEnds.get(clampedRow, BOUNDS.end.x) # Check horizontal bounds
 			or cell.y >= BOUNDS.end.y # Check if reached bottom
 			or invalidCells.has(cell)
 		):
@@ -1138,18 +1167,30 @@ func _on_DracominoHandler_slot_context_hash_updated(_slot_ctx:int) -> void:
 func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemappings) -> void:
 	_linemappings = lineMappings
 	_mappedTileSpaces.clear()
+
+	# Clear background
+	backgroundTileMap.clear()
+
 	for i:int in range(lineNumberLabels.size()):
 		# Re-number the labels
 		var line:int = lineMappings.get(i, 0)
+		var _offset:int = _lineoffsets.get(line, 0)
 		lineNumberLabels[i].text = str(line + 1)
 		lineNumberLabels[i].modulate = Color.WHITE if _missinglines.get(line, false) else Color8(0x55,0x55,0x55) # Make dark if collected
-
+		var _p:Node2D = lineNumberLabels[i].get_parent()
+		if _p is Node2D: _p.position = map_to_local(Vector2i(_offset + BOUNDS.position.x + 1, BOUNDS.end.y-i)) # TODO: + 1 is temporary
+		# Set offsets
+		var _row:int = BOUNDS.end.y - i - 1
+		rowOffsets[_row] = _offset
+		rowEnds[_row] = _offset + BOUNDS.size.x
 		# Organize the pickups
 		for j:int in range(BOUNDS.size.x):
 			var vec:Vector2i = Vector2i(j,line)
+			var mapCoord = Vector2i(j + BOUNDS.position.x + _offset, _row) # TODO: This needs to be reversed?
+			# Draw board
+			backgroundTileMap.set_cell(mapCoord, 0, BACKGROUND_TILE_ATLAS_COORD)
 			var space:TileSpace = getTileSpace(vec)
 			if space:
-				var mapCoord = Vector2i(j + BOUNDS.position.x, BOUNDS.end.y - i -1) # TODO: This needs to be reversed?
 				_mappedTileSpaces[mapCoord] = space
 				for index:int in space.objects:
 					# Create if it doesn't exist
