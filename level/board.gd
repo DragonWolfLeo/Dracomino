@@ -70,7 +70,6 @@ var _lastHeldPieceContext:DracominoHandler.PieceContext ## For deathlink message
 var _linemappings:Dictionary[int, int] = {}
 var _lineoffsets:Dictionary[int, int] = {}
 var _missinglines:Dictionary[int, bool] = {}
-var _mappedTileSpaces:Dictionary[Vector2i, TileSpace] = {}
 
 var rowOffsets:Dictionary[int, int] = {}
 var rowEnds:Dictionary[int, int] = {}
@@ -825,7 +824,6 @@ func lockPiece(piece:Piece):
 			if not piece.isEntity: set_cell(mapCoord, 0, Vector2i(piece.colorId, SET_TILE_ATLAS_ROW))
 			# Pick up coins touched
 			var space:TileSpace = getTileSpaceAtMapCoord(mapCoord)
-			assert (space == _mappedTileSpaces.get(mapCoord), "%s is not %s"%[space,_mappedTileSpaces.get(mapCoord)])
 			if space:
 				for ctx:BoardObjectContext in space.objects.values():
 					pickedUpItem = true
@@ -1166,7 +1164,6 @@ func _on_DracominoHandler_slot_context_hash_updated(_slot_ctx:int) -> void:
 
 func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemappings) -> void:
 	_linemappings = lineMappings
-	_mappedTileSpaces.clear()
 
 	# Clear background
 	backgroundTileMap.clear()
@@ -1191,7 +1188,6 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 			backgroundTileMap.set_cell(mapCoord, 0, BACKGROUND_TILE_ATLAS_COORD)
 			var space:TileSpace = getTileSpace(vec)
 			if space:
-				_mappedTileSpaces[mapCoord] = space
 				for index:int in space.objects:
 					# Create if it doesn't exist
 					var ctx:BoardObjectContext = space.objects[index]
