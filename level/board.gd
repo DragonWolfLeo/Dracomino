@@ -825,7 +825,7 @@ func lockPiece(piece:Piece):
 			if not piece.isEntity: set_cell(mapCoord, 0, Vector2i(piece.colorId, SET_TILE_ATLAS_ROW))
 			# Pick up coins touched
 			var space:TileSpace = getTileSpaceAtMapCoord(mapCoord)
-			assert (space == getTileSpaceAtMapCoord(mapCoord), "%s is not %s"%[space,getTileSpaceAtMapCoord(mapCoord)])
+			assert (space == _mappedTileSpaces.get(mapCoord), "%s is not %s"%[space,_mappedTileSpaces.get(mapCoord)])
 			if space:
 				for ctx:BoardObjectContext in space.objects.values():
 					pickedUpItem = true
@@ -1010,12 +1010,8 @@ func makeOrGetTileSpace(coordinates:Vector2i) -> TileSpace:
 	return space
 
 func getTileSpaceAtMapCoord(mapCoordinates:Vector2i) -> TileSpace: ## Get the correlating tile space at the board's native coordinates
-	if not BOUNDS.has_point(mapCoordinates):
-		return null
-	var boardCoordinates:Vector2i = mapToBoardCoordinates(mapCoordinates)
-	if not _linemappings.has(boardCoordinates.y):
-		return null
-	return getTileSpace(Vector2i(boardCoordinates.x, _linemappings.get(boardCoordinates.y, 0)))
+	var tileSpaceCoordinates:Vector2i = mapToTileSpaceCoordinates(mapCoordinates)
+	return getTileSpace(tileSpaceCoordinates)
 
 func registerBoardObjectIfNotAlready(state:DracominoHandler.StateBoardObject) -> void: ## Adds board object to lookups if not there already
 	if not boardObjectLookup.has(state.index):
@@ -1032,8 +1028,12 @@ func unregisterBoardObject(state:DracominoHandler.StateBoardObject) -> void: ## 
 		ctx.destroy()
 	boardObjectLookup.erase(state.index)
 
-static func mapToBoardCoordinates(mapCoordinates:Vector2i) -> Vector2i:
-	return Vector2i(mapCoordinates.x + BOUNDS.position.x, BOUNDS.end.y - mapCoordinates.y - 1)
+func mapToTileSpaceCoordinates(mapCoordinates:Vector2i) -> Vector2i:
+	var _row:int = BOUNDS.end.y - mapCoordinates.y - 1 # Get row counting from the bottom
+	var line:int = _linemappings.get(_row, 0) # Get line this row is mapped to
+	var tileSpaceCoordinates:Vector2i = Vector2i(mapCoordinates.x - BOUNDS.position.x, line)
+	tileSpaceCoordinates.x -= _lineoffsets.get(line, 0) # Adjust from offset
+	return tileSpaceCoordinates
 
 #==== Events =====
 func _input(event: InputEvent) -> void:
@@ -1186,7 +1186,7 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 		# Organize the pickups
 		for j:int in range(BOUNDS.size.x):
 			var vec:Vector2i = Vector2i(j,line)
-			var mapCoord = Vector2i(j + BOUNDS.position.x + _offset, _row) # TODO: This needs to be reversed?
+			var mapCoord = Vector2i(j + BOUNDS.position.x + _offset, _row)
 			# Draw board
 			backgroundTileMap.set_cell(mapCoord, 0, BACKGROUND_TILE_ATLAS_COORD)
 			var space:TileSpace = getTileSpace(vec)
