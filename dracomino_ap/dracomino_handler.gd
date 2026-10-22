@@ -9,7 +9,7 @@ var collectedAbilities:Dictionary[int, int] = {}
 var gotLines:Dictionary[int, bool] = {}
 var allLineLocations:Array[int] = []
 var missingPickups:Array[int] = []
-var boardObjects:Array[StateBoardObject] = []
+var boardObjects:Dictionary[int, StateBoardObject] = {}
 var lineMappings:Dictionary[int, int] = {}
 var missingLines:Dictionary[int, bool] = {}
 var id_to_line:Dictionary[int, int] = {}
@@ -49,7 +49,7 @@ var _effectBuffer:Array[StateItem] = [] ## Next traps to apply to next pieces
 signal lineMappings_updated(mappings:Dictionary[int, int])
 signal missingLines_updated(locs:Dictionary[int, bool])
 signal notification_signal(notif:String, color:Color, force:bool)
-signal boardObjects_updated(array:Array[StateBoardObject])
+signal boardObjects_updated(lookup:Dictionary[int, StateBoardObject])
 signal piecesLeft_updated(total:int)
 signal goal_updated(goalnum:int)
 signal slotContextHash_updated(ctx:int)
@@ -96,14 +96,16 @@ class StateBoardObject: ## Context data for state of board objects
 	var loc_id:int = 0 ## Corresponding location id for this object, or 0 for non-location objects
 	var objectName:StringName ## Corresponding scene name in res://objects/boardobjects
 	var coordinates:Vector2i ## Coordinates object would spawn on the board, starting at Line 1, moving downward
+	var index:int = -1 ## Index in the placement array. Used as an id for board if 0 or more
 	var isLocation:
 		get:
 			return loc_id > 0
 
-	func _init(_coordinates:Vector2i, _objectName:StringName, _loc_id:int = 0) -> void:
+	func _init(_coordinates:Vector2i, _objectName:StringName, _loc_id:int = 0, _index:int = -1) -> void:
 		coordinates = _coordinates
-		objectName = objectName
+		objectName = _objectName
 		loc_id = _loc_id
+		index = _index
 
 class Streak:
 	var size:int = 0
@@ -605,7 +607,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 			var vec:Vector2i = Vector2i(index % Board.BOUNDS.size.x, floor(index/Board.BOUNDS.size.x))
 			var loc_id:Variant = _allPickups.pop_back()
 			if loc_id != null and missingLocations.get(loc_id, false):
-				boardObjects.append(StateBoardObject.new(vec, "error", loc_id as int))
+				boardObjects[index] = StateBoardObject.new(vec, "coin", loc_id as int, index)
 			
 	
 	# Set up lookup tables
@@ -613,7 +615,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		id_to_line[allLineLocations[i]] = i
 		missingLines[i] = missingLocations.get(allLineLocations[i], false)
 
-	for sbo:StateBoardObject in boardObjects:
+	for sbo:StateBoardObject in boardObjects.values():
 		if sbo.isLocation:
 			id_to_boardObject[sbo.loc_id] = sbo
 
@@ -698,7 +700,7 @@ func _on_remove_location(loc_id:int):
 			missingLines[id_to_line[loc_id]] = false
 			missingLines_updated.emit(missingLines)
 		elif id_to_boardObject.has(loc_id):
-			boardObjects.erase(id_to_boardObject[loc_id])
+			boardObjects.erase(id_to_boardObject[loc_id].index)
 			boardObjects_updated.emit(boardObjects)
 			addLocationToCoinCurrency(loc_id)
 

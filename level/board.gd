@@ -53,7 +53,8 @@ var sendDeathOnRestart:bool = false
 var boardIsFresh:bool = true
 var hasOfflineDeath:bool = false
 var lineNumberLabels:Array[Label] = []
-var itemPickups:Dictionary[Vector2i, ItemPickupContext] = {} 
+var tileSpaces:Dictionary[Vector2i, TileSpace] = {}
+var boardObjectLookup:Dictionary[int, BoardObjectContext] ## StateBoardObject index to BoardObjectContext
 var linesCleared:int = 0:
 	set(value):
 		linesCleared = value
@@ -66,8 +67,7 @@ var _lastHeldPieceContext:DracominoHandler.PieceContext ## For deathlink message
 
 var _linemappings:Dictionary[int, int] = {}
 var _missinglines:Dictionary[int, bool] = {}
-var _missingpickups:Dictionary[Vector2i, int] = {}
-var _mappedpickups:Dictionary[Vector2i, ItemPickupContext] = {}
+var _mappedTileSpaces:Dictionary[Vector2i, TileSpace] = {}
 
 var _waitingForPieceToGetOutOfTopRow:Piece = null
 
@@ -81,10 +81,54 @@ signal deathlink_earned(deathContext:DracominoUtil.DeathContext)
 signal activePieces_changed()
 signal effect_activated(item:DracominoHandler.StateItem) ## Relayed from EffectHandler
 
-class ItemPickupContext:
+class BoardObjectContext:
+	signal destroyed()
+	var state:DracominoHandler.StateBoardObject
+	var index:int:
+		get:
+			return state.index if state else -1
 	var node:Node2D
-	var coord:Vector2i
-	var loc_id:int
+	
+	func _init(_state:DracominoHandler.StateBoardObject) -> void:
+		state = _state
+		
+	func destroy(): ## Prepare this context for deletion
+		reset()
+		if state:
+			destroyed.emit()
+			state = null
+	
+	func reset(): ## Clean up for a reset
+		if node:
+			node.queue_free()
+			node = null
+
+class TileSpace: ## Context object for tile space and all board objects occupying it
+	var coordinates:Vector2i
+	var objects:Dictionary[int, BoardObjectContext]
+
+	func _init(_coord:Vector2i) -> void:
+		coordinates = _coord
+		
+	func addObject(ctx:BoardObjectContext) -> void: ## Add an object context to this tile space
+		if not objects.has(ctx.index):
+			objects[ctx.index] = ctx
+			ctx.destroyed.connect(_on_object_destroyed.bind(ctx), CONNECT_ONE_SHOT)
+
+	func destroy(): ## Destroy all objects in this tile space cleanly
+		for ctx:BoardObjectContext in objects.values():
+			# Disconnect signal because we'll clean it up all at once
+			if ctx.destroyed.is_connected(_on_object_destroyed):
+				ctx.destroyed.disconnect(_on_object_destroyed)
+			ctx.destroy()
+		objects.clear()
+
+	func reset(): ## Clean up for a reset
+		for ctx:BoardObjectContext in objects.values():
+			ctx.reset()
+
+	func _on_object_destroyed(ctx:BoardObjectContext): ## Remove an object from array
+		objects.erase(ctx.index)
 
 class ClearingChunk:
 	signal completed()
@@ -712,13 +756,10 @@ func resetGame():
 			deathContext.addContext("WAITED")
 			deathContext.formatValues.merge({waittime = pieceTimer.toPrettyTime()})
 		sendDeathLink(deathContext)
-
-	# Delete pickups
-	for k in itemPickups.keys():
-		if itemPickups[k] and itemPickups[k].node:
-			itemPickups[k].node.queue_free()
-			itemPickups[k].node = null
-		itemPickups.erase(k)
+	
+	# Clean up tile space objects	
+	for k in tileSpaces.keys():
+		tileSpaces[k].reset()
 
 	# Clear effects and queue
 	effectHandler.on_board_reset()
@@ -759,13 +800,14 @@ func lockPiece(piece:Piece):
 			# Lock cells if not entity
 			if not piece.isEntity: set_cell(mapCoord, 0, Vector2i(piece.colorId, SET_TILE_ATLAS_ROW))
 			# Pick up coins touched
-			var pickup:ItemPickupContext = _mappedpickups.get(mapCoord)
-			if pickup:
-				pickedUpItem = true
-				if pickup.node:
-					pickup.node.queue_free()
-					pickup.node = null
-				item_pickedup.emit(pickup.loc_id)
+			var space:TileSpace = getTileSpaceAtMapCoord(mapCoord)
+			assert (space == getTileSpaceAtMapCoord(mapCoord), "%s is not %s"%[space,getTileSpaceAtMapCoord(mapCoord)])
+			if space:
+				for ctx:BoardObjectContext in space.objects.values():
+					pickedUpItem = true
+					var state:DracominoHandler.StateBoardObject = ctx.state
+					unregisterBoardObject(ctx.state)
+					item_pickedup.emit(state.loc_id)
 	if pickedUpItem:
 		SoundManager.play("itempickup")
 
@@ -927,6 +969,43 @@ func updateAllGhosts():
 			for piece:Piece in floatingPieces:
 				relativePositions[piece] += piece.fallDirection
 
+# Tile space helpers
+func getTileSpace(coordinates:Vector2i) -> TileSpace:
+	return tileSpaces.get(coordinates, null)
+
+func makeOrGetTileSpace(coordinates:Vector2i) -> TileSpace:
+	var space:TileSpace = tileSpaces.get(coordinates, null)
+	if space is not TileSpace:
+		space = TileSpace.new(coordinates)
+		tileSpaces[coordinates] = space
+	return space
+
+func getTileSpaceAtMapCoord(mapCoordinates:Vector2i) -> TileSpace: ## Get the correlating tile space at the board's native coordinates
+	if not BOUNDS.has_point(mapCoordinates):
+		return null
+	var boardCoordinates:Vector2i = mapToBoardCoordinates(mapCoordinates)
+	if not _linemappings.has(boardCoordinates.y):
+		return null
+	return getTileSpace(Vector2i(boardCoordinates.x, _linemappings.get(boardCoordinates.y, 0)))
+
+func registerBoardObjectIfNotAlready(state:DracominoHandler.StateBoardObject) -> void: ## Adds board object to lookups if not there already
+	if not boardObjectLookup.has(state.index):
+		var space:TileSpace = makeOrGetTileSpace(state.coordinates)
+		var ctx:BoardObjectContext = BoardObjectContext.new(state)
+		space.addObject(ctx)
+		boardObjectLookup[state.index] = ctx
+
+func unregisterBoardObject(state:DracominoHandler.StateBoardObject) -> void: ## Removes board object from lookups if there
+	assert(state != null, "State should not be null here")
+	if state == null: return
+	var ctx:BoardObjectContext = boardObjectLookup.get(state.index)
+	if ctx is BoardObjectContext:
+		ctx.destroy()
+	boardObjectLookup.erase(state.index)
+
+static func mapToBoardCoordinates(mapCoordinates:Vector2i) -> Vector2i:
+	return Vector2i(mapCoordinates.x + BOUNDS.position.x, BOUNDS.end.y - mapCoordinates.y - 1)
+
 #==== Events =====
 func _input(event: InputEvent) -> void:
 	if event.is_action_type():
@@ -1049,9 +1128,16 @@ func _on_newPieceObtained():
 	fillPreview()
 	requestPiece()
 
+func _on_DracominoHandler_slot_context_hash_updated(_slot_ctx:int) -> void:
+	# New seed loaded so do a full cleanup
+	for k:Vector2i in tileSpaces:
+		tileSpaces[k].destroy()
+	tileSpaces.clear()
+	boardObjectLookup.clear()
+
 func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemappings) -> void:
 	_linemappings = lineMappings
-	_mappedpickups.clear()
+	_mappedTileSpaces.clear()
 	for i:int in range(lineNumberLabels.size()):
 		# Re-number the labels
 		var line:int = lineMappings.get(i, 0)
@@ -1061,44 +1147,39 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 		# Organize the pickups
 		for j:int in range(BOUNDS.size.x):
 			var vec:Vector2i = Vector2i(j,line)
-			if _missingpickups.has(vec):
-				# Create if it doesn't exist
-				if itemPickups.get(vec) == null:
-					itemPickups[vec] = ItemPickupContext.new()
-					itemPickups[vec].coord = vec
-					itemPickups[vec].loc_id = _missingpickups[vec]
-				if itemPickups[vec].node == null:
-					itemPickups[vec].node = createBoardObject("coin")
-					if itemPickups[vec].node == null:
-						# Shouldn't reach this point unless someone did something very wrong
-						continue
-					add_child(itemPickups[vec].node)
-					var animSync:AnimationSyncConfig = itemPickups[vec].node.get_node_or_null("AnimationSyncConfig")
-					if animSync is AnimationSyncConfig:
-						animSync.syncAnim(syncTimer.time, line)
-				# Move into the proper place
-				var mapCoord = Vector2i(j + BOUNDS.position.x, BOUNDS.end.y - i -1)
-				itemPickups[vec].node.position = map_to_local(mapCoord)
-				_mappedpickups[mapCoord] = itemPickups[vec]
+			var space:TileSpace = getTileSpace(vec)
+			if space:
+				var mapCoord = Vector2i(j + BOUNDS.position.x, BOUNDS.end.y - i -1) # TODO: This needs to be reversed?
+				_mappedTileSpaces[mapCoord] = space
+				for index:int in space.objects:
+					# Create if it doesn't exist
+					var ctx:BoardObjectContext = space.objects[index]
+					if ctx.node == null:
+						ctx.node = createBoardObject(ctx.state.objectName)
+						if ctx.node == null:
+							# Shouldn't reach this point unless someone did something very wrong
+							continue
+						add_child(ctx.node)
+						var animSync:AnimationSyncConfig = ctx.node.get_node_or_null("AnimationSyncConfig")
+						if animSync is AnimationSyncConfig:
+							animSync.syncAnim(syncTimer.time, line)
+					# Move into the proper place
+					ctx.node.position = map_to_local(mapCoord)
 
 func _on_DracominoState_missing_lines_updated(lineLocs: Dictionary[int, bool]) -> void:
 	_missinglines = lineLocs
 	_on_DracominoState_line_mappings_updated()
 
-func _on_DracominoHandler_board_objects_updated(boardObjects:Array[DracominoHandler.StateBoardObject]) -> void:
-	_missingpickups.clear()
-	var occupiedTiles:Dictionary[Vector2i, bool] = {}
-	for sbo:DracominoHandler.StateBoardObject in boardObjects:
-		occupiedTiles[sbo.coordinates] = true
-		if sbo.isLocation:
-			_missingpickups[sbo.coordinates] = sbo.loc_id
+func _on_DracominoHandler_board_objects_updated(lookup:Dictionary[int, DracominoHandler.StateBoardObject]) -> void:
+	# Add anything that doesn't exist
+	for index:int in lookup:
+		var state:DracominoHandler.StateBoardObject = lookup[index]
+		registerBoardObjectIfNotAlready(state)
+
 	# Remove anything that's disappeared
-	for k:Vector2i in itemPickups:
-		if not occupiedTiles.has(k):
-			if itemPickups[k] and itemPickups[k].node:
-				itemPickups[k].node.queue_free()
-				itemPickups[k].node = null
-			itemPickups.erase(k)
+	for index:int in boardObjectLookup:
+		if not lookup.has(index):
+			unregisterBoardObject(boardObjectLookup[index].state)
 	_on_DracominoState_line_mappings_updated()
 
 func _on_activePieces_changed():
