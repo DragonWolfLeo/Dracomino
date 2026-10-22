@@ -37,7 +37,7 @@ static var BACKGROUND_TILE_ATLAS_COORD:Vector2i = Vector2i(1,2)
 
 @onready var activatedTileHandler:ActivatedTileHandler = $ActivatedTileHandler
 @onready var focusCamera:Camera2D = $FocusCamera
-@onready var backgroundTileMap:TileMapLayer = $Background/BackgroundTileMap
+@onready var backgroundTileMap:TileMapLayer = $Background/IrregularTileMap
 
 var activePieces:Array[Piece] = []
 var entities:Array[Piece] = []
@@ -75,6 +75,8 @@ var rowOffsets:Dictionary[int, int] = {}
 var rowEnds:Dictionary[int, int] = {}
 
 var _waitingForPieceToGetOutOfTopRow:Piece = null
+var _lineoffset_random:RandomNumberGenerator = RandomNumberGenerator.new()
+var _lineoffset_randomSaveState:int = _lineoffset_random.state
 
 signal lines_cleared(lines:Array)
 signal linesCleared_updated(num:int)
@@ -387,17 +389,9 @@ func _ready():
 	# Effect signals
 	SignalBus.getSignal("effect_impatience").connect(_on_effect_impatience)
 	SignalBus.getSignal("boardeffect_queued").connect(_on_boardeffect_queued)
-
-	# TODO: TEMP
-	# Create line offsets
-	var _line:int = 0
-	while _line < 110:
-		var segmentSize:int = randi_range(1,3)
-		var _offset:int = randi_range(-2, 2)
-		for i:int in range(_line, _line + segmentSize):
-			_lineoffsets[i] = _offset
-		_line += segmentSize
-
+	## Reset when changing irregular board
+	SignalBus.getSignal("stateflag_changed", "irregular_board").connect(resetGame)
+	_generateLineOffsets()
 	for i:int in range(BOUNDS.end.y):
 		# Make line numbers labels
 		var _row:int = BOUNDS.end.y-i
@@ -409,6 +403,23 @@ func _ready():
 		$LineNumberBar.add_child(scn)
 
 #===== Functions ======
+var _is_irregular_board:bool = false
+func _generateLineOffsets(): ## TODO: TEMPORARY FUNCTION
+	if FlagManager.isFlagSet("irregular_board"):
+		_is_irregular_board = true
+		# Create line offsets
+		_lineoffset_random.state = _lineoffset_randomSaveState
+		var _line:int = 0
+		while _line < FlagManager.getIntFlagValue("goal") + 20:
+			var segmentSize:int = _lineoffset_random.randi_range(1,3)
+			var _offset:int = _lineoffset_random.randi_range(-2, 2)
+			for i:int in range(_line, _line + segmentSize):
+				_lineoffsets[i] = _offset
+			_line += segmentSize
+	else:
+		_is_irregular_board = false
+		_lineoffsets.clear()
+
 func resetFlagHolder():
 	if flagHolder: flagHolder.queue_free()
 	flagHolder = FlagHolder.new(FlagHolder.PRIORITY.LEVEL)
@@ -756,6 +767,8 @@ func sendDeathLink(deathContext:DracominoUtil.DeathContext):
 		deathlink_earned.emit(deathContext) # For DracominoHandler to handle
 
 func resetGame():
+	# Re-render irregular board
+	_generateLineOffsets()
 	var focusPiece:Piece = getFocusPiece()
 	# Send deathlink message
 	if sendDeathOnRestart and not isGameOver and not boardIsFresh:
@@ -1155,18 +1168,24 @@ func _on_newPieceObtained():
 	fillPreview()
 	requestPiece()
 
-func _on_DracominoHandler_slot_context_hash_updated(_slot_ctx:int) -> void:
+func _on_DracominoHandler_slot_context_hash_updated(_slotContextHash:int) -> void:
 	# New seed loaded so do a full cleanup
 	for k:Vector2i in tileSpaces:
 		tileSpaces[k].destroy()
 	tileSpaces.clear()
 	boardObjectLookup.clear()
+	# Reseed random
+	_lineoffset_random.seed = _slotContextHash
+	_lineoffset_randomSaveState = _lineoffset_random.state
+	# New line offsets
+	_generateLineOffsets()
 
 func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemappings) -> void:
 	_linemappings = lineMappings
 
 	# Clear background
-	backgroundTileMap.clear()
+	if _is_irregular_board:
+		backgroundTileMap.clear()
 
 	for i:int in range(lineNumberLabels.size()):
 		# Re-number the labels
@@ -1175,7 +1194,11 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 		lineNumberLabels[i].text = str(line + 1)
 		lineNumberLabels[i].modulate = Color.WHITE if _missinglines.get(line, false) else Color8(0x55,0x55,0x55) # Make dark if collected
 		var _p:Node2D = lineNumberLabels[i].get_parent()
-		if _p is Node2D: _p.position = map_to_local(Vector2i(_offset + BOUNDS.position.x + 1, BOUNDS.end.y-i)) # TODO: + 1 is temporary
+		if _p is Node2D:
+			if _is_irregular_board:
+				_p.position = map_to_local(Vector2i(_offset + BOUNDS.position.x + 1, BOUNDS.end.y-i)) # TODO: + 1 is temporary
+			else:
+				_p.position = map_to_local(Vector2i(BOUNDS.position.x, BOUNDS.end.y-i)) # TODO: + 1 is temporary
 		# Set offsets
 		var _row:int = BOUNDS.end.y - i - 1
 		rowOffsets[_row] = _offset
@@ -1185,7 +1208,8 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 			var vec:Vector2i = Vector2i(j,line)
 			var mapCoord = Vector2i(j + BOUNDS.position.x + _offset, _row)
 			# Draw board
-			backgroundTileMap.set_cell(mapCoord, 0, BACKGROUND_TILE_ATLAS_COORD)
+			if _is_irregular_board:
+				backgroundTileMap.set_cell(mapCoord, 0, BACKGROUND_TILE_ATLAS_COORD)
 			var space:TileSpace = getTileSpace(vec)
 			if space:
 				for index:int in space.objects:

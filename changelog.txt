@@ -1,4 +1,5 @@
 Version 0.3.4 (storymode-alpha)
+ - Add irregular board test to the debug menu (requires debug mode to be on)
 
 Version 0.3.4 (beta)
  - Add beam effect to Hold
