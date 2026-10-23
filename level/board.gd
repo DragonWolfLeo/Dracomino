@@ -828,6 +828,10 @@ func resetGame():
 	# Create new piece
 	requestPiece.call_deferred()
 
+func collectBoardObject(state:DracominoHandler.StateBoardObject): ## Signals a board object's state to be collected and unregisters it
+	unregisterBoardObject(state)
+	item_pickedup.emit(state)
+
 func lockPiece(piece:Piece):
 	for cell in piece.globalCells:
 		if (
@@ -846,9 +850,10 @@ func lockPiece(piece:Piece):
 					var state:DracominoHandler.StateBoardObject = ctx.state
 					var bo:BoardObject = ctx.getBoardObject()
 					if bo:
-						bo.collect()
-					unregisterBoardObject(ctx.state)
-					item_pickedup.emit(state)
+						bo.reactToCover(piece)
+					else:
+						# Board objects that are just regular nodes get collected
+						collectBoardObject(state)
 
 	# Allow board to send death on restart
 	boardIsFresh = false
@@ -1227,7 +1232,11 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 						add_child(ctx.node)
 						var bo:BoardObject = ctx.getBoardObject()
 						if bo:
+							# Set up the board object
 							bo.attachTimerAndOffset(syncTimer, line)
+							# Connect signal
+							if ctx.state:
+								bo.collected.connect(collectBoardObject.bind(ctx.state))
 					# Move into the proper place
 					ctx.node.position = map_to_local(mapCoord)
 
