@@ -162,6 +162,13 @@ class TileSpace: ## Context object for tile space and all board objects occupyin
 	func hasObjects() -> bool: ## Are board objects occupying this tile?
 		return not objects.is_empty() or not temporaryObjects.is_empty()
 
+	func willLockPieceOnTouch() -> bool: ## Will this tile make a piece lock when touched? 
+		for ctx:BoardObjectContext in allObjects:
+			var bo:BoardObject = ctx.getBoardObject()
+			if bo and bo.lockPieceOnTouch:
+				return true
+		return false
+
 	func _on_object_destroyed(ctx:BoardObjectContext): ## Remove an object from array
 		objects.erase(ctx.index)
 
@@ -1057,6 +1064,13 @@ func getAllCollidingPieces(cells:Array[Vector2i], sourcePiece:Piece) -> Array[Pi
 					break
 	return ret
 
+func cellsHaveStickyObject(cells:Array[Vector2i]) -> bool: ## Return true if a BoardObject with lockPieceOnTouch occupies the cell
+	for cell:Vector2i in cells:
+		var space:TileSpace = getTileSpaceAtMapCoord(cell)
+		if space and space.willLockPieceOnTouch():
+			return true
+	return false		
+
 func updateAllGhosts():
 	var floatingPieces:Array[Piece] = []
 	var invalidCells:Array[Vector2i] = []
@@ -1069,7 +1083,10 @@ func updateAllGhosts():
 	while floatingPieces.size():
 		var somethingLanded:bool = false
 		for piece:Piece in floatingPieces.duplicate():
-			if not areCellsOpen(getTranslatedCells(piece.globalCells, relativePositions[piece] + piece.fallDirection), invalidCells, false):
+			if (
+				cellsHaveStickyObject(getTranslatedCells(piece.globalCells, relativePositions[piece])) 
+				or not areCellsOpen(getTranslatedCells(piece.globalCells, relativePositions[piece] + piece.fallDirection), invalidCells, false)
+			):
 				piece.ghost.relativePosition = relativePositions[piece]
 				floatingPieces.erase(piece)
 				mergeCells(invalidCells, getTranslatedCells(piece.globalCells, piece.ghost.relativePosition))
@@ -1389,6 +1406,7 @@ func _on_effect_web():
 		registerBoardObjectIfNotAlready(state)
 
 	_on_DracominoState_line_mappings_updated()
+	updateAllGhosts()
 
 func _on_boardeffect_queued():
 	EffectHandler.tryToTriggerNextBoardEffect(self)
