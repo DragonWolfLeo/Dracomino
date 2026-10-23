@@ -9,11 +9,11 @@ var collectedAbilities:Dictionary[int, int] = {}
 var gotLines:Dictionary[int, bool] = {}
 var allLineLocations:Array[int] = []
 var missingPickups:Array[int] = []
-var missingPickupCoordinates:Dictionary[Vector2i, int] = {}
+var boardObjects:Dictionary[int, StateBoardObject] = {}
 var lineMappings:Dictionary[int, int] = {}
 var missingLines:Dictionary[int, bool] = {}
 var id_to_line:Dictionary[int, int] = {}
-var id_to_pickupCoord:Dictionary[int, Vector2i] = {}
+var id_to_boardObject:Dictionary[int, StateBoardObject] = {}
 var hintedRotateAbilities:Dictionary[int, StateItem] = {}
 var goal:int = -1:
 	set(value):
@@ -49,7 +49,7 @@ var _effectBuffer:Array[StateItem] = [] ## Next traps to apply to next pieces
 signal lineMappings_updated(mappings:Dictionary[int, int])
 signal missingLines_updated(locs:Dictionary[int, bool])
 signal notification_signal(notif:String, color:Color, force:bool)
-signal missingPickupCoordinates_updated(map:Dictionary[Vector2i, int])
+signal boardObjects_updated(lookup:Dictionary[int, StateBoardObject])
 signal piecesLeft_updated(total:int)
 signal goal_updated(goalnum:int)
 signal slotContextHash_updated(ctx:int)
@@ -91,6 +91,21 @@ class StateItem:
 	static func fromInternalName(internalName:StringName) -> StateItem:
 		var si := StateItem.fromId(CONSTANTS.ITEM_NAME_TO_ID.get(internalName, 0))
 		return si
+
+class StateBoardObject: ## Context data for state of board objects
+	var loc_id:int = 0 ## Corresponding location id for this object, or 0 for non-location objects
+	var objectName:StringName ## Corresponding scene name in res://objects/boardobjects
+	var coordinates:Vector2i ## Coordinates object would spawn on the board, starting at Line 1, moving upward
+	var index:int = -1 ## Index in the placement array. Used as an id for board if 0 or more
+	var isLocation:
+		get:
+			return loc_id > 0
+
+	func _init(_coordinates:Vector2i, _objectName:StringName, _loc_id:int = 0, _index:int = -1) -> void:
+		coordinates = _coordinates
+		objectName = _objectName
+		loc_id = _loc_id
+		index = _index
 
 class Streak:
 	var size:int = 0
@@ -247,7 +262,8 @@ func sendLocation(loc_id:int):
 	
 	missingLocations[loc_id] = false
 	checkedLocations[loc_id] = true
-	if id_to_pickupCoord.has(loc_id):
+	# TODO: Only board objects that are currency are currency
+	if id_to_boardObject.has(loc_id):
 		addLocationToCoinCurrency(loc_id)
 
 func sendLine(lineIndex:int):
@@ -537,18 +553,18 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	collectedItems.clear()
 	collectedAbilities.clear()
 	allLineLocations.clear()
-	missingPickupCoordinates.clear()
+	boardObjects.clear()
 	missingLines.clear()
 	missingPickups.clear()
 	id_to_line.clear()
-	id_to_pickupCoord.clear()
+	id_to_boardObject.clear()
 
 	var locsToCollect:Array[int] = []
 	var _missingLocations_changed:bool = false
-	var _allPickups:Array[int] = []
+	var _allPickupLocations:Dictionary[StringName, Array]
 	for loc_id:int in conn.slot_locations:
 		var loc_data:CONSTANTS.LocationData = CONSTANTS.LOCATIONS.get(loc_id)
-		if loc_data:
+		if loc_data is CONSTANTS.LocationData:
 			var checked:bool = conn.slot_locations[loc_id]
 			# Sync missingLocations and checkedLocations with server
 			if not checked:
@@ -566,10 +582,13 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 				if missingLocations.get(loc_id, false):
 					missingLocations[loc_id] = false
 					_missingLocations_changed = true
-			if loc_data.tags.get("line_clear", false):
+			if loc_data.isLineClear:
 				allLineLocations.append(loc_id)
-			elif loc_data.tags.get("item_pickup", false):
-				_allPickups.append(loc_id)
+			elif loc_data.isBoardObject:
+				if loc_data.objectName:
+					if not _allPickupLocations.has(loc_data.objectName):
+						_allPickupLocations[loc_data.objectName] = []
+					_allPickupLocations[loc_data.objectName].append(loc_id)
 				if not checked:
 					missingPickups.append(loc_id)
 				else:
@@ -580,17 +599,49 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 			)
 	#
 	allLineLocations.sort()
-	_allPickups.sort()
+	for k:StringName in _allPickupLocations:
+		_allPickupLocations[k].sort()
+		_allPickupLocations[k].reverse() # Prepare to pop the first objects first
 	missingPickups.sort()
 
 	# Create item pickup data
-	var item_pickup_placements = conn.slot_data.get("item_pickup_placements", [])
-	_allPickups.reverse()
-	for index:int in item_pickup_placements:
-		var vec:Vector2i = Vector2i(index % Board.BOUNDS.size.x, floor(index/Board.BOUNDS.size.x))
-		var loc_id:Variant = _allPickups.pop_back()
-		if loc_id != null and missingLocations.get(loc_id, false):
-			missingPickupCoordinates[vec] = loc_id as int
+	var item_pickup_placements:Variant = conn.slot_data.get("item_pickup_placements", [])
+	# Added version 1.0.0 probably
+	var item_pickup_ids:Variant = conn.slot_data.get("item_pickup_ids")
+	var item_pickup_id_mappings:Variant = conn.slot_data.get("item_pickup_id_mappings")
+	# Create board objects states
+	if item_pickup_placements is Array:
+		for i:int in range(item_pickup_placements.size()):
+			var placement:int = item_pickup_placements[i]
+			# Map pickup id to object name
+			var objectName:StringName = &"error" # Make default an error. TODO: Can put APWorld-specific error object here
+			if item_pickup_ids is Array:
+				if item_pickup_ids.size() > i:
+					var item_pickup_id:int = 0
+					item_pickup_id = int(item_pickup_ids[i])
+					if item_pickup_id_mappings is Dictionary:
+						# Get the mapped object name, or make error object if something weird is happening
+						if item_pickup_id_mappings.has(item_pickup_id):
+							objectName = item_pickup_id_mappings[item_pickup_id] as StringName
+						else:
+							# Unknown mapping (something is wrong with the APWorld)
+							printerr("Error: Malformed slot data. Found missing item pickup id: ", item_pickup_id)
+				else:
+					# Out of bounds (something is wrong with the APWorld)
+					printerr("Error: Malformed slot data. Index %s exceeds item_pickup_ids size"%i)
+			else:
+				# There is no item pickup mappings, so default to coin
+				objectName = &"coin"
+			#
+			var vec:Vector2i = Vector2i(placement % Board.BOUNDS.size.x, floor(placement/Board.BOUNDS.size.x))
+			var loc_id:Variant = _allPickupLocations.get(objectName, []).pop_back()
+			if loc_id != null:
+				# This is a location
+				if missingLocations.get(loc_id, false):
+					boardObjects[i] = StateBoardObject.new(vec, objectName, loc_id as int, i)
+			else:
+				# This isn't a location; it's just a regular board object or an error
+				boardObjects[i] = StateBoardObject.new(vec, objectName, -1, i)
 			
 	
 	# Set up lookup tables
@@ -598,8 +649,9 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		id_to_line[allLineLocations[i]] = i
 		missingLines[i] = missingLocations.get(allLineLocations[i], false)
 
-	for k:Vector2i in missingPickupCoordinates:
-		id_to_pickupCoord[missingPickupCoordinates.get(k,Vector2i())] = k
+	for sbo:StateBoardObject in boardObjects.values():
+		if sbo.isLocation:
+			id_to_boardObject[sbo.loc_id] = sbo
 
 	if victory:
 		sendVictory()
@@ -607,7 +659,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	# Send new state to board
 	if _missingLocations_changed:
 		missingLines_updated.emit(missingLines)
-		missingPickupCoordinates_updated.emit(missingPickupCoordinates)
+		boardObjects_updated.emit(boardObjects)
 
 	# Sync with server
 	if locsToCollect.size():
@@ -681,9 +733,9 @@ func _on_remove_location(loc_id:int):
 		if id_to_line.has(loc_id):
 			missingLines[id_to_line[loc_id]] = false
 			missingLines_updated.emit(missingLines)
-		elif id_to_pickupCoord.has(loc_id):
-			missingPickupCoordinates.erase(id_to_pickupCoord[loc_id])
-			missingPickupCoordinates_updated.emit(missingPickupCoordinates)
+		elif id_to_boardObject.has(loc_id):
+			boardObjects.erase(id_to_boardObject[loc_id].index)
+			boardObjects_updated.emit(boardObjects)
 			addLocationToCoinCurrency(loc_id)
 
 func _on_Board_pieces_requested(callback:Callable, num:int) -> void:
@@ -713,9 +765,10 @@ func _on_Board_lines_cleared(lines:Array) -> void:
 	
 	giveMana(lines.size() * Board.BOUNDS.size.x * CONSTANTS.MANA_PER_BLOCK)
 
-func _on_Board_item_pickedup(loc_id) -> void:
-	print("Picked up ", CONSTANTS.LOCATIONS[loc_id].prettyName)
-	sendLocation(loc_id)
+func _on_Board_item_pickedup(state:StateBoardObject) -> void:
+	if state and state.isLocation:
+		print("Picked up ", CONSTANTS.LOCATIONS[state.loc_id].prettyName)
+		sendLocation(state.loc_id)
 	giveMana(CONSTANTS.MANA_PER_COIN)
 
 func _on_Board_lines_cleared_updated(num:int) -> void:

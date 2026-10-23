@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://djxy2bil5qjud"]
+
+[ext_resource type="Texture2D" uid="uid://f1eov555c1cp" path="res://assets/art/object/web.png" id="1_plbpe"]
+
+[node name="Web" type="Sprite2D"]
+z_index = 1
+texture = ExtResource("1_plbpe")
