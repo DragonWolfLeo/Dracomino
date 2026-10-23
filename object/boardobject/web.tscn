@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://djxy2bil5qjud"]
+[gd_scene load_steps=5 format=3 uid="uid://djxy2bil5qjud"]
 
 [ext_resource type="Script" uid="uid://6uieedcjeaar" path="res://object/boardobject/boardobject.gd" id="1_jtb83"]
 [ext_resource type="Texture2D" uid="uid://f1eov555c1cp" path="res://assets/art/object/web.png" id="1_plbpe"]
 [ext_resource type="PackedScene" uid="uid://tc3ku0s0adh7" path="res://object/boardobject_collision_area.tscn" id="3_bi0bi"]
+[ext_resource type="PackedScene" uid="uid://cvr3d572qb64s" path="res://object/webparticles.tscn" id="4_6antp"]
 
 [node name="Web" type="Node2D"]
 script = ExtResource("1_jtb83")
@@ -10,6 +11,7 @@ collectOnTouch = true
 collectOnCollision = true
 lockPieceOnTouch = true
 collectSound = &""
+deathParticlesScene = ExtResource("4_6antp")
 metadata/_custom_type_script = "uid://6uieedcjeaar"
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
