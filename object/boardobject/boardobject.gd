@@ -3,6 +3,8 @@ class_name BoardObject extends Node2D
 @export var animSync:AnimationSyncConfig
 
 @export var collectOnCover:bool = true
+@export var collectOnTouch:bool = false
+@export var lockPieceOnTouch:bool = false
 @export var collectSound:StringName = &"itempickup"
 
 signal collected()
@@ -18,4 +20,8 @@ func collect() -> void: ## Play sound as if this is collected
 
 func reactToCover(_piece:Piece) -> void: ## Reaction to a piece locking on it
 	if collectOnCover:
+		collect()
+
+func reactToTouch(_piece:Piece) -> void: ## Reaction to a piece touching it
+	if collectOnTouch:
 		collect()

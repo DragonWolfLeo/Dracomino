@@ -321,6 +321,7 @@ signal focus_lost()
 signal trap_activated(stateItem:DracominoHandler.StateItem)
 signal piece_placed()
 signal landed_on_by(piece:Piece, movementType:int)
+signal moved(piece:Piece)
 
 #==== Virtuals ======
 func _ready() -> void:
@@ -525,6 +526,7 @@ func updateTiles():
 		renderPiece(self)
 	
 	globalCells = Board.getTranslatedCells(localCells, currentPosition)
+	moved.emit(self)
 	if ghost:
 		ghost.setCells(localCells)
 		ghost_cells_requested.emit(self, ghost)
@@ -652,17 +654,17 @@ func markEffectsAsUsed() -> void: ## Prevent repeating trap shapes and enchantme
 # Events
 func _on_HorizontalTimer_timeout():
 	if not isFocus or momentumPhysics: return
-	var moved = Vector2i.ZERO
+	var hasMoved = Vector2i.ZERO
 	if Input.is_action_pressed("moveLeft"):
-		moved = Vector2i.LEFT
+		hasMoved = Vector2i.LEFT
 	elif Input.is_action_pressed("moveRight"):
-		moved = Vector2i.RIGHT
+		hasMoved = Vector2i.RIGHT
 	else:
 		horizontalTimer.wait_time = HORIZONTAL_WAIT_TIME
 		return
 	horizontalTimer.wait_time = HORIZONTAL_REPEAT_WAIT_TIME
 	horizontalTimer.start()
-	movement_requested.emit(self, moved, MOVEMENT.HORIZONTAL)
+	movement_requested.emit(self, hasMoved, MOVEMENT.HORIZONTAL)
 
 func _on_SoftDropTimer_timeout():
 	if not isFocus: return

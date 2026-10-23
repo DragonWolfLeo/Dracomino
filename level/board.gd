@@ -574,6 +574,7 @@ func spawnPiece(piece:Piece):
 		activePieces.append(piece)
 		piece.movement_requested.connect(_on_Piece_movement_requested)
 		piece.new_cells_requested.connect(_on_Piece_new_cells_requested)
+		piece.moved.connect(_on_Piece_moved)
 		piece.ghost_cells_requested.connect(_on_Piece_ghost_cells_requested)
 		piece.focus_lost.connect(_on_Piece_focus_lost.bind(piece))
 		piece.trap_activated.connect(effect_activated.emit)
@@ -614,6 +615,8 @@ func hold(index:int = -1):
 				piece.movement_requested.disconnect(_on_Piece_movement_requested)
 			if piece.new_cells_requested.is_connected(_on_Piece_new_cells_requested):
 				piece.new_cells_requested.disconnect(_on_Piece_new_cells_requested)
+			if piece.moved.is_connected(_on_Piece_moved):
+				piece.moved.disconnect(_on_Piece_moved)
 			if piece.ghost_cells_requested.is_connected(_on_Piece_ghost_cells_requested):
 				piece.ghost_cells_requested.disconnect(_on_Piece_ghost_cells_requested)
 			if piece.focus_lost.is_connected(_on_Piece_focus_lost):
@@ -833,6 +836,8 @@ func collectBoardObject(state:DracominoHandler.StateBoardObject): ## Signals a b
 	item_pickedup.emit(state)
 
 func lockPiece(piece:Piece):
+	if piece.is_queued_for_deletion():
+		return
 	for cell in piece.globalCells:
 		if (
 			cell.y >= BOUNDS.position.y
@@ -890,6 +895,28 @@ func lockPiece(piece:Piece):
 		activePieces_changed.emit()
 
 	SignalBus.getSignal("effect_duration_down").emit() # Used to count down effect duration
+
+func checkPieceTouchedTiles(piece:Piece) -> void: ## React to any tile spaces with objects that react to being touched
+	var getLocked:bool = false
+	for cell in piece.globalCells:
+		if (
+			cell.y >= BOUNDS.position.y
+			and cell.y < BOUNDS.end.y
+			and cell.x >= rowOffsets.get(cell.y, BOUNDS.position.x)
+			and cell.x < rowEnds.get(cell.y, BOUNDS.end.x)
+		):
+			var mapCoord:Vector2i = cell
+			# Touch board objects
+			var space:TileSpace = getTileSpaceAtMapCoord(mapCoord)
+			if space:
+				for ctx:BoardObjectContext in space.objects.values():
+					var bo:BoardObject = ctx.getBoardObject()
+					if bo:
+						bo.reactToTouch(piece)
+						if bo.lockPieceOnTouch:
+							getLocked = true
+	if getLocked:
+		lockPiece(piece)
 
 func getFullRows() -> Array[int]:
 	var fullRows:Array[int] = []
@@ -1150,8 +1177,11 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 			return
 	SoundManager.play("rotate_fail")
 
+func _on_Piece_moved(piece:Piece):
+	checkPieceTouchedTiles(piece)
+
 func _on_Piece_ghost_cells_requested(_piece:Piece, _ghost:GhostPiece):
-	updateAllGhosts()			
+	updateAllGhosts()
 
 func _on_Piece_focus_lost(piece:Piece):
 	if not piece.momentumPhysics and FlagManager.isFlagSet("hard_drop") and is_instance_valid(piece) and isPieceOnTopRow(piece):
