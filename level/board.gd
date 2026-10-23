@@ -876,7 +876,7 @@ func collectBoardObject(state:DracominoHandler.StateBoardObject): ## Signals a b
 	item_pickedup.emit(state)
 
 func lockPiece(piece:Piece):
-	if piece.is_queued_for_deletion():
+	if piece.is_queued_for_deletion() or piece.placed:
 		return
 	for cell in piece.globalCells:
 		if (
@@ -923,7 +923,8 @@ func lockPiece(piece:Piece):
 	if piece.isEntity:
 		piece.placed = true
 		activePieces.erase(piece)
-		entities.append(piece)
+		if not entities.has(piece):
+			entities.append(piece)
 	else:
 		deletePiece(piece)
 	
