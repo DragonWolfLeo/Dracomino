@@ -4,18 +4,18 @@
 [ext_resource type="Texture2D" uid="uid://c8du5xjutq5cd" path="res://assets/art/object/beam.png" id="1_ls31p"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_k6mly"]
-size = Vector2(8, 64)
+size = Vector2(8, 16)
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_3g2ki"]
 blend_mode = 1
 
 [node name="Beam" type="Area2D"]
-monitoring = false
-monitorable = false
+collision_layer = 32
+collision_mask = 0
 script = ExtResource("1_3g2ki")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, 32)
+position = Vector2(0, 8)
 shape = SubResource("RectangleShape2D_k6mly")
 
 [node name="BeamSprite" type="Sprite2D" parent="."]

@@ -342,6 +342,7 @@ cast={
 2d_physics/layer_3="Boundary"
 2d_physics/layer_4="Object"
 2d_physics/layer_5="Floor"
+2d_physics/layer_6="Projectile"
 
 [rendering]
 

@@ -1,12 +1,13 @@
-[gd_scene load_steps=3 format=3 uid="uid://djxy2bil5qjud"]
+[gd_scene load_steps=4 format=3 uid="uid://djxy2bil5qjud"]
 
 [ext_resource type="Script" uid="uid://6uieedcjeaar" path="res://object/boardobject/boardobject.gd" id="1_jtb83"]
 [ext_resource type="Texture2D" uid="uid://f1eov555c1cp" path="res://assets/art/object/web.png" id="1_plbpe"]
+[ext_resource type="PackedScene" uid="uid://tc3ku0s0adh7" path="res://object/boardobject_collision_area.tscn" id="3_bi0bi"]
 
 [node name="Web" type="Node2D"]
 script = ExtResource("1_jtb83")
-collectOnCover = false
 collectOnTouch = true
+collectOnCollision = true
 lockPieceOnTouch = true
 collectSound = &""
 metadata/_custom_type_script = "uid://6uieedcjeaar"
@@ -14,3 +15,7 @@ metadata/_custom_type_script = "uid://6uieedcjeaar"
 [node name="Sprite2D" type="Sprite2D" parent="."]
 z_index = 1
 texture = ExtResource("1_plbpe")
+
+[node name="BoardObjectCollisionArea" parent="." instance=ExtResource("3_bi0bi")]
+
+[connection signal="area_entered" from="BoardObjectCollisionArea" to="." method="_on_BoardObjectCollisionArea_area_entered"]

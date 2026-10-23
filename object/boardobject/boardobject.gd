@@ -4,6 +4,7 @@ class_name BoardObject extends Node2D
 
 @export var collectOnCover:bool = true
 @export var collectOnTouch:bool = false
+@export var collectOnCollision:bool = false
 @export var lockPieceOnTouch:bool = false
 @export var collectSound:StringName = &"itempickup"
 
@@ -24,4 +25,8 @@ func reactToCover(_piece:Piece) -> void: ## Reaction to a piece locking on it
 
 func reactToTouch(_piece:Piece) -> void: ## Reaction to a piece touching it
 	if collectOnTouch:
+		collect()
+
+func _on_BoardObjectCollisionArea_area_entered(area:Area2D) -> void:
+	if collectOnCollision:
 		collect()
