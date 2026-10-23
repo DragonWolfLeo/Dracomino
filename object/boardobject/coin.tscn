@@ -1,6 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://d0mgyh6oleq0m"]
+[gd_scene load_steps=7 format=3 uid="uid://d0mgyh6oleq0m"]
 
 [ext_resource type="Texture2D" uid="uid://xv8twcset8nu" path="res://assets/art/coin.png" id="1_lcvo8"]
+[ext_resource type="Script" uid="uid://6uieedcjeaar" path="res://object/boardobject/boardobject.gd" id="1_wvsos"]
 [ext_resource type="Script" uid="uid://d0khoq25o6yrt" path="res://module/animationsyncconfig.gd" id="2_5de8d"]
 
 [sub_resource type="Animation" id="Animation_5de8d"]
@@ -42,19 +43,25 @@ _data = {
 &"anim": SubResource("Animation_lcvo8")
 }
 
-[node name="Coin" type="Sprite2D"]
+[node name="Coin" type="Node2D" node_paths=PackedStringArray("animSync")]
+script = ExtResource("1_wvsos")
+animSync = NodePath("Sprite2D/AnimationPlayer/AnimationSyncConfig")
+metadata/_custom_type_script = "uid://6uieedcjeaar"
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
 z_index = 1
 texture = ExtResource("1_lcvo8")
 hframes = 10
 vframes = 5
 frame = 10
 
-[node name="AnimationSyncConfig" type="Node" parent="."]
-script = ExtResource("2_5de8d")
-metadata/_custom_type_script = "uid://d0khoq25o6yrt"
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Sprite2D"]
 libraries = {
 &"": SubResource("AnimationLibrary_u1sg4")
 }
 autoplay = "anim"
+
+[node name="AnimationSyncConfig" type="Node" parent="Sprite2D/AnimationPlayer" node_paths=PackedStringArray("targetAnimationPlayer")]
+script = ExtResource("2_5de8d")
+targetAnimationPlayer = NodePath("..")
+metadata/_custom_type_script = "uid://d0khoq25o6yrt"

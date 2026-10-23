@@ -1221,9 +1221,8 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 							# Shouldn't reach this point unless someone did something very wrong
 							continue
 						add_child(ctx.node)
-						var animSync:AnimationSyncConfig = ctx.node.get_node_or_null("AnimationSyncConfig")
-						if animSync is AnimationSyncConfig:
-							animSync.syncAnim(syncTimer.time, line)
+						if ctx.node is BoardObject:
+							(ctx.node as BoardObject).attachTimerAndOffset(syncTimer, line)
 					# Move into the proper place
 					ctx.node.position = map_to_local(mapCoord)
 
