@@ -122,6 +122,7 @@ class LocationData extends Data:
 	[217, "Impatience Trap",          "impatience_trap",            [ "trap", "on_spawn" ] ],
 	[218, "In Space!",                "space_trap",                 [ "trap", "on_spawn"] ],
 	[219, "Riptide Trap",             "riptide_trap",               [ "trap", "on_spawn"] ],
+	[220, "Web Trap",                 "web_trap",                   [ "trap", "on_spawn"] ],
 
 	# # Ones that might just be effects only, dunno
 	# [000, "Premium Trap",             "", [ "trap" ] ],
@@ -148,7 +149,6 @@ class LocationData extends Data:
 	# [000, "I Trap",                   "", [ "trap" ] ],
 	# [000, "Sleep Trap",               "", [ "trap" ] ],
 	# [000, "Wyrmino Trap",             "", [ "trap" ] ],
-	# [000, "Tutorial",                 "", [ "trap" ] ],
 	
 	# Shapes (301-)                                                                     Last two values are poor height, safe height
 	[301, "Monomino",       "", [ "progression_skip_balancing", "shape", "monomino" ],                                             1, 1],
@@ -241,6 +241,7 @@ var TRAP_ALIASES:Dictionary[StringName, String] = {
 	riptide_trap            = "Riptide Trap",
 	space_trap              = "Space Trap",
 	# unrandomization_trap    = "Unrandomization Trap",
+	web_trap                = "Web Trap",
 	welldone                = "Well Done Trap",
 
 	# EXISTING TRAPS
@@ -273,6 +274,7 @@ var RANDOM_TRAP_CHOICES:Array[StringName] = [
 	"pixellation_trap",
 	"space_trap",
 	"riptide_trap",
+	"web_trap",
 ]
 var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	# DRACOMINO TRAPS
@@ -286,6 +288,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"Riptide Trap"            : "riptide_trap",
 	"Space Trap"              : "space_trap",
 	# "Unrandomization Trap"    : "unrandomization_trap",
+	"Web Trap"                : "web_trap",
 	"Well Done Trap"          : "welldone",
 
 	# OTHER TRAPS
@@ -301,7 +304,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"Banana Trap"             : "space_trap",
 	"Banner Trap"             : "enchantment",
 	"Bathroom Trap"           : "water_trap",
-	# "Bee Trap"                : "glue_trap",
+	"Bee Trap"                : "web_trap",
 	# "Blango Artillery"        : "", # Means becoming a snowman?
 	"Blastoad"                : "impatience_trap",
 	# "Blue Balls Curse"        : "shatter_trap",
@@ -406,7 +409,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"Hiccup Trap"             : "impatience_trap",
 	"Hidden Trap"             : "space_trap",
 	"Home Trap"               : "tutorial",
-	# "Honey Trap"              : "glue_trap",
+	"Honey Trap"              : "web_trap",
 	# "Ice Floor Trap"          : "momemtum_trap",
 	# "Ice Trap"                : "Ice Trap",
 	"Icon Trap"                : "random_trap",
@@ -435,9 +438,9 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"Meteor Trap"             : "enchantment_curse_gravity",
 	"Metronome Trap"          : "random_trap",
 	# "Mirror Trap"             : "Flip Trap",
-	"Modified Bloons Trap"   : "random_trap",
+	"Modified Bloons Trap"    : "random_trap",
 	"Monkey Mash Trap"        : "impatience_trap",
-	"Monkey Trap"            : "egg",
+	"Monkey Trap"             : "egg",
 	"My Turn! Trap"           : "impatience_trap",
 	"Nightmare Trap"          : "impatience_trap",
 	"Ninja Trap"              : "egg",
@@ -454,8 +457,8 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"One Hit KO"              : "enchantment_curse_gravity",
 	"One Hit Trap"            : "enchantment_curse_gravity",
 	# "Paper Trap"              : "I Trap",
-	"Paralyze Trap"           : "enchantment_curse_movement",
-	"Paralysis Trap"          : "enchantment_curse_movement",
+	"Paralyze Trap"           : "web_trap",
+	"Paralysis Trap"          : "web_trap",
 	"Paratoad"                : "fishing",
 	"Pea Soup Trap"           : "egg",
 	"Person Trap"             : "impatience_trap",
@@ -509,7 +512,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"Spotlight Trap"          : "zoom_trap",
 	"Spring Trap"             : "impatience_trap",
 	# "Squash Trap"             : "I Trap",
-	# "Sticky Floor Trap"       : "glue_trap",
+	"Sticky Floor Trap"       : "web_trap",
 	# "Sticky Hands Trap"       : "Disable Hold Trap",
 	"Stinky Trap"             : "enchantment_curse",
 	"Stun Trap"               : "enchantment_curse_movement",
@@ -519,8 +522,8 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"SvC Effect"              : "enchantment_random",
 	# "Swap Trap"               : "Swap Trap",
 	"Syntax Jumpscare Trap"   : "mini_jumpscare",
-	"Tar Trap"               : "enchantment_curse_movement",
-	# "Tarr Trap"               : "glue_trap",
+	"Tar Trap"                : "web_trap",
+	"Tarr Trap"               : "web_trap",
 	"Teleport Trap"           : "impatience_trap",
 	"Text Trap"               : "tutorial", # "Random Cutscene",
 	"Thwimp Trap"             : "enchantment_curse_gravity",

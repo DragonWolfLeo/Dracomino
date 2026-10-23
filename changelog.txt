@@ -1,4 +1,5 @@
 Version 0.3.4 (dev-alpha)
+ - Add Web Trap. Not available in the APWorld yet, but can trigger through Random Trap or Trap Link.
  - Add irregular board test to the debug menu (requires debug mode to be on)
  - Add beam effect to Hold
  - Add afterimage effect to legendary pieces

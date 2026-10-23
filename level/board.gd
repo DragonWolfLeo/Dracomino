@@ -11,6 +11,8 @@ var ALLOW_GRAVITY_DROP:bool = true # TODO: Make an option
 var OPACITY_REDUCTION_PER_GHOST:float = 1/3 # 
 var MAX_PIECES:int = 8
 var EFFECT_IMPATIENCE_NUM_PIECES_TO_SPAWN:int = 2
+var EFFECT_WEB_NUM_TO_SPAWN:int = 3
+var EFFECT_WEB_BOUNDS := BOUNDS.grow_individual(0, -8, 0, -1)
 var DELAYED_EFFECT_CONTEXT_DURATION:float = 1.3
 
 static var ACTIVE_TILE_ATLAS_ROW:int = 0
@@ -57,6 +59,7 @@ var hasOfflineDeath:bool = false
 var lineNumberLabels:Array[Label] = []
 var tileSpaces:Dictionary[Vector2i, TileSpace] = {}
 var boardObjectLookup:Dictionary[int, BoardObjectContext] ## StateBoardObject index to BoardObjectContext
+var temp_boardObjectLookup:Dictionary[DracominoHandler.StateBoardObject, BoardObjectContext] ## StateBoardObject to BoardObjectContext
 var linesCleared:int = 0:
 	set(value):
 		linesCleared = value
@@ -95,9 +98,11 @@ class BoardObjectContext:
 		get:
 			return state.index if state else -1
 	var node:Node2D
+	var temporary:bool = false
 	
 	func _init(_state:DracominoHandler.StateBoardObject) -> void:
 		state = _state
+		temporary = state.index < 0
 		
 	func destroy(): ## Prepare this context for deletion
 		reset()
@@ -118,29 +123,51 @@ class BoardObjectContext:
 class TileSpace: ## Context object for tile space and all board objects occupying it
 	var coordinates:Vector2i
 	var objects:Dictionary[int, BoardObjectContext]
+	var temporaryObjects:Dictionary[DracominoHandler.StateBoardObject, BoardObjectContext]
+	var allObjects:Array[BoardObjectContext]:
+		get:
+			var arr:Array[BoardObjectContext] = []
+			arr.append_array(objects.values())
+			arr.append_array(temporaryObjects.values())
+			return arr
 
 	func _init(_coord:Vector2i) -> void:
 		coordinates = _coord
 		
 	func addObject(ctx:BoardObjectContext) -> void: ## Add an object context to this tile space
-		if not objects.has(ctx.index):
-			objects[ctx.index] = ctx
-			ctx.destroyed.connect(_on_object_destroyed.bind(ctx), CONNECT_ONE_SHOT)
+		if ctx.index >= 0:
+			if not objects.has(ctx.index):
+				objects[ctx.index] = ctx
+				ctx.destroyed.connect(_on_object_destroyed.bind(ctx), CONNECT_ONE_SHOT)
+		else:
+			if ctx.state and not temporaryObjects.has(ctx.state):
+				temporaryObjects[ctx.state] = ctx
+				ctx.destroyed.connect(_on_temporaryObject_destroyed.bind(ctx), CONNECT_ONE_SHOT)
 
 	func destroy(): ## Destroy all objects in this tile space cleanly
-		for ctx:BoardObjectContext in objects.values():
+		for ctx:BoardObjectContext in allObjects:
 			# Disconnect signal because we'll clean it up all at once
 			if ctx.destroyed.is_connected(_on_object_destroyed):
 				ctx.destroyed.disconnect(_on_object_destroyed)
+			if ctx.destroyed.is_connected(_on_temporaryObject_destroyed):
+				ctx.destroyed.disconnect(_on_temporaryObject_destroyed)
 			ctx.destroy()
 		objects.clear()
+		temporaryObjects.clear()
 
 	func reset(): ## Clean up for a reset
-		for ctx:BoardObjectContext in objects.values():
+		for ctx:BoardObjectContext in allObjects:
 			ctx.reset()
+	
+	func hasObjects() -> bool: ## Are board objects occupying this tile?
+		return not objects.is_empty() or not temporaryObjects.is_empty()
 
 	func _on_object_destroyed(ctx:BoardObjectContext): ## Remove an object from array
 		objects.erase(ctx.index)
+
+	func _on_temporaryObject_destroyed(ctx:BoardObjectContext): ## Remove a temporary object from array
+		assert(ctx.state != null, "State should not be null")
+		temporaryObjects.erase(ctx.state)
 
 class ClearingChunk:
 	signal completed()
@@ -393,6 +420,7 @@ func _ready():
 		mode.mode_enabled.connect(_on_mode_enabled)
 	# Effect signals
 	SignalBus.getSignal("effect_impatience").connect(_on_effect_impatience)
+	SignalBus.getSignal("effect_web").connect(_on_effect_web)
 	SignalBus.getSignal("boardeffect_queued").connect(_on_boardeffect_queued)
 	## Reset when changing irregular board
 	SignalBus.getSignal("stateflag_changed", "irregular_board").connect(resetGame)
@@ -797,8 +825,13 @@ func resetGame():
 		sendDeathLink(deathContext)
 	
 	# Clean up tile space objects	
-	for k in tileSpaces.keys():
+	for k:Vector2i in tileSpaces:
 		tileSpaces[k].reset()
+
+	# Clean up temporary objects
+	for ctx:BoardObjectContext in temp_boardObjectLookup.values():
+		ctx.destroy()
+	temp_boardObjectLookup.clear()
 
 	# Clear effects and queue
 	effectHandler.on_board_reset()
@@ -851,7 +884,7 @@ func lockPiece(piece:Piece):
 			# Pick up coins touched
 			var space:TileSpace = getTileSpaceAtMapCoord(mapCoord)
 			if space:
-				for ctx:BoardObjectContext in space.objects.values():
+				for ctx:BoardObjectContext in space.allObjects:
 					var state:DracominoHandler.StateBoardObject = ctx.state
 					var bo:BoardObject = ctx.getBoardObject()
 					if bo:
@@ -909,7 +942,7 @@ func checkPieceTouchedTiles(piece:Piece) -> void: ## React to any tile spaces wi
 			# Touch board objects
 			var space:TileSpace = getTileSpaceAtMapCoord(mapCoord)
 			if space:
-				for ctx:BoardObjectContext in space.objects.values():
+				for ctx:BoardObjectContext in space.allObjects:
 					var bo:BoardObject = ctx.getBoardObject()
 					if bo:
 						bo.reactToTouch(piece)
@@ -1060,20 +1093,37 @@ func getTileSpaceAtMapCoord(mapCoordinates:Vector2i) -> TileSpace: ## Get the co
 	var tileSpaceCoordinates:Vector2i = mapToTileSpaceCoordinates(mapCoordinates)
 	return getTileSpace(tileSpaceCoordinates)
 
+func makeOrGetTileSpaceAtMapCoord(mapCoordinates:Vector2i) -> TileSpace: ## Make the correlating tile space at the board's native coordinates
+	var tileSpaceCoordinates:Vector2i = mapToTileSpaceCoordinates(mapCoordinates)
+	return makeOrGetTileSpace(tileSpaceCoordinates)
+
 func registerBoardObjectIfNotAlready(state:DracominoHandler.StateBoardObject) -> void: ## Adds board object to lookups if not there already
-	if not boardObjectLookup.has(state.index):
-		var space:TileSpace = makeOrGetTileSpace(state.coordinates)
-		var ctx:BoardObjectContext = BoardObjectContext.new(state)
-		space.addObject(ctx)
-		boardObjectLookup[state.index] = ctx
+	if state.index >= 0:
+		if not boardObjectLookup.has(state.index):
+			var space:TileSpace = makeOrGetTileSpace(state.coordinates)
+			var ctx:BoardObjectContext = BoardObjectContext.new(state)
+			space.addObject(ctx)
+			boardObjectLookup[state.index] = ctx
+	else:
+		if not temp_boardObjectLookup.has(state):
+			var space:TileSpace = makeOrGetTileSpace(state.coordinates)
+			var ctx:BoardObjectContext = BoardObjectContext.new(state)
+			space.addObject(ctx)
+			temp_boardObjectLookup[state] = ctx
 
 func unregisterBoardObject(state:DracominoHandler.StateBoardObject) -> void: ## Removes board object from lookups if there
 	assert(state != null, "State should not be null here")
 	if state == null: return
-	var ctx:BoardObjectContext = boardObjectLookup.get(state.index)
-	if ctx is BoardObjectContext:
-		ctx.destroy()
-	boardObjectLookup.erase(state.index)
+	if state.index >= 0:
+		var ctx:BoardObjectContext = boardObjectLookup.get(state.index)
+		if ctx is BoardObjectContext:
+			ctx.destroy()
+		boardObjectLookup.erase(state.index)
+	else:
+		var ctx:BoardObjectContext = temp_boardObjectLookup.get(state)
+		if ctx is BoardObjectContext:
+			ctx.destroy()
+		temp_boardObjectLookup.erase(state)
 
 func mapToTileSpaceCoordinates(mapCoordinates:Vector2i) -> Vector2i:
 	var _row:int = BOUNDS.end.y - mapCoordinates.y - 1 # Get row counting from the bottom
@@ -1213,6 +1263,7 @@ func _on_DracominoHandler_slot_context_hash_updated(_slotContextHash:int) -> voi
 		tileSpaces[k].destroy()
 	tileSpaces.clear()
 	boardObjectLookup.clear()
+	temp_boardObjectLookup.clear()
 	# Reseed random
 	_lineoffset_random.seed = _slotContextHash
 	_lineoffset_randomSaveState = _lineoffset_random.state
@@ -1251,9 +1302,8 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 				backgroundTileMap.set_cell(mapCoord, 0, BACKGROUND_TILE_ATLAS_COORD)
 			var space:TileSpace = getTileSpace(vec)
 			if space:
-				for index:int in space.objects:
+				for ctx:BoardObjectContext in space.allObjects:
 					# Create if it doesn't exist
-					var ctx:BoardObjectContext = space.objects[index]
 					if ctx.node == null:
 						ctx.node = createBoardObject(ctx.state.objectName)
 						if ctx.node == null:
@@ -1316,6 +1366,29 @@ func _on_effect_impatience():
 	SoundManager.play("trap")
 	for i in range(EFFECT_IMPATIENCE_NUM_PIECES_TO_SPAWN):
 		tween.tween_callback(requestPiece.bind(true)).set_delay(i*0.5)
+
+func _on_effect_web():
+	SoundManager.play("trap")
+	# Get a list of empty spaces
+	var validMapCoords:Array[Vector2i] = []
+	for y in range(EFFECT_WEB_BOUNDS.position.y, EFFECT_WEB_BOUNDS.end.y):
+		for x in range(rowOffsets.get(y, EFFECT_WEB_BOUNDS.position.x), rowEnds.get(y, EFFECT_WEB_BOUNDS.end.x)):
+			var vec:Vector2i = Vector2i(x, y)
+			if not isTileFilled(vec):
+				var space:TileSpace = getTileSpaceAtMapCoord(vec)
+				if not space or not space.hasObjects():
+					validMapCoords.append(mapToTileSpaceCoordinates(vec))
+
+	# Make webs
+	for i in range(EFFECT_WEB_NUM_TO_SPAWN):
+		if validMapCoords.is_empty():
+			break
+		var mapCoords:Vector2i = validMapCoords.pop_at(randi_range(0, validMapCoords.size()-1))
+		var state:DracominoHandler.StateBoardObject = DracominoHandler.StateBoardObject.new(mapCoords, &"web")
+		var ctx:BoardObjectContext = BoardObjectContext.new(state)
+		registerBoardObjectIfNotAlready(state)
+
+	_on_DracominoState_line_mappings_updated()
 
 func _on_boardeffect_queued():
 	EffectHandler.tryToTriggerNextBoardEffect(self)
