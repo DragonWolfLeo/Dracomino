@@ -2,6 +2,12 @@ class_name BoardObject extends Node2D
 
 @export var animSync:AnimationSyncConfig
 
-func attachTimerAndOffset(timer:ActivityTimer, offset:float) -> void:
+@export var collectSound:StringName = &"itempickup"
+
+func attachTimerAndOffset(timer:ActivityTimer, offset:float) -> void: ## Pass anim sync setup to AnimationSyncConfig
 	if animSync:
 		animSync.attachTimerAndOffset(timer, offset)
+
+func collect() -> void: ## Play sound as if this is collected
+	if collectSound:
+		SoundManager.play(collectSound)

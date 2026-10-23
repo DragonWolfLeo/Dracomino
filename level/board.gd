@@ -109,6 +109,11 @@ class BoardObjectContext:
 		if node:
 			node.queue_free()
 			node = null
+	
+	func getBoardObject() -> BoardObject: ## Return node but casted as BoardObject if applicable
+		if node is BoardObject:
+			return node as BoardObject
+		return null
 
 class TileSpace: ## Context object for tile space and all board objects occupying it
 	var coordinates:Vector2i
@@ -824,7 +829,6 @@ func resetGame():
 	requestPiece.call_deferred()
 
 func lockPiece(piece:Piece):
-	var pickedUpItem:bool = false
 	for cell in piece.globalCells:
 		if (
 			cell.y >= BOUNDS.position.y
@@ -839,12 +843,12 @@ func lockPiece(piece:Piece):
 			var space:TileSpace = getTileSpaceAtMapCoord(mapCoord)
 			if space:
 				for ctx:BoardObjectContext in space.objects.values():
-					pickedUpItem = true
 					var state:DracominoHandler.StateBoardObject = ctx.state
+					var bo:BoardObject = ctx.getBoardObject()
+					if bo:
+						bo.collect()
 					unregisterBoardObject(ctx.state)
 					item_pickedup.emit(state)
-	if pickedUpItem:
-		SoundManager.play("itempickup")
 
 	# Allow board to send death on restart
 	boardIsFresh = false
@@ -1221,8 +1225,9 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 							# Shouldn't reach this point unless someone did something very wrong
 							continue
 						add_child(ctx.node)
-						if ctx.node is BoardObject:
-							(ctx.node as BoardObject).attachTimerAndOffset(syncTimer, line)
+						var bo:BoardObject = ctx.getBoardObject()
+						if bo:
+							bo.attachTimerAndOffset(syncTimer, line)
 					# Move into the proper place
 					ctx.node.position = map_to_local(mapCoord)
 
