@@ -52,14 +52,13 @@ class Data:
 	]
 	var id:int
 	var prettyName:StringName
-	var internalName:StringName
 	var tags:Dictionary[StringName, bool]
 	var type:StringName
 	func _init(arr=[]):
 		arr.resize(4)
 		id = arr[0] as int
 		prettyName = arr[1] as StringName
-		internalName = (arr[2] if arr[2] else prettyName.to_snake_case()) as StringName
+		_set_internalName((arr[2] if arr[2] else prettyName.to_snake_case()) as StringName)
 		for tag in arr[3] as Array:
 			tags[tag as StringName] = true
 		for tag in OBJECT_TYPES:
@@ -67,8 +66,24 @@ class Data:
 				type = tag
 				break
 
-class ItemData extends Data: pass
-class LocationData extends Data: pass
+	func _set_internalName(_internalName:StringName) -> void: ## Overridible to use the internalName field
+		pass
+
+class ItemData extends Data:
+	var internalName:StringName ## Internal name should be unique among item data
+	func _set_internalName(_internalName:StringName) -> void:
+		internalName = _internalName
+
+class LocationData extends Data: 
+	var objectName:StringName ## Object name does not have to be unique, but corresponds to scene name in res://objects/boardobjects
+	var isLineClear:bool: ## Is this a line clear location?
+		get:
+			return bool(tags.get(&"line_clear", false))
+	var isBoardObject:bool: ## Is this a board object location?
+		get:
+			return bool(tags.get(&"item_pickup", false))
+	func _set_internalName(_internalName:StringName) -> void:
+		objectName = _internalName
 
 @onready var ITEMS:Dictionary[int, ItemData] = [
 	# Abilities (1-100)
@@ -181,16 +196,17 @@ class LocationData extends Data: pass
 @onready var LOCATIONS:Dictionary[int, LocationData] = _combineArrays([
 	# Each location type will have 10000 "reserved" for it, but we'll only create a reasonable amount for now, just to save on datapackage size
 	# Common
-	_locationRangeConfig(      0,  1_000, "Line {n} Cleared",     [ "line_clear" ]),
-	_locationRangeConfig( 10_000, 10_000, "Dragon Coin {n}",      [ "item_pickup" ]),
+	_locationRangeConfig(      0,  1_000, "Line {n} Cleared",         "",                [ "line_clear" ]),
+	_locationRangeConfig( 10_000, 10_000, "Dragon Coin {n}",          "coin",            [ "item_pickup" ]),
+	# Reserve 20_000 for unique locations
 	# Story mode
-	_locationRangeConfig( 20_000,    100, "Boss {n} Defeated",    [ "boss_defeat" ]),
-	_locationRangeConfig( 30_000,  1_000, "Ore Chunk {n}",        [ "item_pickup" ]), # Home Sweet Home - Dragon Lair
-	_locationRangeConfig( 40_000,  1_000, "Ghost {n} Defeated",   [ "item_pickup" ]), # Home Sweet Home - Spooky Woods
-	_locationRangeConfig( 50_000,  1_000, "Treasure Piece {n}",   [ "item_pickup" ]), # Home Sweet Home - Riverside
-	_locationRangeConfig( 60_000,  1_000, "Fish {n} Caught",      [ "item_pickup" ]), # Home Sweet Home - Riverside
-	_locationRangeConfig( 70_000,  1_000, "Webbed Gem {n}",       [ "item_pickup" ]), # Home Sweet Home - Spider Nest
-	_locationRangeConfig( 80_000,  1_000, "Spider {n} Defeated",  [ "item_pickup" ]), # Home Sweet Home - Spider Nest
+	_locationRangeConfig( 30_000,    100, "Boss {n} Defeated",        "",                [ "boss_defeat" ]),
+	_locationRangeConfig( 40_000,  1_000, "Ore Chunk {n}",            "orechunk",        [ "item_pickup" ]), # Home Sweet Home - Dragon Lair
+	_locationRangeConfig( 50_000,  1_000, "Ghost {n} Defeated",       "ghost",           [ "item_pickup" ]), # Home Sweet Home - Spooky Woods
+	_locationRangeConfig( 60_000,  1_000, "Treasure Piece {n}",       "treasurepiece",   [ "item_pickup" ]), # Home Sweet Home - Riverside
+	_locationRangeConfig( 70_000,  1_000, "Fish {n} Caught",          "fish",            [ "item_pickup" ]), # Home Sweet Home - Riverside
+	_locationRangeConfig( 80_000,  1_000, "Gem {n}",                  "gem",             [ "item_pickup" ]), # Home Sweet Home - Spider Nest
+	_locationRangeConfig( 90_000,  1_000, "Spider {n} Defeated",      "spider",          [ "item_pickup" ]), # Home Sweet Home - Spider Nest
 ]).reduce(_generateDataTable.bind(LocationData.new), {} as Dictionary[int, LocationData])
 
 # Private generator functions
@@ -206,10 +222,10 @@ static func _combineArrays(nestedArr:Array) -> Array:
 		arr.append_array(subArr)
 	return arr
 
-static func _locationRangeConfig(offsetId:int = 0, amount:int = 10000, locationNameTemplate:String = "", locationTags:Array[String] = []) -> Array:
+static func _locationRangeConfig(offsetId:int = 0, amount:int = 10000, locationNameTemplate:String = "", objectName:StringName = "", locationTags:Array[String] = []) -> Array:
 	var arr = []
 	for i in range(1, amount + 1):
-		arr.append([i + offsetId, locationNameTemplate.format({n=i}), "", locationTags])
+		arr.append([i + offsetId, locationNameTemplate.format({n=i}), objectName, locationTags])
 	return arr
 
 # === Trap Link ===

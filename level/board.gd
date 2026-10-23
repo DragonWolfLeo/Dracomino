@@ -83,7 +83,7 @@ signal linesCleared_updated(num:int)
 signal game_over_earned()
 signal game_started()
 signal pieces_requested(callback:Callable, num:int)
-signal item_pickedup(loc_id:int)
+signal item_pickedup(state:DracominoHandler.StateBoardObject)
 signal deathlink_earned(deathContext:DracominoUtil.DeathContext)
 signal activePieces_changed()
 signal effect_activated(item:DracominoHandler.StateItem) ## Relayed from EffectHandler
@@ -842,7 +842,7 @@ func lockPiece(piece:Piece):
 					pickedUpItem = true
 					var state:DracominoHandler.StateBoardObject = ctx.state
 					unregisterBoardObject(ctx.state)
-					item_pickedup.emit(state.loc_id)
+					item_pickedup.emit(state)
 	if pickedUpItem:
 		SoundManager.play("itempickup")
 
