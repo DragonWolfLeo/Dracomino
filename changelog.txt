@@ -1,3 +1,6 @@
+Version 0.3.3.2 (2026 October 23)
+ - Fix GodotAP vulnerabilty
+
 Version 0.3.3.1 (2026 October 19)
  - Add text limit to console, avoiding crash when there's too much.
 
