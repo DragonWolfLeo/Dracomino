@@ -52,6 +52,15 @@ script = ExtResource("2_5smlf")
 flag = "irregular_board"
 debugOnly = true
 
+[node name="Btn_Upsidedown" type="CheckButton" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "(RESTARTS GAME!)
+Board starts from the top and continues downward."
+text = "Upside-Down Rows (Test)"
+script = ExtResource("2_5smlf")
+flag = "upsidedown_rows"
+debugOnly = true
+
 [node name="Btn_PixelFilter" type="CheckButton" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Pixellation Filter"
