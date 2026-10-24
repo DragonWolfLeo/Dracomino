@@ -10,7 +10,7 @@ script = ExtResource("1_jtb83")
 collectOnTouch = true
 collectOnCollision = true
 lockPieceOnTouch = true
-collectSound = &""
+collectSound = &"web"
 deathParticlesScene = ExtResource("4_6antp")
 metadata/_custom_type_script = "uid://6uieedcjeaar"
 
