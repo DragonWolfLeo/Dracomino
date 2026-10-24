@@ -67,6 +67,7 @@ var linesCleared:int = 0:
 		linesCleared_updated.emit(linesCleared)
 var flagHolder:FlagHolder
 var effectHandler:EffectHandler
+var upsidedownRows:bool = false
 
 var _lastHeldPieceContext:DracominoHandler.PieceContext ## For deathlink message context; TODO: Obsolete
 
@@ -190,12 +191,11 @@ class ClearingChunk:
 		flip = !flip
 		tilesToActivate.append_array(arr)
 		mappedLine = BOUNDS.end.y - row - 1
-	func pushDown() -> void:
-		# Remap data when rows get pushed down
-		row += 1
+	func pushDownOrUp(amount:int = 1) -> void: ## Remap data when rows get pushed down; 1 is down, -1 is up
+		row += amount
 		for i in range(tilesToActivate.size()):
-			tilesToActivate[i].y += 1
-		mappedLine -= 1
+			tilesToActivate[i].y += amount
+		mappedLine -= amount
 
 class PieceMovement:
 	var board:Board
@@ -441,6 +441,10 @@ func _ready():
 		label.text = str(i + 1)
 		scn.position = map_to_local(Vector2i(BOUNDS.position.x, _row))
 		$LineNumberBar.add_child(scn)
+	# Temp signal for upsidedown mode
+	SignalBus.getSignal("stateflag_set", "upsidedown_rows").connect(set.bind("upsidedownRows", true))
+	SignalBus.getSignal("stateflag_cleared", "upsidedown_rows").connect(set.bind("upsidedownRows", false))
+	SignalBus.getSignal("stateflag_changed", "upsidedown_rows").connect(resetGame)
 
 #===== Functions ======
 var _is_irregular_board:bool = false
@@ -509,8 +513,8 @@ func processClearingChunk(chunk:ClearingChunk) -> void:
 		func():					
 			clearingChunks.erase(chunk)
 			chunk.completed.emit()
-			pushDownRows(chunk)
-			lines_cleared.emit([chunk.mappedLine])
+			pushRows(chunk)
+			lines_cleared.emit([getAdjustedRow(chunk.mappedLine)])
 			if not clearingChunks.size():
 				checkForEvent(["line_clear"])
 	)
@@ -977,7 +981,7 @@ func getFullRows() -> Array[int]:
 		# Figure out if this is a check or not so we can play the correct sound
 		var isMissingLineCheck:bool = false
 		for i in fullRows:
-			var line:int = _linemappings.get(BOUNDS.end.y - i - 1, 0) 
+			var line:int = _linemappings.get(getAdjustedRow(BOUNDS.end.y - i - 1), 0) 
 			isMissingLineCheck = _missinglines.get(line, false)
 		SoundManager.play("lineclear_check" if isMissingLineCheck else "lineclear")
 	return fullRows
@@ -1009,7 +1013,13 @@ func isInDanger() -> bool:
 				return true
 	return false
 
-func pushDownRows(clearedChunk:ClearingChunk) -> void:
+func pushRows(clearedChunk:ClearingChunk) -> void:
+	if upsidedownRows:
+		pushRowsUp(clearedChunk)
+	else:
+		pushRowsDown(clearedChunk)
+
+func pushRowsDown(clearedChunk:ClearingChunk) -> void:
 	# Move tiles down
 	for y in range(clearedChunk.row, BOUNDS.position.y -1, -1):
 		for x in range(
@@ -1023,12 +1033,36 @@ func pushDownRows(clearedChunk:ClearingChunk) -> void:
 			if isPieceBottomOnRow(ent,y-1):
 				ent.move(Vector2i.DOWN)
 
-	activatedTileHandler.pushDownRows(clearedChunk.row)
+	activatedTileHandler.pushRowsDown(clearedChunk.row)
 			
 	# Move clearing chunks down
 	for chunk in clearingChunks:
 		if chunk.row < clearedChunk.row:
-			chunk.pushDown()
+			chunk.pushDownOrUp(1)
+
+	# Update ghosts
+	updateAllGhosts()
+
+func pushRowsUp(clearedChunk:ClearingChunk) -> void:
+	# Move tiles down
+	for y in range(clearedChunk.row, BOUNDS.end.y):
+		for x in range(
+			# Move the entire width of both affected rows combined
+			min(rowOffsets.get(y, BOUNDS.position.x), rowOffsets.get(y + 1, BOUNDS.position.x)),
+			max(rowEnds.get(y, BOUNDS.end.x), rowEnds.get(y + 1, BOUNDS.end.x))
+		):
+			set_cell(Vector2i(x,y), 0, get_cell_atlas_coords(Vector2i(x, y + 1)))
+		# Move entities down
+		for ent:Piece in entities:
+			if isPieceBottomOnRow(ent,y+1):
+				ent.move(Vector2i.UP)
+
+	activatedTileHandler.pushRowsUp(clearedChunk.row)
+			
+	# Move clearing chunks up
+	for chunk in clearingChunks:
+		if chunk.row > clearedChunk.row:
+			chunk.pushDownOrUp(-1)
 
 	# Update ghosts
 	updateAllGhosts()
@@ -1145,7 +1179,7 @@ func unregisterBoardObject(state:DracominoHandler.StateBoardObject) -> void: ## 
 
 func mapToTileSpaceCoordinates(mapCoordinates:Vector2i) -> Vector2i:
 	var _row:int = BOUNDS.end.y - mapCoordinates.y - 1 # Get row counting from the bottom
-	var line:int = _linemappings.get(_row, 0) # Get line this row is mapped to
+	var line:int = _linemappings.get(getAdjustedRow(_row), 0) # Get line this row is mapped to
 	var tileSpaceCoordinates:Vector2i = Vector2i(mapCoordinates.x - BOUNDS.position.x, line)
 	tileSpaceCoordinates.x -= _lineoffsets.get(line, 0) # Adjust from offset
 	return tileSpaceCoordinates
@@ -1275,6 +1309,14 @@ func _on_newPieceObtained():
 	fillPreview()
 	requestPiece()
 
+static func flipRow(_row:int) -> int: ## Flips row as if flipping the board upside down
+	return Board.BOUNDS.size.y - _row - 1
+
+func getAdjustedRow(_row:int) -> int: ## Flips row as if flipping the board upside down
+	if upsidedownRows:
+		return flipRow(_row)
+	return _row
+
 func _on_DracominoHandler_slot_context_hash_updated(_slotContextHash:int) -> void:
 	# New seed loaded so do a full cleanup
 	for k:Vector2i in tileSpaces:
@@ -1297,7 +1339,7 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 
 	for i:int in range(lineNumberLabels.size()):
 		# Re-number the labels
-		var line:int = lineMappings.get(i, 0)
+		var line:int = lineMappings.get(getAdjustedRow(i), 0)
 		var _offset:int = _lineoffsets.get(line, 0)
 		lineNumberLabels[i].text = str(line + 1)
 		lineNumberLabels[i].modulate = Color.WHITE if _missinglines.get(line, false) else Color8(0x55,0x55,0x55) # Make dark if collected

@@ -96,7 +96,7 @@ func clear() -> void:
 	crystallizedTileMap.clear()
 	cleared.emit()
 
-func pushDownRows(row:int) -> void:
+func pushRowsDown(row:int) -> void:
 	var CRYSTAL_UP:Vector2i = Vector2i.UP*2
 	# Move tiles down
 	for y in range(row, Board.BOUNDS.position.y -1, -1):
@@ -117,6 +117,31 @@ func pushDownRows(row:int) -> void:
 				crystallizedCell+Vector2i.RIGHT+Vector2i.DOWN
 			]:
 				crystallizedTileMap.set_cell(v, 0, crystallizedTileMap.get_cell_atlas_coords(v+CRYSTAL_UP))
+	
+	for x in range(Board.BOUNDS.position.x, Board.BOUNDS.end.x):
+		crystallizedTileMap.updateSurrounding(Vector2i(x, row))
+
+func pushRowsUp(row:int) -> void:
+	var CRYSTAL_DOWN:Vector2i = Vector2i.DOWN*2
+	# Move tiles down
+	for y in range(row, Board.BOUNDS.end.y):
+		for x in range(Board.BOUNDS.position.x, Board.BOUNDS.end.x):
+			var cell := Vector2i(x,y)
+			var belowCell := cell + Vector2i.DOWN
+			activatedTileMap.set_cell(
+				cell,
+				activatedTileMap.get_cell_source_id(belowCell),
+				activatedTileMap.get_cell_atlas_coords(belowCell),
+				activatedTileMap.get_cell_alternative_tile(belowCell)
+			)
+			var crystallizedCell = cell*2
+			for v in [
+				crystallizedCell, 
+				crystallizedCell+Vector2i.RIGHT, 
+				crystallizedCell+Vector2i.DOWN, 
+				crystallizedCell+Vector2i.RIGHT+Vector2i.DOWN
+			]:
+				crystallizedTileMap.set_cell(v, 0, crystallizedTileMap.get_cell_atlas_coords(v+CRYSTAL_DOWN))
 	
 	for x in range(Board.BOUNDS.position.x, Board.BOUNDS.end.x):
 		crystallizedTileMap.updateSurrounding(Vector2i(x, row))
