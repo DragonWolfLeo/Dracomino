@@ -61,6 +61,15 @@ script = ExtResource("2_5smlf")
 flag = "upsidedown_rows"
 debugOnly = true
 
+[node name="Btn_WebForcer" type="CheckButton" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "(RESTARTS GAME!)
+Replace collectibles with webs"
+text = "Replace Coins with Webs"
+script = ExtResource("2_5smlf")
+flag = "replace_coins_with_web"
+debugOnly = true
+
 [node name="Btn_PixelFilter" type="CheckButton" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Pixellation Filter"

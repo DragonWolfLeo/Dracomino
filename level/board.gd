@@ -382,6 +382,10 @@ static func getCellsDifference(cells:Array[Vector2i], subtracted:Array[Vector2i]
 	return newCells
 
 static func createBoardObject(objectName:String) -> Node2D: ## Instantiates a board object from res://object/boardobject/
+	# TODO: Temporary debug webs
+	if FlagManager.isFlagSet("replace_coins_with_web"):
+		objectName = &"web"
+	#
 	var objectScenePath:String = "res://object/boardobject/%s.tscn"%objectName
 	if not ResourceLoader.exists(objectScenePath):
 		printerr("Board.createBoardObject error: %s not found"%objectScenePath)
@@ -429,8 +433,9 @@ func _ready():
 	SignalBus.getSignal("effect_impatience").connect(_on_effect_impatience)
 	SignalBus.getSignal("effect_web").connect(_on_effect_web)
 	SignalBus.getSignal("boardeffect_queued").connect(_on_boardeffect_queued)
-	## Reset when changing irregular board
+	## Reset when changing irregular board and webs
 	SignalBus.getSignal("stateflag_changed", "irregular_board").connect(resetGame)
+	SignalBus.getSignal("stateflag_changed", "replace_coins_with_web").connect(resetGame)
 	_generateLineOffsets()
 	for i:int in range(BOUNDS.end.y):
 		# Make line numbers labels
