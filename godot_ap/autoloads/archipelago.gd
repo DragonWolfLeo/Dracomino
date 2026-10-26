@@ -866,7 +866,7 @@ func _send_datapack_request() -> void:
 # Write the datapack cache to disk.
 func _cache_datapacks() -> void:
 	var cachefile = FileAccess.open("user://ap/datapacks/cache.dat", FileAccess.WRITE)
-	cachefile.store_var(_datapack_cache, true)
+	cachefile.store_var(_datapack_cache, false)
 	cachefile.close()
 
 
