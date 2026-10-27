@@ -70,6 +70,7 @@ var EFFECTS:Dictionary[StringName, Effect] = {
 	space_trap = Effect.new(_activateEffect.bind("effect_space", 8, false)),
 	riptide_trap = Effect.new(_activateEffect.bind("effect_riptide", 8, false)),
 	web_trap = Effect.new(SignalBus.getSignal("effect_web").emit),
+	spinspin = Effect.new(_activateTimedEffect.bind("overlay_spinspin", 180)),
 	noop = Effect.new(_NOOP),
 
 	# == Trap Link Specific ==

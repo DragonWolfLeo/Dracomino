@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://ckv6tnuoxlxgw"]
+[gd_scene load_steps=15 format=3 uid="uid://ckv6tnuoxlxgw"]
 
 [ext_resource type="Shader" uid="uid://bqohxdob6tubs" path="res://resource/shader/crystal.gdshader" id="1_qjtf7"]
 [ext_resource type="Script" uid="uid://dvj4uugycseke" path="res://module/overlayfilter.gd" id="2_5coou"]
@@ -7,7 +7,9 @@
 [ext_resource type="Shader" uid="uid://dobuvt43qhvwi" path="res://resource/shader/waterwave.gdshader" id="5_ogaaw"]
 [ext_resource type="PackedScene" uid="uid://dhqni4ryrpliy" path="res://screen/welldone_filter.tscn" id="7_74bbe"]
 [ext_resource type="PackedScene" uid="uid://bk4uliv6j16ps" path="res://screen/riptide_foreground.tscn" id="8_5uhy6"]
+[ext_resource type="PackedScene" uid="uid://quqs2fhw4fe3" path="res://object/spinspin.tscn" id="9_jm7pi"]
 [ext_resource type="Script" uid="uid://3hyxsaj4myy1" path="res://module/play_sound_on_visible.gd" id="9_ogaaw"]
+[ext_resource type="PackedScene" uid="uid://b2uhcavishhys" path="res://screen/screenbounds.tscn" id="10_jm7pi"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_m1ejn"]
 shader = ExtResource("1_qjtf7")
@@ -130,3 +132,13 @@ copy_mode = 2
 [node name="PlaySoundOnVisible" type="Node2D" parent="RiptideForeground"]
 script = ExtResource("9_ogaaw")
 soundName = "trap"
+
+[node name="SpinSpin" parent="." instance=ExtResource("9_jm7pi")]
+process_mode = 3
+position = Vector2(480, 270)
+collision_layer = 0
+lock_rotation = true
+script = ExtResource("2_5coou")
+flag = "overlay_spinspin"
+
+[node name="ScreenBounds" parent="." instance=ExtResource("10_jm7pi")]
