@@ -1,0 +1,91 @@
+[gd_scene load_steps=13 format=3 uid="uid://quqs2fhw4fe3"]
+
+[ext_resource type="Texture2D" uid="uid://bjq8g6hfn467j" path="res://assets/art/object/spinspin.png" id="1_o424i"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_o424i"]
+friction = 0.0
+bounce = 1.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_o424i"]
+atlas = ExtResource("1_o424i")
+region = Rect2(0, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_56d7d"]
+atlas = ExtResource("1_o424i")
+region = Rect2(128, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7fkx2"]
+atlas = ExtResource("1_o424i")
+region = Rect2(256, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ek8bi"]
+atlas = ExtResource("1_o424i")
+region = Rect2(384, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gcteu"]
+atlas = ExtResource("1_o424i")
+region = Rect2(512, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3twsg"]
+atlas = ExtResource("1_o424i")
+region = Rect2(640, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_agpqk"]
+atlas = ExtResource("1_o424i")
+region = Rect2(768, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d4r8w"]
+atlas = ExtResource("1_o424i")
+region = Rect2(896, 0, 128, 128)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_8rc0l"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_o424i")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_56d7d")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7fkx2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ek8bi")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gcteu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3twsg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_agpqk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d4r8w")
+}],
+"loop": true,
+"name": &"default",
+"speed": 30.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_o424i"]
+radius = 43.0465
+
+[node name="SpinSpin" type="RigidBody2D"]
+collision_layer = 32
+collision_mask = 64
+physics_material_override = SubResource("PhysicsMaterial_o424i")
+gravity_scale = 0.0
+linear_velocity = Vector2(256, -256)
+linear_damp_mode = 1
+angular_damp_mode = 1
+
+[node name="SpinSpin" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_8rc0l")
+autoplay = "default"
+frame_progress = 0.291247
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_o424i")
