@@ -122,7 +122,8 @@ class LocationData extends Data:
 	[217, "Impatience Trap",          "impatience_trap",            [ "trap", "on_spawn" ] ],
 	[218, "In Space!",                "space_trap",                 [ "trap", "on_spawn"] ],
 	[219, "Riptide Trap",             "riptide_trap",               [ "trap", "on_spawn"] ],
-	[220, "Web Trap",                 "web_trap",                   [ "trap", "on_spawn"] ],
+	[220, "Spider Web Trap",          "web_trap",                   [ "trap", "on_spawn"] ],
+	[221, "Spin Spin",                "spinspin",                   [ "trap", "on_spawn"] ],
 
 	# # Ones that might just be effects only, dunno
 	# [000, "Premium Trap",             "", [ "trap" ] ],
@@ -240,9 +241,9 @@ var TRAP_ALIASES:Dictionary[StringName, String] = {
 	# premium_trap           = "Premium Trap", # Might scrap
 	riptide_trap            = "Riptide Trap",
 	space_trap              = "Space Trap",
-	spinspin                = "Spin Spin",
+	spinspin                = "Spin Trap",
 	# unrandomization_trap    = "Unrandomization Trap",
-	web_trap                = "Web Trap",
+	web_trap                = "Spider Web Trap",
 	welldone                = "Well Done Trap",
 
 	# EXISTING TRAPS
@@ -289,9 +290,9 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	# "Premium Trap"            : "premium_trap",
 	"Riptide Trap"            : "riptide_trap",
 	"Space Trap"              : "space_trap",
-	"Spin Spin"               : "spinspin",
+	"Spin Trap"               : "spinspin",
 	# "Unrandomization Trap"    : "unrandomization_trap",
-	"Web Trap"                : "web_trap",
+	"Spider Web Trap"         : "web_trap",
 	"Well Done Trap"          : "welldone",
 
 	# OTHER TRAPS
