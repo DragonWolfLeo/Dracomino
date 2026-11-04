@@ -157,6 +157,10 @@ class CampaignContext:
 
 	static var CLASSIC_CAMPAIGN_LINES_PER_ACT:int = 20
 
+	func _init() -> void:
+		SignalBus.getSignal("stateflag_changed", "total_aether_value").connect(_on_stateflag_changed)
+		SignalBus.getSignal("stateflag_changed", "rotate").connect(_on_stateflag_changed)
+
 	## Generate a classic campaign
 	static func Classic(lines:int, linesPerAct:int = CLASSIC_CAMPAIGN_LINES_PER_ACT) -> CampaignContext:
 		var c:CampaignContext = CampaignContext.new()
@@ -172,7 +176,7 @@ class CampaignContext:
 			var act:ActContext = ActContext.new(linesPerAct)
 			c.acts.append(act)
 			act.prettyName = "Section %s"%(i+1)
-			remainingLines -= linesPerAct		
+			remainingLines -= linesPerAct
 
 		# Add remaining lines to last act
 		if not c.acts.is_empty():
@@ -211,11 +215,26 @@ class CampaignContext:
 			act.removeMissingLocation(loc_id)
 
 	func cleanUp(): ## Clean up this object. It frees anyway when unreferenced anyway, but being extra cautious
+		SignalBus.getSignal("stateflag_changed", "total_aether_value").disconnect(_on_stateflag_changed)
+		SignalBus.getSignal("stateflag_changed", "rotate").disconnect(_on_stateflag_changed)
 		for act:ActContext in acts:
 			act.disconnectSignals()
 
+	# === Events ===
+	func _on_stateflag_changed() -> void:
+		# Figure out which acts are available with aether collected
+		var aether:float = FlagManager.getTotalCountAmount("total_aether_value")
+		var previousCompleted:bool = true
+		for act:ActContext in acts:
+			act.selectable = previousCompleted and aether >= 0
+			if previousCompleted and not act.isLogicallyCleared():
+				previousCompleted = false
+			aether -= act.aetherCapacity
+
+
 class ActContext:
 	signal completed()
+	signal selectable_changed(isSelectable:bool)
 
 	var prettyName:StringName = "Unnamed Act"
 	var lines:int
@@ -223,9 +242,17 @@ class ActContext:
 	var isCompleted:bool: ## Are all locations in this act checked?
 		get:
 			return missingLocations.is_empty()
+	var selectable:bool = false:
+		set(value):
+			if selectable == value: return
+			selectable = value
+			selectable_changed.emit(value)
+	var aetherCapacity:float ## The amount of aether it takes to complete this act
 
 	func _init(_lines:int = 20) -> void:
 		lines = _lines
+		# TODO: Handle variable line size around here
+		aetherCapacity = lines * Board.BOUNDS.size.x * CONSTANTS.AETHER_PER_BLOCK
 
 	func registerMissingLocation(loc_id:int) -> void: ## Add a missing location
 		missingLocations[loc_id] = true
@@ -242,6 +269,9 @@ class ActContext:
 	func disconnectSignals() -> void: ## Disconnect signals for clean up (probably unnecessary)
 		for dict:Dictionary in completed.get_connections():
 			(dict["signal"] as Signal).disconnect(dict["callable"] as Callable)
+
+	func isLogicallyCleared() -> bool: ## Is this act completed and in logic?
+		return isCompleted and FlagManager.isFlagSet("rotate")
 
 
 #===== Virtuals =====
@@ -512,6 +542,9 @@ func giveItem(item:StateItem):
 			"shape":
 				seedFlagHolder.count("shapes_left", "collected", 1, true)
 				seedFlagHolder.count("shapes", item.data.internalName, 1, true)
+				var aether:int = int(DracominoUtil.getAetherValueOfItem(item.data))
+				if aether > 0:
+					seedFlagHolder.count("total_aether_value", "collected", aether, true)
 				var streak:Streak
 				# Get last shape in collectedItems and get its streak object if the same as this one 
 				var index:int = collectedItems.size() - 2 # Get the one right before the one we just added
@@ -666,6 +699,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 
 	# Reset collected items
 	seedFlagHolder.count("shapes_left", "collected", 0)
+	seedFlagHolder.count("total_aether_value", "collected", 0)
 	collectedItems.clear()
 	collectedAbilities.clear()
 	allLineLocations.clear()

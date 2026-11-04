@@ -6,6 +6,7 @@ var MANA_PER_BLOCK:float = 4
 var MANA_PER_COIN:float = 20
 var MANA_PER_VERSUS_DEFEAT:float = MANA_PER_BLOCK * 50 # 5 lines worth
 var ENERGY_LINK_SHARE:float = 0.5
+var AETHER_PER_BLOCK:float = 4
 
 var DISPEL_MANA_COST:float = MANA_PER_BLOCK * 50 # 5 lines worth
 
@@ -37,6 +38,15 @@ var LEGACY_PIECE_COLOR_MAPPINGS:Array[int] = [
 ]
 var NUMBER_OF_PIECE_COLORS_MIN = 1
 var NUMBER_OF_PIECE_COLORS_MAX = 16
+
+## Number of blocks per shape type
+var NUMBER_OF_BLOCKS_PER_SHAPE_TYPE:Dictionary[StringName, int] = {
+	monomino = 1,
+	domino = 2,
+	tromino = 3,
+	tetromino = 4,
+	pentomino = 5,
+}
 
 # Item + Location Data
 class Data:

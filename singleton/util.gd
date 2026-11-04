@@ -214,3 +214,10 @@ static func getSimplifiedNumberString(num:float) -> String:
 			return String.num(units, 1 if idx > 0 else 0)+UNIT_MULTIPLES[idx]
 
 static var UNIT_MULTIPLES:Array[String] = ["", "k", "M", "G", "T"]
+
+## Get shape value of item
+static func getAetherValueOfItem(itemData:CONSTANTS.ItemData) -> float:
+	for shapeType:StringName in CONSTANTS.NUMBER_OF_BLOCKS_PER_SHAPE_TYPE:
+		if itemData.tags.has(shapeType):
+			return CONSTANTS.NUMBER_OF_BLOCKS_PER_SHAPE_TYPE[shapeType] * CONSTANTS.AETHER_PER_BLOCK
+	return 0
