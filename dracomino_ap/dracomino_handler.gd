@@ -28,6 +28,12 @@ var slotContextHash:int:
 			return
 		slotContextHash = value
 		slotContextHash_updated.emit(slotContextHash)
+var campaign:CampaignContext:
+	set(value):
+		if campaign == value:
+			return
+		campaign = value
+		campaign_changed.emit(campaign)
 var seedFlagHolder:FlagHolder
 var retroFlagHolder:FlagHolder
 var effectHandler:EffectHandler
@@ -52,6 +58,7 @@ signal notification_signal(notif:String, color:Color, force:bool)
 signal boardObjects_updated(lookup:Dictionary[int, StateBoardObject])
 signal piecesLeft_updated(total:int)
 signal goal_updated(goalnum:int)
+signal campaign_changed(campaign:CampaignContext)
 signal slotContextHash_updated(ctx:int)
 signal started()
 
@@ -144,6 +151,99 @@ class PieceContext:
 		instantSpawn = _instantSpawn
 		return self
 
+class CampaignContext:
+	var acts:Array[ActContext] = []
+	var location_id_to_act:Dictionary[int, ActContext]
+
+	static var CLASSIC_CAMPAIGN_LINES_PER_ACT:int = 20
+
+	## Generate a classic campaign
+	static func Classic(lines:int, linesPerAct:int = CLASSIC_CAMPAIGN_LINES_PER_ACT) -> CampaignContext:
+		var c:CampaignContext = CampaignContext.new()
+
+		# Force minimum 1 line
+		lines = max(1, lines)
+		linesPerAct = max(1, linesPerAct)
+
+		# Each act will have no less than lines per act, unless there's not enough lines for a full act
+		var numActsToMake:int = max(1, floor(lines/linesPerAct))
+		var remainingLines:int = lines
+		for i:int in range(numActsToMake):
+			var act:ActContext = ActContext.new(linesPerAct)
+			c.acts.append(act)
+			act.prettyName = "Section %s"%(i+1)
+			remainingLines -= linesPerAct		
+
+		# Add remaining lines to last act
+		if not c.acts.is_empty():
+			(c.acts.back() as ActContext).lines += remainingLines
+		#
+		return c
+
+	## Generate a story campaign
+	static func Story(actConfig:Array[Dictionary] = []) -> CampaignContext:
+		var c:CampaignContext = CampaignContext.new()
+		# TODO
+		return c
+
+	# === Functions ===
+	func getActAtLine(line:int) -> ActContext:
+		for act:ActContext in acts:
+			if line < act.lines:
+				return act
+			line -= act.lines
+		return acts.back()
+
+	func registerMissingLocationByLine(loc_id:int, line:int) -> void: ## Registers a missing location into its proper act
+		if location_id_to_act.has(loc_id):
+			# Don't register if already did
+			return
+		var act:ActContext = getActAtLine(line)
+		assert(act != null, "Tried to register a missing location for nonexistent act")
+		if act is ActContext:
+			act.registerMissingLocation(loc_id)
+			location_id_to_act[loc_id] = act
+
+	func removeMissingLocation(loc_id:int) -> void: ## Remove a missing location from its act because it was checked; Do nothing if already checked
+		var act:ActContext = location_id_to_act.get(loc_id, null)
+		if act is ActContext:
+			location_id_to_act.erase(loc_id)
+			act.removeMissingLocation(loc_id)
+
+	func cleanUp(): ## Clean up this object. It frees anyway when unreferenced anyway, but being extra cautious
+		for act:ActContext in acts:
+			act.disconnectSignals()
+
+class ActContext:
+	signal completed()
+
+	var prettyName:StringName = "Unnamed Act"
+	var lines:int
+	var missingLocations:Dictionary[int, bool] ## Locations present in this act; bool is always true (erase when checked)
+	var isCompleted:bool: ## Are all locations in this act checked?
+		get:
+			return missingLocations.is_empty()
+
+	func _init(_lines:int = 20) -> void:
+		lines = _lines
+
+	func registerMissingLocation(loc_id:int) -> void: ## Add a missing location
+		missingLocations[loc_id] = true
+
+	func removeMissingLocation(loc_id:int) -> void: ## Removed checked locations from this act; Emits completed when last location is checked
+		if missingLocations.is_empty():
+			return
+		assert(missingLocations.has(loc_id), "Location id %s is not in act"%loc_id)
+		missingLocations.erase(loc_id)
+
+		if missingLocations.is_empty():
+			completed.emit()
+
+	func disconnectSignals() -> void: ## Disconnect signals for clean up (probably unnecessary)
+		for dict:Dictionary in completed.get_connections():
+			(dict["signal"] as Signal).disconnect(dict["callable"] as Callable)
+
+
 #===== Virtuals =====
 func _ready() -> void:
 	Archipelago.connected.connect(_on_connected)
@@ -196,6 +296,9 @@ func newSeedReset():
 	collectedAbilities.clear()
 	allLineLocations.clear()
 	missingPickups.clear()
+	if campaign is CampaignContext:
+		campaign.cleanUp()
+		campaign = null
 	hintedRotateAbilities.clear()
 	resetSeedFlagHolder()
 	# Reset randoms
@@ -252,15 +355,19 @@ func getNextPiece() -> PieceContext:
 
 func sendLocation(loc_id:int):
 	# Send the location
-	if Archipelago.conn and missingLocations.get(loc_id, false):
-		Archipelago.collect_location(loc_id)
-		print("Sending location: ", CONSTANTS.LOCATIONS[loc_id].prettyName)
-	elif Archipelago.conn:
+	if missingLocations.get(loc_id, false):
+		if Archipelago.conn:
+			Archipelago.collect_location(loc_id)
+			print("Sending location: ", CONSTANTS.LOCATIONS[loc_id].prettyName)
+		else:
+			print("Will send ", CONSTANTS.LOCATIONS[loc_id].prettyName, " to server when reconnected.")
+		
+		if campaign:
+			campaign.removeMissingLocation(loc_id)
+	else:	
 		print("Already sent: ", CONSTANTS.LOCATIONS[loc_id].prettyName)
-	else:
-		print("Will send ", CONSTANTS.LOCATIONS[loc_id].prettyName, " to server when reconnected.")
 	
-	missingLocations[loc_id] = false
+	missingLocations.erase(loc_id)
 	checkedLocations[loc_id] = true
 	# TODO: Only board objects that are currency are currency
 	if id_to_boardObject.has(loc_id):
@@ -541,6 +648,15 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		for abilityname in ["rotate_clockwise", "rotate_counterclockwise", "gravity", "soft_drop", "hard_drop"]:
 			seedFlagHolder.setFlag("existing_"+abilityname)
 
+	# Set up campaign
+	if campaign == null:
+		var actConfig:Variant = conn.slot_data.get("act_config")
+		if actConfig is Dictionary:
+			# TODO: Story data gets loaded here
+			campaign = CampaignContext.Classic(goal)
+		else:
+			campaign = CampaignContext.Classic(goal)
+
 	# Set randomize orientations
 	var randomizeOrientations = conn.slot_data.get("randomize_orientations", false)
 	if randomizeOrientations:
@@ -580,7 +696,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 			else:
 				checkedLocations[loc_id] = true
 				if missingLocations.get(loc_id, false):
-					missingLocations[loc_id] = false
+					missingLocations.erase(loc_id)
 					_missingLocations_changed = true
 			if loc_data.isLineClear:
 				allLineLocations.append(loc_id)
@@ -648,10 +764,18 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	for i:int in range(allLineLocations.size()):
 		id_to_line[allLineLocations[i]] = i
 		missingLines[i] = missingLocations.get(allLineLocations[i], false)
+		if missingLines[i]:
+			campaign.registerMissingLocationByLine(allLineLocations[i], i)
 
 	for sbo:StateBoardObject in boardObjects.values():
 		if sbo.isLocation:
 			id_to_boardObject[sbo.loc_id] = sbo
+			if missingLocations.get(sbo.loc_id, false):
+				campaign.registerMissingLocationByLine(sbo.loc_id, sbo.coordinates.y)
+
+	# Sync with campaign (because reconnect)
+	for loc_id:int in locsToCollect:
+		campaign.removeMissingLocation(loc_id)
 
 	if victory:
 		sendVictory()
@@ -729,6 +853,8 @@ func _on_remove_location(loc_id:int):
 	var changed:bool = missingLocations.get(loc_id, false)
 	missingLocations.erase(loc_id)
 	if changed:
+		if campaign:
+			campaign.removeMissingLocation(loc_id)
 		checkedLocations[loc_id] = true
 		if id_to_line.has(loc_id):
 			missingLines[id_to_line[loc_id]] = false
