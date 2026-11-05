@@ -1,0 +1,40 @@
+[gd_resource type="Theme" load_steps=8 format=3 uid="uid://dld1yt1on6jy7"]
+
+[ext_resource type="FontFile" uid="uid://g3itr7tagcaw" path="res://resource/font/ChakraPetch-Regular.ttf" id="1_e1xws"]
+[ext_resource type="FontFile" uid="uid://dsmco8aopu3b6" path="res://resource/font/ChakraPetch-Bold.ttf" id="2_kr83f"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e1xws"]
+bg_color = Color(0.333333, 0.333333, 0.333333, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kr83f"]
+bg_color = Color(0.666667, 0.333333, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p1tab"]
+bg_color = Color(0.666667, 0.333333, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cndkl"]
+bg_color = Color(0.333333, 0.333333, 0.666667, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hqd04"]
+bg_color = Color(0, 0, 0.333333, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0, 0.333333, 0.666667, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+corner_detail = 1
+
+[resource]
+Button/colors/font_color = Color(1, 1, 1, 1)
+Button/colors/font_disabled_color = Color(0, 0, 0, 1)
+Button/fonts/font = ExtResource("1_e1xws")
+Button/styles/disabled = SubResource("StyleBoxFlat_e1xws")
+Button/styles/focus = SubResource("StyleBoxFlat_kr83f")
+Button/styles/hover = SubResource("StyleBoxFlat_p1tab")
+Button/styles/normal = SubResource("StyleBoxFlat_cndkl")
+Label/fonts/font = ExtResource("2_kr83f")
+PanelContainer/styles/panel = SubResource("StyleBoxFlat_hqd04")

@@ -152,8 +152,15 @@ class PieceContext:
 		return self
 
 class CampaignContext:
+	signal checkpoint_changed(act:ActContext)
+
 	var acts:Array[ActContext] = []
 	var location_id_to_act:Dictionary[int, ActContext]
+	var checkpoint:ActContext:
+		set(value):
+			if checkpoint == value: return
+			checkpoint = value
+			checkpoint_changed.emit(value)
 
 	static var CLASSIC_CAMPAIGN_LINES_PER_ACT:int = 20
 
@@ -175,13 +182,17 @@ class CampaignContext:
 		for i:int in range(numActsToMake):
 			var act:ActContext = ActContext.new(linesPerAct)
 			c.acts.append(act)
-			act.prettyName = "Section %s"%(i+1)
+			act.prettyName = "Line %s"%((i*linesPerAct)+1)
+			act.load_requested.connect(c.loadAct.bind(act))
 			remainingLines -= linesPerAct
 
 		# Add remaining lines to last act
 		if not c.acts.is_empty():
 			(c.acts.back() as ActContext).lines += remainingLines
-		#
+
+		# Update selectables and checkpoint
+		c._on_stateflag_changed()
+		
 		return c
 
 	## Generate a story campaign
@@ -219,29 +230,40 @@ class CampaignContext:
 		SignalBus.getSignal("stateflag_changed", "rotate").disconnect(_on_stateflag_changed)
 		for act:ActContext in acts:
 			act.disconnectSignals()
+		for dict:Dictionary in checkpoint_changed.get_connections():
+			(dict["signal"] as Signal).disconnect(dict["callable"] as Callable)
+
+	func loadCheckpoint():
+		loadAct(checkpoint)
+
+	func loadAct(act:ActContext) -> void:
+		# TODO
+		SignalBus.getSignal("restartGame").emit()
 
 	# === Events ===
 	func _on_stateflag_changed() -> void:
 		# Figure out which acts are available with aether collected
 		var aether:float = FlagManager.getTotalCountAmount("total_aether_value")
 		var previousCompleted:bool = true
+		var newCheckpoint:ActContext
 		for act:ActContext in acts:
 			act.selectable = previousCompleted and aether >= 0
+			if act.selectable:
+				newCheckpoint = act
 			if previousCompleted and not act.isLogicallyCleared():
 				previousCompleted = false
 			aether -= act.aetherCapacity
+		checkpoint = newCheckpoint
 
 
 class ActContext:
 	signal completed()
 	signal selectable_changed(isSelectable:bool)
+	signal load_requested()
 
 	var prettyName:StringName = "Unnamed Act"
 	var lines:int
 	var missingLocations:Dictionary[int, bool] ## Locations present in this act; bool is always true (erase when checked)
-	var isCompleted:bool: ## Are all locations in this act checked?
-		get:
-			return missingLocations.is_empty()
 	var selectable:bool = false:
 		set(value):
 			if selectable == value: return
@@ -267,11 +289,18 @@ class ActContext:
 			completed.emit()
 
 	func disconnectSignals() -> void: ## Disconnect signals for clean up (probably unnecessary)
-		for dict:Dictionary in completed.get_connections():
-			(dict["signal"] as Signal).disconnect(dict["callable"] as Callable)
+		for s:Signal in [completed, selectable_changed, load_requested] as Array[Signal]:
+			for dict:Dictionary in s.get_connections():
+				(dict["signal"] as Signal).disconnect(dict["callable"] as Callable)
+
+	func isCompleted() -> bool:  ## Are all locations in this act checked?
+		return missingLocations.is_empty()
 
 	func isLogicallyCleared() -> bool: ## Is this act completed and in logic?
-		return isCompleted and FlagManager.isFlagSet("rotate")
+		return isCompleted() and FlagManager.isFlagSet("rotate")
+
+	func loadAct() -> void: ## Emits the signal to load this act
+		load_requested.emit()
 
 
 #===== Virtuals =====

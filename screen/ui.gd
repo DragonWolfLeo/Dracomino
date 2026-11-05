@@ -8,6 +8,7 @@ signal state_changed(state)
 @onready var dialogueEditWindow:ConfirmationDialog = $DialogueEditWindow
 @onready var dialogueEdit:CodeEdit = $DialogueEditWindow/DialogueEdit
 @onready var centerLabel:Label = %CenterLabel
+@onready var actSelectScreen:CanvasLayer = $ActSelectScreen
 
 enum STATES {
 	NORMAL = 1,
@@ -17,8 +18,9 @@ enum STATES {
 	DIALOGUE_EDIT = 1 << 4,
 	GAMEOVER = 1 << 5,
 	NOT_FOCUSED = 1 << 6,
+	ACT_SELECT = 1 << 7,
 
-	NOTIFICATION_PAUSE = PAUSE | GAMEOVER | NOT_FOCUSED | DEBUG | DIALOGUE_EDIT
+	NOTIFICATION_PAUSE = PAUSE | GAMEOVER | NOT_FOCUSED | DEBUG | DIALOGUE_EDIT | ACT_SELECT
 }
 
 @onready var allowedScreens = {
@@ -26,6 +28,7 @@ enum STATES {
 	dialogueScreen: STATES.DIALOGUE,
 	debugScreen: STATES.DEBUG,
 	dialogueEditWindow: STATES.DIALOGUE_EDIT,
+	actSelectScreen: STATES.ACT_SELECT,
 }
 
 var state:int = 0: set = changeState
@@ -40,6 +43,9 @@ func _ready():
 	DialogueManager.dialogue_updated.connect(SignalBus.getSignal("effect_duration_down").emit.unbind(2)) # Updating dialogue lowers trap duration
 	
 	dialogueEdit.text = ""
+
+	if actSelectScreen:
+		actSelectScreen.visibility_changed.connect(_on_ActSelectScreen_visibility_changed)
 	
 func bitclearState(_state: int):
 	changeState(state &~ _state)
@@ -176,3 +182,9 @@ func _on_DialogueEdit_hidden() -> void:
 func _on_DialogueEditWindow_window_input(event:InputEvent) -> void:
 	if event.is_action_pressed("edit"):
 		bitclearState(STATES.DIALOGUE_EDIT)
+
+func _on_ActSelectScreen_visibility_changed() -> void:
+	if actSelectScreen.visible:
+		bitsetState(STATES.ACT_SELECT)
+	else:
+		bitclearState(STATES.ACT_SELECT)
