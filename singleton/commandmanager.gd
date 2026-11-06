@@ -44,6 +44,7 @@ func _ready():
 	addCommand("FADEOUTINVISIBLE", Overlay.doFadeOut.unbind(1), true)
 	addCommand("SHOWCUTSCENE", Overlay.showCutsceneByName).setArgHint("cutscene")
 	addCommand("HIDECUTSCENE", Overlay.hideCutscene.unbind(1), true)
+	addCommand("ANNOUNCE", Overlay.queueAnnouncement, true)
 	# Global flag setting
 	addCommand("SETFLAG", FlagManager.setFlag, true).setArgHint(DESC.SETFLAG)
 	# addCommand("SETFLAGTOMORROW", FlagManager.queueFlag, true).setArgHint(DESC.SETFLAG)
