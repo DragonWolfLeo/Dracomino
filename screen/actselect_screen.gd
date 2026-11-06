@@ -8,7 +8,7 @@ extends CanvasLayer
 # === Virtuals ===
 func _ready() -> void:
 	clearButtonContainer()
-	SignalBus.getSignal("openActSelect").connect(show)
+	SignalBus.getSignal("openActSelect").connect(_on_openActSelect_signal)
 	SignalBus.getSignal("restartGame").connect(hide)
 	visibility_changed.connect(_on_visibility_changed)
 	# Cancel button
@@ -20,7 +20,7 @@ func _ready() -> void:
 	btn_checkpoint.focus_entered.connect(SoundManager.play.bind("select"))
 
 func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
+	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("back"):
 		hide()
 		get_viewport().set_input_as_handled()
 
@@ -55,8 +55,12 @@ func _on_DracominoHandler_campaign_changed(campaign:DracominoHandler.CampaignCon
 			otherActsSection.show()
 
 func _on_visibility_changed() -> void:
+	set_process_input(visible)
 	if visible:
 		btn_checkpoint.grab_focus()
+
+func _on_openActSelect_signal() -> void:
+	visible = !visible
 
 func _on_actButton_selectable_changed(isSelectable:bool, btn:Button, showOtherActs:bool = true) -> void:
 	if is_instance_valid(btn):
