@@ -20,6 +20,9 @@ var cutscene:Control = null
 @onready var cutsceneContainer := $CutsceneContainer
 @onready var objectOverlay := $ObjectOverlay
 @onready var objectContainer := $ObjectOverlay/ObjectContainer
+@onready var announcementContainer := %AnnouncementContainer
+
+static var ANNOUNCEMENT_OBJECT_SCENE:PackedScene = load("res://ui/announcement_object.tscn")
 
 func _enter_tree() -> void:
 	overlay = self
@@ -216,3 +219,13 @@ func clearCutscene():
 	for child in cutsceneContainer.get_children():
 		child.queue_free()
 	cutscene = null
+
+static func queueAnnouncement(message:String) -> void:
+	if not overlay: return
+	var context:SoundManager.QueuedSoundContext = SoundManager.enqueue("abilityget")
+	context.activated.connect(overlay.showAnnouncement.bind(message))
+
+func showAnnouncement(message:String) -> void:
+	var obj:AnnouncementObject = ANNOUNCEMENT_OBJECT_SCENE.instantiate() as AnnouncementObject
+	announcementContainer.add_child(obj)
+	obj.setText(message)

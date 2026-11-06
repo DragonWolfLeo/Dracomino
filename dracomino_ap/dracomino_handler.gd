@@ -494,6 +494,7 @@ func sendLine(lineIndex:int):
 func sendVictory():
 	victory = true
 	Archipelago.set_client_status(Archipelago.ClientStatus.CLIENT_GOAL)
+	Overlay.queueAnnouncement("You reached your goal! Congratulations!")
 
 func giveMana(amount:float, shareThroughEnergyLink:bool = true) -> void:
 	# Send mana/energy
@@ -642,7 +643,6 @@ func giveItem(item:StateItem):
 					collectedAbilities[item.id] += 1
 				else:
 					collectedAbilities[item.id] = 1
-				var prettyName = item.data.prettyName
 
 				# Add flag for ability
 				seedFlagHolder.count(item.data.internalName, "collected", collectedAbilities[item.id])
@@ -654,6 +654,10 @@ func giveItem(item:StateItem):
 				# Keep track of rotate abilities collected
 				if item.data.tags.get("rotate"):
 					seedFlagHolder.count("rotate", item.data.internalName, 1)
+
+				# Announce the ability you got
+				if not isJustConnected:
+					Overlay.queueAnnouncement("You got {item}!".format({item=item.data.prettyName}))
 			# Trigger effects
 			"on_lock", "on_spawn":
 				if not isJustConnected:
@@ -924,6 +928,13 @@ func _on_newSeed_refresh_items():
 	# Reset when everything is loaded
 	if campaign is CampaignContext:
 		campaign.updateActs()
+		# Make acts announce when unlocked
+		for act:ActContext in campaign.acts:
+			act.selectable_changed.connect(
+				func(isSelectable):
+					if isSelectable:
+						Overlay.queueAnnouncement("%s Checkpoint is unlocked!"%act.prettyName)
+			)
 	SignalBus.getSignal("restartGame").emit()
 
 func _on_deathlink(source: String, cause: String, json: Dictionary):

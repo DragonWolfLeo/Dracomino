@@ -1,0 +1,37 @@
+[gd_scene load_steps=3 format=3 uid="uid://82i3lfivo12t"]
+
+[ext_resource type="FontFile" uid="uid://brbxrenwotboe" path="res://resource/font/Galindo-Regular.ttf" id="1_gbtjn"]
+[ext_resource type="Script" uid="uid://cd68c5l7okqcp" path="res://ui/announcement_object.gd" id="1_gotii"]
+
+[node name="AnnouncementObject" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_gotii")
+
+[node name="Offset" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="RichTextLabel" parent="Offset"]
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_colors/default_color = Color(1, 1, 0, 1)
+theme_override_constants/outline_size = 12
+theme_override_fonts/normal_font = ExtResource("1_gbtjn")
+theme_override_font_sizes/normal_font_size = 40
+text = "You got an item!"
+fit_content = true
+scroll_active = false
+shortcut_keys_enabled = false
+horizontal_alignment = 1
+vertical_alignment = 1
