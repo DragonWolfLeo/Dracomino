@@ -43,7 +43,7 @@ func _on_DracominoHandler_campaign_changed(campaign:DracominoHandler.CampaignCon
 			var actButton:Button = Button.new()
 			actButton.text = act.prettyName
 			actButton.visible = act.selectable
-			act.selectable_changed.connect(_on_actButton_selectable_changed.bind(actButton))
+			act.selectable_changed.connect(_on_actButton_selectable_changed.bind(actButton, act != campaign.acts.front()))
 			actButton.pressed.connect(act.loadAct)
 			actButton.pressed.connect(SoundManager.play.bind("confirm"))
 			actButton.pressed.connect(hide, CONNECT_DEFERRED)
@@ -58,10 +58,10 @@ func _on_visibility_changed() -> void:
 	if visible:
 		btn_checkpoint.grab_focus()
 
-func _on_actButton_selectable_changed(isSelectable:bool, btn:Button) -> void:
+func _on_actButton_selectable_changed(isSelectable:bool, btn:Button, showOtherActs:bool = true) -> void:
 	if is_instance_valid(btn):
 		btn.visible = isSelectable
-		if isSelectable:
+		if isSelectable and showOtherActs:
 			otherActsSection.show()
 
 func _on_campaign_checkpoint_changed(act:DracominoHandler.ActContext) -> void:
