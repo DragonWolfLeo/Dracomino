@@ -186,14 +186,14 @@ class CampaignContext:
 			c.acts.append(act)
 			act.prettyName = "Line %s"%((i*linesPerAct)+1)
 			act.load_requested.connect(c.loadAct.bind(act))
+			act.selectable_changed.connect(c._on_act_selectable_changed.bind(act))
 			remainingLines -= linesPerAct
 
-		# Add remaining lines to last act
 		if not c.acts.is_empty():
+			# Add remaining lines to last act
 			(c.acts.back() as ActContext).lines += remainingLines
-
-		# Update selectables and checkpoint
-		c._on_stateflag_changed()
+			# Set a checkpoint
+			c.checkpoint = c.acts.front() as ActContext
 		
 		return c
 
@@ -258,20 +258,40 @@ class CampaignContext:
 			aether += act.aetherCapacity 
 		return 0
 
+	func getLastSelectableCheckpoint() -> ActContext: ## Get last selectable checkpoint
+		var lastCheckpoint:ActContext
+		for act:ActContext in acts:
+			if act.selectable:
+				lastCheckpoint = act
+			else:
+				break
+		return lastCheckpoint
+
+	func updateActs() -> void: ## Set acts as selectable and get last checkpoint once game is first loaded
+		_on_stateflag_changed()
+		checkpoint = getLastSelectableCheckpoint()
+
 	# === Events ===
 	func _on_stateflag_changed() -> void:
 		# Figure out which acts are available with aether collected
 		var aether:float = FlagManager.getTotalCountAmount("total_aether_value")
 		var previousCompleted:bool = true
-		var newCheckpoint:ActContext
 		for act:ActContext in acts:
 			act.selectable = previousCompleted and aether >= 0
-			if act.selectable:
-				newCheckpoint = act
 			if previousCompleted and not act.isLogicallyCleared():
 				previousCompleted = false
 			aether -= act.aetherCapacity
-		checkpoint = newCheckpoint
+
+	func _on_act_selectable_changed(isSelectable:bool, act:ActContext) -> void:
+		if isSelectable:
+			# Automatically set act as checkpoint if previous is immediately before
+			var prevIndex:int = acts.find(act) - 1
+			if prevIndex >= 0:
+				if acts[prevIndex] == checkpoint:
+					checkpoint = act
+		elif act == checkpoint:
+			# Since this is unselectable now, select a new valid checkpoint
+			checkpoint = getLastSelectableCheckpoint()
 
 
 class ActContext:
@@ -391,9 +411,6 @@ func newSeedReset():
 	color_randomSaveState = color_random.state
 	rotate_random.seed = slotContextHash+1
 	rotate_randomSaveState = rotate_random.state
-	# Reset when everything is loaded
-	await started
-	SignalBus.getSignal("restartGame").emit()
 
 func resetSeedFlagHolder():
 	if seedFlagHolder: seedFlagHolder.queue_free()
@@ -709,6 +726,12 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	if slotContextHash != _conn_ctx:
 		slotContextHash = _conn_ctx
 		newSeedReset()
+		
+		# Set up a signal to reset the game once everything is loaded
+		if is_instance_valid(warningDialog):
+			warningDialog.tree_exited.connect(_on_newSeed_refresh_items)
+		else:
+			conn.refresh_items.connect(_on_newSeed_refresh_items.unbind(1), CONNECT_ONE_SHOT)
 
 	goal = conn.slot_data.get("goal", -1)
 
@@ -896,6 +919,12 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 
 	# Send energy that couldn't be sent earlier
 	sendEnergy.call_deferred()
+
+func _on_newSeed_refresh_items():
+	# Reset when everything is loaded
+	if campaign is CampaignContext:
+		campaign.updateActs()
+	SignalBus.getSignal("restartGame").emit()
 
 func _on_deathlink(source: String, cause: String, json: Dictionary):
 	var vsmode:bool = FlagManager.isFlagSet("versus_mode")
