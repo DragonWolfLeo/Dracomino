@@ -104,14 +104,14 @@ class Enchantment:
 class Modifier:
 	var strength:float = 1
 	var type:StringName
-	var isEligible:Callable = func(): return true
+	var isEligible:Callable = func(_piece:Piece): return true
 	var alwaysActive:bool = false
 
 	func _init(_type:StringName = "") -> void:
 		type = _type
 
-	func addCondition(fn:Callable) -> Modifier:
-		isEligible = fn
+	func addCondition(fnOfPiece:Callable) -> Modifier: ## Add a function that takes Piece as a parameter
+		isEligible = fnOfPiece
 		return self
 
 	func setStrength(_strength:float) -> Modifier:
@@ -142,11 +142,11 @@ static var MODIFIERS:Dictionary[StringName, Modifier] = {
 	afterimage = Modifier.new("afterimage").setAlwaysActive()
 }
 
-static func _canUseGravityEnchantment() -> bool:
+static func _canUseGravityEnchantment(_piece:Piece) -> bool:
 	return FlagManager.isFlagSet("gravity") and FlagManager.isFlagSet("soft_drop/hard_drop")
 
-static func _canRotate() -> bool:
-	return FlagManager.isFlagSet("rotate")
+static func _canRotate(_piece:Piece) -> bool:
+	return FlagManager.isFlagSet("rotate") and _piece.canRotate
 
 static var ENCHANTMENTS:Dictionary[StringName, Enchantment] = {
 	enchantment_curse = Enchantment.new("curse", [
@@ -503,7 +503,7 @@ func applyEnchantmentByName(enchantmentName:StringName) -> Enchantment:
 			context.prettyName = enchantment.prettyName + " " + context.name
 		var eligibleMods:Array[Modifier] = []
 		for mod in enchantment.modifiers:
-			if mod.isEligible.call():
+			if mod.isEligible.call(self):
 				if mod.alwaysActive:
 					applyModifer(mod)
 				else:
