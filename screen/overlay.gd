@@ -221,7 +221,8 @@ func clearCutscene():
 	cutscene = null
 
 static func queueAnnouncement(message:String) -> void:
-	if not overlay: return
+	if not overlay or not Config.getSetting("showAnnouncements", true):
+		return
 	var context:SoundManager.QueuedSoundContext = SoundManager.enqueue("abilityget")
 	context.activated.connect(overlay.showAnnouncement.bind(message))
 
