@@ -139,7 +139,13 @@ static var MODIFIERS:Dictionary[StringName, Modifier] = {
 	rotate_epic = Modifier.new("rotate").setStrength(0.7).addCondition(_canRotate),
 	rotate_legendary = Modifier.new("rotate").setStrength(0.25),
 
-	afterimage = Modifier.new("afterimage").setAlwaysActive()
+	afterimage = Modifier.new("afterimage").setAlwaysActive(),
+
+	damage_curse = Modifier.new("damage").setStrength(0.5).setAlwaysActive(),
+	damage_uncommon = Modifier.new("damage").setStrength(1.5).setAlwaysActive(),
+	damage_rare = Modifier.new("damage").setStrength(2.0).setAlwaysActive(),
+	damage_epic = Modifier.new("damage").setStrength(2.5).setAlwaysActive(),
+	damage_legendary = Modifier.new("damage").setStrength(3.0).setAlwaysActive(),
 }
 
 static func _canUseGravityEnchantment(_piece:Piece) -> bool:
@@ -152,20 +158,24 @@ static var ENCHANTMENTS:Dictionary[StringName, Enchantment] = {
 	enchantment_curse = Enchantment.new("curse", [
 		MODIFIERS.gravity_curse,
 		MODIFIERS.movement_curse,
+		MODIFIERS.damage_curse,
 	]),
 	enchantment_uncommon = Enchantment.new("uncommon", [
 		MODIFIERS.gravity_uncommon,
 		MODIFIERS.movement_uncommon,
+		MODIFIERS.damage_uncommon,
 	]),
 	enchantment_rare = Enchantment.new("rare", [
 		MODIFIERS.gravity_rare,
 		MODIFIERS.movement_rare,
 		MODIFIERS.rotate_rare,
+		MODIFIERS.damage_rare,
 	]),
 	enchantment_epic = Enchantment.new("epic", [
 		MODIFIERS.gravity_epic,
 		MODIFIERS.movement_epic,
 		MODIFIERS.rotate_epic,
+		MODIFIERS.damage_epic,
 	]),
 	enchantment_legendary = Enchantment.new("legendary", [
 		MODIFIERS.antigravity,
@@ -173,11 +183,30 @@ static var ENCHANTMENTS:Dictionary[StringName, Enchantment] = {
 		MODIFIERS.movement_legendary,
 		MODIFIERS.rotate_legendary,
 		MODIFIERS.afterimage,
+		MODIFIERS.damage_legendary,
 	]),
-	enchantment_curse_gravity = Enchantment.new("curse", [MODIFIERS.gravity_curse]),
-	enchantment_curse_movement = Enchantment.new("curse", [MODIFIERS.movement_curse]),
-	enchantment_legendary_movement = Enchantment.new("legendary", [MODIFIERS.movement_legendary]),
-	enchantment_legendary_spin = Enchantment.new("legendary", [MODIFIERS.rotate_legendary]),
+	enchantment_curse_gravity = Enchantment.new("curse", [
+		MODIFIERS.gravity_curse,
+		MODIFIERS.damage_curse,
+	]),
+	enchantment_curse_movement = Enchantment.new("curse", [
+		MODIFIERS.movement_curse,
+		MODIFIERS.damage_curse,
+	]),
+	enchantment_legendary_movement = Enchantment.new("legendary", [
+		MODIFIERS.movement_legendary,
+		MODIFIERS.antigravity,
+		MODIFIERS.gravity_epic,
+		MODIFIERS.afterimage,
+		MODIFIERS.damage_legendary,
+	]),
+	enchantment_legendary_spin = Enchantment.new("legendary", [
+		MODIFIERS.rotate_legendary,
+		MODIFIERS.antigravity,
+		MODIFIERS.gravity_epic,
+		MODIFIERS.afterimage,
+		MODIFIERS.damage_legendary,
+	]),
 	enchantment_random = Enchantment.new("random"),
 	enchantment = Enchantment.new("enchantment"),
 }

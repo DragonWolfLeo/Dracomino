@@ -40,8 +40,11 @@ func _on_activeEffect_duration_changed(remaining:int) -> void:
 
 func _on_landed_on_by(piece:Piece, movementType:int):
 	if not activeEffect: return
-	var tickAmount:int = 2
+	var tickAmount:float = 2
+	# Apply enchantment damage modifier
+	tickAmount *= float(piece.modifiers.get("damage", 1.0))
+	# Double damage if hard dropping
 	match movementType:
 		Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE:
-			tickAmount = 4
-	activeEffect.tickDuration(tickAmount, false)
+			tickAmount *= 2
+	activeEffect.tickDuration(roundi(tickAmount), false)
