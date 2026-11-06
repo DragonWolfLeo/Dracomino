@@ -31,6 +31,7 @@ const DEFAULT_SETTINGS:Dictionary[StringName, Variant] = {
 	horizontal_repeatDelay = 1.0,
 	fishResisting = true,
 	allowUnfocusedInputs = false,
+	showAnnouncements = true,
 }
 var settings:Dictionary[StringName, Variant] = DEFAULT_SETTINGS.duplicate()
 var VERSION_UPGRADES:Dictionary[String, Callable] = {
