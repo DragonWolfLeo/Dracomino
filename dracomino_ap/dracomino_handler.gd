@@ -128,11 +128,13 @@ class PieceContext:
 	var colorId:int = -1
 	var orientationId:int = -1
 	var instantSpawn:bool = false
+	var aether:float = 0
 	static var fallbackRandom:RandomNumberGenerator = RandomNumberGenerator.new()
 	func _init(_stateItem:StateItem) -> void:
 		stateItem = _stateItem
 		if stateItem.data:
 			name = stateItem.data.prettyName
+			aether = DracominoUtil.getAetherValueOfItem(stateItem.data)
 		randomizeColor()
 		randomizeOrientation()
 	func randomizeColor(random:RandomNumberGenerator = fallbackRandom) -> PieceContext:
@@ -237,8 +239,24 @@ class CampaignContext:
 		loadAct(checkpoint)
 
 	func loadAct(act:ActContext) -> void:
-		# TODO
+		checkpoint = act
 		SignalBus.getSignal("restartGame").emit()
+
+	func getCheckpointLine() -> int: ## Get the line the current checkpoint starts on
+		var startingLine:int = 0
+		for act:ActContext in acts:
+			if act == checkpoint:
+				return startingLine
+			startingLine += act.lines 
+		return 0
+
+	func getCheckpointAetherCost() -> float: ## Get the aether cost of current checkpoint
+		var aether:float = 0
+		for act:ActContext in acts:
+			if act == checkpoint:
+				return aether
+			aether += act.aetherCapacity 
+		return 0
 
 	# === Events ===
 	func _on_stateflag_changed() -> void:
@@ -337,9 +355,16 @@ func reset():
 	# Reset randoms
 	color_random.state = color_randomSaveState
 	rotate_random.state = rotate_randomSaveState
+	var startingLine:int = 0
+	var aetherCost:float = 0
+	if campaign is CampaignContext:
+		startingLine = campaign.getCheckpointLine()
+		aetherCost = campaign.getCheckpointAetherCost()
 	# Fill visible line mappings
 	for i in range(Board.BOUNDS.size.y):
-		lineMappings[i] = i
+		lineMappings[i] = i + startingLine
+	# Set index forward until aether cost is spent
+	skipAetherWorthOfPieces(aetherCost)
 
 	lineMappings_updated.emit(lineMappings)
 
@@ -411,6 +436,13 @@ func getNextPiece() -> PieceContext:
 					_effectBuffer.append(stateItem)
 		currentIndex += 1
 	return null
+
+func skipAetherWorthOfPieces(aetherAmount:float) -> void:
+	while aetherAmount > 0:
+		var piece:PieceContext = getNextPiece()
+		if piece == null:
+			return
+		aetherAmount -= piece.aether
 
 func sendLocation(loc_id:int):
 	# Send the location
