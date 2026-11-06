@@ -11,6 +11,7 @@ func _ready() -> void:
 	SignalBus.getSignal("openActSelect").connect(_on_openActSelect_signal)
 	SignalBus.getSignal("restartGame").connect(hide)
 	visibility_changed.connect(_on_visibility_changed)
+	set_process_input(visible) # Don't process input while invisible
 	# Cancel button
 	btn_cancel.pressed.connect(hide)
 	btn_cancel.focus_entered.connect(SoundManager.play.bind("select"))
