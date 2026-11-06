@@ -1,0 +1,113 @@
+[gd_scene load_steps=5 format=3 uid="uid://ds2kugg6ra6uy"]
+
+[ext_resource type="Script" uid="uid://b2s7dh7bhjw7m" path="res://godot_ap/ui/theme_manager.gd" id="1_wfe0e"]
+[ext_resource type="Script" uid="uid://cttniyxj6oq7h" path="res://godot_ap/ui/theme_box.gd" id="2_x2ppi"]
+[ext_resource type="Script" uid="uid://cfbgk8vq58w0h" path="res://dracomino_ap/option_toggle_button.gd" id="3_6wts0"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_1wnfu"]
+
+[node name="Client" type="ScrollContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+follow_focus = true
+metadata/_tab_index = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="." node_paths=PackedStringArray("themes", "default_theme")]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+script = ExtResource("1_wfe0e")
+themes = [NodePath("Row/Col1/DarkTheme"), NodePath("Row/Col1/LightTheme")]
+default_theme = NodePath("Row/Col1/DarkTheme")
+
+[node name="Row" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="Col1" type="VBoxContainer" parent="MarginContainer/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DarkTheme" type="CheckBox" parent="MarginContainer/Row/Col1"]
+layout_mode = 2
+button_pressed = true
+button_group = SubResource("ButtonGroup_1wnfu")
+text = "Dark Mode"
+script = ExtResource("2_x2ppi")
+target_theme_path = "res://godot_ap/ui/themes/dark_theme.tres"
+metadata/_custom_type_script = "uid://cttniyxj6oq7h"
+
+[node name="LightTheme" type="CheckBox" parent="MarginContainer/Row/Col1"]
+layout_mode = 2
+button_group = SubResource("ButtonGroup_1wnfu")
+text = "Light Mode"
+script = ExtResource("2_x2ppi")
+target_theme_path = "res://godot_ap/ui/themes/light_theme.tres"
+metadata/_custom_type_script = "uid://cttniyxj6oq7h"
+
+[node name="Btn_ShowNonlocalItemSends" type="CheckButton" parent="MarginContainer/Row/Col1"]
+layout_mode = 2
+tooltip_text = "Show messages for item-sends that do not involve you"
+text = "Show Irrelevant Messages"
+script = ExtResource("3_6wts0")
+optionKey = "showNonlocalItemSends"
+
+[node name="Container_Pronouns" type="MarginContainer" parent="MarginContainer/Row/Col1"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/Row/Col1/Container_Pronouns"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HFlowContainer" parent="MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Pronouns:"
+
+[node name="OptionButton_Pronouns" type="OptionButton" parent="MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+selected = 0
+item_count = 4
+popup/item_0/text = "They/Them/Their"
+popup/item_0/id = 0
+popup/item_1/text = "He/Him/His"
+popup/item_1/id = 1
+popup/item_2/text = "She/Her/Her"
+popup/item_2/id = 2
+popup/item_3/text = "Custom"
+popup/item_3/id = 3
+
+[node name="PronounInputGroup" type="HFlowContainer" parent="MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LineEdit_He_She_They" type="LineEdit" parent="MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer/PronounInputGroup"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+placeholder_text = "They"
+max_length = 20
+
+[node name="LineEdit_Him_Her_Them" type="LineEdit" parent="MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer/PronounInputGroup"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+placeholder_text = "Them"
+max_length = 20
+
+[node name="LineEdit_His_Her_Their" type="LineEdit" parent="MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer/PronounInputGroup"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+placeholder_text = "Their"
+max_length = 20
