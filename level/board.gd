@@ -685,6 +685,15 @@ func isTileOccupied(cell:Vector2i) -> bool:
 			return true
 	return false
 
+func getOccupyingEntities(cells:Array[Vector2i]) -> Array[Piece]: ## Get all entities intersecting cells
+	var ret:Array[Piece] = []
+	for ent:Piece in entities:
+		for cell:Vector2i in cells:
+			if ent.globalCells.has(cell):
+				ret.append(ent)
+				break
+	return ret
+
 func placeOnHighestRow(piece:Piece):
 	var greatestY:int = 0
 	for cell in piece.globalCells:
@@ -1219,7 +1228,8 @@ func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:
 
 func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 	var dirs:Array[Vector2i] = [Vector2i.ZERO]
-	if FlagManager.isFlagSet("kick"):
+	var hasKick:bool = FlagManager.isFlagSet("kick")
+	if hasKick:
 		# Add more directions to push when kick is active
 		dirs.append_array([
 			Vector2i.DOWN,
@@ -1236,6 +1246,11 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 		var translatedCells := getTranslatedCells(cells, piece.currentPosition + dir)
 		if areCellsOpen(translatedCells) and not getCollidingPiece(translatedCells, piece):
 			piece.setCells(cells)
+			# Let entities get kicked
+			if hasKick:
+				for ent:Piece in getOccupyingEntities(piece.globalCells):
+					ent.getKickedBy(piece, -dir)
+			# Push piece in direction of kick
 			piece.move(dir, true)
 			SoundManager.play("rotate")
 			if dir.x != 0:

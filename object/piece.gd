@@ -350,6 +350,7 @@ signal focus_lost()
 signal trap_activated(stateItem:DracominoHandler.StateItem)
 signal piece_placed()
 signal landed_on_by(piece:Piece, movementType:int)
+signal kicked_by(piece:Piece, direction:Vector2i)
 signal moved(piece:Piece)
 
 #==== Virtuals ======
@@ -673,6 +674,9 @@ func getGravityDelay() -> float:
 
 func getLandedOnBy(piece:Piece, movementType:int = MOVEMENT.NONE) -> void:
 	landed_on_by.emit(piece, movementType)
+
+func getKickedBy(piece:Piece, direction:Vector2i = Vector2i.ZERO) -> void:
+	kicked_by.emit(piece, direction)
 
 func markEffectsAsUsed() -> void: ## Prevent repeating trap shapes and enchantments
 	if stateItem:

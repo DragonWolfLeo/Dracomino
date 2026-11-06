@@ -10,6 +10,7 @@ func _ready():
 	super()
 	piece_placed.connect(_on_piece_placed)
 	landed_on_by.connect(_on_landed_on_by)
+	kicked_by.connect(_on_kicked_by)
 
 func hatch():
 	if is_queued_for_deletion(): return
@@ -48,3 +49,12 @@ func _on_landed_on_by(piece:Piece, movementType:int):
 		Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE:
 			tickAmount *= 2
 	activeEffect.tickDuration(roundi(tickAmount), false)
+	
+func _on_kicked_by(piece:Piece, _direction:Vector2i) -> void:
+	if not activeEffect: return
+	var tickAmount:float = 1
+	# Apply enchantment damage modifier
+	tickAmount *= float(piece.modifiers.get("damage", 1.0))
+	# Double damage if hard dropping
+	activeEffect.tickDuration(roundi(tickAmount), false)
+	SoundManager.play("dink")
