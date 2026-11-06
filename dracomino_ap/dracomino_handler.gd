@@ -359,6 +359,7 @@ func reset():
 	var aetherCost:float = 0
 	if campaign is CampaignContext:
 		startingLine = campaign.getCheckpointLine()
+		seedFlagHolder.count("lines_cleared", "starting_line", startingLine)
 		aetherCost = campaign.getCheckpointAetherCost()
 	# Fill visible line mappings
 	for i in range(Board.BOUNDS.size.y):
@@ -996,7 +997,7 @@ func _on_Board_lines_cleared_updated(num:int) -> void:
 	# Make NO_ROTATE death context only happen when you're putting the effort
 	_canUseDeathContext_NO_ROTATE = num >= LINE_THRESHOLD_FOR_NO_ROTATE_DEATH_CONTEXT
 	# Send victory if reached goal
-	if not victory and goal > 0 and num >= goal:
+	if not victory and goal > 0 and FlagManager.getTotalCountAmount("lines_cleared") >= goal:
 		sendVictory()
 	# Send mana/energy
 	sendEnergy()
