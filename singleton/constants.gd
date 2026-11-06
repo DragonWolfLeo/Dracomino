@@ -6,6 +6,7 @@ var MANA_PER_BLOCK:float = 4
 var MANA_PER_COIN:float = 20
 var MANA_PER_VERSUS_DEFEAT:float = MANA_PER_BLOCK * 50 # 5 lines worth
 var ENERGY_LINK_SHARE:float = 0.5
+var AETHER_PER_BLOCK:float = 4
 
 var DISPEL_MANA_COST:float = MANA_PER_BLOCK * 50 # 5 lines worth
 
@@ -37,6 +38,15 @@ var LEGACY_PIECE_COLOR_MAPPINGS:Array[int] = [
 ]
 var NUMBER_OF_PIECE_COLORS_MIN = 1
 var NUMBER_OF_PIECE_COLORS_MAX = 16
+
+## Number of blocks per shape type
+var NUMBER_OF_BLOCKS_PER_SHAPE_TYPE:Dictionary[StringName, int] = {
+	monomino = 1,
+	domino = 2,
+	tromino = 3,
+	tetromino = 4,
+	pentomino = 5,
+}
 
 # Item + Location Data
 class Data:
@@ -122,7 +132,8 @@ class LocationData extends Data:
 	[217, "Impatience Trap",          "impatience_trap",            [ "trap", "on_spawn" ] ],
 	[218, "In Space!",                "space_trap",                 [ "trap", "on_spawn"] ],
 	[219, "Riptide Trap",             "riptide_trap",               [ "trap", "on_spawn"] ],
-	[220, "Web Trap",                 "web_trap",                   [ "trap", "on_spawn"] ],
+	[220, "Spider Web Trap",          "web_trap",                   [ "trap", "on_spawn"] ],
+	[221, "Spin Spin",                "spinspin",                   [ "trap", "on_spawn"] ],
 
 	# # Ones that might just be effects only, dunno
 	# [000, "Premium Trap",             "", [ "trap" ] ],
@@ -240,9 +251,9 @@ var TRAP_ALIASES:Dictionary[StringName, String] = {
 	# premium_trap           = "Premium Trap", # Might scrap
 	riptide_trap            = "Riptide Trap",
 	space_trap              = "Space Trap",
-	spinspin                = "Spin Spin",
+	spinspin                = "Spin Trap",
 	# unrandomization_trap    = "Unrandomization Trap",
-	web_trap                = "Web Trap",
+	web_trap                = "Spider Web Trap",
 	welldone                = "Well Done Trap",
 
 	# EXISTING TRAPS
@@ -289,9 +300,9 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	# "Premium Trap"            : "premium_trap",
 	"Riptide Trap"            : "riptide_trap",
 	"Space Trap"              : "space_trap",
-	"Spin Spin"               : "spinspin",
+	"Spin Trap"               : "spinspin",
 	# "Unrandomization Trap"    : "unrandomization_trap",
-	"Web Trap"                : "web_trap",
+	"Spider Web Trap"         : "web_trap",
 	"Well Done Trap"          : "welldone",
 
 	# OTHER TRAPS

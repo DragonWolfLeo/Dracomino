@@ -79,7 +79,7 @@ func _input(event: InputEvent) -> void:
 
 	# Restart the game
 	if event.is_action_pressed("restart"):
-		SignalBus.getSignal("restartGame").emit()
+		SignalBus.getSignal("openActSelect").emit()
 		accept_event()
 		return
 

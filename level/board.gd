@@ -63,7 +63,7 @@ var temp_boardObjectLookup:Dictionary[DracominoHandler.StateBoardObject, BoardOb
 var linesCleared:int = 0:
 	set(value):
 		linesCleared = value
-		if flagHolder: flagHolder.setFlag("lines_cleared", linesCleared)
+		if flagHolder: flagHolder.count("lines_cleared", "board", linesCleared)
 		linesCleared_updated.emit(linesCleared)
 var flagHolder:FlagHolder
 var effectHandler:EffectHandler

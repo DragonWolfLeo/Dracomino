@@ -5,6 +5,7 @@ extends VBoxContainer
 @onready var btnTutorial:Button = %Btn_Tutorial
 @onready var btnLogic:Button = %Btn_Logic
 @onready var btnRestart:Button = %Btn_Restart
+@onready var btnActSelect:Button = %Btn_ActSelect
 @onready var btnQuit:Button = %Btn_Quit
 
 var CHANGELOG_WINDOW_SCENE:PackedScene = load("res://ui/changelog_window.tscn")
@@ -20,6 +21,7 @@ func _ready() -> void:
 	btnChangelog.pressed.connect(_on_btnChangelog_pressed)
 	btnTutorial.pressed.connect(_on_btnTutorial_pressed)
 	btnLogic.pressed.connect(_on_btnLogic_pressed)
+	btnActSelect.pressed.connect(_on_btnActSelect_pressed)
 	btnRestart.pressed.connect(_on_btnRestart_pressed)
 	btnQuit.pressed.connect(_on_btnQuit_pressed)
 
@@ -41,6 +43,9 @@ func _on_btnTutorial_pressed() -> void:
 func _on_btnLogic_pressed() -> void:
 	if not DialogueManager.dialogue:
 		DialogueManager.loadDialogue(load("res://dialogue/tutorial_logic.script"))
+
+func _on_btnActSelect_pressed() -> void:
+	SignalBus.getSignal("openActSelect").emit()
 
 func _on_btnRestart_pressed() -> void:
 	SignalBus.getSignal("restartGame").emit()

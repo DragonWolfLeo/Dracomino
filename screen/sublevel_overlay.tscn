@@ -14,13 +14,11 @@ radius = 2.0
 
 [node name="SubLevelOverlay" type="CanvasLayer"]
 
-[node name="SpinSpin" parent="." instance=ExtResource("1_0i13u")]
-process_mode = 3
-position = Vector2(480, 270)
-collision_layer = 0
-lock_rotation = true
+[node name="SpinSpinEffect" type="Node2D" parent="."]
 script = ExtResource("2_gyqws")
 flag = "overlay_spinspin"
+
+[node name="SpinSpin" parent="SpinSpinEffect" instance=ExtResource("1_0i13u")]
 
 [node name="ScreenBounds" parent="." instance=ExtResource("3_efi5m")]
 

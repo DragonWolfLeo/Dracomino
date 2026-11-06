@@ -1,0 +1,113 @@
+[gd_scene load_steps=3 format=3 uid="uid://b7v8lc77jrar4"]
+
+[ext_resource type="Theme" uid="uid://dld1yt1on6jy7" path="res://resource/style/actselect.tres" id="1_rxm1y"]
+[ext_resource type="Script" uid="uid://d0iv0d0sml5va" path="res://screen/actselect_screen.gd" id="1_s0h2r"]
+
+[node name="ActSelectScreen" type="CanvasLayer"]
+layer = 7
+script = ExtResource("1_s0h2r")
+
+[node name="ClickMask" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="PanelContainer" type="PanelContainer" parent="ClickMask"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -128.0
+offset_top = -67.0
+offset_right = 128.0
+offset_bottom = 68.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_rxm1y")
+
+[node name="MarginContainer" type="MarginContainer" parent="ClickMask/PanelContainer"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ClickMask/PanelContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="Label2" type="Label" parent="ClickMask/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Restart on checkpoint"
+horizontal_alignment = 1
+
+[node name="Button_Checkpoint" type="Button" parent="ClickMask/PanelContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Restart"
+
+[node name="OtherActsSection" type="VBoxContainer" parent="ClickMask/PanelContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="ClickMask/PanelContainer/MarginContainer/VBoxContainer/OtherActsSection"]
+layout_mode = 2
+text = "Start on other act"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="ClickMask/PanelContainer/MarginContainer/VBoxContainer/OtherActsSection"]
+custom_minimum_size = Vector2(0, 128)
+layout_mode = 2
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="ButtonContainer" type="VBoxContainer" parent="ClickMask/PanelContainer/MarginContainer/VBoxContainer/OtherActsSection/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Button" type="Button" parent="ClickMask/PanelContainer/MarginContainer/VBoxContainer/OtherActsSection/ScrollContainer/ButtonContainer"]
+layout_mode = 2
+text = "Act 1"
+
+[node name="Button2" type="Button" parent="ClickMask/PanelContainer/MarginContainer/VBoxContainer/OtherActsSection/ScrollContainer/ButtonContainer"]
+layout_mode = 2
+text = "Act 2"
+
+[node name="Button3" type="Button" parent="ClickMask/PanelContainer/MarginContainer/VBoxContainer/OtherActsSection/ScrollContainer/ButtonContainer"]
+layout_mode = 2
+disabled = true
+text = "Act 3"
+
+[node name="Button4" type="Button" parent="ClickMask/PanelContainer/MarginContainer/VBoxContainer/OtherActsSection/ScrollContainer/ButtonContainer"]
+layout_mode = 2
+disabled = true
+text = "Act 4"
+
+[node name="Button5" type="Button" parent="ClickMask/PanelContainer/MarginContainer/VBoxContainer/OtherActsSection/ScrollContainer/ButtonContainer"]
+layout_mode = 2
+disabled = true
+text = "Act 5"
+
+[node name="Button_Cancel" type="Button" parent="ClickMask/PanelContainer/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cancel"
+
+[connection signal="gui_input" from="ClickMask" to="." method="_on_ClickMask_gui_input"]

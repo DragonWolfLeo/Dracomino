@@ -11,7 +11,7 @@ func _ready() -> void:
 func updateLineClearedLabel():
 	if linesLabel:
 		linesLabel.text = "Lines: {num} / {goal}".format({
-			num=FlagManager.getIntFlagValue("lines_cleared"),
+			num=FlagManager.getTotalCountAmount("lines_cleared"),
 			goal=FlagManager.getIntFlagValue("goal")
 		})
 
