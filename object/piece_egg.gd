@@ -58,3 +58,7 @@ func _on_kicked_by(piece:Piece, _direction:Vector2i) -> void:
 	# Double damage if hard dropping
 	activeEffect.tickDuration(roundi(tickAmount), false)
 	SoundManager.play("dink")
+
+func _on_AttackableArea_attacked(attack: Attack) -> void:
+	if not activeEffect: return
+	activeEffect.tickDuration(roundi(attack.damage), false)

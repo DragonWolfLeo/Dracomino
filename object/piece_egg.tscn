@@ -1,12 +1,18 @@
-[gd_scene load_steps=5 format=4 uid="uid://crmrk48te3jq6"]
+[gd_scene load_steps=7 format=4 uid="uid://crmrk48te3jq6"]
 
 [ext_resource type="PackedScene" uid="uid://176sbvua7a5x" path="res://object/piece.tscn" id="1_d4y6y"]
 [ext_resource type="Script" uid="uid://c6mqic1epdc1v" path="res://object/piece_egg.gd" id="2_7nymy"]
 [ext_resource type="PackedScene" uid="uid://dyaxcur1ermgq" path="res://object/ghostpiece.tscn" id="2_jq0dp"]
 [ext_resource type="Texture2D" uid="uid://d4hr8hd68oveh" path="res://assets/art/eggcrack.png" id="4_swvkc"]
+[ext_resource type="Script" uid="uid://cxrmm2d7wrqkt" path="res://module/attackablearea.gd" id="5_kl0e1"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_kl0e1"]
+radius = 24.0
+height = 64.0
 
 [node name="Piece_Egg" node_paths=PackedStringArray("ghost") instance=ExtResource("1_d4y6y")]
 tile_map_data = PackedByteArray("AAAAAAAAAQABAAIAAAD///7/AQAAAAAAAAD/////AQAAAAEAAAD//wAAAQAAAAIAAAD//wEAAQAAAAMAAAAAAP7/AQABAAAAAAAAAP//AQABAAEAAAAAAAEAAQABAAMAAAABAP7/AQACAAAAAAABAP//AQACAAEAAAABAAAAAQACAAIAAAABAAEAAQACAAMAAAA=")
+collision_enabled = true
 script = ExtResource("2_7nymy")
 canRotate = false
 canFlip = false
@@ -23,3 +29,15 @@ uniquePiece = true
 position = Vector2(8, 0)
 texture = ExtResource("4_swvkc")
 hframes = 6
+
+[node name="AttackableArea" type="Area2D" parent="." index="6"]
+collision_layer = 0
+collision_mask = 32
+script = ExtResource("5_kl0e1")
+hitSound = &"dink"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackableArea" index="0"]
+position = Vector2(8, 0)
+shape = SubResource("CapsuleShape2D_kl0e1")
+
+[connection signal="attacked" from="AttackableArea" to="." method="_on_AttackableArea_attacked"]
