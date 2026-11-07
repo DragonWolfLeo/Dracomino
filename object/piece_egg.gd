@@ -11,6 +11,7 @@ func _ready():
 	piece_placed.connect(_on_piece_placed)
 	landed_on_by.connect(_on_landed_on_by)
 	kicked_by.connect(_on_kicked_by)
+	crystallized_on.connect(_on_crystallized_on)
 
 func hatch():
 	if is_queued_for_deletion(): return
@@ -58,6 +59,11 @@ func _on_kicked_by(piece:Piece, _direction:Vector2i) -> void:
 	# Double damage if hard dropping
 	activeEffect.tickDuration(roundi(tickAmount), false)
 	SoundManager.play("dink")
+
+func _on_crystallized_on(lines:int) -> void:
+	if not activeEffect: return
+	var tickAmount:float = 12 * lines
+	activeEffect.tickDuration(roundi(tickAmount), false)
 
 func _on_AttackableArea_attacked(attack: Attack) -> void:
 	if not activeEffect: return

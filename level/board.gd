@@ -921,10 +921,35 @@ func lockPiece(piece:Piece):
 		if fullRows.size() > 0:
 			if onLockEffect: effectHandler.bufferEffect(onLockEffect)
 			linesCleared += fullRows.size()
+
+			# Get rows bordering the full ones
+			var borderingRows:Array[int]
 			for row:int in fullRows:
+				if not borderingRows.has(row + 1):
+					borderingRows.append(row + 1)
+				if not borderingRows.has(row - 1):
+					borderingRows.append(row - 1)
+			
+			# Get entities occupying bordering rows
+			var crystallizedEnts:Array[Piece] = []
+			var uncrystallizedEnts:Array[Piece] = entities.duplicate()
+			for row:int in borderingRows:
+				for ent:Piece in uncrystallizedEnts.duplicate():
+					for cell:Vector2i in ent.globalCells:
+						if cell.y == row:
+							crystallizedEnts.append(ent)
+							uncrystallizedEnts.erase(ent)
+							break
+			
+			# Create clearing chunks
+			for row:int in fullRows:	
 				var chunk := ClearingChunk.new(row, rowOffsets.get(row, BOUNDS.position.x))
 				clearingChunks.append(chunk)
 				processClearingChunk(chunk)
+
+			# Crystallize on entities
+			for ent:Piece in crystallizedEnts:
+				(clearingChunks.back() as ClearingChunk).completed.connect(ent.getCrystallizedOn.bind(fullRows.size()))
 		else:
 			if onLockEffect: effectHandler.tryToTriggerEffect(onLockEffect)
 	

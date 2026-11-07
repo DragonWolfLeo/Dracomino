@@ -351,6 +351,7 @@ signal trap_activated(stateItem:DracominoHandler.StateItem)
 signal piece_placed()
 signal landed_on_by(piece:Piece, movementType:int)
 signal kicked_by(piece:Piece, direction:Vector2i)
+signal crystallized_on(lines:int)
 signal moved(piece:Piece)
 
 #==== Virtuals ======
@@ -677,6 +678,9 @@ func getLandedOnBy(piece:Piece, movementType:int = MOVEMENT.NONE) -> void:
 
 func getKickedBy(piece:Piece, direction:Vector2i = Vector2i.ZERO) -> void:
 	kicked_by.emit(piece, direction)
+
+func getCrystallizedOn(lines:int = 1) -> void:
+	crystallized_on.emit(lines)
 
 func markEffectsAsUsed() -> void: ## Prevent repeating trap shapes and enchantments
 	if stateItem:
