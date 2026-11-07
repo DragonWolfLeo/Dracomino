@@ -41,12 +41,10 @@ step = 5.0
 value = 100.0
 
 [node name="Label_MusicVol" type="Label" parent="MarginContainer/VBoxContainer/MarginContainer/GridContainer"]
-visible = false
 layout_mode = 2
 text = "Music Volume"
 
 [node name="HSlider_MusicVol" type="HSlider" parent="MarginContainer/VBoxContainer/MarginContainer/GridContainer"]
-visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4

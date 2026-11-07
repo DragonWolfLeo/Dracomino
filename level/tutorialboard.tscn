@@ -1,6 +1,6 @@
 [gd_scene load_steps=11 format=4 uid="uid://bjupl8twtv36p"]
 
-[ext_resource type="PackedScene" uid="uid://d0mgyh6oleq0m" path="res://object/itempickup.tscn" id="1_6cx2d"]
+[ext_resource type="PackedScene" uid="uid://d0mgyh6oleq0m" path="res://object/boardobject/coin.tscn" id="1_6cx2d"]
 [ext_resource type="Script" uid="uid://ce58jxhnsq35" path="res://level/tutorialboard.gd" id="1_s71ex"]
 [ext_resource type="TileSet" uid="uid://bik73l7fn0v3b" path="res://resource/tileset/dracomino_piece.tres" id="2_8qjsx"]
 [ext_resource type="FontFile" uid="uid://dsmco8aopu3b6" path="res://resource/font/ChakraPetch-Bold.ttf" id="3_8qjsx"]

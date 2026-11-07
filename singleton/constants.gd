@@ -6,6 +6,7 @@ var MANA_PER_BLOCK:float = 4
 var MANA_PER_COIN:float = 20
 var MANA_PER_VERSUS_DEFEAT:float = MANA_PER_BLOCK * 50 # 5 lines worth
 var ENERGY_LINK_SHARE:float = 0.5
+var AETHER_PER_BLOCK:float = 4
 
 var DISPEL_MANA_COST:float = MANA_PER_BLOCK * 50 # 5 lines worth
 
@@ -38,6 +39,15 @@ var LEGACY_PIECE_COLOR_MAPPINGS:Array[int] = [
 var NUMBER_OF_PIECE_COLORS_MIN = 1
 var NUMBER_OF_PIECE_COLORS_MAX = 16
 
+## Number of blocks per shape type
+var NUMBER_OF_BLOCKS_PER_SHAPE_TYPE:Dictionary[StringName, int] = {
+	monomino = 1,
+	domino = 2,
+	tromino = 3,
+	tetromino = 4,
+	pentomino = 5,
+}
+
 # Item + Location Data
 class Data:
 	static var OBJECT_TYPES:PackedStringArray = [
@@ -48,17 +58,17 @@ class Data:
 		"modifier",
 		"line_clear",
 		"item_pickup",
+		"boss_defeat",
 	]
 	var id:int
 	var prettyName:StringName
-	var internalName:StringName
 	var tags:Dictionary[StringName, bool]
 	var type:StringName
 	func _init(arr=[]):
 		arr.resize(4)
 		id = arr[0] as int
 		prettyName = arr[1] as StringName
-		internalName = (arr[2] if arr[2] else prettyName.to_snake_case()) as StringName
+		_set_internalName((arr[2] if arr[2] else prettyName.to_snake_case()) as StringName)
 		for tag in arr[3] as Array:
 			tags[tag as StringName] = true
 		for tag in OBJECT_TYPES:
@@ -66,8 +76,24 @@ class Data:
 				type = tag
 				break
 
-class ItemData extends Data: pass
-class LocationData extends Data: pass
+	func _set_internalName(_internalName:StringName) -> void: ## Overridible to use the internalName field
+		pass
+
+class ItemData extends Data:
+	var internalName:StringName ## Internal name should be unique among item data
+	func _set_internalName(_internalName:StringName) -> void:
+		internalName = _internalName
+
+class LocationData extends Data: 
+	var objectName:StringName ## Object name does not have to be unique, but corresponds to scene name in res://objects/boardobjects
+	var isLineClear:bool: ## Is this a line clear location?
+		get:
+			return bool(tags.get(&"line_clear", false))
+	var isBoardObject:bool: ## Is this a board object location?
+		get:
+			return bool(tags.get(&"item_pickup", false))
+	func _set_internalName(_internalName:StringName) -> void:
+		objectName = _internalName
 
 @onready var ITEMS:Dictionary[int, ItemData] = [
 	# Abilities (1-100)
@@ -106,6 +132,8 @@ class LocationData extends Data: pass
 	[217, "Impatience Trap",          "impatience_trap",            [ "trap", "on_spawn" ] ],
 	[218, "In Space!",                "space_trap",                 [ "trap", "on_spawn"] ],
 	[219, "Riptide Trap",             "riptide_trap",               [ "trap", "on_spawn"] ],
+	[220, "Spider Web Trap",          "web_trap",                   [ "trap", "on_spawn"] ],
+	[221, "Spin Spin",                "spinspin",                   [ "trap", "on_spawn"] ],
 
 	# # Ones that might just be effects only, dunno
 	# [000, "Premium Trap",             "", [ "trap" ] ],
@@ -132,7 +160,6 @@ class LocationData extends Data: pass
 	# [000, "I Trap",                   "", [ "trap" ] ],
 	# [000, "Sleep Trap",               "", [ "trap" ] ],
 	# [000, "Wyrmino Trap",             "", [ "trap" ] ],
-	# [000, "Tutorial",                 "", [ "trap" ] ],
 	
 	# Shapes (301-)                                                                     Last two values are poor height, safe height
 	[301, "Monomino",       "", [ "progression_skip_balancing", "shape", "monomino" ],                                             1, 1],
@@ -170,14 +197,47 @@ class LocationData extends Data: pass
 	[329, "Y' Pentomino",   "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
 ].reduce(_generateDataTable.bind(ItemData.new), {} as Dictionary[int, ItemData])
 
-@onready var LOCATIONS:Dictionary[int, LocationData] = (_generateLocationConstants().reduce(_generateDataTable.bind(LocationData.new), {} as Dictionary[int, LocationData]))
-
 @onready var ITEM_NAME_TO_ID:Dictionary[StringName, int] = ITEMS.values().reduce(
 	func(acc:Dictionary[StringName, int], itemData:ItemData):
 		acc[itemData.internalName] = itemData.id
 		return acc,
 	{} as Dictionary[StringName, int]
 )
+
+@onready var LOCATIONS:Dictionary[int, LocationData] = _combineArrays([
+	# Each location type will have 10000 "reserved" for it, but we'll only create a reasonable amount for now, just to save on datapackage size
+	# Common
+	_locationRangeConfig(      0,  1_000, "Line {n} Cleared",         "",                [ "line_clear" ]),
+	_locationRangeConfig( 10_000, 10_000, "Dragon Coin {n}",          "coin",            [ "item_pickup" ]),
+	# Reserve 20_000 for unique locations
+	# Story mode
+	_locationRangeConfig( 30_000,    100, "Boss {n} Defeated",        "",                [ "boss_defeat" ]),
+	_locationRangeConfig( 40_000,  1_000, "Ore Chunk {n}",            "orechunk",        [ "item_pickup" ]), # Home Sweet Home - Dragon Lair
+	_locationRangeConfig( 50_000,  1_000, "Ghost {n} Defeated",       "ghost",           [ "item_pickup" ]), # Home Sweet Home - Spooky Woods
+	_locationRangeConfig( 60_000,  1_000, "Treasure Piece {n}",       "treasurepiece",   [ "item_pickup" ]), # Home Sweet Home - Riverside
+	_locationRangeConfig( 70_000,  1_000, "Fish {n} Caught",          "fish",            [ "item_pickup" ]), # Home Sweet Home - Riverside
+	_locationRangeConfig( 80_000,  1_000, "Gem {n}",                  "gem",             [ "item_pickup" ]), # Home Sweet Home - Spider Nest
+	_locationRangeConfig( 90_000,  1_000, "Spider {n} Defeated",      "spider",          [ "item_pickup" ]), # Home Sweet Home - Spider Nest
+]).reduce(_generateDataTable.bind(LocationData.new), {} as Dictionary[int, LocationData])
+
+# Private generator functions
+static func _generateDataTable(dict:Dictionary, arr:Array, new_fn:Callable) -> Dictionary:
+	var data:Data = new_fn.call(arr) as Data
+	assert(data.id not in dict, "Duplicate id %s for object: %s"%[data.id, data.prettyName])
+	dict[data.id] = data
+	return dict
+
+static func _combineArrays(nestedArr:Array) -> Array:
+	var arr = []
+	for subArr:Array in nestedArr:
+		arr.append_array(subArr)
+	return arr
+
+static func _locationRangeConfig(offsetId:int = 0, amount:int = 10000, locationNameTemplate:String = "", objectName:StringName = "", locationTags:Array[String] = []) -> Array:
+	var arr = []
+	for i in range(1, amount + 1):
+		arr.append([i + offsetId, locationNameTemplate.format({n=i}), objectName, locationTags])
+	return arr
 
 # === Trap Link ===
 var TRAP_ALIASES:Dictionary[StringName, String] = {
@@ -191,7 +251,9 @@ var TRAP_ALIASES:Dictionary[StringName, String] = {
 	# premium_trap           = "Premium Trap", # Might scrap
 	riptide_trap            = "Riptide Trap",
 	space_trap              = "Space Trap",
+	spinspin                = "Spin Trap",
 	# unrandomization_trap    = "Unrandomization Trap",
+	web_trap                = "Spider Web Trap",
 	welldone                = "Well Done Trap",
 
 	# EXISTING TRAPS
@@ -223,7 +285,9 @@ var RANDOM_TRAP_CHOICES:Array[StringName] = [
 	"water_trap",
 	"pixellation_trap",
 	"space_trap",
+	"spinspin",
 	"riptide_trap",
+	"web_trap",
 ]
 var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	# DRACOMINO TRAPS
@@ -236,7 +300,9 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	# "Premium Trap"            : "premium_trap",
 	"Riptide Trap"            : "riptide_trap",
 	"Space Trap"              : "space_trap",
+	"Spin Trap"               : "spinspin",
 	# "Unrandomization Trap"    : "unrandomization_trap",
+	"Spider Web Trap"         : "web_trap",
 	"Well Done Trap"          : "welldone",
 
 	# OTHER TRAPS
@@ -252,7 +318,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"Banana Trap"             : "space_trap",
 	"Banner Trap"             : "enchantment",
 	"Bathroom Trap"           : "water_trap",
-	# "Bee Trap"                : "glue_trap",
+	"Bee Trap"                : "web_trap",
 	# "Blango Artillery"        : "", # Means becoming a snowman?
 	"Blastoad"                : "impatience_trap",
 	# "Blue Balls Curse"        : "shatter_trap",
@@ -312,7 +378,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"Exposition Trap"         : "tutorial_logic", # "Random Cutscene",
 	"Extreme Chaos Mode"      : ["crystal_trap", "fracture_trap"],
 	"Fake Transition"         : "fade",
-	"Farcaster"               : "", # Return home
+	"Farcaster"               : "space_trap",
 	"Fast Trap"               : "enchantment_legendary_movement",
 	# "Fat CJ Trap"             : "I Trap",
 	"Fear Trap"               : "zoom_trap",
@@ -357,7 +423,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"Hiccup Trap"             : "impatience_trap",
 	"Hidden Trap"             : "space_trap",
 	"Home Trap"               : "tutorial",
-	# "Honey Trap"              : "glue_trap",
+	"Honey Trap"              : "web_trap",
 	# "Ice Floor Trap"          : "momemtum_trap",
 	# "Ice Trap"                : "Ice Trap",
 	"Icon Trap"                : "random_trap",
@@ -386,9 +452,9 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"Meteor Trap"             : "enchantment_curse_gravity",
 	"Metronome Trap"          : "random_trap",
 	# "Mirror Trap"             : "Flip Trap",
-	"Modified Bloons Trap"   : "random_trap",
+	"Modified Bloons Trap"    : "random_trap",
 	"Monkey Mash Trap"        : "impatience_trap",
-	"Monkey Trap"            : "egg",
+	"Monkey Trap"             : "egg",
 	"My Turn! Trap"           : "impatience_trap",
 	"Nightmare Trap"          : "impatience_trap",
 	"Ninja Trap"              : "egg",
@@ -405,15 +471,15 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"One Hit KO"              : "enchantment_curse_gravity",
 	"One Hit Trap"            : "enchantment_curse_gravity",
 	# "Paper Trap"              : "I Trap",
-	"Paralyze Trap"           : "enchantment_curse_movement",
-	"Paralysis Trap"          : "enchantment_curse_movement",
+	"Paralyze Trap"           : "web_trap",
+	"Paralysis Trap"          : "web_trap",
 	"Paratoad"                : "fishing",
 	"Pea Soup Trap"           : "egg",
 	"Person Trap"             : "impatience_trap",
 	"Phone Trap"              : "tutorial",
 	"Pie Trap"                : "egg",
-	"Pikmin Trap"             : "egg",
-	"Pinball Trap"            : "egg",
+	"Pikmin Trap"             : "spinspin",
+	"Pinball Trap"            : "spinspin",
 	"Pincercrab"              : "impatience_trap",
 	"Pixelate Trap"           : "pixellation_trap",
 	"Pixellation Trap"        : "pixellation_trap",
@@ -424,8 +490,8 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"Pokemon Count Trap"      : "tutorial_logic",
 	"Pokemon Trivia Trap"     : "tutorial_logic",
 	"Police Trap"             : "impatience_trap",
-	"PONG Challenge"          : "egg",
-	"Pong Trap"               : "egg",
+	"PONG Challenge"          : "spinspin",
+	"Pong Trap"               : "spinspin",
 	# "Posession Trap"          : "Reverse Controls Trap",
 	"PowerPoint Trap"         : "enchantment_curse_movement",
 	"PSP Trap"                : "pixellation_trap",
@@ -460,7 +526,7 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"Spotlight Trap"          : "zoom_trap",
 	"Spring Trap"             : "impatience_trap",
 	# "Squash Trap"             : "I Trap",
-	# "Sticky Floor Trap"       : "glue_trap",
+	"Sticky Floor Trap"       : "web_trap",
 	# "Sticky Hands Trap"       : "Disable Hold Trap",
 	"Stinky Trap"             : "enchantment_curse",
 	"Stun Trap"               : "enchantment_curse_movement",
@@ -470,8 +536,8 @@ var TRAP_LINK_MAPPINGS:Dictionary[StringName, Variant] = {
 	"SvC Effect"              : "enchantment_random",
 	# "Swap Trap"               : "Swap Trap",
 	"Syntax Jumpscare Trap"   : "mini_jumpscare",
-	"Tar Trap"               : "enchantment_curse_movement",
-	# "Tarr Trap"               : "glue_trap",
+	"Tar Trap"                : "web_trap",
+	"Tarr Trap"               : "web_trap",
 	"Teleport Trap"           : "impatience_trap",
 	"Text Trap"               : "tutorial", # "Random Cutscene",
 	"Thwimp Trap"             : "enchantment_curse_gravity",
@@ -645,20 +711,6 @@ var CONTEXT_TAGS:Dictionary[StringName, Dictionary] = {
 		_addDLMessageTemplate("{player} earned a game over while offline.")
 	]
 }
-# Private functions
-static func _generateLocationConstants() -> Array:
-	var arr = []
-	for i in range(1,1001):
-		arr.append([i,        "Line %s Cleared"%i, "", [ "line_clear" ]])
-	for i in range(1,10001):
-		arr.append([i + 10000, "Coin %s"%i, "", [ "item_pickup" ]])
-	return arr
-
-static func _generateDataTable(dict:Dictionary, arr:Array, new_fn:Callable) -> Dictionary:
-	var data:Data = new_fn.call(arr)
-	dict[data.id] = data
-	return dict
-
 	
 # Storage space for mods to use if they want to facilitate compatibility stuff
 var CUSTOM_DATA:Dictionary = {}

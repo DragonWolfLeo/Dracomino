@@ -9,11 +9,11 @@ var collectedAbilities:Dictionary[int, int] = {}
 var gotLines:Dictionary[int, bool] = {}
 var allLineLocations:Array[int] = []
 var missingPickups:Array[int] = []
-var missingPickupCoordinates:Dictionary[Vector2i, int] = {}
+var boardObjects:Dictionary[int, StateBoardObject] = {}
 var lineMappings:Dictionary[int, int] = {}
 var missingLines:Dictionary[int, bool] = {}
 var id_to_line:Dictionary[int, int] = {}
-var id_to_pickupCoord:Dictionary[int, Vector2i] = {}
+var id_to_boardObject:Dictionary[int, StateBoardObject] = {}
 var hintedRotateAbilities:Dictionary[int, StateItem] = {}
 var goal:int = -1:
 	set(value):
@@ -28,6 +28,12 @@ var slotContextHash:int:
 			return
 		slotContextHash = value
 		slotContextHash_updated.emit(slotContextHash)
+var campaign:CampaignContext:
+	set(value):
+		if campaign == value:
+			return
+		campaign = value
+		campaign_changed.emit(campaign)
 var seedFlagHolder:FlagHolder
 var retroFlagHolder:FlagHolder
 var effectHandler:EffectHandler
@@ -49,9 +55,10 @@ var _effectBuffer:Array[StateItem] = [] ## Next traps to apply to next pieces
 signal lineMappings_updated(mappings:Dictionary[int, int])
 signal missingLines_updated(locs:Dictionary[int, bool])
 signal notification_signal(notif:String, color:Color, force:bool)
-signal missingPickupCoordinates_updated(map:Dictionary[Vector2i, int])
+signal boardObjects_updated(lookup:Dictionary[int, StateBoardObject])
 signal piecesLeft_updated(total:int)
 signal goal_updated(goalnum:int)
+signal campaign_changed(campaign:CampaignContext)
 signal slotContextHash_updated(ctx:int)
 signal started()
 
@@ -92,6 +99,21 @@ class StateItem:
 		var si := StateItem.fromId(CONSTANTS.ITEM_NAME_TO_ID.get(internalName, 0))
 		return si
 
+class StateBoardObject: ## Context data for state of board objects
+	var loc_id:int = 0 ## Corresponding location id for this object, or 0 for non-location objects
+	var objectName:StringName ## Corresponding scene name in res://objects/boardobjects
+	var coordinates:Vector2i ## Coordinates object would spawn on the board, starting at Line 1, moving upward
+	var index:int = -1 ## Index in the placement array. Used as an id for board if 0 or more
+	var isLocation:
+		get:
+			return loc_id > 0
+
+	func _init(_coordinates:Vector2i, _objectName:StringName, _loc_id:int = 0, _index:int = -1) -> void:
+		coordinates = _coordinates
+		objectName = _objectName
+		loc_id = _loc_id
+		index = _index
+
 class Streak:
 	var size:int = 0
 	static var NOTABLE_THRESHOLD:int = 4
@@ -106,11 +128,13 @@ class PieceContext:
 	var colorId:int = -1
 	var orientationId:int = -1
 	var instantSpawn:bool = false
+	var aether:float = 0
 	static var fallbackRandom:RandomNumberGenerator = RandomNumberGenerator.new()
 	func _init(_stateItem:StateItem) -> void:
 		stateItem = _stateItem
 		if stateItem.data:
 			name = stateItem.data.prettyName
+			aether = DracominoUtil.getAetherValueOfItem(stateItem.data)
 		randomizeColor()
 		randomizeOrientation()
 	func randomizeColor(random:RandomNumberGenerator = fallbackRandom) -> PieceContext:
@@ -128,6 +152,194 @@ class PieceContext:
 	func setInstantSpawn(_instantSpawn:bool = true) -> PieceContext:
 		instantSpawn = _instantSpawn
 		return self
+
+class CampaignContext:
+	signal checkpoint_changed(act:ActContext)
+
+	var acts:Array[ActContext] = []
+	var location_id_to_act:Dictionary[int, ActContext]
+	var checkpoint:ActContext:
+		set(value):
+			if checkpoint == value: return
+			checkpoint = value
+			checkpoint_changed.emit(value)
+
+	static var CLASSIC_CAMPAIGN_LINES_PER_ACT:int = 20
+
+	func _init() -> void:
+		SignalBus.getSignal("stateflag_changed", "total_aether_value").connect(_on_stateflag_changed)
+		SignalBus.getSignal("stateflag_changed", "rotate").connect(_on_stateflag_changed)
+
+	## Generate a classic campaign
+	static func Classic(lines:int, linesPerAct:int = CLASSIC_CAMPAIGN_LINES_PER_ACT) -> CampaignContext:
+		var c:CampaignContext = CampaignContext.new()
+
+		# Force minimum 1 line
+		lines = max(1, lines)
+		linesPerAct = max(1, linesPerAct)
+
+		# Each act will have no less than lines per act, unless there's not enough lines for a full act
+		var numActsToMake:int = max(1, floor(lines/linesPerAct))
+		var remainingLines:int = lines
+		for i:int in range(numActsToMake):
+			var act:ActContext = ActContext.new(linesPerAct)
+			c.acts.append(act)
+			act.prettyName = "Line %s"%((i*linesPerAct)+1)
+			act.load_requested.connect(c.loadAct.bind(act))
+			act.selectable_changed.connect(c._on_act_selectable_changed.bind(act))
+			remainingLines -= linesPerAct
+
+		if not c.acts.is_empty():
+			# Add remaining lines to last act
+			(c.acts.back() as ActContext).lines += remainingLines
+			# Set a checkpoint
+			c.checkpoint = c.acts.front() as ActContext
+		
+		return c
+
+	## Generate a story campaign
+	static func Story(actConfig:Array[Dictionary] = []) -> CampaignContext:
+		var c:CampaignContext = CampaignContext.new()
+		# TODO
+		return c
+
+	# === Functions ===
+	func getActAtLine(line:int) -> ActContext:
+		for act:ActContext in acts:
+			if line < act.lines:
+				return act
+			line -= act.lines
+		return acts.back()
+
+	func registerMissingLocationByLine(loc_id:int, line:int) -> void: ## Registers a missing location into its proper act
+		if location_id_to_act.has(loc_id):
+			# Don't register if already did
+			return
+		var act:ActContext = getActAtLine(line)
+		assert(act != null, "Tried to register a missing location for nonexistent act")
+		if act is ActContext:
+			act.registerMissingLocation(loc_id)
+			location_id_to_act[loc_id] = act
+
+	func removeMissingLocation(loc_id:int) -> void: ## Remove a missing location from its act because it was checked; Do nothing if already checked
+		var act:ActContext = location_id_to_act.get(loc_id, null)
+		if act is ActContext:
+			location_id_to_act.erase(loc_id)
+			act.removeMissingLocation(loc_id)
+
+	func cleanUp(): ## Clean up this object. It frees anyway when unreferenced anyway, but being extra cautious
+		SignalBus.getSignal("stateflag_changed", "total_aether_value").disconnect(_on_stateflag_changed)
+		SignalBus.getSignal("stateflag_changed", "rotate").disconnect(_on_stateflag_changed)
+		for act:ActContext in acts:
+			act.disconnectSignals()
+		for dict:Dictionary in checkpoint_changed.get_connections():
+			(dict["signal"] as Signal).disconnect(dict["callable"] as Callable)
+
+	func loadCheckpoint():
+		loadAct(checkpoint)
+
+	func loadAct(act:ActContext) -> void:
+		checkpoint = act
+		SignalBus.getSignal("restartGame").emit()
+
+	func getCheckpointLine() -> int: ## Get the line the current checkpoint starts on
+		var startingLine:int = 0
+		for act:ActContext in acts:
+			if act == checkpoint:
+				return startingLine
+			startingLine += act.lines 
+		return 0
+
+	func getCheckpointAetherCost() -> float: ## Get the aether cost of current checkpoint
+		var aether:float = 0
+		for act:ActContext in acts:
+			if act == checkpoint:
+				return aether
+			aether += act.aetherCapacity 
+		return 0
+
+	func getLastSelectableCheckpoint() -> ActContext: ## Get last selectable checkpoint
+		var lastCheckpoint:ActContext
+		for act:ActContext in acts:
+			if act.selectable:
+				lastCheckpoint = act
+			else:
+				break
+		return lastCheckpoint
+
+	func updateActs() -> void: ## Set acts as selectable and get last checkpoint once game is first loaded
+		_on_stateflag_changed()
+		checkpoint = getLastSelectableCheckpoint()
+
+	# === Events ===
+	func _on_stateflag_changed() -> void:
+		# Figure out which acts are available with aether collected
+		var aether:float = FlagManager.getTotalCountAmount("total_aether_value")
+		var previousCompleted:bool = true
+		for act:ActContext in acts:
+			act.selectable = previousCompleted and aether >= 0
+			if previousCompleted and not act.isLogicallyCleared():
+				previousCompleted = false
+			aether -= act.aetherCapacity
+
+	func _on_act_selectable_changed(isSelectable:bool, act:ActContext) -> void:
+		if isSelectable:
+			# Automatically set act as checkpoint if previous is immediately before
+			var prevIndex:int = acts.find(act) - 1
+			if prevIndex >= 0:
+				if acts[prevIndex] == checkpoint:
+					checkpoint = act
+		elif act == checkpoint:
+			# Since this is unselectable now, select a new valid checkpoint
+			checkpoint = getLastSelectableCheckpoint()
+
+
+class ActContext:
+	signal completed()
+	signal selectable_changed(isSelectable:bool)
+	signal load_requested()
+
+	var prettyName:StringName = "Unnamed Act"
+	var lines:int
+	var missingLocations:Dictionary[int, bool] ## Locations present in this act; bool is always true (erase when checked)
+	var selectable:bool = false:
+		set(value):
+			if selectable == value: return
+			selectable = value
+			selectable_changed.emit(value)
+	var aetherCapacity:float ## The amount of aether it takes to complete this act
+
+	func _init(_lines:int = 20) -> void:
+		lines = _lines
+		# TODO: Handle variable line size around here
+		aetherCapacity = lines * Board.BOUNDS.size.x * CONSTANTS.AETHER_PER_BLOCK
+
+	func registerMissingLocation(loc_id:int) -> void: ## Add a missing location
+		missingLocations[loc_id] = true
+
+	func removeMissingLocation(loc_id:int) -> void: ## Removed checked locations from this act; Emits completed when last location is checked
+		if missingLocations.is_empty():
+			return
+		assert(missingLocations.has(loc_id), "Location id %s is not in act"%loc_id)
+		missingLocations.erase(loc_id)
+
+		if missingLocations.is_empty():
+			completed.emit()
+
+	func disconnectSignals() -> void: ## Disconnect signals for clean up (probably unnecessary)
+		for s:Signal in [completed, selectable_changed, load_requested] as Array[Signal]:
+			for dict:Dictionary in s.get_connections():
+				(dict["signal"] as Signal).disconnect(dict["callable"] as Callable)
+
+	func isCompleted() -> bool:  ## Are all locations in this act checked?
+		return missingLocations.is_empty()
+
+	func isLogicallyCleared() -> bool: ## Is this act completed and in logic?
+		return isCompleted() and FlagManager.isFlagSet("rotate")
+
+	func loadAct() -> void: ## Emits the signal to load this act
+		load_requested.emit()
+
 
 #===== Virtuals =====
 func _ready() -> void:
@@ -163,9 +375,17 @@ func reset():
 	# Reset randoms
 	color_random.state = color_randomSaveState
 	rotate_random.state = rotate_randomSaveState
+	var startingLine:int = 0
+	var aetherCost:float = 0
+	if campaign is CampaignContext:
+		startingLine = campaign.getCheckpointLine()
+		seedFlagHolder.count("lines_cleared", "starting_line", startingLine)
+		aetherCost = campaign.getCheckpointAetherCost()
 	# Fill visible line mappings
 	for i in range(Board.BOUNDS.size.y):
-		lineMappings[i] = i
+		lineMappings[i] = i + startingLine
+	# Set index forward until aether cost is spent
+	skipAetherWorthOfPieces(aetherCost)
 
 	lineMappings_updated.emit(lineMappings)
 
@@ -181,6 +401,11 @@ func newSeedReset():
 	collectedAbilities.clear()
 	allLineLocations.clear()
 	missingPickups.clear()
+	if campaign is CampaignContext:
+		campaign.cleanUp()
+		campaign = null
+	
+	seedFlagHolder.count("lines_cleared", "starting_line", 0)
 	hintedRotateAbilities.clear()
 	resetSeedFlagHolder()
 	# Reset randoms
@@ -188,9 +413,6 @@ func newSeedReset():
 	color_randomSaveState = color_random.state
 	rotate_random.seed = slotContextHash+1
 	rotate_randomSaveState = rotate_random.state
-	# Reset when everything is loaded
-	await started
-	SignalBus.getSignal("restartGame").emit()
 
 func resetSeedFlagHolder():
 	if seedFlagHolder: seedFlagHolder.queue_free()
@@ -235,19 +457,31 @@ func getNextPiece() -> PieceContext:
 		currentIndex += 1
 	return null
 
+func skipAetherWorthOfPieces(aetherAmount:float) -> void:
+	while aetherAmount > 0:
+		var piece:PieceContext = getNextPiece()
+		if piece == null:
+			return
+		aetherAmount -= piece.aether
+
 func sendLocation(loc_id:int):
 	# Send the location
-	if Archipelago.conn and missingLocations.get(loc_id, false):
-		Archipelago.collect_location(loc_id)
-		print("Sending location: ", CONSTANTS.LOCATIONS[loc_id].prettyName)
-	elif Archipelago.conn:
+	if missingLocations.get(loc_id, false):
+		if Archipelago.conn:
+			Archipelago.collect_location(loc_id)
+			print("Sending location: ", CONSTANTS.LOCATIONS[loc_id].prettyName)
+		else:
+			print("Will send ", CONSTANTS.LOCATIONS[loc_id].prettyName, " to server when reconnected.")
+		
+		if campaign:
+			campaign.removeMissingLocation(loc_id)
+	else:	
 		print("Already sent: ", CONSTANTS.LOCATIONS[loc_id].prettyName)
-	else:
-		print("Will send ", CONSTANTS.LOCATIONS[loc_id].prettyName, " to server when reconnected.")
 	
-	missingLocations[loc_id] = false
+	missingLocations.erase(loc_id)
 	checkedLocations[loc_id] = true
-	if id_to_pickupCoord.has(loc_id):
+	# TODO: Only board objects that are currency are currency
+	if id_to_boardObject.has(loc_id):
 		addLocationToCoinCurrency(loc_id)
 
 func sendLine(lineIndex:int):
@@ -262,6 +496,7 @@ func sendLine(lineIndex:int):
 func sendVictory():
 	victory = true
 	Archipelago.set_client_status(Archipelago.ClientStatus.CLIENT_GOAL)
+	Overlay.queueAnnouncement("You reached your goal! Congratulations!")
 
 func giveMana(amount:float, shareThroughEnergyLink:bool = true) -> void:
 	# Send mana/energy
@@ -389,6 +624,9 @@ func giveItem(item:StateItem):
 			"shape":
 				seedFlagHolder.count("shapes_left", "collected", 1, true)
 				seedFlagHolder.count("shapes", item.data.internalName, 1, true)
+				var aether:int = int(DracominoUtil.getAetherValueOfItem(item.data))
+				if aether > 0:
+					seedFlagHolder.count("total_aether_value", "collected", aether, true)
 				var streak:Streak
 				# Get last shape in collectedItems and get its streak object if the same as this one 
 				var index:int = collectedItems.size() - 2 # Get the one right before the one we just added
@@ -407,7 +645,6 @@ func giveItem(item:StateItem):
 					collectedAbilities[item.id] += 1
 				else:
 					collectedAbilities[item.id] = 1
-				var prettyName = item.data.prettyName
 
 				# Add flag for ability
 				seedFlagHolder.count(item.data.internalName, "collected", collectedAbilities[item.id])
@@ -419,6 +656,10 @@ func giveItem(item:StateItem):
 				# Keep track of rotate abilities collected
 				if item.data.tags.get("rotate"):
 					seedFlagHolder.count("rotate", item.data.internalName, 1)
+
+				# Announce the ability you got
+				if not isJustConnected:
+					Overlay.queueAnnouncement("You got {item}!".format({item=item.data.prettyName}))
 			# Trigger effects
 			"on_lock", "on_spawn":
 				if not isJustConnected:
@@ -491,6 +732,12 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	if slotContextHash != _conn_ctx:
 		slotContextHash = _conn_ctx
 		newSeedReset()
+		
+		# Set up a signal to reset the game once everything is loaded
+		if is_instance_valid(warningDialog):
+			warningDialog.tree_exited.connect(_on_newSeed_refresh_items)
+		else:
+			conn.refresh_items.connect(_on_newSeed_refresh_items.unbind(1), CONNECT_ONE_SHOT)
 
 	goal = conn.slot_data.get("goal", -1)
 
@@ -525,6 +772,15 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		for abilityname in ["rotate_clockwise", "rotate_counterclockwise", "gravity", "soft_drop", "hard_drop"]:
 			seedFlagHolder.setFlag("existing_"+abilityname)
 
+	# Set up campaign
+	if campaign == null:
+		var actConfig:Variant = conn.slot_data.get("act_config")
+		if actConfig is Dictionary:
+			# TODO: Story data gets loaded here
+			campaign = CampaignContext.Classic(goal)
+		else:
+			campaign = CampaignContext.Classic(goal)
+
 	# Set randomize orientations
 	var randomizeOrientations = conn.slot_data.get("randomize_orientations", false)
 	if randomizeOrientations:
@@ -534,21 +790,22 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 
 	# Reset collected items
 	seedFlagHolder.count("shapes_left", "collected", 0)
+	seedFlagHolder.count("total_aether_value", "collected", 0)
 	collectedItems.clear()
 	collectedAbilities.clear()
 	allLineLocations.clear()
-	missingPickupCoordinates.clear()
+	boardObjects.clear()
 	missingLines.clear()
 	missingPickups.clear()
 	id_to_line.clear()
-	id_to_pickupCoord.clear()
+	id_to_boardObject.clear()
 
 	var locsToCollect:Array[int] = []
 	var _missingLocations_changed:bool = false
-	var _allPickups:Array[int] = []
+	var _allPickupLocations:Dictionary[StringName, Array]
 	for loc_id:int in conn.slot_locations:
 		var loc_data:CONSTANTS.LocationData = CONSTANTS.LOCATIONS.get(loc_id)
-		if loc_data:
+		if loc_data is CONSTANTS.LocationData:
 			var checked:bool = conn.slot_locations[loc_id]
 			# Sync missingLocations and checkedLocations with server
 			if not checked:
@@ -564,12 +821,15 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 			else:
 				checkedLocations[loc_id] = true
 				if missingLocations.get(loc_id, false):
-					missingLocations[loc_id] = false
+					missingLocations.erase(loc_id)
 					_missingLocations_changed = true
-			if loc_data.tags.get("line_clear", false):
+			if loc_data.isLineClear:
 				allLineLocations.append(loc_id)
-			elif loc_data.tags.get("item_pickup", false):
-				_allPickups.append(loc_id)
+			elif loc_data.isBoardObject:
+				if loc_data.objectName:
+					if not _allPickupLocations.has(loc_data.objectName):
+						_allPickupLocations[loc_data.objectName] = []
+					_allPickupLocations[loc_data.objectName].append(loc_id)
 				if not checked:
 					missingPickups.append(loc_id)
 				else:
@@ -580,26 +840,67 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 			)
 	#
 	allLineLocations.sort()
-	_allPickups.sort()
+	for k:StringName in _allPickupLocations:
+		_allPickupLocations[k].sort()
+		_allPickupLocations[k].reverse() # Prepare to pop the first objects first
 	missingPickups.sort()
 
 	# Create item pickup data
-	var item_pickup_placements = conn.slot_data.get("item_pickup_placements", [])
-	_allPickups.reverse()
-	for index:int in item_pickup_placements:
-		var vec:Vector2i = Vector2i(index % Board.BOUNDS.size.x, floor(index/Board.BOUNDS.size.x))
-		var loc_id:Variant = _allPickups.pop_back()
-		if loc_id != null and missingLocations.get(loc_id, false):
-			missingPickupCoordinates[vec] = loc_id as int
+	var item_pickup_placements:Variant = conn.slot_data.get("item_pickup_placements", [])
+	# Added version 1.0.0 probably
+	var item_pickup_ids:Variant = conn.slot_data.get("item_pickup_ids")
+	var item_pickup_id_mappings:Variant = conn.slot_data.get("item_pickup_id_mappings")
+	# Create board objects states
+	if item_pickup_placements is Array:
+		for i:int in range(item_pickup_placements.size()):
+			var placement:int = item_pickup_placements[i]
+			# Map pickup id to object name
+			var objectName:StringName = &"error" # Make default an error. TODO: Can put APWorld-specific error object here
+			if item_pickup_ids is Array:
+				if item_pickup_ids.size() > i:
+					var item_pickup_id:int = 0
+					item_pickup_id = int(item_pickup_ids[i])
+					if item_pickup_id_mappings is Dictionary:
+						# Get the mapped object name, or make error object if something weird is happening
+						if item_pickup_id_mappings.has(item_pickup_id):
+							objectName = item_pickup_id_mappings[item_pickup_id] as StringName
+						else:
+							# Unknown mapping (something is wrong with the APWorld)
+							printerr("Error: Malformed slot data. Found missing item pickup id: ", item_pickup_id)
+				else:
+					# Out of bounds (something is wrong with the APWorld)
+					printerr("Error: Malformed slot data. Index %s exceeds item_pickup_ids size"%i)
+			else:
+				# There is no item pickup mappings, so default to coin
+				objectName = &"coin"
+			#
+			var vec:Vector2i = Vector2i(placement % Board.BOUNDS.size.x, floor(placement/Board.BOUNDS.size.x))
+			var loc_id:Variant = _allPickupLocations.get(objectName, []).pop_back()
+			if loc_id != null:
+				# This is a location
+				if missingLocations.get(loc_id, false):
+					boardObjects[i] = StateBoardObject.new(vec, objectName, loc_id as int, i)
+			else:
+				# This isn't a location; it's just a regular board object or an error
+				boardObjects[i] = StateBoardObject.new(vec, objectName, -1, i)
 			
 	
 	# Set up lookup tables
 	for i:int in range(allLineLocations.size()):
 		id_to_line[allLineLocations[i]] = i
 		missingLines[i] = missingLocations.get(allLineLocations[i], false)
+		if missingLines[i]:
+			campaign.registerMissingLocationByLine(allLineLocations[i], i)
 
-	for k:Vector2i in missingPickupCoordinates:
-		id_to_pickupCoord[missingPickupCoordinates.get(k,Vector2i())] = k
+	for sbo:StateBoardObject in boardObjects.values():
+		if sbo.isLocation:
+			id_to_boardObject[sbo.loc_id] = sbo
+			if missingLocations.get(sbo.loc_id, false):
+				campaign.registerMissingLocationByLine(sbo.loc_id, sbo.coordinates.y)
+
+	# Sync with campaign (because reconnect)
+	for loc_id:int in locsToCollect:
+		campaign.removeMissingLocation(loc_id)
 
 	if victory:
 		sendVictory()
@@ -607,7 +908,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	# Send new state to board
 	if _missingLocations_changed:
 		missingLines_updated.emit(missingLines)
-		missingPickupCoordinates_updated.emit(missingPickupCoordinates)
+		boardObjects_updated.emit(boardObjects)
 
 	# Sync with server
 	if locsToCollect.size():
@@ -624,6 +925,19 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 
 	# Send energy that couldn't be sent earlier
 	sendEnergy.call_deferred()
+
+func _on_newSeed_refresh_items():
+	# Reset when everything is loaded
+	if campaign is CampaignContext:
+		campaign.updateActs()
+		# Make acts announce when unlocked
+		for act:ActContext in campaign.acts:
+			act.selectable_changed.connect(
+				func(isSelectable):
+					if isSelectable:
+						Overlay.queueAnnouncement("%s Checkpoint is unlocked!"%act.prettyName)
+			)
+	SignalBus.getSignal("restartGame").emit()
 
 func _on_deathlink(source: String, cause: String, json: Dictionary):
 	var vsmode:bool = FlagManager.isFlagSet("versus_mode")
@@ -677,13 +991,15 @@ func _on_remove_location(loc_id:int):
 	var changed:bool = missingLocations.get(loc_id, false)
 	missingLocations.erase(loc_id)
 	if changed:
+		if campaign:
+			campaign.removeMissingLocation(loc_id)
 		checkedLocations[loc_id] = true
 		if id_to_line.has(loc_id):
 			missingLines[id_to_line[loc_id]] = false
 			missingLines_updated.emit(missingLines)
-		elif id_to_pickupCoord.has(loc_id):
-			missingPickupCoordinates.erase(id_to_pickupCoord[loc_id])
-			missingPickupCoordinates_updated.emit(missingPickupCoordinates)
+		elif id_to_boardObject.has(loc_id):
+			boardObjects.erase(id_to_boardObject[loc_id].index)
+			boardObjects_updated.emit(boardObjects)
 			addLocationToCoinCurrency(loc_id)
 
 func _on_Board_pieces_requested(callback:Callable, num:int) -> void:
@@ -713,16 +1029,17 @@ func _on_Board_lines_cleared(lines:Array) -> void:
 	
 	giveMana(lines.size() * Board.BOUNDS.size.x * CONSTANTS.MANA_PER_BLOCK)
 
-func _on_Board_item_pickedup(loc_id) -> void:
-	print("Picked up ", CONSTANTS.LOCATIONS[loc_id].prettyName)
-	sendLocation(loc_id)
+func _on_Board_item_pickedup(state:StateBoardObject) -> void:
+	if state and state.isLocation:
+		print("Picked up ", CONSTANTS.LOCATIONS[state.loc_id].prettyName)
+		sendLocation(state.loc_id)
 	giveMana(CONSTANTS.MANA_PER_COIN)
 
 func _on_Board_lines_cleared_updated(num:int) -> void:
 	# Make NO_ROTATE death context only happen when you're putting the effort
 	_canUseDeathContext_NO_ROTATE = num >= LINE_THRESHOLD_FOR_NO_ROTATE_DEATH_CONTEXT
 	# Send victory if reached goal
-	if not victory and goal > 0 and num >= goal:
+	if not victory and goal > 0 and FlagManager.getTotalCountAmount("lines_cleared") >= goal:
 		sendVictory()
 	# Send mana/energy
 	sendEnergy()

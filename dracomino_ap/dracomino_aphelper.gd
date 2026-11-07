@@ -113,6 +113,7 @@ func _ready() -> void:
 		slider_musicVol.value_changed.connect(_on_slider_value_changed.bind(
 			"volume_music",
 			"Music",
+			"music", # TODO# Remove when music gets implemented
 		))
 	slider_sfxVol = get_parent().find_child("HSlider_SfxVol")
 	if slider_sfxVol:

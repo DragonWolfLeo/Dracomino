@@ -104,14 +104,14 @@ class Enchantment:
 class Modifier:
 	var strength:float = 1
 	var type:StringName
-	var isEligible:Callable = func(): return true
+	var isEligible:Callable = func(_piece:Piece): return true
 	var alwaysActive:bool = false
 
 	func _init(_type:StringName = "") -> void:
 		type = _type
 
-	func addCondition(fn:Callable) -> Modifier:
-		isEligible = fn
+	func addCondition(fnOfPiece:Callable) -> Modifier: ## Add a function that takes Piece as a parameter
+		isEligible = fnOfPiece
 		return self
 
 	func setStrength(_strength:float) -> Modifier:
@@ -138,43 +138,75 @@ static var MODIFIERS:Dictionary[StringName, Modifier] = {
 	rotate_rare = Modifier.new("rotate").setStrength(1.0).addCondition(_canRotate),
 	rotate_epic = Modifier.new("rotate").setStrength(0.7).addCondition(_canRotate),
 	rotate_legendary = Modifier.new("rotate").setStrength(0.25),
+
+	afterimage = Modifier.new("afterimage").setAlwaysActive(),
+
+	damage_curse = Modifier.new("damage").setStrength(0.5).setAlwaysActive(),
+	damage_uncommon = Modifier.new("damage").setStrength(1.5).setAlwaysActive(),
+	damage_rare = Modifier.new("damage").setStrength(2.0).setAlwaysActive(),
+	damage_epic = Modifier.new("damage").setStrength(2.5).setAlwaysActive(),
+	damage_legendary = Modifier.new("damage").setStrength(3.0).setAlwaysActive(),
 }
 
-static func _canUseGravityEnchantment() -> bool:
+static func _canUseGravityEnchantment(_piece:Piece) -> bool:
 	return FlagManager.isFlagSet("gravity") and FlagManager.isFlagSet("soft_drop/hard_drop")
 
-static func _canRotate() -> bool:
-	return FlagManager.isFlagSet("rotate")
+static func _canRotate(_piece:Piece) -> bool:
+	return FlagManager.isFlagSet("rotate") and _piece.canRotate
 
 static var ENCHANTMENTS:Dictionary[StringName, Enchantment] = {
 	enchantment_curse = Enchantment.new("curse", [
 		MODIFIERS.gravity_curse,
 		MODIFIERS.movement_curse,
+		MODIFIERS.damage_curse,
 	]),
 	enchantment_uncommon = Enchantment.new("uncommon", [
 		MODIFIERS.gravity_uncommon,
 		MODIFIERS.movement_uncommon,
+		MODIFIERS.damage_uncommon,
 	]),
 	enchantment_rare = Enchantment.new("rare", [
 		MODIFIERS.gravity_rare,
 		MODIFIERS.movement_rare,
 		MODIFIERS.rotate_rare,
+		MODIFIERS.damage_rare,
 	]),
 	enchantment_epic = Enchantment.new("epic", [
 		MODIFIERS.gravity_epic,
 		MODIFIERS.movement_epic,
 		MODIFIERS.rotate_epic,
+		MODIFIERS.damage_epic,
 	]),
 	enchantment_legendary = Enchantment.new("legendary", [
 		MODIFIERS.antigravity,
 		MODIFIERS.gravity_epic,
 		MODIFIERS.movement_legendary,
 		MODIFIERS.rotate_legendary,
+		MODIFIERS.afterimage,
+		MODIFIERS.damage_legendary,
 	]),
-	enchantment_curse_gravity = Enchantment.new("curse", [MODIFIERS.gravity_curse]),
-	enchantment_curse_movement = Enchantment.new("curse", [MODIFIERS.movement_curse]),
-	enchantment_legendary_movement = Enchantment.new("legendary", [MODIFIERS.movement_legendary]),
-	enchantment_legendary_spin = Enchantment.new("legendary", [MODIFIERS.rotate_legendary]),
+	enchantment_curse_gravity = Enchantment.new("curse", [
+		MODIFIERS.gravity_curse,
+		MODIFIERS.damage_curse,
+	]),
+	enchantment_curse_movement = Enchantment.new("curse", [
+		MODIFIERS.movement_curse,
+		MODIFIERS.damage_curse,
+	]),
+	enchantment_legendary_movement = Enchantment.new("legendary", [
+		MODIFIERS.movement_legendary,
+		MODIFIERS.antigravity,
+		MODIFIERS.gravity_epic,
+		MODIFIERS.afterimage,
+		MODIFIERS.damage_legendary,
+	]),
+	enchantment_legendary_spin = Enchantment.new("legendary", [
+		MODIFIERS.rotate_legendary,
+		MODIFIERS.antigravity,
+		MODIFIERS.gravity_epic,
+		MODIFIERS.afterimage,
+		MODIFIERS.damage_legendary,
+	]),
 	enchantment_random = Enchantment.new("random"),
 	enchantment = Enchantment.new("enchantment"),
 }
@@ -308,6 +340,8 @@ var modifiers:Dictionary[StringName, float] = {}
 var flagHolder:FlagHolder
 
 static var GHOSTPIECE_SCENE:PackedScene = load("res://object/ghostpiece.tscn")
+static var PIECEAFTERIMAGE_EFFECT_SCENE:PackedScene = load("res://object/pieceafterimage_effect.tscn")
+static var BEAM_SCENE:PackedScene = load("res://object/beam.tscn")
 
 signal movement_requested(piece:Piece, direction:Vector2i, movementType:int)
 signal new_cells_requested(piece:Piece, cells:Array[Vector2i])
@@ -316,6 +350,9 @@ signal focus_lost()
 signal trap_activated(stateItem:DracominoHandler.StateItem)
 signal piece_placed()
 signal landed_on_by(piece:Piece, movementType:int)
+signal kicked_by(piece:Piece, direction:Vector2i)
+signal crystallized_on(lines:int)
+signal moved(piece:Piece)
 
 #==== Virtuals ======
 func _ready() -> void:
@@ -406,6 +443,26 @@ func _sendTrapLink(trapInternalName:StringName) -> void:
 		Archipelago.conn.send_traplink(trapLinkAlias)
 		print("Piece: Sending trap: ", trapLinkAlias)
 
+func startBeamEffect() -> void: ## Shoots up a beam attack
+	# After image
+	createAfterImageEffect()
+	# Beam
+	var beam:CanvasItem = BEAM_SCENE.instantiate()
+	if beam is CanvasItem:
+		add_sibling(beam)
+		beam.position = position + getCenterPositionOffset()
+	else:
+		printerr("Piece.startBeamEffect error: beam node is not a CanvasItem")
+
+func createAfterImageEffect() -> void: ## Creates an afterimage in current location
+	var fx:PieceTiles = PIECEAFTERIMAGE_EFFECT_SCENE.instantiate()
+	if fx is PieceTiles:
+		add_sibling(fx)
+		fx.global_position = global_position
+		fx.renderPiece(self)
+	else:
+		printerr("Piece.createAfterImageEffect error: piece afterimage effect node is not a PieceTiles")
+
 func makeLimbo():
 	process_mode = Node.PROCESS_MODE_DISABLED
 	set_process_unhandled_input(false)
@@ -477,7 +534,7 @@ func applyEnchantmentByName(enchantmentName:StringName) -> Enchantment:
 			context.prettyName = enchantment.prettyName + " " + context.name
 		var eligibleMods:Array[Modifier] = []
 		for mod in enchantment.modifiers:
-			if mod.isEligible.call():
+			if mod.isEligible.call(self):
 				if mod.alwaysActive:
 					applyModifer(mod)
 				else:
@@ -500,6 +557,7 @@ func updateTiles():
 		renderPiece(self)
 	
 	globalCells = Board.getTranslatedCells(localCells, currentPosition)
+	moved.emit(self)
 	if ghost:
 		ghost.setCells(localCells)
 		ghost_cells_requested.emit(self, ghost)
@@ -595,6 +653,9 @@ func move(direction:Vector2i, isRotate:bool = false):
 			softDropTimer.start(SOFT_DROP_LOCK_DELAY)
 			lockDelayed = false
 			gravityLockDelayed = false
+	elif direction != Vector2i.ZERO:
+		if modifiers.get("afterimage"):
+			createAfterImageEffect()
 
 func restartGravityTimer() -> void:
 	gravityTimer.start()
@@ -615,6 +676,12 @@ func getGravityDelay() -> float:
 func getLandedOnBy(piece:Piece, movementType:int = MOVEMENT.NONE) -> void:
 	landed_on_by.emit(piece, movementType)
 
+func getKickedBy(piece:Piece, direction:Vector2i = Vector2i.ZERO) -> void:
+	kicked_by.emit(piece, direction)
+
+func getCrystallizedOn(lines:int = 1) -> void:
+	crystallized_on.emit(lines)
+
 func markEffectsAsUsed() -> void: ## Prevent repeating trap shapes and enchantments
 	if stateItem:
 		stateItem.used = true
@@ -624,17 +691,17 @@ func markEffectsAsUsed() -> void: ## Prevent repeating trap shapes and enchantme
 # Events
 func _on_HorizontalTimer_timeout():
 	if not isFocus or momentumPhysics: return
-	var moved = Vector2i.ZERO
+	var hasMoved = Vector2i.ZERO
 	if Input.is_action_pressed("moveLeft"):
-		moved = Vector2i.LEFT
+		hasMoved = Vector2i.LEFT
 	elif Input.is_action_pressed("moveRight"):
-		moved = Vector2i.RIGHT
+		hasMoved = Vector2i.RIGHT
 	else:
 		horizontalTimer.wait_time = HORIZONTAL_WAIT_TIME
 		return
 	horizontalTimer.wait_time = HORIZONTAL_REPEAT_WAIT_TIME
 	horizontalTimer.start()
-	movement_requested.emit(self, moved, MOVEMENT.HORIZONTAL)
+	movement_requested.emit(self, hasMoved, MOVEMENT.HORIZONTAL)
 
 func _on_SoftDropTimer_timeout():
 	if not isFocus: return

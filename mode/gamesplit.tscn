@@ -145,6 +145,13 @@ layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
+[node name="Btn_ActSelect" type="Button" parent="HBoxContainer/ButtonBarContainer/ButtonBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 9
+focus_mode = 0
+text = "Act Select"
+
 [node name="Btn_Restart" type="Button" parent="HBoxContainer/ButtonBarContainer/ButtonBar"]
 unique_name_in_owner = true
 layout_mode = 2

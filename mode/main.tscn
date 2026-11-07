@@ -1,13 +1,15 @@
-[gd_scene load_steps=17 format=3 uid="uid://c5lm3ikyfckvp"]
+[gd_scene load_steps=19 format=3 uid="uid://c5lm3ikyfckvp"]
 
 [ext_resource type="Script" uid="uid://c5jgcsxvnygnn" path="res://mode/main.gd" id="1_gx2q7"]
 [ext_resource type="PackedScene" uid="uid://txbrdml6vs6n" path="res://screen/ui.tscn" id="2_yivgv"]
 [ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="3_yivgv"]
 [ext_resource type="Script" uid="uid://daewoikmtskpi" path="res://dracomino_ap/dracomino_handler.gd" id="4_d6dmn"]
 [ext_resource type="PackedScene" uid="uid://0ung6f7krjet" path="res://screen/notificationscreen.tscn" id="5_d6dmn"]
+[ext_resource type="PackedScene" uid="uid://b7v8lc77jrar4" path="res://screen/actselect_screen.tscn" id="5_wule5"]
 [ext_resource type="PackedScene" uid="uid://3jevvou6slg2" path="res://screen/overlay.tscn" id="5_yivgv"]
 [ext_resource type="PackedScene" uid="uid://c81i6wg82i8yk" path="res://screen/backgroundlayer.tscn" id="6_ckgpy"]
 [ext_resource type="PackedScene" uid="uid://ckv6tnuoxlxgw" path="res://screen/level_overlay.tscn" id="6_w0fxs"]
+[ext_resource type="PackedScene" uid="uid://dwgiwr38d1d4q" path="res://screen/sublevel_overlay.tscn" id="6_wule5"]
 [ext_resource type="Script" uid="uid://c5w663oymc2oy" path="res://module/hide_with_mode.gd" id="8_jjnvi"]
 [ext_resource type="PackedScene" uid="uid://boraki5ygsa0g" path="res://level/board.tscn" id="8_wule5"]
 [ext_resource type="Script" uid="uid://dutbiv2hgugwn" path="res://module/piecestorage.gd" id="9_3joyb"]
@@ -53,10 +55,15 @@ script = ExtResource("4_d6dmn")
 [node name="UI" parent="Main/SubViewport" instance=ExtResource("2_yivgv")]
 unique_name_in_owner = true
 
+[node name="ActSelectScreen" parent="Main/SubViewport/UI" instance=ExtResource("5_wule5")]
+visible = false
+
 [node name="Overlay" parent="Main/SubViewport" instance=ExtResource("5_yivgv")]
 
 [node name="LevelOverlay" parent="Main/SubViewport" instance=ExtResource("6_w0fxs")]
 process_mode = 1
+
+[node name="SubLevelOverlay" parent="Main/SubViewport" instance=ExtResource("6_wule5")]
 
 [node name="BackgroundLayer" parent="Main/SubViewport" instance=ExtResource("6_ckgpy")]
 
@@ -220,10 +227,12 @@ autostart = true
 process_mode = 3
 layout_mode = 2
 
+[connection signal="boardObjects_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoHandler_board_objects_updated"]
+[connection signal="campaign_changed" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/UI/ActSelectScreen" method="_on_DracominoHandler_campaign_changed"]
 [connection signal="lineMappings_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_line_mappings_updated"]
 [connection signal="missingLines_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_lines_updated"]
-[connection signal="missingPickupCoordinates_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoState_missing_pickup_coordinates_updated"]
 [connection signal="notification_signal" from="Main/SubViewport/DracominoHandler" to="NotificationScreen" method="_on_DracominoHandler_notification_signal"]
+[connection signal="slotContextHash_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoHandler_slot_context_hash_updated"]
 [connection signal="started" from="Main/SubViewport/DracominoHandler" to="Main" method="_on_DracominoHandler_started"]
 [connection signal="resized" from="Main/SubViewport/PuzzleMode/SubViewportContainer" to="Main/SubViewport/PuzzleMode" method="_on_SubViewportContainer_resized"]
 [connection signal="deathlink_earned" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="Main/SubViewport/DracominoHandler" method="_on_Board_deathlink_earned"]

@@ -1,18 +1,16 @@
-[gd_scene load_steps=13 format=3 uid="uid://c7613bp0awts"]
+[gd_scene load_steps=11 format=3 uid="uid://c7613bp0awts"]
 
 [ext_resource type="Script" uid="uid://bdt3egg4vj746" path="res://dracomino_ap/dracomino_console_window_container.gd" id="1_vsama"]
 [ext_resource type="Script" uid="uid://coc8hh7uywptt" path="res://dracomino_ap/dracomino_aphelper.gd" id="2_prof0"]
 [ext_resource type="PackedScene" uid="uid://dhya6ucgf72i8" path="res://godot_ap/ui/hints_tab.tscn" id="3_prof0"]
 [ext_resource type="PackedScene" uid="uid://c1pyfyn3ax5u2" path="res://dracomino_ap/dracomino_console_tab.tscn" id="3_vsama"]
 [ext_resource type="Script" uid="uid://nuk1liowalgx" path="res://godot_ap/ui/SettingsTab.gd" id="5_eom8v"]
-[ext_resource type="Script" uid="uid://cfbgk8vq58w0h" path="res://dracomino_ap/option_toggle_button.gd" id="6_ewm2l"]
 [ext_resource type="PackedScene" uid="uid://hvf5xrhpkwaq" path="res://dracomino_ap/settingtab_game.tscn" id="6_s3ubo"]
 [ext_resource type="PackedScene" uid="uid://behnhtqv3gcyw" path="res://dracomino_ap/settingtab_audio.tscn" id="7_ewm2l"]
-[ext_resource type="Script" uid="uid://b2s7dh7bhjw7m" path="res://godot_ap/ui/theme_manager.gd" id="8_2crf1"]
 [ext_resource type="PackedScene" uid="uid://bujktwm1f2onj" path="res://dracomino_ap/settingtab_debug.tscn" id="8_euklm"]
-[ext_resource type="Script" uid="uid://cttniyxj6oq7h" path="res://godot_ap/ui/theme_box.gd" id="9_jn7d2"]
+[ext_resource type="PackedScene" uid="uid://ds2kugg6ra6uy" path="res://dracomino_ap/settingtab_client.tscn" id="8_ewm2l"]
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_1wnfu"]
+[sub_resource type="ButtonGroup" id="ButtonGroup_euklm"]
 
 [node name="DracominoClient" type="PanelContainer"]
 process_mode = 3
@@ -75,108 +73,15 @@ visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 
-[node name="Client" type="ScrollContainer" parent="Tabs/Settings/Margin/Tabs"]
+[node name="Client" parent="Tabs/Settings/Margin/Tabs" instance=ExtResource("8_ewm2l")]
 visible = false
 layout_mode = 2
-follow_focus = true
-metadata/_tab_index = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs/Client" node_paths=PackedStringArray("themes", "default_theme")]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/margin_left = 6
-theme_override_constants/margin_top = 6
-theme_override_constants/margin_right = 6
-theme_override_constants/margin_bottom = 6
-script = ExtResource("8_2crf1")
-themes = [NodePath("Row/Col1/DarkTheme"), NodePath("Row/Col1/LightTheme")]
-default_theme = NodePath("Row/Col1/DarkTheme")
+[node name="DarkTheme" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1" index="0"]
+button_group = SubResource("ButtonGroup_euklm")
 
-[node name="Row" type="HBoxContainer" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer"]
-layout_mode = 2
-
-[node name="Col1" type="VBoxContainer" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="DarkTheme" type="CheckBox" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1"]
-layout_mode = 2
-button_pressed = true
-button_group = SubResource("ButtonGroup_1wnfu")
-text = "Dark Mode"
-script = ExtResource("9_jn7d2")
-target_theme_path = "res://godot_ap/ui/themes/dark_theme.tres"
-metadata/_custom_type_script = "uid://cttniyxj6oq7h"
-
-[node name="LightTheme" type="CheckBox" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1"]
-layout_mode = 2
-button_group = SubResource("ButtonGroup_1wnfu")
-text = "Light Mode"
-script = ExtResource("9_jn7d2")
-target_theme_path = "res://godot_ap/ui/themes/light_theme.tres"
-metadata/_custom_type_script = "uid://cttniyxj6oq7h"
-
-[node name="Btn_ShowNonlocalItemSends" type="CheckButton" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1"]
-layout_mode = 2
-tooltip_text = "Show messages for item-sends that do not involve you"
-text = "Show Irrelevant Messages"
-script = ExtResource("6_ewm2l")
-optionKey = "showNonlocalItemSends"
-
-[node name="Container_Pronouns" type="MarginContainer" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1"]
-layout_mode = 2
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
-
-[node name="VBoxContainer" type="VBoxContainer" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1/Container_Pronouns"]
-layout_mode = 2
-
-[node name="HBoxContainer" type="HFlowContainer" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer"]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-text = "Pronouns:"
-
-[node name="OptionButton_Pronouns" type="OptionButton" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-selected = 0
-item_count = 4
-popup/item_0/text = "They/Them/Their"
-popup/item_0/id = 0
-popup/item_1/text = "He/Him/His"
-popup/item_1/id = 1
-popup/item_2/text = "She/Her/Her"
-popup/item_2/id = 2
-popup/item_3/text = "Custom"
-popup/item_3/id = 3
-
-[node name="PronounInputGroup" type="HFlowContainer" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="LineEdit_He_She_They" type="LineEdit" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer/PronounInputGroup"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-placeholder_text = "They"
-max_length = 20
-
-[node name="LineEdit_Him_Her_Them" type="LineEdit" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer/PronounInputGroup"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-placeholder_text = "Them"
-max_length = 20
-
-[node name="LineEdit_His_Her_Their" type="LineEdit" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1/Container_Pronouns/VBoxContainer/HBoxContainer/PronounInputGroup"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-placeholder_text = "Their"
-max_length = 20
+[node name="LightTheme" parent="Tabs/Settings/Margin/Tabs/Client/MarginContainer/Row/Col1" index="1"]
+button_group = SubResource("ButtonGroup_euklm")
 
 [node name="Debug" parent="Tabs/Settings/Margin/Tabs" instance=ExtResource("8_euklm")]
 visible = false
@@ -202,3 +107,5 @@ focus_mode = 2
 mouse_filter = 2
 
 [connection signal="update_theme" from="Tabs/Settings/Margin/Tabs/Client/MarginContainer" to="DracominoAPHelper" method="_on_Theme_update_theme"]
+
+[editable path="Tabs/Settings/Margin/Tabs/Client"]

@@ -43,6 +43,15 @@ script = ExtResource("2_5smlf")
 flag = "overlay_ega"
 ignoreExternalSignals = true
 
+[node name="Btn_IrregularBoard" type="CheckButton" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "(RESTARTS GAME!)
+Makes the board irregular. There is no logic for this!"
+text = "Irregular Board (Test)"
+script = ExtResource("2_5smlf")
+flag = "irregular_board"
+debugOnly = true
+
 [node name="Btn_PixelFilter" type="CheckButton" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Pixellation Filter"
