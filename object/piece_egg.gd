@@ -10,6 +10,8 @@ func _ready():
 	super()
 	piece_placed.connect(_on_piece_placed)
 	landed_on_by.connect(_on_landed_on_by)
+	kicked_by.connect(_on_kicked_by)
+	crystallized_on.connect(_on_crystallized_on)
 
 func hatch():
 	if is_queued_for_deletion(): return
@@ -40,8 +42,29 @@ func _on_activeEffect_duration_changed(remaining:int) -> void:
 
 func _on_landed_on_by(piece:Piece, movementType:int):
 	if not activeEffect: return
-	var tickAmount:int = 2
+	var tickAmount:float = 2
+	# Apply enchantment damage modifier
+	tickAmount *= float(piece.modifiers.get("damage", 1.0))
+	# Double damage if hard dropping
 	match movementType:
 		Piece.MOVEMENT.HARD_DROP, Piece.MOVEMENT.SHOVE, Piece.MOVEMENT.FORCED_SHOVE:
-			tickAmount = 4
-	activeEffect.tickDuration(tickAmount, false)
+			tickAmount *= 2
+	activeEffect.tickDuration(roundi(tickAmount), false)
+	
+func _on_kicked_by(piece:Piece, _direction:Vector2i) -> void:
+	if not activeEffect: return
+	var tickAmount:float = 1
+	# Apply enchantment damage modifier
+	tickAmount *= float(piece.modifiers.get("damage", 1.0))
+	# Double damage if hard dropping
+	activeEffect.tickDuration(roundi(tickAmount), false)
+	SoundManager.play("dink")
+
+func _on_crystallized_on(lines:int) -> void:
+	if not activeEffect: return
+	var tickAmount:float = 12 * lines
+	activeEffect.tickDuration(roundi(tickAmount), false)
+
+func _on_AttackableArea_attacked(attack: Attack) -> void:
+	if not activeEffect: return
+	activeEffect.tickDuration(roundi(attack.damage), false)

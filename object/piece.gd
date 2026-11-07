@@ -104,14 +104,14 @@ class Enchantment:
 class Modifier:
 	var strength:float = 1
 	var type:StringName
-	var isEligible:Callable = func(): return true
+	var isEligible:Callable = func(_piece:Piece): return true
 	var alwaysActive:bool = false
 
 	func _init(_type:StringName = "") -> void:
 		type = _type
 
-	func addCondition(fn:Callable) -> Modifier:
-		isEligible = fn
+	func addCondition(fnOfPiece:Callable) -> Modifier: ## Add a function that takes Piece as a parameter
+		isEligible = fnOfPiece
 		return self
 
 	func setStrength(_strength:float) -> Modifier:
@@ -139,33 +139,43 @@ static var MODIFIERS:Dictionary[StringName, Modifier] = {
 	rotate_epic = Modifier.new("rotate").setStrength(0.7).addCondition(_canRotate),
 	rotate_legendary = Modifier.new("rotate").setStrength(0.25),
 
-	afterimage = Modifier.new("afterimage").setAlwaysActive()
+	afterimage = Modifier.new("afterimage").setAlwaysActive(),
+
+	damage_curse = Modifier.new("damage").setStrength(0.5).setAlwaysActive(),
+	damage_uncommon = Modifier.new("damage").setStrength(1.5).setAlwaysActive(),
+	damage_rare = Modifier.new("damage").setStrength(2.0).setAlwaysActive(),
+	damage_epic = Modifier.new("damage").setStrength(2.5).setAlwaysActive(),
+	damage_legendary = Modifier.new("damage").setStrength(3.0).setAlwaysActive(),
 }
 
-static func _canUseGravityEnchantment() -> bool:
+static func _canUseGravityEnchantment(_piece:Piece) -> bool:
 	return FlagManager.isFlagSet("gravity") and FlagManager.isFlagSet("soft_drop/hard_drop")
 
-static func _canRotate() -> bool:
-	return FlagManager.isFlagSet("rotate")
+static func _canRotate(_piece:Piece) -> bool:
+	return FlagManager.isFlagSet("rotate") and _piece.canRotate
 
 static var ENCHANTMENTS:Dictionary[StringName, Enchantment] = {
 	enchantment_curse = Enchantment.new("curse", [
 		MODIFIERS.gravity_curse,
 		MODIFIERS.movement_curse,
+		MODIFIERS.damage_curse,
 	]),
 	enchantment_uncommon = Enchantment.new("uncommon", [
 		MODIFIERS.gravity_uncommon,
 		MODIFIERS.movement_uncommon,
+		MODIFIERS.damage_uncommon,
 	]),
 	enchantment_rare = Enchantment.new("rare", [
 		MODIFIERS.gravity_rare,
 		MODIFIERS.movement_rare,
 		MODIFIERS.rotate_rare,
+		MODIFIERS.damage_rare,
 	]),
 	enchantment_epic = Enchantment.new("epic", [
 		MODIFIERS.gravity_epic,
 		MODIFIERS.movement_epic,
 		MODIFIERS.rotate_epic,
+		MODIFIERS.damage_epic,
 	]),
 	enchantment_legendary = Enchantment.new("legendary", [
 		MODIFIERS.antigravity,
@@ -173,11 +183,30 @@ static var ENCHANTMENTS:Dictionary[StringName, Enchantment] = {
 		MODIFIERS.movement_legendary,
 		MODIFIERS.rotate_legendary,
 		MODIFIERS.afterimage,
+		MODIFIERS.damage_legendary,
 	]),
-	enchantment_curse_gravity = Enchantment.new("curse", [MODIFIERS.gravity_curse]),
-	enchantment_curse_movement = Enchantment.new("curse", [MODIFIERS.movement_curse]),
-	enchantment_legendary_movement = Enchantment.new("legendary", [MODIFIERS.movement_legendary]),
-	enchantment_legendary_spin = Enchantment.new("legendary", [MODIFIERS.rotate_legendary]),
+	enchantment_curse_gravity = Enchantment.new("curse", [
+		MODIFIERS.gravity_curse,
+		MODIFIERS.damage_curse,
+	]),
+	enchantment_curse_movement = Enchantment.new("curse", [
+		MODIFIERS.movement_curse,
+		MODIFIERS.damage_curse,
+	]),
+	enchantment_legendary_movement = Enchantment.new("legendary", [
+		MODIFIERS.movement_legendary,
+		MODIFIERS.antigravity,
+		MODIFIERS.gravity_epic,
+		MODIFIERS.afterimage,
+		MODIFIERS.damage_legendary,
+	]),
+	enchantment_legendary_spin = Enchantment.new("legendary", [
+		MODIFIERS.rotate_legendary,
+		MODIFIERS.antigravity,
+		MODIFIERS.gravity_epic,
+		MODIFIERS.afterimage,
+		MODIFIERS.damage_legendary,
+	]),
 	enchantment_random = Enchantment.new("random"),
 	enchantment = Enchantment.new("enchantment"),
 }
@@ -321,6 +350,8 @@ signal focus_lost()
 signal trap_activated(stateItem:DracominoHandler.StateItem)
 signal piece_placed()
 signal landed_on_by(piece:Piece, movementType:int)
+signal kicked_by(piece:Piece, direction:Vector2i)
+signal crystallized_on(lines:int)
 signal moved(piece:Piece)
 
 #==== Virtuals ======
@@ -503,7 +534,7 @@ func applyEnchantmentByName(enchantmentName:StringName) -> Enchantment:
 			context.prettyName = enchantment.prettyName + " " + context.name
 		var eligibleMods:Array[Modifier] = []
 		for mod in enchantment.modifiers:
-			if mod.isEligible.call():
+			if mod.isEligible.call(self):
 				if mod.alwaysActive:
 					applyModifer(mod)
 				else:
@@ -644,6 +675,12 @@ func getGravityDelay() -> float:
 
 func getLandedOnBy(piece:Piece, movementType:int = MOVEMENT.NONE) -> void:
 	landed_on_by.emit(piece, movementType)
+
+func getKickedBy(piece:Piece, direction:Vector2i = Vector2i.ZERO) -> void:
+	kicked_by.emit(piece, direction)
+
+func getCrystallizedOn(lines:int = 1) -> void:
+	crystallized_on.emit(lines)
 
 func markEffectsAsUsed() -> void: ## Prevent repeating trap shapes and enchantments
 	if stateItem:

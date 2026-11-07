@@ -694,6 +694,15 @@ func isTileOccupied(cell:Vector2i) -> bool:
 			return true
 	return false
 
+func getOccupyingEntities(cells:Array[Vector2i]) -> Array[Piece]: ## Get all entities intersecting cells
+	var ret:Array[Piece] = []
+	for ent:Piece in entities:
+		for cell:Vector2i in cells:
+			if ent.globalCells.has(cell):
+				ret.append(ent)
+				break
+	return ret
+
 func placeOnHighestRow(piece:Piece):
 	var greatestY:int = 0
 	for cell in piece.globalCells:
@@ -921,10 +930,35 @@ func lockPiece(piece:Piece):
 		if fullRows.size() > 0:
 			if onLockEffect: effectHandler.bufferEffect(onLockEffect)
 			linesCleared += fullRows.size()
+
+			# Get rows bordering the full ones
+			var borderingRows:Array[int]
 			for row:int in fullRows:
+				if not borderingRows.has(row + 1):
+					borderingRows.append(row + 1)
+				if not borderingRows.has(row - 1):
+					borderingRows.append(row - 1)
+			
+			# Get entities occupying bordering rows
+			var crystallizedEnts:Array[Piece] = []
+			var uncrystallizedEnts:Array[Piece] = entities.duplicate()
+			for row:int in borderingRows:
+				for ent:Piece in uncrystallizedEnts.duplicate():
+					for cell:Vector2i in ent.globalCells:
+						if cell.y == row:
+							crystallizedEnts.append(ent)
+							uncrystallizedEnts.erase(ent)
+							break
+			
+			# Create clearing chunks
+			for row:int in fullRows:	
 				var chunk := ClearingChunk.new(row, rowOffsets.get(row, BOUNDS.position.x))
 				clearingChunks.append(chunk)
 				processClearingChunk(chunk)
+
+			# Crystallize on entities
+			for ent:Piece in crystallizedEnts:
+				(clearingChunks.back() as ClearingChunk).completed.connect(ent.getCrystallizedOn.bind(fullRows.size()))
 		else:
 			if onLockEffect: effectHandler.tryToTriggerEffect(onLockEffect)
 	
@@ -1258,7 +1292,8 @@ func _on_Piece_movement_requested(piece:Piece, direction:Vector2i, movementType:
 
 func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 	var dirs:Array[Vector2i] = [Vector2i.ZERO]
-	if FlagManager.isFlagSet("kick"):
+	var hasKick:bool = FlagManager.isFlagSet("kick")
+	if hasKick:
 		# Add more directions to push when kick is active
 		dirs.append_array([
 			Vector2i.DOWN,
@@ -1275,6 +1310,11 @@ func _on_Piece_new_cells_requested(piece:Piece, cells:Array[Vector2i]):
 		var translatedCells := getTranslatedCells(cells, piece.currentPosition + dir)
 		if areCellsOpen(translatedCells) and not getCollidingPiece(translatedCells, piece):
 			piece.setCells(cells)
+			# Let entities get kicked
+			if hasKick:
+				for ent:Piece in getOccupyingEntities(piece.globalCells):
+					ent.getKickedBy(piece, -dir)
+			# Push piece in direction of kick
 			piece.move(dir, true)
 			SoundManager.play("rotate")
 			if dir.x != 0:

@@ -1,9 +1,12 @@
-Version 0.3.4 (dev-alpha)
+Version 0.3.4 (2026 November 6)
  - Add checkpoint system
  - Add Spider Web Trap and Spin Spin. Not available in the APWorld yet, but can trigger through Random Trap or Trap Link.
  - Add irregular board test to the debug menu (requires debug mode to be on)
  - Add beam effect to Hold
  - Add afterimage effect to legendary pieces
+ - Eggs are effected by hold beams, kicks, and adjacent line clears
+ - Enchanted pieces do more damage. Cursed pieces do less damage.
+ - Add more visible notifier for ability and checkpoint gets
 
 Version 0.3.3.2 (2026 October 23)
  - Fix GodotAP vulnerabilty
