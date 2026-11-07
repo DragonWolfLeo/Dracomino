@@ -404,6 +404,8 @@ func newSeedReset():
 	if campaign is CampaignContext:
 		campaign.cleanUp()
 		campaign = null
+	
+	seedFlagHolder.count("lines_cleared", "starting_line", 0)
 	hintedRotateAbilities.clear()
 	resetSeedFlagHolder()
 	# Reset randoms
