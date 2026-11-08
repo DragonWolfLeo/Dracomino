@@ -220,9 +220,6 @@ scroll_to_bottom_on_new_message = true
 [node name="PanelContainer" parent="Console/ConsoleBox/ConsoleMargin/ConsoleBG/Row/Console" index="0"]
 mouse_filter = 2
 
-[node name="ScrollContainer" parent="Console/ConsoleBox/ConsoleMargin/ConsoleBG/Row/Console/PanelContainer" index="0"]
-mouse_filter = 2
-
 [node name="PartsContainer" parent="Console/ConsoleBox/ConsoleMargin/ConsoleBG/Row/Console/PanelContainer/ScrollContainer" index="0"]
 mouse_filter = 2
 
