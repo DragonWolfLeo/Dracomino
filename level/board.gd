@@ -510,7 +510,8 @@ func processClearingChunk(chunk:ClearingChunk) -> void:
 			clearingChunks.erase(chunk)
 			chunk.completed.emit()
 			pushDownRows(chunk)
-			lines_cleared.emit([chunk.mappedLine])
+			if _linemappings.has(chunk.mappedLine):
+				lines_cleared.emit([chunk.mappedLine])
 			if not clearingChunks.size():
 				checkForEvent(["line_clear"])
 	)
@@ -1011,8 +1012,10 @@ func getFullRows() -> Array[int]:
 		# Figure out if this is a check or not so we can play the correct sound
 		var isMissingLineCheck:bool = false
 		for i in fullRows:
-			var line:int = _linemappings.get(BOUNDS.end.y - i - 1, 0) 
-			isMissingLineCheck = _missinglines.get(line, false)
+			var row:int = BOUNDS.end.y - i - 1
+			if _linemappings.has(row):
+				var line:int = _linemappings.get(row, 0) 
+				isMissingLineCheck = _missinglines.get(line, false)
 		SoundManager.play("lineclear_check" if isMissingLineCheck else "lineclear")
 	return fullRows
 
@@ -1142,12 +1145,20 @@ func makeOrGetTileSpace(coordinates:Vector2i) -> TileSpace:
 	return space
 
 func getTileSpaceAtMapCoord(mapCoordinates:Vector2i) -> TileSpace: ## Get the correlating tile space at the board's native coordinates
-	var tileSpaceCoordinates:Vector2i = mapToTileSpaceCoordinates(mapCoordinates)
-	return getTileSpace(tileSpaceCoordinates)
+	if isMappedCoordinates(mapCoordinates):
+		var tileSpaceCoordinates:Vector2i = mapToTileSpaceCoordinates(mapCoordinates)
+		return getTileSpace(tileSpaceCoordinates)
+	return null
 
 func makeOrGetTileSpaceAtMapCoord(mapCoordinates:Vector2i) -> TileSpace: ## Make the correlating tile space at the board's native coordinates
-	var tileSpaceCoordinates:Vector2i = mapToTileSpaceCoordinates(mapCoordinates)
-	return makeOrGetTileSpace(tileSpaceCoordinates)
+	if isMappedCoordinates(mapCoordinates):
+		var tileSpaceCoordinates:Vector2i = mapToTileSpaceCoordinates(mapCoordinates)
+		return makeOrGetTileSpace(tileSpaceCoordinates)
+	return null
+
+func isMappedCoordinates(mapCoordinates:Vector2i) -> bool:
+	var _row:int = BOUNDS.end.y - mapCoordinates.y - 1 # Get row counting from the bottom
+	return _linemappings.has(_row)
 
 func registerBoardObjectIfNotAlready(state:DracominoHandler.StateBoardObject) -> void: ## Adds board object to lookups if not there already
 	if state.index >= 0:
@@ -1336,10 +1347,11 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 		backgroundTileMap.clear()
 
 	for i:int in range(lineNumberLabels.size()):
+		var renderLine:bool = lineMappings.has(i)
 		# Re-number the labels
 		var line:int = lineMappings.get(i, 0)
 		var _offset:int = _lineoffsets.get(line, 0)
-		lineNumberLabels[i].text = str(line + 1)
+		lineNumberLabels[i].text = str(line + 1) if renderLine else ""
 		lineNumberLabels[i].modulate = Color.WHITE if _missinglines.get(line, false) else Color8(0x55,0x55,0x55) # Make dark if collected
 		var _p:Node2D = lineNumberLabels[i].get_parent()
 		if _p is Node2D:
@@ -1351,6 +1363,8 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 		var _row:int = BOUNDS.end.y - i - 1
 		rowOffsets[_row] = _offset
 		rowEnds[_row] = _offset + BOUNDS.size.x
+		if not renderLine:
+			continue
 		# Organize the pickups
 		for j:int in range(BOUNDS.size.x):
 			var vec:Vector2i = Vector2i(j,line)
@@ -1432,7 +1446,7 @@ func _on_effect_web():
 	for y in range(EFFECT_WEB_BOUNDS.position.y, EFFECT_WEB_BOUNDS.end.y):
 		for x in range(rowOffsets.get(y, EFFECT_WEB_BOUNDS.position.x), rowEnds.get(y, EFFECT_WEB_BOUNDS.end.x)):
 			var vec:Vector2i = Vector2i(x, y)
-			if not isTileFilled(vec):
+			if isMappedCoordinates(vec) and not isTileFilled(vec):
 				var space:TileSpace = getTileSpaceAtMapCoord(vec)
 				if not space or not space.hasObjects():
 					validMapCoords.append(mapToTileSpaceCoordinates(vec))

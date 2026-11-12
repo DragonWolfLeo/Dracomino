@@ -157,7 +157,8 @@ class CampaignContext:
 	signal checkpoint_changed(act:ActContext)
 
 	var acts:Array[ActContext] = []
-	var location_id_to_act:Dictionary[int, ActContext]
+	var location_id_to_act:Dictionary[int, ActContext] ## Missing locations lookup for acts; Gets erased when location checked
+	var line_to_act:Dictionary[int, ActContext] ## Line lookup for acts; Does not get erased
 	var checkpoint:ActContext:
 		set(value):
 			if checkpoint == value: return
@@ -182,7 +183,7 @@ class CampaignContext:
 		var numActsToMake:int = max(1, floor(lines/linesPerAct))
 		var remainingLines:int = lines
 		for i:int in range(numActsToMake):
-			var act:ActContext = ActContext.new(linesPerAct)
+			var act:ActContext = ActContext.new(linesPerAct, true)
 			c.acts.append(act)
 			act.prettyName = "Line %s"%((i*linesPerAct)+1)
 			act.load_requested.connect(c.loadAct.bind(act))
@@ -195,6 +196,7 @@ class CampaignContext:
 			# Set a checkpoint
 			c.checkpoint = c.acts.front() as ActContext
 		
+		c.buildLineActLookup()
 		return c
 
 	## Generate a story campaign
@@ -204,12 +206,18 @@ class CampaignContext:
 		return c
 
 	# === Functions ===
-	func getActAtLine(line:int) -> ActContext:
-		for act:ActContext in acts:
-			if line < act.lines:
-				return act
-			line -= act.lines
+	func getActAtLine(line:int) -> ActContext: ## Gets the act that contains the line, or returns last act if out of bounds
+		if line_to_act.has(line):
+			return line_to_act[line]
 		return acts.back()
+
+	func buildLineActLookup() -> void: ## Builds the lookup table to find act at line 
+		line_to_act.clear()
+		var line:int = 0
+		for act:ActContext in acts:
+			for i:int in range(act.lines):
+				line_to_act[line] = act
+				line += 1
 
 	func registerMissingLocationByLine(loc_id:int, line:int) -> void: ## Registers a missing location into its proper act
 		if location_id_to_act.has(loc_id):
@@ -234,6 +242,7 @@ class CampaignContext:
 			act.disconnectSignals()
 		for dict:Dictionary in checkpoint_changed.get_connections():
 			(dict["signal"] as Signal).disconnect(dict["callable"] as Callable)
+		line_to_act.clear()
 
 	func loadCheckpoint():
 		loadAct(checkpoint)
@@ -249,6 +258,29 @@ class CampaignContext:
 				return startingLine
 			startingLine += act.lines 
 		return 0
+
+	func getConsecutiveStartingLinesMappings(numLines:int) -> Array[int]: ## Get a range of line mappings, restricted if next act is not a continuation
+		var line:int = getCheckpointLine()
+		var consecutiveLines:Array[int] = [line] as Array[int]
+		numLines -= 1
+		line += 1
+		while numLines > 0 and isLineContinuation(line):
+			consecutiveLines.append(line)
+			numLines -= 1
+			line += 1
+		return consecutiveLines
+	
+	func isLineContinuation(line:int) -> bool: ## Is this line a continuation of the line before
+		var prev:ActContext = line_to_act.get(line - 1)
+		var here:ActContext = line_to_act.get(line)
+		if prev == here:
+			# Prev line is in same act
+			return true
+		if here is ActContext:
+			# This is the beginning of an act. Check if it's a continuation
+			return here.isContinuation
+		# This isn't an act, so make dummy lines
+		return true
 
 	func getCheckpointAetherCost() -> float: ## Get the aether cost of current checkpoint
 		var aether:float = 0
@@ -308,9 +340,11 @@ class ActContext:
 			selectable = value
 			selectable_changed.emit(value)
 	var aetherCapacity:float ## The amount of aether it takes to complete this act
+	var isContinuation:bool ## Combine seamlessly with the act before
 
-	func _init(_lines:int = 20) -> void:
+	func _init(_lines:int = 20, _isContinuation:bool = false) -> void:
 		lines = _lines
+		isContinuation = _isContinuation
 		# TODO: Handle variable line size around here
 		aetherCapacity = lines * Board.BOUNDS.size.x * CONSTANTS.AETHER_PER_BLOCK
 
@@ -381,9 +415,14 @@ func reset():
 		startingLine = campaign.getCheckpointLine()
 		seedFlagHolder.count("lines_cleared", "starting_line", startingLine)
 		aetherCost = campaign.getCheckpointAetherCost()
-	# Fill visible line mappings
-	for i in range(Board.BOUNDS.size.y):
-		lineMappings[i] = i + startingLine
+		# Fill visible line mappings
+		var consecutiveLines:Array[int] = campaign.getConsecutiveStartingLinesMappings(Board.BOUNDS.size.y)
+		for i:int in range(consecutiveLines.size()):
+			lineMappings[i] = consecutiveLines[i]
+	else:
+		# Fill visible line mappings
+		for i in range(Board.BOUNDS.size.y):
+			lineMappings[i] = i + startingLine
 	# Set index forward until aether cost is spent
 	skipAetherWorthOfPieces(aetherCost)
 
@@ -1018,12 +1057,33 @@ func _on_Board_lines_cleared(lines:Array) -> void:
 	assert(lines.size() < Board.BOUNDS.size.y)
 	# Set lines as got
 	for n:int in lines:
+		assert(lineMappings.has(n), "Tried to clear unmapped line")
+		if not lineMappings.has(n):
+			continue
 		gotLines[lineMappings[n]] = true
 		sendLine(lineMappings[n])
 		# Shift line mappings
+		var lastLine:int = n
+		var lastMapping:int = lineMappings[n]
 		for i:int in range(n, Board.BOUNDS.size.y-1):
-			lineMappings[i] = lineMappings[i + 1]
-		lineMappings[Board.BOUNDS.size.y-1] += 1 
+			if lineMappings.has(i + 1):
+				lineMappings[i] = lineMappings[i + 1]
+				lastLine = i + 1
+				lastMapping = lineMappings[i + 1]
+			else:
+				lineMappings.erase(i)
+				break
+
+		if campaign:
+			if campaign.isLineContinuation(lastMapping + 1):
+				# Reveal next line since it continues
+				lineMappings[lastLine] = lastMapping + 1
+			else:
+				# The lines end here, so delete mappings
+				lineMappings.erase(lastLine)
+		else:
+			# Reveal next line since there's no campaign data
+			lineMappings[lastLine] = lastMapping + 1
 
 	lineMappings_updated.emit(lineMappings)
 	
