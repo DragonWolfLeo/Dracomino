@@ -1144,11 +1144,12 @@ func _on_Board_game_started() -> void:
 
 func _on_Board_lines_cleared(lines:Array) -> void:
 	assert(lines.size() < Board.BOUNDS.size.y)
+	var linesChanged:bool = false
 	# Set lines as got
 	for n:int in lines:
-		assert(lineMappings.has(n), "Tried to clear unmapped line")
 		if not lineMappings.has(n):
 			continue
+		linesChanged = true
 		gotLines[lineMappings[n]] = true
 		sendLine(lineMappings[n])
 		# Shift line mappings
@@ -1174,7 +1175,8 @@ func _on_Board_lines_cleared(lines:Array) -> void:
 			# Reveal next line since there's no campaign data
 			lineMappings[lastLine] = lastMapping + 1
 
-	lineMappings_updated.emit(lineMappings)
+	if linesChanged:
+		lineMappings_updated.emit(lineMappings)
 	
 	giveMana(lines.size() * Board.BOUNDS.size.x * CONSTANTS.MANA_PER_BLOCK)
 

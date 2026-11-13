@@ -513,8 +513,7 @@ func processClearingChunk(chunk:ClearingChunk) -> void:
 			clearingChunks.erase(chunk)
 			chunk.completed.emit()
 			pushDownRows(chunk)
-			if _linemappings.has(chunk.mappedLine):
-				lines_cleared.emit([chunk.mappedLine])
+			lines_cleared.emit([chunk.mappedLine])
 			if not clearingChunks.size():
 				checkForEvent(["line_clear"])
 	)
