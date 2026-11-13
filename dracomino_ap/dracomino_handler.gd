@@ -15,6 +15,7 @@ var missingLines:Dictionary[int, bool] = {}
 var id_to_line:Dictionary[int, int] = {}
 var id_to_boardObject:Dictionary[int, StateBoardObject] = {}
 var hintedRotateAbilities:Dictionary[int, StateItem] = {}
+var seedIsValid:bool = false
 var goal:int = -1:
 	set(value):
 		if goal == value: return
@@ -164,15 +165,21 @@ class CampaignContext:
 			if checkpoint == value: return
 			checkpoint = value
 			checkpoint_changed.emit(value)
+	var errors:Array[Dictionary] ## A list of errors that gets filled on creation
 
 	static var CLASSIC_CAMPAIGN_LINES_PER_ACT:int = 20
+
+	enum ERROR_TYPE {
+		MISSING_CHAPTER,
+		MISSING_ACT,
+	}
 
 	func _init() -> void:
 		SignalBus.getSignal("stateflag_changed", "total_aether_value").connect(_on_stateflag_changed)
 		SignalBus.getSignal("stateflag_changed", "rotate").connect(_on_stateflag_changed)
 
 	## Generate a classic campaign
-	static func Classic(lines:int, linesPerAct:int = CLASSIC_CAMPAIGN_LINES_PER_ACT) -> CampaignContext:
+	static func ClassicCampaign(lines:int, linesPerAct:int = CLASSIC_CAMPAIGN_LINES_PER_ACT) -> CampaignContext:
 		var c:CampaignContext = CampaignContext.new()
 
 		# Force minimum 1 line
@@ -184,10 +191,8 @@ class CampaignContext:
 		var remainingLines:int = lines
 		for i:int in range(numActsToMake):
 			var act:ActContext = ActContext.new(linesPerAct, true)
-			c.acts.append(act)
 			act.prettyName = "Line %s"%((i*linesPerAct)+1)
-			act.load_requested.connect(c.loadAct.bind(act))
-			act.selectable_changed.connect(c._on_act_selectable_changed.bind(act))
+			c.addAct(act)
 			remainingLines -= linesPerAct
 
 		if not c.acts.is_empty():
@@ -200,12 +205,50 @@ class CampaignContext:
 		return c
 
 	## Generate a story campaign
-	static func Story(actConfig:Array[Dictionary] = []) -> CampaignContext:
+	static func StoryCampaign(actDataList:Array = []) -> CampaignContext:
 		var c:CampaignContext = CampaignContext.new()
-		# TODO
+		for actData:Variant in actDataList:
+			if actData is Dictionary:
+				var chapterId:StringName = actData.get("chapter", "") as StringName
+				var chapter:Story.Chapter = Story.CHAPTERS.get(chapterId)
+				var act:ActContext = ActContext.new(actData.get("lines", 20) as int, bool(actData.get("continuation", false)))
+				act.prettyName = actData.get("name", "Unknown Act")
+				c.addAct(act)
+				if chapter is Story.Chapter:
+					var actId:StringName = actData.get("id", "") as StringName
+					# If there's an error here, is a problem with the apworld
+					if not chapter.acts.has(actId):
+						printerr("Chapter %s does not have act %s"%[chapter.prettyName, actId])
+					var actDefinition:Story.Act = chapter.acts.get(actId)
+					if actDefinition is Story.Act:
+						pass
+					else:
+						# This act doesn't exist in this chapter
+						c.errors.append({
+							type = ERROR_TYPE.MISSING_ACT,
+							chapterId = chapterId,
+							actName = act.prettyName,
+						})
+				else:
+					# This chapter doesn't exist in this version of the game
+					c.errors.append({
+						type = ERROR_TYPE.MISSING_CHAPTER,
+						chapterId = chapterId,
+					})
+
+		if not c.acts.is_empty():
+			# Set a checkpoint
+			c.checkpoint = c.acts.front() as ActContext
+
+		c.buildLineActLookup()
 		return c
 
 	# === Functions ===
+	func addAct(act:ActContext) -> void: ## Add act to campaign and connect signals
+		acts.append(act)
+		act.load_requested.connect(loadAct.bind(act))
+		act.selectable_changed.connect(_on_act_selectable_changed.bind(act))
+
 	func getActAtLine(line:int) -> ActContext: ## Gets the act that contains the line, or returns last act if out of bounds
 		if line_to_act.has(line):
 			return line_to_act[line]
@@ -506,6 +549,8 @@ func skipAetherWorthOfPieces(aetherAmount:float) -> void:
 		aetherAmount -= piece.aether
 
 func sendLocation(loc_id:int):
+	if not seedIsValid:
+		return
 	# Send the location
 	if missingLocations.get(loc_id, false):
 		if Archipelago.conn:
@@ -812,15 +857,55 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		# Older gens are unaware of item counts, so assume the abilities
 		for abilityname in ["rotate_clockwise", "rotate_counterclockwise", "gravity", "soft_drop", "hard_drop"]:
 			seedFlagHolder.setFlag("existing_"+abilityname)
-
+	var requirements:Array = conn.slot_data.get("requirements", []) as Array
+	var chapterNames:Dictionary = conn.slot_data.get("chapter_names", {}) as Dictionary
 	# Set up campaign
 	if campaign == null:
-		var actConfig:Variant = conn.slot_data.get("act_config")
-		if actConfig is Dictionary:
-			# TODO: Story data gets loaded here
-			campaign = CampaignContext.Classic(goal)
+		var actDataList:Variant = conn.slot_data.get("acts")
+		if actDataList is Array:
+			campaign = CampaignContext.StoryCampaign(actDataList as Array)
+
+	# Make a classic campaign if there isn't one
+	if campaign == null:	
+		campaign = CampaignContext.ClassicCampaign(goal)
+
+	# Check if there were errors before aborting this load
+	if campaign.errors.size():
+		seedIsValid = false
+		var errorDialog:AcceptDialog = VERSION_WARNING_DIALOG_SCENE.instantiate()
+		errorDialog.dialog_text = "There were errors loading the story campaign:"
+		var missingChapters:Array[StringName] = []
+		var missingActs:Array[StringName] = []
+		for error:Dictionary in campaign.errors:
+			match error.get("type", ""):
+				CampaignContext.ERROR_TYPE.MISSING_CHAPTER:
+					var chapterName:String = chapterNames.get(error.get("chapterId"), error.get("chapterId", "Unknown Chapter"))
+					if not missingChapters.has(chapterName):
+						missingChapters.append(chapterName)
+				CampaignContext.ERROR_TYPE.MISSING_ACT:
+					var chapterName:String = chapterNames.get(error.get("chapterId"), error.get("chapterId", "Unknown Chapter"))
+					var actName:String = chapterName + " - " + error.get("actName", "Unknown Act")
+					if not missingActs.has(actName):
+						missingActs.append(actName)
+		if missingChapters.size():
+			errorDialog.dialog_text += "\n Chapters are missing in this version: {chapters}".format({
+				chapters = ", ".join(missingChapters)
+			})
+		if missingActs.size():
+			errorDialog.dialog_text += "\n Acts are missing in this version: {chapters}".format({
+				chapters = ", ".join(missingActs)
+			})
+		errorDialog.dialog_text += ""
+		add_child(errorDialog)
+		if warningDialog:
+			warningDialog.tree_exiting.connect(errorDialog.popup_centered, CONNECT_ONE_SHOT)
 		else:
-			campaign = CampaignContext.Classic(goal)
+			errorDialog.popup_centered()
+		errorDialog.visibility_changed.connect(errorDialog.queue_free)
+
+		return
+	else:
+		seedIsValid = true
 
 	# Set randomize orientations
 	var randomizeOrientations = conn.slot_data.get("randomize_orientations", false)
@@ -1001,6 +1086,8 @@ func _on_traplink(source: String, trapname: String, json: Dictionary):
 		}), CONSTANTS.COLOR.TRAP, true)
 
 func _on_obtained_item(item: NetworkItem):
+	if not seedIsValid:
+		return
 	if not isJustConnected:
 		var color = (
 			CONSTANTS.COLOR.PROGUSEFUL if item.is_prog() and (item.flags & AP.ItemClassification.USEFUL)
@@ -1098,6 +1185,8 @@ func _on_Board_item_pickedup(state:StateBoardObject) -> void:
 	giveMana(CONSTANTS.MANA_PER_COIN)
 
 func _on_Board_lines_cleared_updated(num:int) -> void:
+	if not seedIsValid:
+		return
 	# Make NO_ROTATE death context only happen when you're putting the effort
 	_canUseDeathContext_NO_ROTATE = num >= LINE_THRESHOLD_FOR_NO_ROTATE_DEATH_CONTEXT
 	# Send victory if reached goal
