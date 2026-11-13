@@ -76,4 +76,6 @@ func _on_ClickMask_gui_input(event:InputEvent) -> void:
 	# Hide when clicking outside the window
 	if event is InputEventMouseButton:
 		if event.pressed:
-			hide()
+			match event.button_index:
+				MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT:
+					hide()
