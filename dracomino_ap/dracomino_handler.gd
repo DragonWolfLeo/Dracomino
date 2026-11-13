@@ -232,8 +232,10 @@ class CampaignContext:
 	func removeMissingLocation(loc_id:int) -> void: ## Remove a missing location from its act because it was checked; Do nothing if already checked
 		var act:ActContext = location_id_to_act.get(loc_id, null)
 		if act is ActContext:
-			location_id_to_act.erase(loc_id)
+			var existed:bool = location_id_to_act.erase(loc_id)
 			act.removeMissingLocation(loc_id)
+			if existed: 
+				_on_stateflag_changed()
 
 	func cleanUp(): ## Clean up this object. It frees anyway when unreferenced anyway, but being extra cautious
 		SignalBus.getSignal("stateflag_changed", "total_aether_value").disconnect(_on_stateflag_changed)
