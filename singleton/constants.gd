@@ -223,7 +223,7 @@ class LocationData extends Data:
 	],
 	# Story mode
 	_locationRangeConfig( 30_000,    100, "Boss {n} Defeated",        "",                [ "boss_defeat" ]),
-	_locationRangeConfig( 40_000,  1_000, "Ore Chunk {n}",            "orechunk",        [ "item_pickup" ]), # Home Sweet Home - Dragon Lair
+	_locationRangeConfig( 40_000,  1_000, "Nugget {n}",               "nugget",          [ "item_pickup" ]), # Home Sweet Home - Dragon Lair
 	_locationRangeConfig( 50_000,  1_000, "Ghost {n} Defeated",       "ghost",           [ "item_pickup" ]), # Home Sweet Home - Spooky Woods
 	_locationRangeConfig( 60_000,  1_000, "Treasure Piece {n}",       "treasurepiece",   [ "item_pickup" ]), # Home Sweet Home - Riverside
 	_locationRangeConfig( 70_000,  1_000, "Fish {n} Caught",          "fish",            [ "item_pickup" ]), # Home Sweet Home - Riverside
