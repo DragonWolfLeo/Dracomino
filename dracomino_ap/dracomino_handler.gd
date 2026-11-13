@@ -1165,7 +1165,7 @@ func _on_Board_lines_cleared(lines:Array) -> void:
 				break
 
 		if campaign:
-			if campaign.isLineContinuation(lastMapping + 1):
+			if campaign.isLineContinuation(lastMapping + 1) and not gotLines.get(lastMapping + 1, false):
 				# Reveal next line since it continues
 				lineMappings[lastLine] = lastMapping + 1
 			else:
