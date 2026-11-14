@@ -255,10 +255,13 @@ class CampaignContext:
 			return line_to_act[line]
 		return acts.back()
 
-	func buildLineActLookup() -> void: ## Builds the lookup table to find act at line 
+	func buildLineActLookup() -> void: ## Builds the lookup table to find act at line and set their offset too
 		line_to_act.clear()
 		var line:int = 0
+		var startingLine:int = 0
 		for act:ActContext in acts:
+			act.offset = startingLine
+			startingLine += act.lines
 			for i:int in range(act.lines):
 				line_to_act[line] = act
 				line += 1
@@ -298,12 +301,7 @@ class CampaignContext:
 		SignalBus.getSignal("restartGame").emit()
 
 	func getCheckpointLine() -> int: ## Get the line the current checkpoint starts on
-		var startingLine:int = 0
-		for act:ActContext in acts:
-			if act == checkpoint:
-				return startingLine
-			startingLine += act.lines 
-		return 0
+		return checkpoint.offset
 
 	func getConsecutiveStartingLinesMappings(numLines:int) -> Array[int]: ## Get a range of line mappings, restricted if next act is not a continuation
 		var line:int = getCheckpointLine()
@@ -384,6 +382,7 @@ class ActContext:
 
 	var prettyName:StringName = "Unnamed Act"
 	var lines:int
+	var offset:int ## The line this act starts in the campaign, set by the campaign
 	var missingLocations:Dictionary[int, bool] ## Locations present in this act; bool is always true (erase when checked)
 	var selectable:bool = false:
 		set(value):
