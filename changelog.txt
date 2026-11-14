@@ -1,3 +1,8 @@
+Version 0.3.4.1 (2026 November 14)
+ - Fix mouse wheel scrolling on console and act select
+ - Fix checkpoint updating
+ - Prevent checkpoints re-announcing when reconnecting
+
 Version 0.3.4 (2026 November 6)
  - Add checkpoint system
  - Add Spider Web Trap and Spin Spin. Not available in the APWorld yet, but can trigger through Random Trap or Trap Link.
