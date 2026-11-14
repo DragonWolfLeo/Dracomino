@@ -119,7 +119,7 @@ func _canLoadNewDialogue() -> bool:
 	return DialogueManager.dialogue == null
 
 func _activateEffect(flag:String, duration:int = 8, annoying:bool = true) -> void:
-	var ae:ActiveEffect = ActiveEffect.instantiateEffect(flag, duration, annoying)
+	var ae:ActiveEffect = ActiveEffect.instantiateEffect(flag, duration, annoying).connectDefaultTickSignal()
 	add_child(ae)
 
 func _activateTimedEffect(flag:String, duration:float = 1.0) -> void:

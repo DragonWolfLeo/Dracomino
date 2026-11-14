@@ -2,25 +2,16 @@ class_name ActiveEffect extends FlagHolder
 
 signal duration_changed(remaining:int)
 
-var durationLeft:int = -1:
-	set(value):
-		if durationLeft == value:
-			return
-		durationLeft = value
-		var sig:Signal = SignalBus.getSignal("effect_duration_down")
-		if durationLeft > 0:
-			if not sig.is_connected(_on_effect_duration_down):
-				sig.connect(_on_effect_duration_down, CONNECT_DEFERRED)
-		else:
-			if sig.is_connected(_on_effect_duration_down):
-				sig.disconnect(_on_effect_duration_down)
-
+var durationLeft:float = -1
 var dispelCost:float = CONSTANTS.DISPEL_MANA_COST
 var effectDurationTick_cooldown:float = 2.0
 var _cooldownTimer:SceneTreeTimer
 
+static var DEFAULT_TICK_SIGNAL_FLAG:StringName = ""
+static var DEFAULT_TICK_SIGNAL_KEY:StringName = "effect_duration_down"
+
 # === Static functions ===
-static func instantiateEffect(flag:String, duration:int = -1, annoying:bool = true, removalAction:String = "dispel") -> ActiveEffect:
+static func instantiateEffect(flag:String, duration:float = -1, annoying:bool = true, removalAction:String = "dispel") -> ActiveEffect:
 	var ae := ActiveEffect.new()
 	ae.priority = FlagHolder.PRIORITY.OBJECT
 	ae.durationLeft = duration
@@ -46,7 +37,7 @@ func clearEffect() -> void:
 	SoundManager.play("untrap")
 	queue_free()
 
-func tickDuration(amount:int, affectedByCooldown:bool = true) -> void:
+func tickDuration(amount:float, affectedByCooldown:bool = true) -> void:
 	if affectedByCooldown and _cooldownTimer:
 		return
 	durationLeft -= amount
@@ -56,11 +47,19 @@ func tickDuration(amount:int, affectedByCooldown:bool = true) -> void:
 		duration_changed.emit(durationLeft)
 		_cooldownTimer = get_tree().create_timer(effectDurationTick_cooldown, true)
 		_cooldownTimer.timeout.connect(set.bind("_cooldownTimer", null))
-	pass
+
+func connectTickSignal(sig:Signal, tickAmount:float = 1, affectedByCooldown:bool = true) -> ActiveEffect: ## Connect a signal to tick duration
+	if not sig.is_connected(_on_effect_duration_down):
+		sig.connect(_on_effect_duration_down, CONNECT_DEFERRED)
+	return self
+
+func connectDefaultTickSignal() -> ActiveEffect: ## Connect the signal effect_duration_down to tick duration
+	connectTickSignal(SignalBus.getSignal(DEFAULT_TICK_SIGNAL_KEY, DEFAULT_TICK_SIGNAL_FLAG))
+	return self
 
 # === Events ===
-func _on_effect_duration_down() -> void:
-	tickDuration(1)
+func _on_effect_duration_down(tickAmount:float = 1, affectedByCooldown:bool = true) -> void:
+	tickDuration(tickAmount, affectedByCooldown)
 
 func _on_dispelled() -> void:
 	FlagManager.clearFlag("last_mana_transaction_succeeded")

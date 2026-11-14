@@ -30,7 +30,7 @@ func hatch():
 func _on_piece_placed():
 	if activeEffect:
 		printerr("Piece_Egg._on_piece_placed: There's already an active effect")
-	activeEffect = ActiveEffect.instantiateEffect("egg_active", EFFECT_DURATION-(6 if playHardDropSound else 0), false, "hatch")
+	activeEffect = ActiveEffect.instantiateEffect("egg_active", EFFECT_DURATION-(6 if playHardDropSound else 0), false, "hatch").connectDefaultTickSignal()
 	activeEffect.tree_exiting.connect(hatch)
 	activeEffect.tree_exiting.connect(set.bind("activeEffect", null))
 	activeEffect.duration_changed.connect(_on_activeEffect_duration_changed)
