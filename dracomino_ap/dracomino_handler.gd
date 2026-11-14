@@ -173,10 +173,11 @@ class CampaignContext:
 		MISSING_CHAPTER,
 		MISSING_ACT,
 	}
+	var _updateActs_deferred_called:bool = false
 
 	func _init() -> void:
-		SignalBus.getSignal("stateflag_changed", "total_aether_value").connect(_on_stateflag_changed)
-		SignalBus.getSignal("stateflag_changed", "rotate").connect(_on_stateflag_changed)
+		SignalBus.getSignal("stateflag_changed", "total_aether_value").connect(updateActs_deferred)
+		SignalBus.getSignal("stateflag_changed", "rotate").connect(updateActs_deferred)
 
 	## Generate a classic campaign
 	static func ClassicCampaign(lines:int, linesPerAct:int = CLASSIC_CAMPAIGN_LINES_PER_ACT) -> CampaignContext:
@@ -277,12 +278,12 @@ class CampaignContext:
 		if act is ActContext:
 			var existed:bool = location_id_to_act.erase(loc_id)
 			act.removeMissingLocation(loc_id)
-			if existed: 
-				_on_stateflag_changed()
+			if existed:
+				updateActs_deferred()
 
 	func cleanUp(): ## Clean up this object. It frees anyway when unreferenced anyway, but being extra cautious
-		SignalBus.getSignal("stateflag_changed", "total_aether_value").disconnect(_on_stateflag_changed)
-		SignalBus.getSignal("stateflag_changed", "rotate").disconnect(_on_stateflag_changed)
+		SignalBus.getSignal("stateflag_changed", "total_aether_value").disconnect(updateActs_deferred)
+		SignalBus.getSignal("stateflag_changed", "rotate").disconnect(updateActs_deferred)
 		for act:ActContext in acts:
 			act.disconnectSignals()
 		for dict:Dictionary in checkpoint_changed.get_connections():
@@ -344,13 +345,17 @@ class CampaignContext:
 				break
 		return lastCheckpoint
 
-	func updateActs() -> void: ## Set acts as selectable and get last checkpoint once game is first loaded
-		_on_stateflag_changed()
+	func updateCheckpoint() -> void: ## Set acts as selectable and get last checkpoint once game is first loaded
+		updateActs()
 		checkpoint = getLastSelectableCheckpoint()
 
-	# === Events ===
-	func _on_stateflag_changed() -> void:
-		# Figure out which acts are available with aether collected
+	func updateActs_deferred() -> void:
+		if not _updateActs_deferred_called:
+			_updateActs_deferred_called = true
+			updateActs.call_deferred()
+
+	func updateActs() -> void: ## Figure out which acts are available with aether collected
+		_updateActs_deferred_called = false
 		var aether:float = FlagManager.getTotalCountAmount("total_aether_value")
 		var previousCompleted:bool = true
 		for act:ActContext in acts:
@@ -358,7 +363,8 @@ class CampaignContext:
 			if previousCompleted and not act.isLogicallyCleared():
 				previousCompleted = false
 			aether -= act.aetherCapacity
-
+	
+	# === Events ===
 	func _on_act_selectable_changed(isSelectable:bool, act:ActContext) -> void:
 		if isSelectable:
 			# Automatically set act as checkpoint if previous is immediately before
@@ -1055,7 +1061,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 func _on_newSeed_refresh_items():
 	# Reset when everything is loaded
 	if campaign is CampaignContext:
-		campaign.updateActs()
+		campaign.updateCheckpoint()
 		# Make acts announce when unlocked
 		for act:ActContext in campaign.acts:
 			act.selectable_changed.connect(

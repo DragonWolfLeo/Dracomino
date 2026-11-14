@@ -70,7 +70,10 @@ func _on_actButton_selectable_changed(isSelectable:bool, btn:Button, showOtherAc
 			otherActsSection.show()
 
 func _on_campaign_checkpoint_changed(act:DracominoHandler.ActContext) -> void:
-	btn_checkpoint.text = act.prettyName
+	if act:
+		btn_checkpoint.text = act.prettyName
+	else:
+		btn_checkpoint.text = "None"
 
 func _on_ClickMask_gui_input(event:InputEvent) -> void:
 	# Hide when clicking outside the window
