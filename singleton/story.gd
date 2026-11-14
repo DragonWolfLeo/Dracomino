@@ -1,8 +1,18 @@
 ## Story-related constants and classes
 extends Node
 
+static var effectHandler:EffectHandler
+
+# === Virtuals ===
+func _init() -> void:
+	# Make an effect handler here
+	if effectHandler:
+		effectHandler.queue_free()
+	effectHandler = EffectHandler.new()
+	add_child(effectHandler)
+
 # === Story mode definitions ===
-var CHAPTERS:Dictionary[StringName, Chapter] = {
+@onready var CHAPTERS:Dictionary[StringName, Chapter] = {
 	classic = Chapter.new("Dragon Hoard"),
 	story_mini_home = Chapter.new("Home Sweet Home", [
 		Act.new({
@@ -106,15 +116,15 @@ var CHAPTERS:Dictionary[StringName, Chapter] = {
 					.setCondition("storycontext_reachedriversideend"),
 				# Scripted gimmics
 				EventTrigger.LinesCleared(2)
-					.setEffect(TriggeredEffect.Effect("fishing", 1)),
+					.setEffect(TriggeredEffect.HandlerEffect("fishing")),
 				EventTrigger.LinesCleared(4)
-					.setEffect(TriggeredEffect.Effect("water_trap", 2)),
+					.setEffect(TriggeredEffect.LineTickedEffect("overlay_water", 4)).setRepeatable(),
 				EventTrigger.LinesCleared(10)
-					.setEffect(TriggeredEffect.Effect("riptide_trap", 8)),
+					.setEffect(TriggeredEffect.LineTickedEffect("effect_riptide", 8)).setRepeatable(),
 				EventTrigger.LinesCleared(13)
-					.setEffect(TriggeredEffect.Effect("fishing", 1)),
+					.setEffect(TriggeredEffect.HandlerEffect("fishing")),
 				EventTrigger.LinesCleared(16)
-					.setEffect(TriggeredEffect.Effect("water_trap", 2)),
+					.setEffect(TriggeredEffect.LineTickedEffect("overlay_water", 4)).setRepeatable(),
 			],
 		}),
 		Act.new({
@@ -208,6 +218,7 @@ class Act:
 	var lines:int
 	var areaName:StringName
 	var type:StringName
+	var triggers:Array[EventTrigger] = []
 	const TYPE:Dictionary[StringName, StringName] = {
 		puzzle = "puzzle",
 		boss = "boss",
@@ -230,76 +241,127 @@ class Act:
 		id = str(data.get("id", ""))
 		lines = int(data.get("lines", 0))
 		type = str(data.get("type", ""))
+		triggers.append_array(data.get("triggers", []))
 
 class EventTrigger:
-	var effect:TriggeredEffect
+	var effect:EffectHandler.Effect
+	var repeatable:bool = false
 	var condition:String
-	var amount:int
 
 	static func ActStarted() -> EventTrigger:
-		var trigger:EventTrigger = EventTrigger.new()
-		return trigger
+		return LineReachedEventTrigger.new(0)
 
 	static func LineReached(_line:int) -> EventTrigger:
-		var trigger:EventTrigger = EventTrigger.new()
-		return trigger
+		return LineReachedEventTrigger.new(_line)
 
 	static func LinesCleared(_amount:int) -> EventTrigger:
-		var trigger:EventTrigger = EventTrigger.new()
-		return trigger
+		return LinesClearedEventTrigger.new(_amount)
 
 	static func LineRatioCleared(_ratio:float) -> EventTrigger:
-		var trigger:EventTrigger = EventTrigger.new()
-		return trigger
+		return LineRatioClearedEventTrigger.new(_ratio)
 
 	static func ObjectCollected(_objectName:StringName = &"", _amount:int = 1) -> EventTrigger:
-		var trigger:EventTrigger = EventTrigger.new()
-		return trigger
+		return ObjectCollectedEventTrigger.new(_objectName, _amount)
 
 	static func ObjectRatioCollected(_objectName:StringName = &"", _ratio:float = 1.0) -> EventTrigger:
-		var trigger:EventTrigger = EventTrigger.new()
-		return trigger
+		return ObjectRatioCollectedEventTrigger.new(_objectName, _ratio)
 
 	static func ItemReceived(_itemName:StringName, _amount:int = 1) -> EventTrigger:
-		var trigger:EventTrigger = EventTrigger.new()
-		return trigger
+		return ItemReceivedEventTrigger.new(_itemName, _amount)
 
-	static func ItemRatioReceived(_itemName:StringName, _ratio:float = 1.0) -> EventTrigger:
-		var trigger:EventTrigger = EventTrigger.new()
-		return trigger
+	static func OnSignal(_signalKey:StringName, _signalFlag:StringName = "") -> EventTrigger:
+		return OnSignalEventTrigger.new(SignalBus.getSignal(_signalKey, _signalFlag))
 
-	static func OnSignal(_signalName:StringName) -> EventTrigger:
-		var trigger:EventTrigger = EventTrigger.new()
-		return trigger
+	func setEffect(_effect:EffectHandler.Effect) -> EventTrigger:
+		effect = _effect
+		return self
 
-	func setEffect(_effect:TriggeredEffect) -> EventTrigger:
-		self.effect = _effect
+	func setRepeatable(_repeatable:bool = true) -> EventTrigger:
+		repeatable = _repeatable
 		return self
 
 	func setCondition(_condition:String) -> EventTrigger:
-		self.condition = _condition
+		condition = _condition
 		return self
 
+class LineReachedEventTrigger extends EventTrigger:
+	var line:int
+	func _init(_line:int) -> void:
+		line = _line
 
-class TriggeredEffect:
+class LinesClearedEventTrigger extends EventTrigger:
+	var amount:int
+	func _init(_amount:int) -> void:
+		amount = _amount
+
+class LineRatioClearedEventTrigger extends EventTrigger:
+	var ratio:float
+	func _init(_ratio:float) -> void:
+		ratio = _ratio
+
+class ObjectCollectedEventTrigger extends EventTrigger:
+	var objectName:StringName
+	var amount:int
+	func _init(_objectName:StringName, _amount:int) -> void:
+		objectName = _objectName
+		amount = amount
+
+class ObjectRatioCollectedEventTrigger extends EventTrigger:
+	var objectName:StringName
+	var ratio:float
+	func _init(_objectName:StringName, _ratio:float) -> void:
+		objectName = _objectName
+		ratio = _ratio
+
+class ItemReceivedEventTrigger extends EventTrigger:
+	var itemName:StringName
+	var amount:int
+	func _init(_itemName:StringName, _amount:int) -> void:
+		itemName = _itemName
+		amount = amount
+
+class OnSignalEventTrigger extends EventTrigger:
+	var sig:Signal
+	func _init(_sig:Signal) -> void:
+		sig = _sig
+
+class TriggeredEffect extends EffectHandler.Effect:
 	var type:StringName
 	const TYPE:Dictionary[StringName, StringName] = {
 		cutscene = "cutscene",
 		effect = "effect",
 	}
-	static func Cutscene(dialogue:StringName, response:StringName = &"") -> TriggeredEffect:
-		var fx:TriggeredEffect = TriggeredEffect.new()
-		return fx
+	# === Constructors ===
+	## Play a dialogue
+	static func Cutscene(dialogue:StringName, jumpToState:StringName = &"") -> EffectHandler.Effect:
+		return EffectHandler.Effect.new(_loadDialogue.bind(dialogue, jumpToState)).setCanTriggerFn(_canLoadNewDialogue)
 
-	static func Effect(effect:StringName, duration:int = 0) -> TriggeredEffect:
-		var fx:TriggeredEffect = TriggeredEffect.new()
-		return fx
+	## Start an effect that lasts for a specified amount of lines
+	static func LineTickedEffect(flag:StringName, duration:int = 0) -> EffectHandler.BoardEffect:
+		return EffectHandler.BoardEffect.new(_board_activateLineTickedEffect.call_deferred.bind(flag, duration))
 
-	static func Spawn(entity:StringName) -> TriggeredEffect:
-		var fx:TriggeredEffect = TriggeredEffect.new()
-		return fx
+	## Use a pre-defined effect from EffectHandler
+	static func HandlerEffect(effectName:StringName) -> EffectHandler.Effect:
+		return Story.effectHandler.EFFECTS.get(effectName)
 
-	static func NextAct() -> TriggeredEffect:
-		var fx:TriggeredEffect = TriggeredEffect.new()
-		return fx
+	## Spawn an entity
+	static func Spawn(entity:StringName) -> EffectHandler.Effect:
+		return TriggeredEffect.new(print.bind("TODO: Spawn a %s here!"%entity))
 
+	## Go to the next act
+	static func NextAct() -> EffectHandler.Effect:
+		return TriggeredEffect.new(print.bind("TODO: Go to next act"))
+
+	# === Private Effect Functions ===
+	static func _loadDialogue(dialogue:Variant, jumpToState:StringName = &"") -> void:
+		DialogueManager.loadDialogue(dialogue, jumpToState)
+
+	static func _canLoadNewDialogue() -> bool:
+		return DialogueManager.dialogue == null
+
+	static func _board_activateLineTickedEffect(board:Board, flag:StringName, duration:float = 1.0) -> void:
+		print("Activated {flag} for {duration} lines.".format([flag,duration]))
+		var ae:ActiveEffect = ActiveEffect.instantiateEffect(flag, duration, false)
+		var parent:Node = (board.effectHandler as Node) if board.effectHandler else (board as Node)
+		parent.add_child(ae)
+		board.line_cleared.connect(ae.tickDuration.bind(1, false).unbind(1))

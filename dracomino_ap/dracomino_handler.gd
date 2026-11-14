@@ -54,6 +54,7 @@ var _energySendBuffer:int = 0 ## Energy to send to server when reconnecting
 var _effectBuffer:Array[StateItem] = [] ## Next traps to apply to next pieces
 
 signal lineMappings_updated(mappings:Dictionary[int, int])
+signal gotLines_updated(_gotLines:Dictionary[int, bool])
 signal missingLines_updated(locs:Dictionary[int, bool])
 signal notification_signal(notif:String, color:Color, force:bool)
 signal boardObjects_updated(lookup:Dictionary[int, StateBoardObject])
@@ -222,7 +223,7 @@ class CampaignContext:
 						printerr("Chapter %s does not have act %s"%[chapter.prettyName, actId])
 					var actDefinition:Story.Act = chapter.acts.get(actId)
 					if actDefinition is Story.Act:
-						pass
+						act.applyDefinition(actDefinition)
 					else:
 						# This act doesn't exist in this chapter
 						c.errors.append({
@@ -361,6 +362,10 @@ class CampaignContext:
 			if previousCompleted and not act.isLogicallyCleared():
 				previousCompleted = false
 			aether -= act.aetherCapacity
+
+	func reset() -> void: ## Tell acts to reset their triggers
+		for act:ActContext in acts:
+			act.resetTriggers()
 	
 	# === Events ===
 	func _on_act_selectable_changed(isSelectable:bool, act:ActContext) -> void:
@@ -374,6 +379,21 @@ class CampaignContext:
 			# Since this is unselectable now, select a new valid checkpoint
 			checkpoint = getLastSelectableCheckpoint()
 
+	func _on_DracominoHandler_lineMappings_updated(lineMappings:Dictionary):
+		if lineMappings.has(0):
+			var bottomLine:int = int(lineMappings.get(0, 0))
+			var act:ActContext = getActAtLine(bottomLine)
+			act.triggerLineReach(bottomLine - act.offset)
+
+	func _on_DracominoHandler_gotLines_updated(gotLines:Dictionary):
+		var numGotLinesByAct:Dictionary[ActContext, int]
+		for k:int in gotLines.keys():
+			if gotLines[k]:
+				var act:ActContext = line_to_act.get(k)
+				if act:
+					numGotLinesByAct[act] = numGotLinesByAct.get(act, 0) + 1
+		for act:ActContext in numGotLinesByAct.keys():
+			act.triggerLinesCleared(numGotLinesByAct[act])
 
 class ActContext:
 	signal completed()
@@ -391,6 +411,7 @@ class ActContext:
 			selectable_changed.emit(value)
 	var aetherCapacity:float ## The amount of aether it takes to complete this act
 	var isContinuation:bool ## Combine seamlessly with the act before
+	var triggers:Array[EventTriggerContext] = []
 
 	func _init(_lines:int = 20, _isContinuation:bool = false) -> void:
 		lines = _lines
@@ -424,6 +445,47 @@ class ActContext:
 	func loadAct() -> void: ## Emits the signal to load this act
 		load_requested.emit()
 
+	func applyDefinition(actDefinition:Story.Act) -> void: ## Applies an act's definition from Story
+		for trigger:Story.EventTrigger in actDefinition.triggers:
+			triggers.append(EventTriggerContext.new(trigger))
+
+	func resetTriggers() -> void: ## Reset repeatable triggers
+		for ctx:EventTriggerContext in triggers:
+			if ctx.trigger.repeatable:
+				ctx.isTriggered = false
+
+	func triggerLineReach(line:int) -> void: ## Trigger events on line reached
+		for ctx:EventTriggerContext in triggers:
+			if not ctx.isTriggered:
+				if ctx.trigger is Story.LineReachedEventTrigger:
+					if (ctx.trigger as Story.LineReachedEventTrigger).line <= line:
+						ctx.activate()
+
+	func triggerLinesCleared(amount:int) -> void: ## Trigger events on lines cleared
+		var ratio:float = float(amount)/lines
+		for ctx:EventTriggerContext in triggers:
+			if not ctx.isTriggered:
+				if ctx.trigger is Story.LinesClearedEventTrigger:
+					if (ctx.trigger as Story.LinesClearedEventTrigger).amount <= amount:
+						ctx.activate()
+				elif ctx.trigger is Story.LineRatioClearedEventTrigger:
+					if (ctx.trigger as Story.LineRatioClearedEventTrigger).ratio <= ratio:
+						ctx.activate()
+
+class EventTriggerContext:
+	var isTriggered:bool = false
+	var trigger:Story.EventTrigger
+
+	func _init(_trigger:Story.EventTrigger) -> void:
+		trigger = _trigger
+
+	func activate() -> void:
+		if isTriggered:
+			return
+		var fx:EffectHandler.Effect = trigger.effect
+		if fx.canTriggerFn.call():
+			fx.triggerFn.call()
+			isTriggered = true
 
 #===== Virtuals =====
 func _ready() -> void:
@@ -462,6 +524,7 @@ func reset():
 	var startingLine:int = 0
 	var aetherCost:float = 0
 	if campaign is CampaignContext:
+		campaign.reset()
 		startingLine = campaign.getCheckpointLine()
 		seedFlagHolder.count("lines_cleared", "starting_line", startingLine)
 		aetherCost = campaign.getCheckpointAetherCost()
@@ -477,6 +540,7 @@ func reset():
 	skipAetherWorthOfPieces(aetherCost)
 
 	lineMappings_updated.emit(lineMappings)
+	gotLines_updated.emit(gotLines)
 
 	effectHandler.on_board_reset()
 
@@ -870,9 +934,12 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		if actDataList is Array:
 			campaign = CampaignContext.StoryCampaign(actDataList as Array)
 
-	# Make a classic campaign if there isn't one
-	if campaign == null:	
-		campaign = CampaignContext.ClassicCampaign(goal)
+		# Make a classic campaign if there isn't one
+		if campaign == null:	
+			campaign = CampaignContext.ClassicCampaign(goal)
+
+		lineMappings_updated.connect(campaign._on_DracominoHandler_lineMappings_updated)
+		gotLines_updated.connect(campaign._on_DracominoHandler_gotLines_updated)
 
 	# Check if there were errors before aborting this load
 	if campaign.errors.size():
@@ -1182,6 +1249,7 @@ func _on_Board_lines_cleared(lines:Array) -> void:
 
 	if linesChanged:
 		lineMappings_updated.emit(lineMappings)
+		gotLines_updated.emit(gotLines)
 	
 	giveMana(lines.size() * Board.BOUNDS.size.x * CONSTANTS.MANA_PER_BLOCK)
 

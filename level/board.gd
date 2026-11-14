@@ -84,7 +84,8 @@ var _waitingForPieceToGetOutOfTopRow:Piece = null
 var _lineoffset_random:RandomNumberGenerator = RandomNumberGenerator.new()
 var _lineoffset_randomSaveState:int = _lineoffset_random.state
 
-signal lines_cleared(lines:Array)
+signal lines_cleared(lines:Array) # TODO: Replace with line_cleared
+signal line_cleared(line:int)
 signal linesCleared_updated(num:int)
 signal game_over_earned()
 signal game_started()
@@ -514,6 +515,7 @@ func processClearingChunk(chunk:ClearingChunk) -> void:
 			chunk.completed.emit()
 			pushDownRows(chunk)
 			lines_cleared.emit([chunk.mappedLine])
+			line_cleared.emit(chunk.mappedLine)
 			if not clearingChunks.size():
 				checkForEvent(["line_clear"])
 	)
