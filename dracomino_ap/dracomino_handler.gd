@@ -783,13 +783,15 @@ func triggerEffectCommand(option:String): ## Triggers an effect immediately
 	if not effectHandler.EFFECTS.has(option):
 		var msg:String = "%s is not an effect"%option
 		printerr("DracominoHandler.triggerEffectCommand: ", msg)
-		notification_signal.emit("Trigger effect failed: "+msg, CONSTANTS.COLOR.ERROR, true)
+		if Config.debugMode:
+			notification_signal.emit("Trigger effect failed: "+msg, CONSTANTS.COLOR.ERROR, true)
 		return
 	var success:bool = effectHandler.triggerEffectByName(option)
-	if success:
-		notification_signal.emit("Triggering effect: %s"%CONSTANTS.TRAP_ALIASES.get(option, option), CONSTANTS.COLOR.SPECIAL, true)
-	else:
-		notification_signal.emit("Trigger effect failed: %s does not meet conditions"%CONSTANTS.TRAP_ALIASES.get(option, option), CONSTANTS.COLOR.ERROR, true)
+	if Config.debugMode:
+		if success:
+			notification_signal.emit("Triggering effect: %s"%CONSTANTS.TRAP_ALIASES.get(option, option), CONSTANTS.COLOR.SPECIAL, true)
+		else:
+			notification_signal.emit("Trigger effect failed: %s does not meet conditions"%CONSTANTS.TRAP_ALIASES.get(option, option), CONSTANTS.COLOR.ERROR, true)
 
 func triggerTrapLinkTrap(trapname:String, source:String = "") -> String: ## Triggers trap link trap immediately or buffers it
 	var mapping:Variant = CONSTANTS.TRAP_LINK_MAPPINGS.get(trapname)
