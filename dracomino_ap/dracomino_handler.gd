@@ -629,8 +629,8 @@ func getNextPiece() -> PieceContext:
 	# Iterate through all items
 	while currentIndex < numItems:
 		var stateItem := collectedItems[currentIndex]
-		var item := CONSTANTS.ITEMS[stateItem.id]
-		if item:
+		var item:CONSTANTS.ItemData = CONSTANTS.ITEMS.get(stateItem.id)
+		if item is CONSTANTS.ItemData:
 			match item.type:
 				"shape":
 					# Apply any effects from the effect buffer first
@@ -881,8 +881,8 @@ func giveItem(item:StateItem):
 							.set_delay(DELAYED_EFFECT_CONTEXT_DURATION/Config.getSetting("gravity", 1.0))
 
 	else:
-		print("Obtained invalid item: id: {id}; name: {name}; You may be running an outdated version of the client!"
-			.format({id=item.id,name=item.get_name()})
+		printerr("Obtained invalid item: id: {id}; name: {name}; You may be running an outdated version of the client!"
+			.format({id=item.id,name=Archipelago.conn.get_gamedata_for_player().get_item_name(item.id) if Archipelago.conn else "unknown"})
 		)
 
 func triggerEffect(stateItem:StateItem, context:Array[StringName] = []) -> bool: ## Return true on null or success (false means try again but delayed)
