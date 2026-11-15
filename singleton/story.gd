@@ -317,7 +317,7 @@ class ItemReceivedEventTrigger extends EventTrigger:
 	var amount:int
 	func _init(_itemName:StringName, _amount:int) -> void:
 		itemName = _itemName
-		amount = amount
+		amount = _amount
 
 class OnSignalEventTrigger extends EventTrigger:
 	var sig:Signal

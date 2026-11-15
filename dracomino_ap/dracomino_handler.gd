@@ -371,6 +371,11 @@ class CampaignContext:
 	func triggerObjectCollected(state:StateBoardObject) -> void: ## Tell object's belonging act to trigger object collect effect
 		var act:ActContext = getActAtLine(state.coordinates.y)
 		act.triggerObjectCollected(state)
+
+	func triggerItemReceived(itemName:StringName, amount:int) -> void: ## Tell active acts to trigger item received events
+		for act:ActContext in acts:
+			if act.isActive:
+				act.triggerItemReceived(itemName, amount)
 	
 	# === Events ===
 	func _on_act_selectable_changed(isSelectable:bool, act:ActContext) -> void:
@@ -499,6 +504,14 @@ class ActContext:
 						ctx.activate()
 				elif isLast and (ctx.trigger is Story.ObjectsAllCollectedEventTrigger):
 					if (ctx.trigger as Story.ObjectsAllCollectedEventTrigger).objectName == state.objectName:
+						ctx.activate()
+
+	func triggerItemReceived(itemName:StringName, amount:int) -> void: ## Trigger events on item received
+		for ctx:EventTriggerContext in triggers:
+			if not ctx.isTriggered:
+				if ctx.trigger is Story.ItemReceivedEventTrigger:
+					var trigger:Story.ItemReceivedEventTrigger = ctx.trigger
+					if trigger.itemName == itemName and trigger.amount <= amount:
 						ctx.activate()
 
 	func _on_signal_event_triggered(ctx:EventTriggerContext):
@@ -829,8 +842,8 @@ func giveItem(item:StateItem):
 				if not streak: streak = Streak.new()
 				streak.size += 1
 				item.streak = streak
-			# Register collected ability
-			"ability":
+			# Register collected ability or misc item
+			"ability", "misc":
 				if collectedAbilities.has(item.id):
 					collectedAbilities[item.id] += 1
 				else:
@@ -850,6 +863,10 @@ func giveItem(item:StateItem):
 				# Announce the ability you got
 				if not isJustConnected:
 					Overlay.queueAnnouncement("You got {item}!".format({item=item.data.prettyName}))
+
+				# Trigger item received events in campaign
+				if campaign:
+					campaign.triggerItemReceived(item.data.internalName, collectedAbilities[item.id])
 			# Trigger effects
 			"on_lock", "on_spawn":
 				if not isJustConnected:
