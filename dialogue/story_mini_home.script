@@ -76,6 +76,7 @@ Mini (cute): Heh, oh well. If all you have to do is put these together, I'm sure
 // Cutscene: Picks up all nuggets
 [State dragonlair_allnuggets]
 // TODO: Make well done appear here
+[Announce All nuggets collected!]
 Mini (cute): Yay! I got everything picked up! Nice and tidy!
 // I was going to make this also link to discover web but I thought against it
 [End]
@@ -89,7 +90,6 @@ Mini (cute): I'm glad I figured out how to rotate stuff. That came in very handy
 [else]
 Mini (uncomfortable): Though, it was pretty hard to line up all those blocks. If only I could [b]rotate[/b] them somehow.
 [always]
-[End if storycontext_foundweb]
 [GotoState discoverweb]
 
 /////////////////////////////////////
@@ -98,7 +98,11 @@ Mini (uncomfortable): Though, it was pretty hard to line up all those blocks. If
 Mini (content): All right! I better choose a cozy spot for my hoard.
 [SetFlag storycontext_foundweb]
 // TODO: Make webs appear here.
+[if storycontext_touchedweb]
+Mini (grumpy): ...There's still gross, sticky stuff here. [i]THIS[/i] time it goes! [if hold_slot]I should try hitting it with that little magic bolt when I swap block-thingies.
+[else]
 Mini (awkward): It sure is convenient no one else is in this cave... Hey, what's that white stuff?
+[always]
 [End]
 
 /////////////////////////////////////
@@ -113,7 +117,9 @@ Mini (grumpy): Okay, this stuff's gotta go! [if hold_slot]Maybe with a little ma
 // Cutscene: Clean up all the webs
 [State dragonlair_allwebs]
 // TODO: Add welldone here
+[Announce Webs cleared!]
 Mini (cute): Yay! All that gross, sticky stuff is gone!
+[SetFlag storycontext_clearedallwebs]
 [End]
 
 /////////////////////////////////////
