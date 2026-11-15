@@ -24,24 +24,27 @@ func _init() -> void:
 				EventTrigger.ActStarted()
 					.setEffect(TriggeredEffect.Cutscene("story_mini_home", "dragonlair_start")),
 				# Mini picks up first nugget
-				EventTrigger.ObjectCollected("nugget", 1)
+				EventTrigger.ObjectCollected("nugget")
 					.setEffect(TriggeredEffect.Cutscene("story_mini_home", "dragonlair_nugget_1")),
 				# Mini clears first line
 				EventTrigger.LinesCleared(1)
 					.setEffect(TriggeredEffect.Cutscene("story_mini_home", "dragonlair_lineclear_1")),
 				# Mini reaches the halfway point; Webs are placed after discovering them
 				EventTrigger.LineRatioCleared(0.5)
-					.setEffect(TriggeredEffect.Cutscene("story_mini_home", "dragonlair_halflineprogress")),
+					.setEffect(TriggeredEffect.Cutscene("story_mini_home", "dragonlair_halflineprogress"))
+					.setCondition("!storycontext_clearedallwebs")
+					.setRepeatable(),
 				# Mini collects all nuggets
-				EventTrigger.ObjectRatioCollected("nugget", 1.0)
+				EventTrigger.ObjectsAllCollected("nugget")
 					.setEffect(TriggeredEffect.Cutscene("story_mini_home", "dragonlair_allnuggets")),
 				# Mini touches a web and reacts
 				EventTrigger.OnSignal("boardObject_web_touched")
 					.setEffect(TriggeredEffect.Cutscene("story_mini_home", "dragonlair_ontouchweb"))
-					.setCondition("!storycontext_foundweb"),
+					.setCondition("!storycontext_touchedweb"),
 				# Mini clears all webs
-				EventTrigger.ObjectRatioCollected("web", 1.0)
-					.setEffect(TriggeredEffect.Cutscene("story_mini_home", "dragonlair_allwebs")),
+				EventTrigger.ObjectsAllCollected("web")
+					.setEffect(TriggeredEffect.Cutscene("story_mini_home", "dragonlair_allwebs"))
+					.setCondition("storycontext_foundweb"),
 				# Mini clears all lines; Move on to next act
 				EventTrigger.LineRatioCleared(1.0)
 					.setEffect(TriggeredEffect.Cutscene("story_mini_home", "dragonlair_clear")),
@@ -56,7 +59,7 @@ func _init() -> void:
 				EventTrigger.ActStarted()
 					.setEffect(TriggeredEffect.Cutscene("story_mini_home", "spookywoods_start")),
 				# Mini defeats first ghost
-				EventTrigger.ObjectCollected("ghost", 1)
+				EventTrigger.ObjectCollected("ghost")
 					.setEffect(TriggeredEffect.Cutscene("story_mini_home", "spookywoods_ghost_1")),
 				# Mini sees phantom
 				EventTrigger.LineRatioCleared(0.3)
@@ -102,10 +105,10 @@ func _init() -> void:
 				EventTrigger.ActStarted()
 					.setEffect(TriggeredEffect.Cutscene("story_mini_home", "riverside_start")),
 				# Mini fishes some treasure and gets an item
-				EventTrigger.ObjectCollected("treasure", 1)
+				EventTrigger.ObjectCollected("treasure")
 					.setEffect(TriggeredEffect.Cutscene("story_mini_home", "riverside_treasure_1")),
 				# Mini get their first fish and decide on a goal
-				EventTrigger.ObjectCollected("fish", 1)
+				EventTrigger.ObjectCollected("fish")
 					.setEffect(TriggeredEffect.Cutscene("story_mini_home", "riverside_fish_1")),
 				# Mini reach the end of act and check if they have enough fish; Complete the act if so
 				EventTrigger.LineRatioCleared(1.0)
@@ -260,11 +263,11 @@ class EventTrigger:
 	static func LineRatioCleared(_ratio:float) -> EventTrigger:
 		return LineRatioClearedEventTrigger.new(_ratio)
 
-	static func ObjectCollected(_objectName:StringName = &"", _amount:int = 1) -> EventTrigger:
-		return ObjectCollectedEventTrigger.new(_objectName, _amount)
+	static func ObjectCollected(_objectName:StringName = &"") -> EventTrigger:
+		return ObjectCollectedEventTrigger.new(_objectName)
 
-	static func ObjectRatioCollected(_objectName:StringName = &"", _ratio:float = 1.0) -> EventTrigger:
-		return ObjectRatioCollectedEventTrigger.new(_objectName, _ratio)
+	static func ObjectsAllCollected(_objectName:StringName = &"") -> EventTrigger:
+		return ObjectsAllCollectedEventTrigger.new(_objectName)
 
 	static func ItemReceived(_itemName:StringName, _amount:int = 1) -> EventTrigger:
 		return ItemReceivedEventTrigger.new(_itemName, _amount)
@@ -301,17 +304,13 @@ class LineRatioClearedEventTrigger extends EventTrigger:
 
 class ObjectCollectedEventTrigger extends EventTrigger:
 	var objectName:StringName
-	var amount:int
-	func _init(_objectName:StringName, _amount:int) -> void:
+	func _init(_objectName:StringName) -> void:
 		objectName = _objectName
-		amount = amount
 
-class ObjectRatioCollectedEventTrigger extends EventTrigger:
+class ObjectsAllCollectedEventTrigger extends EventTrigger:
 	var objectName:StringName
-	var ratio:float
-	func _init(_objectName:StringName, _ratio:float) -> void:
+	func _init(_objectName:StringName) -> void:
 		objectName = _objectName
-		ratio = _ratio
 
 class ItemReceivedEventTrigger extends EventTrigger:
 	var itemName:StringName

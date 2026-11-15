@@ -365,7 +365,12 @@ class CampaignContext:
 
 	func reset() -> void: ## Tell acts to reset their triggers
 		for act:ActContext in acts:
+			act.isActive = false
 			act.resetTriggers()
+
+	func triggerObjectCollected(state:StateBoardObject) -> void: ## Tell object's belonging act to trigger object collect effect
+		var act:ActContext = getActAtLine(state.coordinates.y)
+		act.triggerObjectCollected(state)
 	
 	# === Events ===
 	func _on_act_selectable_changed(isSelectable:bool, act:ActContext) -> void:
@@ -384,6 +389,12 @@ class CampaignContext:
 			var bottomLine:int = int(lineMappings.get(0, 0))
 			var act:ActContext = getActAtLine(bottomLine)
 			act.triggerLineReach(bottomLine - act.offset)
+
+		# Set acts as active
+		for v:int in lineMappings.values():
+			var act:ActContext = line_to_act.get(v)
+			if act is ActContext:
+				act.isActive = true
 
 	func _on_DracominoHandler_gotLines_updated(gotLines:Dictionary):
 		var numGotLinesByAct:Dictionary[ActContext, int]
@@ -411,6 +422,7 @@ class ActContext:
 			selectable_changed.emit(value)
 	var aetherCapacity:float ## The amount of aether it takes to complete this act
 	var isContinuation:bool ## Combine seamlessly with the act before
+	var isActive:bool ## This act has lines mapped on the board since restarting; Set by campaign
 	var triggers:Array[EventTriggerContext] = []
 
 	func _init(_lines:int = 20, _isContinuation:bool = false) -> void:
@@ -447,7 +459,10 @@ class ActContext:
 
 	func applyDefinition(actDefinition:Story.Act) -> void: ## Applies an act's definition from Story
 		for trigger:Story.EventTrigger in actDefinition.triggers:
-			triggers.append(EventTriggerContext.new(trigger))
+			var ctx:EventTriggerContext = EventTriggerContext.new(trigger)
+			triggers.append(ctx)
+			if trigger is Story.OnSignalEventTrigger:
+				(trigger as Story.OnSignalEventTrigger).sig.connect(_on_signal_event_triggered.bind(ctx))
 
 	func resetTriggers() -> void: ## Reset repeatable triggers
 		for ctx:EventTriggerContext in triggers:
@@ -472,6 +487,24 @@ class ActContext:
 					if (ctx.trigger as Story.LineRatioClearedEventTrigger).ratio <= ratio:
 						ctx.activate()
 
+	func triggerObjectCollected(state:StateBoardObject) -> void: ## Trigger events on object collected
+		var flagName:StringName = "boardobjects_active_"+state.objectName
+		# Since the flag will take a bit to update, wait for the signal
+		await SignalBus.getSignal("stateflag_changed", flagName)
+		var isLast:bool = not FlagManager.isFlagSet(flagName)		
+		for ctx:EventTriggerContext in triggers:
+			if not ctx.isTriggered:
+				if ctx.trigger is Story.ObjectCollectedEventTrigger:
+					if (ctx.trigger as Story.ObjectCollectedEventTrigger).objectName == state.objectName:
+						ctx.activate()
+				elif isLast and (ctx.trigger is Story.ObjectsAllCollectedEventTrigger):
+					if (ctx.trigger as Story.ObjectsAllCollectedEventTrigger).objectName == state.objectName:
+						ctx.activate()
+
+	func _on_signal_event_triggered(ctx:EventTriggerContext):
+		if isActive and not ctx.isTriggered:
+			ctx.activate()
+
 class EventTriggerContext:
 	var isTriggered:bool = false
 	var trigger:Story.EventTrigger
@@ -481,6 +514,8 @@ class EventTriggerContext:
 
 	func activate() -> void:
 		if isTriggered:
+			return
+		if trigger.condition and not FlagManager.isFlagSet(trigger.condition):
 			return
 		var fx:EffectHandler.Effect = trigger.effect
 		if fx.canTriggerFn.call():
@@ -1257,6 +1292,8 @@ func _on_Board_item_pickedup(state:StateBoardObject) -> void:
 	if state and state.isLocation:
 		print("Picked up ", CONSTANTS.LOCATIONS[state.loc_id].prettyName)
 		sendLocation(state.loc_id)
+	if campaign:
+		campaign.triggerObjectCollected(state)
 	giveMana(CONSTANTS.MANA_PER_COIN)
 
 func _on_Board_lines_cleared_updated(num:int) -> void:

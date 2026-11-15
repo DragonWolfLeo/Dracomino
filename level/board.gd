@@ -392,7 +392,14 @@ static func createBoardObject(objectName:String) -> Node2D: ## Instantiates a bo
 		objectScenePath = "res://object/boardobject/error.tscn"
 	
 	var node:Node = (load(objectScenePath) as PackedScene).instantiate()
+	if node is BoardObject:
+		(node as BoardObject).objectName = objectName
 	if node is Node2D:
+		# Attach a flag holder to the board object so we can keep track of how many is on the board
+		var fh:FlagHolder = FlagHolder.new(FlagHolder.PRIORITY.OBJECT)
+		fh.count("boardobjects_active_"+objectName, "active", 1)
+		node.add_child(fh)
+
 		return node as Node2D
 	
 	printerr("Board.createBoardObject error: %s is not a Node2D"%objectScenePath)
