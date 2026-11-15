@@ -59,7 +59,7 @@ class Data:
 		"modifier",
 		"line_clear",
 		"item_pickup",
-		"boss_defeat",
+		"act_completion",
 		"milestone",
 	]
 	var id:int
@@ -222,7 +222,7 @@ class LocationData extends Data:
 		[20002, "Home Sweet Home - Dragon Lair: Clear All Webs",      "",                [ "milestone" ] ],
 	],
 	# Story mode
-	_locationRangeConfig( 30_000,    100, "Boss {n} Defeated",        "",                [ "boss_defeat" ]),
+	_locationRangeConfig( 30_000,    100, "Act {n} Completed",        "",                [ "act_completion" ]),
 	_locationRangeConfig( 40_000,  1_000, "Nugget {n}",               "nugget",          [ "item_pickup" ]), # Home Sweet Home - Dragon Lair
 	_locationRangeConfig( 50_000,  1_000, "Ghost {n} Defeated",       "ghost",           [ "item_pickup" ]), # Home Sweet Home - Spooky Woods
 	_locationRangeConfig( 60_000,  1_000, "Treasure Piece {n}",       "treasurepiece",   [ "item_pickup" ]), # Home Sweet Home - Riverside
