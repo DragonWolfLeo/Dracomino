@@ -42,7 +42,7 @@ var tempFlags:Dictionary
 var queuedFlags:Array
 var monitoring:bool = true:
 	set(value):
-		if stateFlags.is_empty():
+		if stateFlags.is_empty() and tempFlags.is_empty():
 			# No need to be dirty if this is just empty
 			monitoring = value
 		elif value != monitoring:
