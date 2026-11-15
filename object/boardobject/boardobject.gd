@@ -9,6 +9,8 @@ class_name BoardObject extends Node2D
 @export var collectSound:StringName = &"itempickup"
 @export var deathParticlesScene:PackedScene
 
+var objectName:StringName
+
 signal collected()
 
 func attachTimerAndOffset(timer:ActivityTimer, offset:float) -> void: ## Pass anim sync setup to AnimationSyncConfig
@@ -26,6 +28,8 @@ func reactToCover(_piece:Piece) -> void: ## Reaction to a piece locking on it
 		collect()
 
 func reactToTouch(_piece:Piece) -> void: ## Reaction to a piece touching it
+	if objectName:
+		SignalBus.getSignal("boardObject_%s_touched"%objectName).emit()
 	if collectOnTouch:
 		collect()
 
