@@ -850,7 +850,10 @@ func giveItem(item:StateItem):
 					collectedAbilities[item.id] = 1
 
 				# Add flag for ability
-				seedFlagHolder.count(item.data.internalName, "collected", collectedAbilities[item.id])
+				match item.data.type:
+					"ability": seedFlagHolder.count(item.data.internalName, "collected", collectedAbilities[item.id])
+				# Add has_ flag for both abilities and misc
+				seedFlagHolder.count("has_"+item.data.internalName, "collected", collectedAbilities[item.id])
 
 				# We were given an item that doesn't exist, so put it in our other flag holder so it appears in the ability bar
 				if not seedFlagHolder.isFlagSet("existing_"+item.data.internalName):
