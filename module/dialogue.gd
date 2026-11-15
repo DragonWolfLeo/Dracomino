@@ -4,6 +4,7 @@ extends Node
 signal dialogue_updated(line, choices)
 signal dialogue_ended()
 
+var flagHolder:FlagHolder
 var resourcePath:String = ""
 var states:Array[DialogueState] = []	
 var statePosition:int = 0
@@ -148,6 +149,12 @@ class NavTagCommand:
 	func setArgHint(_argHint:String = "") -> NavTagCommand:
 		argHint = _argHint
 		return self
+
+# === Virtuals ===
+func _init() -> void:
+	flagHolder = FlagHolder.new(FlagHolder.PRIORITY.DIALOGUE)
+	flagHolder.setFlag("dialogue_active")
+	add_child(flagHolder)
 
 # Static Variables
 static var NAVTAGS:Dictionary = {}
