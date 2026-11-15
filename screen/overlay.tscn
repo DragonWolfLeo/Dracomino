@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://3jevvou6slg2"]
+[gd_scene load_steps=4 format=3 uid="uid://3jevvou6slg2"]
 
 [ext_resource type="Script" uid="uid://bemp7m05rfi26" path="res://screen/overlay.gd" id="1_8fhn2"]
+[ext_resource type="Script" uid="uid://sfgrdlrv7j48" path="res://module/show_on_flag_set.gd" id="2_xoiiu"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_osm8g"]
 bg_color = Color(0.913725, 0.913725, 0.901961, 1)
@@ -118,16 +119,28 @@ metadata/_edit_use_anchors_ = true
 [node name="AnnouncementLayer" type="CanvasLayer" parent="."]
 layer = 8
 
-[node name="AnnouncementContainer" type="MarginContainer" parent="AnnouncementLayer"]
-unique_name_in_owner = true
+[node name="VBoxContainer" type="VBoxContainer" parent="AnnouncementLayer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+
+[node name="AnnouncementContainer" type="MarginContainer" parent="AnnouncementLayer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
 theme_override_constants/margin_left = 80
 theme_override_constants/margin_right = 80
 theme_override_constants/margin_bottom = 120
+
+[node name="DialogueSpacer" type="Control" parent="AnnouncementLayer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("2_xoiiu")
+flag = "dialogue_active"
 
 [connection signal="gui_input" from="FocusMask" to="." method="_on_focus_mask_gui_input"]
