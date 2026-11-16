@@ -4,6 +4,9 @@
 ** Mini arrives to cave **
 ** Show interior of empty cave **
 Mini (eager): This looks like a nice cave to live in.
+[if not boardobjects_active]
+[End]
+[always]
 ** Mini holds a sack of treasure **
 ** Mini trips on a pebble, spilling sack **
 Mini (panicked): Eeeek!

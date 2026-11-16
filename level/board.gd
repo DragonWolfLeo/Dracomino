@@ -398,6 +398,7 @@ static func createBoardObject(objectName:String) -> Node2D: ## Instantiates a bo
 		# Attach a flag holder to the board object so we can keep track of how many is on the board
 		var fh:FlagHolder = FlagHolder.new(FlagHolder.PRIORITY.OBJECT)
 		fh.count("boardobjects_active_"+objectName, "active", 1)
+		fh.count("boardobjects_active", "active", 1)
 		node.add_child(fh)
 
 		return node as Node2D
