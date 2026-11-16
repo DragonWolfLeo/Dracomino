@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://d0mgyh6oleq0m"]
+[gd_scene load_steps=21 format=3 uid="uid://d0mgyh6oleq0m"]
 
 [ext_resource type="Texture2D" uid="uid://xv8twcset8nu" path="res://assets/art/object/coin.png" id="1_lcvo8"]
 [ext_resource type="Script" uid="uid://6uieedcjeaar" path="res://object/boardobject/boardobject.gd" id="1_wvsos"]
@@ -7,6 +7,8 @@
 [ext_resource type="Texture2D" uid="uid://dgylpxesem4ck" path="res://assets/art/object/coin_progression.png" id="5_4u11l"]
 [ext_resource type="Texture2D" uid="uid://7cb0dxbqanj2" path="res://assets/art/object/coin_proguseful.png" id="6_vxc45"]
 [ext_resource type="Texture2D" uid="uid://be1jdv63np5ds" path="res://assets/art/object/coin_nothing.png" id="7_sk1uc"]
+[ext_resource type="Texture2D" uid="uid://wceq0evcoou7" path="res://assets/art/object/coin_trap.png" id="8_sk1uc"]
+[ext_resource type="Script" uid="uid://cvkf0k4nh418x" path="res://module/itemclassificationplayer.gd" id="8_vxc45"]
 
 [sub_resource type="Animation" id="Animation_5de8d"]
 length = 0.001
@@ -137,6 +139,21 @@ tracks/0/keys = {
 "values": [ExtResource("7_sk1uc")]
 }
 
+[sub_resource type="Animation" id="Animation_twqhn"]
+resource_name = "trap"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("8_sk1uc")]
+}
+
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_vxc45"]
 _data = {
 &"RESET": SubResource("Animation_h4frr"),
@@ -144,6 +161,7 @@ _data = {
 &"nothing": SubResource("Animation_dy2bm"),
 &"progression": SubResource("Animation_iu7fd"),
 &"proguseful": SubResource("Animation_pdd15"),
+&"trap": SubResource("Animation_twqhn"),
 &"useful": SubResource("Animation_4u11l")
 }
 
@@ -173,3 +191,6 @@ libraries = {
 &"": SubResource("AnimationLibrary_vxc45")
 }
 autoplay = "default"
+script = ExtResource("8_vxc45")
+
+[connection signal="locationContext_updated" from="." to="Sprite2D/ItemClassificationPlayer" method="_on_locationContext_updated"]
