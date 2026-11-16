@@ -260,8 +260,14 @@ func fillCollectedItemContextByName(internalName:StringName) -> void: ## Fill fo
 	fillStateItemContext()
 
 static func sanitizeString(string:String) -> String: ## Escape brackets from third-party strings
-	string = string.replace("[", "[lb]")
-	return string
+	var newString:String = ""
+	for i:int in range(string.length()):
+		var c:String = string[i]
+		match c:
+			"[": newString += "[lb]"
+			"]": newString += "[rb]"
+			_: newString += c
+	return newString
 
 static func itemNameTemplate(stateItem:DracominoHandler.StateItem) -> String: ## Format a string for an item
 	if stateItem and stateItem.data:
