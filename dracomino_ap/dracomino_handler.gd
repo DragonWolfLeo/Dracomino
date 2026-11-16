@@ -133,6 +133,11 @@ class LocationContext:
 			if item == value: return
 			item = value
 			if item: item_updated.emit(item)
+	var hinted:bool = false:
+		set(value):
+			if hinted == value: return
+			hinted = value
+			if hinted and item: item_updated.emit(item)
 
 	static func getFromId(loc_id:int) -> LocationContext: ## Get context from location id
 		if not cache.has(loc_id):
@@ -1029,7 +1034,7 @@ func _on_on_hint_update(hints: Array[NetworkHint]):
 	if Archipelago.conn:
 		for hint:NetworkHint in hints:
 			if hint.item.src_player_id == Archipelago.conn.player_id:
-				LocationContext.getOrCreateFromNetItem(hint.item)
+				LocationContext.getOrCreateFromNetItem(hint.item).hinted = true
 			if hint.status == NetworkHint.Status.FOUND: continue
 			if hint.item.dest_player_id == Archipelago.conn.player_id:
 				# Only check hints for our abilities
