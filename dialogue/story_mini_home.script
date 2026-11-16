@@ -23,7 +23,7 @@ Mini (awkward): If this is gonna be my new home, I better take care of it! I'm a
 [if hard_drop not gravity/feather_drop]
 : To drop down the Dracomino quickly, press the {UP} button.
 [always]
-[SetWorldFlag explained_move]
+[SetFlag explained_move]
 [End]
 
 ////////////////////////////////////
@@ -69,17 +69,16 @@ Mini (panicked): Whoa, what just happened to those blocks?!
 Mini (think): They turned into magic crystals? And also a {item_name}?
 Mini (awkward): Huh, I wish I knew that a lot sooner. I was starting to think these blocks were indestructible.
 Mini (cute): Heh, oh well. If all you have to do is put these together, I'm sure they'll figure that out back at the old place.
-[SetFlag storycontext_clearedfirstline]
+[SetFlag storycontext_discover_line_crystallization]
 [End]
 
 /////////////////////////////////////
 // Cutscene: Picks up all nuggets
 [State dragonlair_allnuggets]
-// TODO: Make well done appear here
 [Announce All nuggets collected!]
 Mini (cute): Yay! I got everything picked up! Nice and tidy!
-// I was going to make this also link to discover web but I thought against it
-[End]
+[End if storycontext_foundweb]
+[GotoState discoverweb]
 
 /////////////////////////////////////
 // Cutscene: Mini clears half the lines
@@ -90,18 +89,19 @@ Mini (cute): I'm glad I figured out how to rotate stuff. That came in very handy
 [else]
 Mini (uncomfortable): Though, it was pretty hard to line up all those blocks. If only I could [b]rotate[/b] them somehow.
 [always]
+[End if storycontext_foundweb]
 [GotoState discoverweb]
 
 /////////////////////////////////////
 // Cutscene Part: Discover Webs
 [State discoverweb]
-Mini (content): All right! I better choose a cozy spot for my hoard.
-[SetFlag storycontext_foundweb]
-// TODO: Make webs appear here.
+Mini (content): Now, time to choose a cozy corner to put my hoard.
+[SetLevelFlag storycontext_foundweb]
+[TriggerEffect web_trap]
 [if storycontext_touchedweb]
 Mini (grumpy): ...There's still gross, sticky stuff here. [i]THIS[/i] time it goes! [if hold_slot]I should try hitting it with that little magic bolt when I swap block-thingies.
 [else]
-Mini (awkward): It sure is convenient no one else is in this cave... Hey, what's that white stuff?
+Mini (neutral): ...Hey, what's that white stuff?
 [always]
 [End]
 
@@ -116,10 +116,29 @@ Mini (grumpy): Okay, this stuff's gotta go! [if hold_slot]Maybe with a little ma
 /////////////////////////////////////
 // Cutscene: Clean up all the webs
 [State dragonlair_allwebs]
-// TODO: Add welldone here
 [Announce Webs cleared!]
 Mini (cute): Yay! All that gross, sticky stuff is gone!
 [SetFlag storycontext_clearedallwebs]
+[Jump Crystallize if storycontext_discover_line_crystallization]
+[Jump NoCrystallize]
+
+[Response Crystallize]
+Mini (content): Now, time to turn the rest of these blocks into magic crystals.
+[if not rotate]
+Mini (confused): ...Which seems like a lot of work honestly. I might want to wait a bit until I figure out how to [b]rotate[/b] them.
+[if boardobjects_active_nugget]
+Mini (cute): I should also pick up the rest of my gold nuggets while I'm at it, too. [if not rotate]That, at least, would be much easier to do! Hey, that rhymed! Hehe!
+[else]
+Mini (awkward): I already have my gold bunched up in one, cozy pile.
+    [if rotate] I'm not sure how to get more, but the crystals make a nice substitute.
+    [else] I might as well rest for now. Maybe the answer will come to me in my slumber.
+[always]
+[End]
+
+[Response NoCrystallize]
+Mini (think): Wow. This place is starting to look a lot like the old place. 
+Mini (uncomfortable): ...Minus all the kobolds.
+Mini (annoyed): At the very least I should try placing these blocks a lot more compact.
 [End]
 
 /////////////////////////////////////
