@@ -106,6 +106,7 @@ class StateBoardObject: ## Context data for state of board objects
 	var objectName:StringName ## Corresponding scene name in res://objects/boardobjects
 	var coordinates:Vector2i ## Coordinates object would spawn on the board, starting at Line 1, moving upward
 	var index:int = -1 ## Index in the placement array. Used as an id for board if 0 or more
+	var homeLine:int = -1 ## Line this belongs to, despite coordinates. Use to determine which act this belongs in 
 	var isLocation:
 		get:
 			return loc_id > 0
@@ -369,7 +370,7 @@ class CampaignContext:
 			act.resetTriggers()
 
 	func triggerObjectCollected(state:StateBoardObject) -> void: ## Tell object's belonging act to trigger object collect effect
-		var act:ActContext = getActAtLine(state.coordinates.y)
+		var act:ActContext = getActAtLine(state.coordinates.y if state.homeLine < 0 else state.homeLine)
 		act.triggerObjectCollected(state)
 
 	func triggerItemReceived(itemName:StringName, amount:int) -> void: ## Tell active acts to trigger item received events

@@ -1482,21 +1482,27 @@ func _on_effect_impatience():
 func _on_effect_web():
 	SoundManager.play("trap")
 	# Get a list of empty spaces
-	var validMapCoords:Array[Vector2i] = []
+	var validTileSpaceCoords:Array[Vector2i] = []
 	for y in range(EFFECT_WEB_BOUNDS.position.y, EFFECT_WEB_BOUNDS.end.y):
 		for x in range(rowOffsets.get(y, EFFECT_WEB_BOUNDS.position.x), rowEnds.get(y, EFFECT_WEB_BOUNDS.end.x)):
 			var vec:Vector2i = Vector2i(x, y)
 			if not isTileFilled(vec):
 				var space:TileSpace = getTileSpaceAtMapCoord(vec)
 				if not space or not space.hasObjects():
-					validMapCoords.append(mapToTileSpaceCoordinates(vec))
+					validTileSpaceCoords.append(mapToTileSpaceCoordinates(vec))
 
 	# Make webs
 	for i in range(EFFECT_WEB_NUM_TO_SPAWN):
-		if validMapCoords.is_empty():
+		if validTileSpaceCoords.is_empty():
 			break
-		var mapCoords:Vector2i = validMapCoords.pop_at(randi_range(0, validMapCoords.size()-1))
-		var state:DracominoHandler.StateBoardObject = DracominoHandler.StateBoardObject.new(mapCoords, &"web")
+		var coords:Vector2i = validTileSpaceCoords.pop_at(randi_range(0, validTileSpaceCoords.size()-1))
+		var state:DracominoHandler.StateBoardObject = DracominoHandler.StateBoardObject.new(coords, &"web")
+		# Bind to a line in this act
+		state.homeLine = coords.y
+		var _linemapping_values:Array[int] = _linemappings.values()
+		while state.homeLine >= 0 and not _linemapping_values.has(state.homeLine):
+			state.homeLine -= 1
+		#
 		var ctx:BoardObjectContext = BoardObjectContext.new(state)
 		registerBoardObjectIfNotAlready(state)
 
