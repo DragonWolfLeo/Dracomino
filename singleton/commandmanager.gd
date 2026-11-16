@@ -45,19 +45,23 @@ func _ready():
 	addCommand("SHOWCUTSCENE", Overlay.showCutsceneByName).setArgHint("cutscene")
 	addCommand("HIDECUTSCENE", Overlay.hideCutscene.unbind(1), true)
 	addCommand("ANNOUNCE", Overlay.queueAnnouncement, true).setArgHint("message")
-	# Global flag setting
-	addCommand("SETFLAG", FlagManager.setFlag, true).setArgHint(DESC.SETFLAG)
+	# Default flag setting (world)
+	addCommand("SETFLAG", FlagManager.HANDLERS.WORLD.setFlag, true).setArgHint(DESC.SETFLAG)
+	addCommand("CLEARFLAG", FlagManager.HANDLERS.WORLD.clearFlag, true).setArgHint("flag")
+	addCommand("COUNT", FlagManager.HANDLERS.WORLD.count, true).setArgHint(DESC.COUNT)
+	# Main flag setting
+	addCommand("SETMAINFLAG", FlagManager.HANDLERS.MAIN.setFlag, true).setArgHint(DESC.SETFLAG)
 	# addCommand("SETFLAGTOMORROW", FlagManager.queueFlag, true).setArgHint(DESC.SETFLAG)
-	addCommand("CLEARFLAG", FlagManager.clearFlag, true).setArgHint("flag")
-	addCommand("COUNT", FlagManager.count, true).setArgHint(DESC.COUNT)
+	addCommand("CLEARMAINFLAG", FlagManager.HANDLERS.MAIN.clearFlag, true).setArgHint("flag")
+	addCommand("MAINCOUNT", FlagManager.HANDLERS.MAIN.count, true).setArgHint(DESC.COUNT)
 	# Level flag setting
 	addCommand("SETLEVELFLAG", FlagManager.HANDLERS.LEVEL.setFlag, true).setArgHint(DESC.SETFLAG)
 	addCommand("CLEARLEVELFLAG", FlagManager.HANDLERS.LEVEL.clearFlag, true).setArgHint("flag")
 	addCommand("LEVELCOUNT", FlagManager.HANDLERS.LEVEL.count, true).setArgHint(DESC.COUNT)
 	# World flag setting
-	addCommand("SETWORLDFLAG", FlagManager.HANDLERS.WORLD.setFlag, true).setArgHint(DESC.SETFLAG)
-	addCommand("CLEARWORLDFLAG", FlagManager.HANDLERS.WORLD.clearFlag, true).setArgHint("flag")
-	addCommand("WORLDCOUNT", FlagManager.HANDLERS.WORLD.count, true).setArgHint(DESC.COUNT)
+	addCommand("SETWORLDFLAG", FlagManager.HANDLERS.WORLD.setFlag, true).setArgHint(DESC.SETFLAG).setDeprecated()
+	addCommand("CLEARWORLDFLAG", FlagManager.HANDLERS.WORLD.clearFlag, true).setArgHint("flag").setDeprecated()
+	addCommand("WORLDCOUNT", FlagManager.HANDLERS.WORLD.count, true).setArgHint(DESC.COUNT).setDeprecated()
 	# Dialogue system stuff
 	addCommand("LOADDIALOGUE", func(_option:String):
 		var args = _option.split(" ", false, 2); args.resize(3); DialogueManager.loadDialogue.call_deferred.bind(false).callv(args)
