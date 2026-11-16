@@ -7,6 +7,9 @@ extends AnimationPlayer
 @export var nothingAnimationName:StringName = &"nothing"
 @export var trapAnimationName:StringName = &"trap"
 
+func _ready() -> void:
+	process_mode = PROCESS_MODE_ALWAYS
+	
 func _on_locationContext_updated(item:NetworkItem) -> void:
 	if not item:
 		return
