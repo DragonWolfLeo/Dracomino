@@ -17,10 +17,16 @@ var CHOICE_LABEL_SCENE_RESOURCE_PATH := "res://ui/choicelabel.tscn"
 var SHOW_NAME_LABEL:bool = false
 
 class DialogueState:
+	signal text_print_done()
 	var currentSpeaker
 	var targetLine:String = ""
 	var textTimer:float = 0
-	var textPrintDone:bool = true
+	var textPrintDone:bool = true:
+		set(value):
+			if textPrintDone == value: return
+			textPrintDone = value
+			if textPrintDone: text_print_done.emit()
+
 	var visibleCharacters:int = 0
 	var totalCharacters:int = 0
 	var speakerDir:int = -2
@@ -60,6 +66,8 @@ func _ready():
 	SignalBus.getSignal("stateflag_cleared","game_focus").connect(set.bind("_was_focused", false), CONNECT_DEFERRED)
 	DracominoCommandManager.addCommand("ALIGNLEFT", setSpeakerAlignment.bind(1), true).setArgHint("speaker")
 	DracominoCommandManager.addCommand("ALIGNRIGHT", setSpeakerAlignment.bind(-1), true).setArgHint("speaker")
+	DracominoCommandManager.addSignalCommand("CONTINUE")
+	DracominoCommandManager.COMMANDS["CONTINUE"].command_activated.connect(_on_continue_command)
 
 func _process(delta):
 	# Print text procedurally
@@ -271,4 +279,7 @@ func _on_ChoiceLabel_pressed(data):
 	grab_focus()
 	SoundManager.play("confirm")
 	dialogue.selectChoice(data)
-		
+
+func _on_continue_command():
+	if state and dialogue:
+		state.text_print_done.connect(dialogue.proceedDialogue, CONNECT_ONE_SHOT)
