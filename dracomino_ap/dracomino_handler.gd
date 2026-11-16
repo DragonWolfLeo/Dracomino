@@ -1,6 +1,6 @@
 class_name DracominoHandler extends Node
 
-var collectedItems:Array[StateItem] = []
+static var collectedItems:Array[StateItem] = []
 var missingLocations:Dictionary[int, bool] = {}
 var checkedLocations:Dictionary[int, bool] = {}
 var victory:bool = false
@@ -69,8 +69,10 @@ class StateItem:
 	var loc_id:int
 	var sender_id:int
 	var senderName:String = "someone"
+	var receiverName:String = "someone"
 	var locationName:String = "somewhere"
 	var gameName:String = "game"
+	var classification:StringName = "filler"
 	var isLocal:bool = true
 	var streak:Streak = null
 	var used:bool = false ## Set to true when used as an effect, to prevent using again
@@ -84,10 +86,19 @@ class StateItem:
 		si.loc_id = netItem.loc_id
 		si.sender_id = netItem.src_player_id
 		si.isLocal = netItem.src_player_id == 0 or netItem.is_local()
+		si.classification = (
+			"proguseful" if netItem.is_prog() and (netItem.flags & AP.ItemClassification.USEFUL)
+			else "progression" if netItem.is_prog()
+			else "trap" if netItem.flags & AP.ItemClassification.TRAP
+			else "useful" if netItem.flags & AP.ItemClassification.USEFUL
+			else "filler"
+		)
 		if Archipelago.conn:
 			si.senderName = Archipelago.conn.get_player_name(netItem.src_player_id)
+			si.receiverName = Archipelago.conn.get_player_name(netItem.dest_player_id)
 			si.locationName = Archipelago.conn.get_gamedata_for_player(netItem.src_player_id).get_loc_name(netItem.loc_id)
 			si.gameName = Archipelago.conn.get_game_for_player(netItem.src_player_id)
+		LocationContext.getOrCreateFromNetItem(netItem).attachStateItem(si)
 		return si
 
 	static func fromId(_id:int) -> StateItem:
@@ -100,6 +111,14 @@ class StateItem:
 	static func fromInternalName(internalName:StringName) -> StateItem:
 		var si := StateItem.fromId(CONSTANTS.ITEM_NAME_TO_ID.get(internalName, 0))
 		return si
+
+	func getClassificationColor() -> Color:
+		match classification:
+			"proguseful": return CONSTANTS.COLOR.PROGUSEFUL
+			"progression": return CONSTANTS.COLOR.PROGRESSION
+			"trap": return CONSTANTS.COLOR.TRAP
+			"useful": return CONSTANTS.COLOR.USEFUL
+		return CONSTANTS.COLOR.FILLER
 
 class StateBoardObject: ## Context data for state of board objects
 	var loc_id:int = 0 ## Corresponding location id for this object, or 0 for non-location objects
@@ -130,7 +149,10 @@ class LocationContext:
 	signal item_updated(item:NetworkItem)
 	
 	static var cache:Dictionary[int, LocationContext] = {}
+	static var lastLineLocation:int
+	static var lastBoardObjectLocation:int
 
+	var stateItem:StateItem
 	var item:NetworkItem:
 		set(value):
 			if item == value: return
@@ -154,7 +176,12 @@ class LocationContext:
 	
 	static func clearCache() -> void: ## Clear cache for a new seed
 		cache.clear()
+		lastLineLocation = 0
+		lastBoardObjectLocation = 0
 
+	func attachStateItem(si:StateItem) -> LocationContext:
+		stateItem = si
+		return self
 
 class PieceContext:
 	var name:StringName
@@ -732,6 +759,7 @@ func sendLine(lineIndex:int):
 	missingLines[lineIndex] = false
 	missingLines_updated.emit(missingLines)
 	sendLocation(allLineLocations[lineIndex])
+	LocationContext.lastLineLocation = allLineLocations[lineIndex]
 
 func sendVictory():
 	victory = true
@@ -1357,6 +1385,7 @@ func _on_Board_item_pickedup(state:StateBoardObject) -> void:
 	if state and state.isLocation:
 		print("Picked up ", CONSTANTS.LOCATIONS[state.loc_id].prettyName)
 		sendLocation(state.loc_id)
+		LocationContext.lastBoardObjectLocation = state.loc_id
 	if campaign:
 		campaign.triggerObjectCollected(state)
 	giveMana(CONSTANTS.MANA_PER_COIN)

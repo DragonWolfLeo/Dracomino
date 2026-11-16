@@ -32,6 +32,7 @@ Mini (awkward): If this is gonna be my new home, I better take care of it! I'm a
 ////////////////////////////////////
 // Cutscene: Mini touches first nugget
 [State dragonlair_nugget_1]
+[FillBoardObjectContext]
 ** Mini is about to pick up a nugget **
 ** Mini then pulls their hand back **
 Mini (think): Hm... If I touch metal, it's gonna conjure one of those colorful blocks.
@@ -67,6 +68,7 @@ Mini (panicked): Eek! Where did it go?
 /////////////////////////////////////
 // Cutscene: Mini clears a line
 [State dragonlair_lineclear_1]
+[FillLineClearContext]
 ** Mini clears a line, leaving behind a bunch of mana crystals and an item **
 Mini (panicked): Whoa, what just happened to those blocks?!
 Mini (think): They turned into magic crystals? And also a {item_name}?

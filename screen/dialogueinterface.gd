@@ -67,6 +67,11 @@ func _ready():
 	DracominoCommandManager.addCommand("ALIGNLEFT", setSpeakerAlignment.bind(1), true).setArgHint("speaker")
 	DracominoCommandManager.addCommand("ALIGNRIGHT", setSpeakerAlignment.bind(-1), true).setArgHint("speaker")
 	DracominoCommandManager.addSignalCommand("CONTINUE")
+	DracominoCommandManager.addCommand("FILLBOARDOBJECTCONTEXT", fillBoardObjectContext.unbind(1), true)
+	DracominoCommandManager.addCommand("FILLLINECLEARCONTEXT", fillLineClearContext.unbind(1), true)
+	DracominoCommandManager.addCommand("FILLITEMCONTEXT", fillCollectedItemContextByName, true)
+
+
 	DracominoCommandManager.COMMANDS["CONTINUE"].command_activated.connect(_on_continue_command)
 
 func _process(delta):
@@ -211,7 +216,66 @@ func setPortraitExpression(expression:String = "", isInitial:bool = false) -> vo
 func setSpeakerAlignment(speaker:String, dir:int=1) -> void:
 	speaker = speaker.to_lower()
 	speakerAlignment[speaker] = dir
-	
+
+func fillBoardObjectContext() -> void: ## Fill format values with board object location context
+	fillLocationContextFromLocationId(DracominoHandler.LocationContext.lastBoardObjectLocation)
+
+func fillLineClearContext() -> void: ## Fill format values with line location context
+	fillLocationContextFromLocationId(DracominoHandler.LocationContext.lastLineLocation)
+
+func fillLocationContextFromLocationId(loc_id:int) -> void: ## Fill format values with location context from id
+	if loc_id > 0:
+		var ctx:DracominoHandler.LocationContext = DracominoHandler.LocationContext.getFromId(loc_id)
+		var si:DracominoHandler.StateItem = ctx.stateItem
+		if si == null and ctx.item is NetworkItem:
+			si = DracominoHandler.StateItem.fromNetworkItem(ctx.item)
+		fillStateItemContext(si)
+		return
+	fillStateItemContext()
+
+func fillStateItemContext(stateItem:DracominoHandler.StateItem = null) -> void: ## Fill format values with location context from state item or null
+	if state and stateItem:
+		state.formatValues.merge({
+			item_name = itemNameTemplate(stateItem),
+			location_name = coloredBoldedSanitizedString(stateItem.locationName, CONSTANTS.COLOR.LOCATION),
+			game_name = coloredBoldedSanitizedString(stateItem.gameName, CONSTANTS.COLOR.GAME),
+			sender_name = coloredBoldedSanitizedString(stateItem.senderName, CONSTANTS.COLOR.PLAYER),
+			receiver_name = coloredBoldedSanitizedString(stateItem.receiverName, CONSTANTS.COLOR.PLAYER),
+		}, true)
+	else:
+		state.formatValues.merge({
+			item_name = "Something",
+			location_name = "Somewhere",
+			game_name = "Another World",
+			sender_name = "Someone",
+			receiver_name = "Someone",
+		})
+
+func fillCollectedItemContextByName(internalName:StringName) -> void: ## Fill format values with first instance of collected item
+	var id:int = CONSTANTS.ITEM_NAME_TO_ID.get(internalName, 0)
+	for si:DracominoHandler.StateItem in DracominoHandler.collectedItems:
+		if si.id == id:
+			fillStateItemContext(si)
+			return
+	fillStateItemContext()
+
+static func sanitizeString(string:String) -> String: ## Escape brackets from third-party strings
+	string = string.replace("[", "[lb]")
+	return string
+
+static func itemNameTemplate(stateItem:DracominoHandler.StateItem) -> String: ## Format a string for an item
+	if stateItem and stateItem.data:
+		return coloredBoldedSanitizedString(
+			stateItem.data.prettyName,
+			stateItem.getClassificationColor()
+		)
+	return "Something"
+
+static func coloredBoldedSanitizedString(string:String, color:Color) -> String: ## Format a string to be colored, bolded, and escaped
+	return "[color=#{color}][b]{string}[/b][/color]".format({
+		string = sanitizeString(string),
+		color = color.to_html(),
+	})
 ### 
 func isSkippable()->bool:
 	return state.skippable
