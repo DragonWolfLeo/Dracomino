@@ -117,9 +117,44 @@ class StateBoardObject: ## Context data for state of board objects
 		loc_id = _loc_id
 		index = _index
 
+	func getLocationContext() -> LocationContext:
+		if isLocation:
+			return LocationContext.getFromId(loc_id)
+		return null
+
 class Streak:
 	var size:int = 0
 	static var NOTABLE_THRESHOLD:int = 4
+
+class LocationContext:
+	signal item_updated(item:NetworkItem)
+	
+	static var cache:Dictionary[int, LocationContext] = {}
+
+	var item:NetworkItem:
+		set(value):
+			if item == value: return
+			item = value
+			if item: item_updated.emit(item)
+
+	static func getFromId(loc_id:int) -> LocationContext: ## Get context from location id
+		if not cache.has(loc_id):
+			cache[loc_id] = LocationContext.new()
+		return cache[loc_id]
+
+	static func getOrCreateFromNetItem(netItem:NetworkItem) -> LocationContext: ## Get or create context from network item
+		# Make context if not existent
+		if not cache.has(netItem.loc_id):
+			cache[netItem.loc_id] = LocationContext.new()
+		# Set net item if it's null
+		if not cache[netItem.loc_id].item:
+			cache[netItem.loc_id].item = netItem
+
+		return cache[netItem.loc_id]
+	
+	static func clearCache() -> void: ## Clear cache for a new seed
+		cache.clear()
+
 
 class PieceContext:
 	var name:StringName
@@ -603,6 +638,7 @@ func newSeedReset():
 	collectedAbilities.clear()
 	allLineLocations.clear()
 	missingPickups.clear()
+	LocationContext.clearCache()
 	if campaign is CampaignContext:
 		campaign.cleanUp()
 		campaign = null
@@ -952,6 +988,8 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		else:
 			conn.refresh_items.connect(_on_newSeed_refresh_items.unbind(1), CONNECT_ONE_SHOT)
 
+		conn.force_scout_all()
+
 	goal = conn.slot_data.get("goal", -1)
 
 	# Set death link
@@ -1090,6 +1128,8 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 					missingPickups.append(loc_id)
 				else:
 					addLocationToCoinCurrency(loc_id)
+			# Scout this
+			conn.scout(loc_id, 0, _on_location_scouted)
 		else:
 			printerr("Got invalid location: id: {id}; name: {name}; You may be running an outdated version of the client!"
 				.format({id=loc_id, name=conn.locations[loc_id].name})
@@ -1238,6 +1278,8 @@ func _on_obtained_item(item: NetworkItem):
 func _on_on_hint_update(hints: Array[NetworkHint]):
 	if Archipelago.conn:
 		for hint:NetworkHint in hints:
+			if hint.item.src_player_id == Archipelago.conn.player_id:
+				LocationContext.getOrCreateFromNetItem(hint.item)
 			if hint.status == NetworkHint.Status.FOUND: continue
 			if hint.item.dest_player_id == Archipelago.conn.player_id:
 				# Only check hints for our abilities
@@ -1378,3 +1420,6 @@ func _on_Board_deathlink_earned(deathContext:DracominoUtil.DeathContext) -> void
 		Archipelago.conn.send_deathlink.call_deferred(msg)
 		notification_signal.emit(msg, CONSTANTS.COLOR.DEATH, true)
 		print(msg, deathContext.category, ": ", contextTags)
+
+func _on_location_scouted(item:NetworkItem) -> void:
+	LocationContext.getOrCreateFromNetItem(item)

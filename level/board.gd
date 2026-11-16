@@ -1429,6 +1429,7 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 							bo.attachTimerAndOffset(syncTimer, line)
 							# Connect signal
 							if ctx.state:
+								bo.attachState(ctx.state)
 								bo.collected.connect(collectBoardObject.bind(ctx.state))
 					# Move into the proper place
 					ctx.node.position = map_to_local(mapCoord)
