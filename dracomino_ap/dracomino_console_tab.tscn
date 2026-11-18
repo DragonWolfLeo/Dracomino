@@ -1,9 +1,9 @@
 [gd_scene load_steps=12 format=3 uid="uid://c1pyfyn3ax5u2"]
 
 [ext_resource type="Script" uid="uid://b84vkudajol4o" path="res://godot_ap/ui/console_container.gd" id="1_1q0y7"]
-[ext_resource type="PackedScene" uid="uid://bwamxuo3s7c8n" path="res://godot_ap/ui/console/plain_console.tscn" id="2_g5swp"]
 [ext_resource type="Script" uid="uid://y5ynaxa4mqhx" path="res://dracomino_ap/dracomino_connection_box.gd" id="2_p51m1"]
 [ext_resource type="PackedScene" uid="uid://hifmj2cuuh1b" path="res://godot_ap/ui/typing_bar.tscn" id="3_yws72"]
+[ext_resource type="Script" uid="uid://ui28oqn7stfd" path="res://dracomino_ap/dracomino_console.gd" id="5_cya21"]
 [ext_resource type="Script" uid="uid://cyc8jkqjagswj" path="res://godot_ap/ui/connect_box.gd" id="5_snpev"]
 [ext_resource type="Script" uid="uid://dtpng2vn6k5jf" path="res://dracomino_ap/console_outline.gd" id="6_cya21"]
 [ext_resource type="Script" uid="uid://cety6nqnci3n6" path="res://godot_ap/ui/updown_lineedit.gd" id="6_qturd"]
@@ -211,16 +211,38 @@ theme_type_variation = &"Console_BG"
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Console" parent="Console/ConsoleBox/ConsoleMargin/ConsoleBG/Row" instance=ExtResource("2_g5swp")]
+[node name="Console" type="Control" parent="Console/ConsoleBox/ConsoleMargin/ConsoleBG/Row" node_paths=PackedStringArray("scroll_cont", "parts_cont")]
+custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
+size_flags_horizontal = 3
 focus_next = NodePath("../../../../../TypingBar")
 focus_previous = NodePath("../../../../../ButtonRow/DisconnectBtn")
+focus_mode = 2
+mouse_filter = 1
+script = ExtResource("5_cya21")
+scroll_cont = NodePath("PanelContainer/ScrollContainer")
+parts_cont = NodePath("PanelContainer/ScrollContainer/PartsContainer")
+spacing = 4
 scroll_to_bottom_on_new_message = true
 
-[node name="PanelContainer" parent="Console/ConsoleBox/ConsoleMargin/ConsoleBG/Row/Console" index="0"]
+[node name="PanelContainer" type="PanelContainer" parent="Console/ConsoleBox/ConsoleMargin/ConsoleBG/Row/Console"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
+theme_type_variation = &"Console_BG"
 
-[node name="PartsContainer" parent="Console/ConsoleBox/ConsoleMargin/ConsoleBG/Row/Console/PanelContainer/ScrollContainer" index="0"]
+[node name="ScrollContainer" type="ScrollContainer" parent="Console/ConsoleBox/ConsoleMargin/ConsoleBG/Row/Console/PanelContainer"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 4
+
+[node name="PartsContainer" type="VBoxContainer" parent="Console/ConsoleBox/ConsoleMargin/ConsoleBG/Row/Console/PanelContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 
 [node name="ConsoleOutline" type="PanelContainer" parent="Console/ConsoleBox/ConsoleMargin" node_paths=PackedStringArray("console")]
@@ -241,5 +263,3 @@ caret_blink = true
 
 [connection signal="pressed" from="Console/ButtonRow/ConnectBtn" to="Console/ConnectBox/Row/Box/Margins/VBox/Content" method="try_connection"]
 [connection signal="pressed" from="Console/ButtonRow/DisconnectBtn" to="Console/ConnectBox/Row/Box/Margins/VBox/Content" method="kill_connection"]
-
-[editable path="Console/ConsoleBox/ConsoleMargin/ConsoleBG/Row/Console"]
