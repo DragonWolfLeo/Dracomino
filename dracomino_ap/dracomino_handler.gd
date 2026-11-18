@@ -68,10 +68,14 @@ class StateItem:
 	var id:int
 	var loc_id:int
 	var sender_id:int
-	var senderName:String = "someone"
+	var senderName:StringName:
+		get:
+			return SeedState.getPlayerName(sender_id)
 	var receiverName:String = "someone"
-	var locationName:String = "somewhere"
-	var gameName:String = "game"
+	var locationName:StringName = "somewhere"
+	var gameName:StringName: ## The game this item came from
+		get:
+			return SeedState.getGameName(sender_id)
 	var classification:StringName = "filler"
 	var isLocal:bool = true
 	var streak:Streak = null
@@ -94,17 +98,15 @@ class StateItem:
 			else "filler"
 		)
 		if Archipelago.conn:
-			si.senderName = Archipelago.conn.get_player_name(netItem.src_player_id)
 			si.receiverName = Archipelago.conn.get_player_name(netItem.dest_player_id)
 			si.locationName = Archipelago.conn.get_gamedata_for_player(netItem.src_player_id).get_loc_name(netItem.loc_id)
-			si.gameName = Archipelago.conn.get_game_for_player(netItem.src_player_id)
 		LocationContext.getOrCreateFromNetItem(netItem).attachStateItem(si)
 		return si
 
 	static func fromId(_id:int) -> StateItem:
 		var si := StateItem.new()
 		si.id = _id
-		si.gameName = "Dracomino"
+		si.sender_id = SeedState.player_id
 		si.locationName = "Debug Command"
 		return si
 
@@ -119,6 +121,69 @@ class StateItem:
 			"trap": return CONSTANTS.COLOR.TRAP
 			"useful": return CONSTANTS.COLOR.USEFUL
 		return CONSTANTS.COLOR.FILLER
+
+	func toDictionary() -> Dictionary[StringName, Variant]: ## Convert to dictionary for saving
+		var dict:Dictionary[StringName, Variant] = {
+			id = id,
+			loc_id = loc_id,
+			sender_id = sender_id,
+			locationName = locationName,
+			used = used,
+			usedTrapLink = usedTrapLink,
+		}
+		return dict
+
+	static func fromDictionary(dict:Dictionary) -> StateItem: ## Rebuild a state item from save data
+		var si := StateItem.new()
+		si.id = int(dict.get("id", 0))
+		si.loc_id = int(dict.get("loc_id", 0))
+		si.sender_id = int(dict.get("sender_id", 0))
+		si.locationName = str(dict.get("locationName", "Somewhere"))
+		si.used = bool(dict.get("used", false))
+		si.usedTrapLink = bool(dict.get("usedTrapLink", false))
+		si.isLocal = (si.sender_id == SeedState.player_id) or (si.sender_id == 0)
+		return si
+
+class SeedState:
+	static var player_id:int
+	static var playerNames:Array[StringName]
+	static var gameNames:Array[StringName]
+
+	static func sync(conn:ConnectionInfo) -> void: ## Populate with player names and their games' names
+		playerNames.clear()
+		gameNames.clear()
+		if conn:
+			player_id = conn.player_id
+			for i:int in range(conn.players.size()):
+				var player:NetworkPlayer = conn.players[i]
+				assert(i == player.slot)
+				playerNames[i] = player.get_name()
+				gameNames[i] = conn.get_game_for_player(i)
+	
+	static func addToSaveData(data:Dictionary) -> void:
+		data["player_id"] = player_id
+		data["playerNames"] = playerNames.duplicate()
+		data["gameNames"] = gameNames.duplicate()
+
+	static func loadFromSaveData(data:Dictionary) -> void:
+		player_id = int(data.get("player_id", 0))
+		playerNames.clear()
+		gameNames.clear()
+		if data.get("playerNames") is Array:
+			playerNames.append_array((data["playerNames"] as Array).map(str))
+		if data.get("gameNames") is Array:
+			gameNames.append_array((data["gameNames"] as Array).map(str))
+
+	static func getPlayerName(slotNum:int) -> StringName:
+		if playerNames.size() < slotNum:
+			return playerNames[slotNum]
+		return "Someone"
+
+	static func getGameName(slotNum:int) -> StringName:
+		if gameNames.size() < slotNum:
+			return gameNames[slotNum]
+		return "Game"
+
 
 class StateBoardObject: ## Context data for state of board objects
 	var loc_id:int = 0 ## Corresponding location id for this object, or 0 for non-location objects
@@ -665,11 +730,11 @@ func newSeedReset():
 	victory = false
 	collectedItems.clear()
 	missingLocations.clear()
-	missingLines.clear()
+	# missingLines.clear() # TODO: Redundant
 	checkedLocations.clear()
 	collectedAbilities.clear()
-	allLineLocations.clear()
-	missingPickups.clear()
+	# allLineLocations.clear() # TODO: Redundant
+	# missingPickups.clear() # TODO: Redundant
 	LocationContext.clearCache()
 	if campaign is CampaignContext:
 		campaign.cleanUp()
@@ -683,6 +748,34 @@ func newSeedReset():
 	color_randomSaveState = color_random.state
 	rotate_random.seed = slotContextHash+1
 	rotate_randomSaveState = rotate_random.state
+
+func addToSaveData(data:Dictionary) -> void: ## Record state to dictionary to save to json file
+	SeedState.addToSaveData(data)
+	data["slotContextHash"] = slotContextHash
+	data["victory"] = victory
+	data["collectedItems"] = []
+	for si:StateItem in collectedItems:
+		data["collectedItems"].append(si.toDictionary())
+	data["missingLocations"] = DracominoUtil.setToArray(missingLocations)
+	data["checkedLocations"] = DracominoUtil.setToArray(checkedLocations)
+
+func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json dictionary
+	slotContextHash = int(data.get("slotContextHash", 0))
+	SeedState.loadFromSaveData(data)
+	newSeedReset()
+	victory = data.get("victory", false)
+	collectedItems.clear()
+	if data.get("collectedItems") is Array:
+		for dict:Variant in data["collectedItems"]:
+			if dict is Dictionary:
+				collectedItems.append(StateItem.fromDictionary(dict))
+	missingLocations.clear()
+	missingLines.clear()
+	missingPickups.clear()
+	if data.get("missingLocations") is Array:
+		missingLocations.merge(DracominoUtil.arrayToIntSet(data["missingLocations"]))
+	if data.get("checkedLocations") is Array:
+		checkedLocations.merge(DracominoUtil.arrayToIntSet(data["checkedLocations"]))
 
 func resetSeedFlagHolder():
 	if seedFlagHolder: seedFlagHolder.queue_free()

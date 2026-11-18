@@ -573,7 +573,7 @@ func requestPiece(allowMultiplePieces:bool = false):
 	if poppedPiece:
 		print("Spawned {pieceName} from {sender}'s {location} in {game}".format({
 			pieceName = poppedPiece.prettyName,
-			sender = "self" if poppedPiece.stateItem.isLocal else poppedPiece.stateItem.senderName,
+			sender = "self" if poppedPiece.stateItem.isLocal else str(poppedPiece.stateItem.senderName),
 			location = poppedPiece.stateItem.locationName,
 			game = poppedPiece.stateItem.gameName,
 		}))
