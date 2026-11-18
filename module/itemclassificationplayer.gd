@@ -10,22 +10,13 @@ extends AnimationPlayer
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
 	
-func _on_locationContext_updated(item:NetworkItem) -> void:
+func _on_locationContext_updated(loc_ctx:DracominoHandler.LocationContext) -> void:
+	var item:DracominoHandler.StateItem = loc_ctx.item
 	if not item:
 		return
-	var loc_ctx:DracominoHandler.LocationContext = DracominoHandler.LocationContext.getOrCreateFromNetItem(item)
-	var isProgression:bool = item.is_prog()
-	var isTrap:bool = item.flags & AP.ItemClassification.TRAP
-	var isUseful:bool = item.flags & AP.ItemClassification.USEFUL
-	var isHinted = loc_ctx.hinted if loc_ctx else false
-	# Make traps look like progression
-	if isTrap and not isHinted:
-		isProgression = true
-	play(
-		progusefulAnimationName if isProgression and isUseful
-		else progressionAnimationName if isProgression
-		else usefulAnimationName if isUseful
-		else trapAnimationName if isTrap
-		else nothingAnimationName if item.get_name() == "Nothing"
-		else defaultAnimationName
-	)
+	match item.classification:
+		&"proguseful": play(progusefulAnimationName)
+		&"progression": play(progressionAnimationName)
+		&"useful": play(usefulAnimationName)
+		&"trap": play(trapAnimationName if loc_ctx.hinted else progressionAnimationName)
+		_: play(nothingAnimationName if item.id == -1 else defaultAnimationName)

@@ -225,10 +225,8 @@ func fillLineClearContext() -> void: ## Fill format values with line location co
 
 func fillLocationContextFromLocationId(loc_id:int) -> void: ## Fill format values with location context from id
 	if loc_id > 0:
-		var ctx:DracominoHandler.LocationContext = DracominoHandler.LocationContext.getFromId(loc_id)
-		var si:DracominoHandler.StateItem = ctx.stateItem
-		if si == null and ctx.item is NetworkItem:
-			si = DracominoHandler.StateItem.fromNetworkItem(ctx.item)
+		var loc_ctx:DracominoHandler.LocationContext = DracominoHandler.LocationContext.getFromId(loc_id)
+		var si:DracominoHandler.StateItem = loc_ctx.item
 		fillStateItemContext(si)
 		return
 	fillStateItemContext()

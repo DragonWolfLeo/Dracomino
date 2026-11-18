@@ -18,18 +18,18 @@ var state:DracominoHandler.StateBoardObject:
 		if state:
 			var loc_ctx:DracominoHandler.LocationContext = state.getLocationContext()
 			if loc_ctx:
-				if loc_ctx.item_updated.is_connected(locationContext_updated.emit):
-					loc_ctx.item_updated.disconnect(locationContext_updated.emit)
+				if loc_ctx.updated.is_connected(locationContext_updated.emit):
+					loc_ctx.updated.disconnect(locationContext_updated.emit)
 		state = value
 		if state:
 			var loc_ctx:DracominoHandler.LocationContext = state.getLocationContext()
 			if loc_ctx:
-				if not loc_ctx.item_updated.is_connected(locationContext_updated.emit):
-					loc_ctx.item_updated.connect(locationContext_updated.emit)
-				if loc_ctx.item: locationContext_updated.emit(loc_ctx.item)
+				if not loc_ctx.updated.is_connected(locationContext_updated.emit):
+					loc_ctx.updated.connect(locationContext_updated.emit.bind(loc_ctx))
+				if loc_ctx.item: locationContext_updated.emit(loc_ctx)
 
 signal collected()
-signal locationContext_updated(netItem:NetworkItem)
+signal locationContext_updated(loc_ctx:DracominoHandler.LocationContext)
 
 func attachTimerAndOffset(timer:ActivityTimer, offset:float) -> void: ## Pass anim sync setup to AnimationSyncConfig
 	if animSync:

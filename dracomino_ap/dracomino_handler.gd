@@ -68,45 +68,64 @@ class StateItem:
 	var id:int
 	var loc_id:int
 	var sender_id:int
+	var receiver_id:int
 	var senderName:StringName:
 		get:
 			return SeedState.getPlayerName(sender_id)
-	var receiverName:String = "someone"
+	var receiverName:StringName:
+		get:
+			return SeedState.getPlayerName(receiver_id)
 	var locationName:StringName = "somewhere"
 	var gameName:StringName: ## The game this item came from
 		get:
 			return SeedState.getGameName(sender_id)
-	var classification:StringName = "filler"
-	var isLocal:bool = true
+	var flags:int
+	var classification:StringName:
+		get:
+			if (flags & AP.ItemClassification.PROG) and (flags & AP.ItemClassification.USEFUL):
+				return "proguseful"
+			if flags & AP.ItemClassification.PROG:
+				return "progression"
+			if flags & AP.ItemClassification.TRAP:
+				return "trap" 
+			if flags & AP.ItemClassification.USEFUL:
+				return "useful"
+			return "filler"
+	var isLocal:bool:
+		get:
+			return (sender_id == 0) or (sender_id == receiver_id)
 	var streak:Streak = null
 	var used:bool = false ## Set to true when used as an effect, to prevent using again
 	var usedTrapLink:bool = false ## Set to true to avoid sending to trap link again
 	var data:CONSTANTS.ItemData:
 		get:
 			return CONSTANTS.ITEMS.get(id)
-	static func fromNetworkItem(netItem:NetworkItem) -> StateItem:
-		var si := StateItem.new()
-		si.id = netItem.id
-		si.loc_id = netItem.loc_id
-		si.sender_id = netItem.src_player_id
-		si.isLocal = netItem.src_player_id == 0 or netItem.is_local()
-		si.classification = (
-			"proguseful" if netItem.is_prog() and (netItem.flags & AP.ItemClassification.USEFUL)
-			else "progression" if netItem.is_prog()
-			else "trap" if netItem.flags & AP.ItemClassification.TRAP
-			else "useful" if netItem.flags & AP.ItemClassification.USEFUL
-			else "filler"
-		)
-		if Archipelago.conn:
-			si.receiverName = Archipelago.conn.get_player_name(netItem.dest_player_id)
-			si.locationName = Archipelago.conn.get_gamedata_for_player(netItem.src_player_id).get_loc_name(netItem.loc_id)
-		LocationContext.getOrCreateFromNetItem(netItem).attachStateItem(si)
+	static func fromNetworkItem(netItem:NetworkItem) -> StateItem: ## Get existing state item from location context, or create it if it doesn't exist
+		var si:StateItem
+		var loc_ctx:LocationContext
+		# Only create location context of unique locations (not starting inventory or cheat console)
+		if netItem.loc_id > 0:
+			loc_ctx = LocationContext.getOrCreateFromId(netItem.loc_id)
+			si = loc_ctx.item
+		# Create state item if nonexistent
+		if si is not StateItem:
+			si = StateItem.new()
+			si.id = netItem.id
+			si.loc_id = netItem.loc_id
+			si.sender_id = netItem.src_player_id
+			si.receiver_id = netItem.dest_player_id
+			si.flags = netItem.flags
+			if Archipelago.conn:
+				si.locationName = Archipelago.conn.get_gamedata_for_player(netItem.src_player_id).get_loc_name(netItem.loc_id)
+			if loc_ctx:
+				loc_ctx.item = si
 		return si
 
 	static func fromId(_id:int) -> StateItem:
 		var si := StateItem.new()
 		si.id = _id
 		si.sender_id = SeedState.player_id
+		si.receiver_id = SeedState.player_id
 		si.locationName = "Debug Command"
 		return si
 
@@ -127,7 +146,9 @@ class StateItem:
 			id = id,
 			loc_id = loc_id,
 			sender_id = sender_id,
+			receiver_id = receiver_id,
 			locationName = locationName,
+			flags = flags,
 			used = used,
 			usedTrapLink = usedTrapLink,
 		}
@@ -138,27 +159,26 @@ class StateItem:
 		si.id = int(dict.get("id", 0))
 		si.loc_id = int(dict.get("loc_id", 0))
 		si.sender_id = int(dict.get("sender_id", 0))
+		si.receiver_id = int(dict.get("receiver_id", 0))
 		si.locationName = str(dict.get("locationName", "Somewhere"))
+		si.flags = int(dict.get("flags", 0))
 		si.used = bool(dict.get("used", false))
 		si.usedTrapLink = bool(dict.get("usedTrapLink", false))
-		si.isLocal = (si.sender_id == SeedState.player_id) or (si.sender_id == 0)
 		return si
 
 class SeedState:
 	static var player_id:int
-	static var playerNames:Array[StringName]
-	static var gameNames:Array[StringName]
+	static var playerNames:Dictionary[int, StringName]
+	static var gameNames:Dictionary[int, StringName]
 
-	static func sync(conn:ConnectionInfo) -> void: ## Populate with player names and their games' names
+	static func syncWithAP(conn:ConnectionInfo) -> void: ## Populate with player names and their games' names
 		playerNames.clear()
 		gameNames.clear()
 		if conn:
 			player_id = conn.player_id
-			for i:int in range(conn.players.size()):
-				var player:NetworkPlayer = conn.players[i]
-				assert(i == player.slot)
-				playerNames[i] = player.get_name()
-				gameNames[i] = conn.get_game_for_player(i)
+			for player:NetworkPlayer in conn.players:
+				playerNames[player.slot] = player.get_name()
+				gameNames[player.slot] = conn.get_game_for_player(player.slot)
 	
 	static func addToSaveData(data:Dictionary) -> void:
 		data["player_id"] = player_id
@@ -169,20 +189,18 @@ class SeedState:
 		player_id = int(data.get("player_id", 0))
 		playerNames.clear()
 		gameNames.clear()
-		if data.get("playerNames") is Array:
-			playerNames.append_array((data["playerNames"] as Array).map(str))
-		if data.get("gameNames") is Array:
-			gameNames.append_array((data["gameNames"] as Array).map(str))
+		if data.get("playerNames") is Dictionary:
+			for k:Variant in data["playerNames"].keys():
+				playerNames[int(k)] = str(data["playerNames"][k])
+		if data.get("gameNames") is Dictionary:
+			for k:Variant in data["gameNames"].keys():
+				gameNames[int(k)] = str(data["gameNames"][k])
 
 	static func getPlayerName(slotNum:int) -> StringName:
-		if playerNames.size() < slotNum:
-			return playerNames[slotNum]
-		return "Someone"
+		return playerNames.get(slotNum, "Someone")
 
 	static func getGameName(slotNum:int) -> StringName:
-		if gameNames.size() < slotNum:
-			return gameNames[slotNum]
-		return "Game"
+		return gameNames.get(slotNum, "Game")
 
 
 class StateBoardObject: ## Context data for state of board objects
@@ -203,7 +221,7 @@ class StateBoardObject: ## Context data for state of board objects
 
 	func getLocationContext() -> LocationContext:
 		if isLocation:
-			return LocationContext.getFromId(loc_id)
+			return LocationContext.getOrCreateFromId(loc_id)
 		return null
 
 class Streak:
@@ -211,25 +229,27 @@ class Streak:
 	static var NOTABLE_THRESHOLD:int = 4
 
 class LocationContext:
-	signal item_updated(item:NetworkItem)
+	signal updated()
 	
 	static var cache:Dictionary[int, LocationContext] = {}
 	static var lastLineLocation:int
 	static var lastBoardObjectLocation:int
 
-	var stateItem:StateItem
-	var item:NetworkItem:
+	var item:StateItem:
 		set(value):
 			if item == value: return
 			item = value
-			if item: item_updated.emit(item)
+			if item: updated.emit()
 	var hinted:bool = false:
 		set(value):
 			if hinted == value: return
 			hinted = value
-			if hinted and item: item_updated.emit(item)
+			if hinted and item: updated.emit()
 
 	static func getFromId(loc_id:int) -> LocationContext: ## Get context from location id
+		return cache.get(loc_id)
+
+	static func getOrCreateFromId(loc_id:int) -> LocationContext: ## Get or create context from location id
 		if not cache.has(loc_id):
 			cache[loc_id] = LocationContext.new()
 		return cache[loc_id]
@@ -238,9 +258,9 @@ class LocationContext:
 		# Make context if not existent
 		if not cache.has(netItem.loc_id):
 			cache[netItem.loc_id] = LocationContext.new()
-		# Set net item if it's null
+		# Set item if it's null
 		if not cache[netItem.loc_id].item:
-			cache[netItem.loc_id].item = netItem
+			cache[netItem.loc_id].item = StateItem.fromNetworkItem(netItem)
 
 		return cache[netItem.loc_id]
 	
@@ -249,9 +269,8 @@ class LocationContext:
 		lastLineLocation = 0
 		lastBoardObjectLocation = 0
 
-	func attachStateItem(si:StateItem) -> LocationContext:
-		stateItem = si
-		return self
+	static func hasLocationId(loc_id:int) -> bool: ## Is location id in the cache?
+		return cache.has(loc_id)
 
 class PieceContext:
 	var name:StringName
@@ -1076,6 +1095,9 @@ func addLocationToCoinCurrency(loc_id): ## Add coins to currency (be careful not
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	isJustConnected = true
 	get_tree().create_timer(2, true).timeout.connect(set.bind("isJustConnected", false))
+
+	# Sync player and game names with seed state
+	SeedState.syncWithAP(conn)
 	
 	# Connect signals
 	conn.deathlink.connect(_on_deathlink)
