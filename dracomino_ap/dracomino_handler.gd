@@ -94,6 +94,9 @@ class StateItem:
 	var isLocal:bool:
 		get:
 			return (sender_id == 0) or (sender_id == receiver_id)
+	var locationLocal:bool:
+		get:
+			return sender_id == SeedState.player_id
 	var streak:Streak = null
 	var used:bool = false ## Set to true when used as an effect, to prevent using again
 	var usedTrapLink:bool = false ## Set to true to avoid sending to trap link again
@@ -103,8 +106,8 @@ class StateItem:
 	static func fromNetworkItem(netItem:NetworkItem) -> StateItem: ## Get existing state item from location context, or create it if it doesn't exist
 		var si:StateItem
 		var loc_ctx:LocationContext
-		# Only create location context of unique locations (not starting inventory or cheat console)
-		if netItem.loc_id > 0:
+		# Only create location context of unique locations in this slot
+		if netItem.loc_id > 0 and (netItem.src_player_id == SeedState.player_id):
 			loc_ctx = LocationContext.getOrCreateFromId(netItem.loc_id)
 			si = loc_ctx.item
 		# Create state item if nonexistent
@@ -147,23 +150,58 @@ class StateItem:
 			loc_id = loc_id,
 			sender_id = sender_id,
 			receiver_id = receiver_id,
-			locationName = locationName,
 			flags = flags,
-			used = used,
-			usedTrapLink = usedTrapLink,
 		}
+		if not locationLocal:
+			dict["locationName"] = locationName
+		else:
+			dict["used"] = used
+			dict["usedTrapLink"] = usedTrapLink
 		return dict
 
-	static func fromDictionary(dict:Dictionary) -> StateItem: ## Rebuild a state item from save data
-		var si := StateItem.new()
+	static func fromDictionary(dict:Dictionary) -> StateItem: ## Rebuild a state item from save data. Do this after loading location context cache!
+		var si:StateItem
+		var dict_loc_id:int = int(dict.get("loc_id", 0))
+		var dict_sender_id:int = int(dict.get("sender_id", 0))
+		# Get from location context cache first
+		if dict_sender_id == SeedState.player_id and LocationContext.getFromId(dict_loc_id):
+			si = LocationContext.getFromId(dict_loc_id).item
+		if si is not StateItem:
+			si = StateItem.new()
 		si.id = int(dict.get("id", 0))
 		si.loc_id = int(dict.get("loc_id", 0))
 		si.sender_id = int(dict.get("sender_id", 0))
 		si.receiver_id = int(dict.get("receiver_id", 0))
 		si.locationName = str(dict.get("locationName", "Somewhere"))
+		if si.locationLocal:
+			var loc_data:CONSTANTS.LocationData = CONSTANTS.LOCATIONS.get(si.loc_id)
+			if loc_data is CONSTANTS.LocationData:
+				si.locationName = loc_data.prettyName
 		si.flags = int(dict.get("flags", 0))
 		si.used = bool(dict.get("used", false))
 		si.usedTrapLink = bool(dict.get("usedTrapLink", false))
+		return si
+
+	func toLocationContextDictionary() -> Dictionary[StringName, Variant]: ## Convert to dictionary for saving location context
+		var dict:Dictionary[StringName, Variant] = {
+			id = id,
+			receiver_id = receiver_id,
+			flags = flags,
+		}
+		return dict
+	
+	static func fromLocationContextDictionary(dict:Dictionary, _loc_id:int) -> StateItem: ## Rebuild a state item from location context save data
+		var si := StateItem.new()
+		si.id = int(dict.get("id", 0))
+		si.loc_id = _loc_id
+		si.sender_id = SeedState.player_id
+		si.receiver_id = int(dict.get("receiver_id", 0))
+		var loc_data:CONSTANTS.LocationData = CONSTANTS.LOCATIONS.get(_loc_id)
+		if loc_data is CONSTANTS.LocationData:
+			si.locationName = loc_data.prettyName
+		else:
+			si.locationName = "Somewhere"
+		si.flags = int(dict.get("flags", 0))
 		return si
 
 class SeedState:
@@ -181,20 +219,24 @@ class SeedState:
 				gameNames[player.slot] = conn.get_game_for_player(player.slot)
 	
 	static func addToSaveData(data:Dictionary) -> void:
-		data["player_id"] = player_id
-		data["playerNames"] = playerNames.duplicate()
-		data["gameNames"] = gameNames.duplicate()
+		data["seedState"] = {
+			player_id = player_id,
+			playerNames = playerNames.duplicate(),
+			gameNames = gameNames.duplicate(),
+		}
 
 	static func loadFromSaveData(data:Dictionary) -> void:
-		player_id = int(data.get("player_id", 0))
-		playerNames.clear()
-		gameNames.clear()
-		if data.get("playerNames") is Dictionary:
-			for k:Variant in data["playerNames"].keys():
-				playerNames[int(k)] = str(data["playerNames"][k])
-		if data.get("gameNames") is Dictionary:
-			for k:Variant in data["gameNames"].keys():
-				gameNames[int(k)] = str(data["gameNames"][k])
+		var seedData:Variant = data.get("seedState")
+		if seedData is Dictionary:
+			player_id = int(seedData.get("player_id", 0))
+			playerNames.clear()
+			gameNames.clear()
+			if seedData.get("playerNames") is Dictionary:
+				for k:Variant in seedData["playerNames"].keys():
+					playerNames[int(k)] = str(seedData["playerNames"][k])
+			if seedData.get("gameNames") is Dictionary:
+				for k:Variant in seedData["gameNames"].keys():
+					gameNames[int(k)] = str(seedData["gameNames"][k])
 
 	static func getPlayerName(slotNum:int) -> StringName:
 		return playerNames.get(slotNum, "Someone")
@@ -271,6 +313,28 @@ class LocationContext:
 
 	static func hasLocationId(loc_id:int) -> bool: ## Is location id in the cache?
 		return cache.has(loc_id)
+	
+	static func addToSaveData(data:Dictionary) -> void: ## Save the location context cache to a dictionary
+		data["locationInfo"] = {} as Dictionary[int, Dictionary]
+		for loc_id:int in cache.keys():
+			if CONSTANTS.LOCATIONS.has(loc_id):
+				var loc_ctx:LocationContext = cache[loc_id]
+				data["locationInfo"][loc_id] = {
+					hinted = loc_ctx.hinted
+				}
+				if loc_ctx.item:
+					data["locationInfo"][loc_id]["item"] = loc_ctx.item.toLocationContextDictionary()
+
+	static func loadFromSaveData(data:Dictionary) -> void: ## Load the location context cache from a dictionary
+		clearCache()
+		var locationInfo:Variant = data.get("locationInfo")
+		if locationInfo is Dictionary:
+			for loc_id:Variant in locationInfo.keys():
+				var loc_ctx:LocationContext = getOrCreateFromId(int(loc_id))
+				loc_ctx.hinted = bool(locationInfo[loc_id].get("hinted", false))
+				if locationInfo[loc_id].get("item") is Dictionary:
+					loc_ctx.item = StateItem.fromLocationContextDictionary(locationInfo[loc_id]["item"], int(loc_id))
+
 
 class PieceContext:
 	var name:StringName
@@ -702,6 +766,12 @@ func _ready() -> void:
 	# Add Dracomino specific commands
 	DracominoCommandManager.addCommand("GETITEM", giveItemCommand).setArgHint("name")
 	DracominoCommandManager.addCommand("TRIGGEREFFECT", triggerEffectCommand).setArgHint("name").setInvisible()
+	DracominoCommandManager.addCommand("SAVE", func(_a):
+		UserData.saveDataToFile(addToSaveData(), "user://testsave.json")
+	)
+	DracominoCommandManager.addCommand("LOAD", func(_a):
+		loadFromSaveData(UserData.loadDataFromFile("user://testsave.json"))
+	)
 
 	# Set up trap link signal
 	SignalBus.getSignal("stateflag_set", "trap_link").connect(Archipelago.set_traplink.bind(true))
@@ -749,11 +819,8 @@ func newSeedReset():
 	victory = false
 	collectedItems.clear()
 	missingLocations.clear()
-	# missingLines.clear() # TODO: Redundant
 	checkedLocations.clear()
 	collectedAbilities.clear()
-	# allLineLocations.clear() # TODO: Redundant
-	# missingPickups.clear() # TODO: Redundant
 	LocationContext.clearCache()
 	if campaign is CampaignContext:
 		campaign.cleanUp()
@@ -768,33 +835,40 @@ func newSeedReset():
 	rotate_random.seed = slotContextHash+1
 	rotate_randomSaveState = rotate_random.state
 
-func addToSaveData(data:Dictionary) -> void: ## Record state to dictionary to save to json file
+func addToSaveData(data:Dictionary = {}) -> Dictionary: ## Record state to dictionary to save to json file
 	SeedState.addToSaveData(data)
 	data["slotContextHash"] = slotContextHash
 	data["victory"] = victory
+	LocationContext.addToSaveData(data)
 	data["collectedItems"] = []
 	for si:StateItem in collectedItems:
 		data["collectedItems"].append(si.toDictionary())
 	data["missingLocations"] = DracominoUtil.setToArray(missingLocations)
 	data["checkedLocations"] = DracominoUtil.setToArray(checkedLocations)
+	data["stateFlags"] = seedFlagHolder.stateFlags.duplicate()
+	return data
 
 func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json dictionary
+	isJustConnected = true
+	get_tree().create_timer(2, true).timeout.connect(set.bind("isJustConnected", false))
 	slotContextHash = int(data.get("slotContextHash", 0))
 	SeedState.loadFromSaveData(data)
 	newSeedReset()
 	victory = data.get("victory", false)
-	collectedItems.clear()
+	LocationContext.loadFromSaveData(data)
 	if data.get("collectedItems") is Array:
 		for dict:Variant in data["collectedItems"]:
 			if dict is Dictionary:
-				collectedItems.append(StateItem.fromDictionary(dict))
-	missingLocations.clear()
-	missingLines.clear()
-	missingPickups.clear()
+				giveItem(StateItem.fromDictionary(dict))
 	if data.get("missingLocations") is Array:
 		missingLocations.merge(DracominoUtil.arrayToIntSet(data["missingLocations"]))
 	if data.get("checkedLocations") is Array:
 		checkedLocations.merge(DracominoUtil.arrayToIntSet(data["checkedLocations"]))
+	if data.get("stateFlags") is Dictionary:
+		seedFlagHolder.stateFlags = data["stateFlags"]
+
+	_connectSignalsToCampaign()
+		
 
 func resetSeedFlagHolder():
 	if seedFlagHolder: seedFlagHolder.queue_free()
@@ -1091,6 +1165,12 @@ func triggerEffect(stateItem:StateItem, context:Array[StringName] = []) -> bool:
 func addLocationToCoinCurrency(loc_id): ## Add coins to currency (be careful not to use line locations here)
 	seedFlagHolder.count("coins", "coin_%s"%loc_id, 1)
 
+#===== Private Functions =====
+func _connectSignalsToCampaign() -> void:
+	if campaign:
+		lineMappings_updated.connect(campaign._on_DracominoHandler_lineMappings_updated)
+		gotLines_updated.connect(campaign._on_DracominoHandler_gotLines_updated)
+
 #===== Events =====
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
 	isJustConnected = true
@@ -1181,9 +1261,8 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		# Make a classic campaign if there isn't one
 		if campaign == null:	
 			campaign = CampaignContext.ClassicCampaign(goal)
-
-		lineMappings_updated.connect(campaign._on_DracominoHandler_lineMappings_updated)
-		gotLines_updated.connect(campaign._on_DracominoHandler_gotLines_updated)
+		
+		_connectSignalsToCampaign()
 
 	# Check if there were errors before aborting this load
 	if campaign.errors.size():
