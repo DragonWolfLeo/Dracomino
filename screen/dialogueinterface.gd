@@ -64,12 +64,12 @@ func _ready():
 	DialogueManager.speaker_updated.connect(updatePortrait)
 	SignalBus.getSignal("stateflag_set","game_focus").connect(set.bind("_was_focused", true), CONNECT_DEFERRED)
 	SignalBus.getSignal("stateflag_cleared","game_focus").connect(set.bind("_was_focused", false), CONNECT_DEFERRED)
-	DracominoCommandManager.addCommand("ALIGNLEFT", setSpeakerAlignment.bind(1), true).setArgHint("speaker")
-	DracominoCommandManager.addCommand("ALIGNRIGHT", setSpeakerAlignment.bind(-1), true).setArgHint("speaker")
-	DracominoCommandManager.addSignalCommand("CONTINUE")
-	DracominoCommandManager.addCommand("FILLBOARDOBJECTCONTEXT", fillBoardObjectContext.unbind(1), true)
-	DracominoCommandManager.addCommand("FILLLINECLEARCONTEXT", fillLineClearContext.unbind(1), true)
-	DracominoCommandManager.addCommand("FILLITEMCONTEXT", fillCollectedItemContextByName, true)
+	DracominoCommandManager.addCommand("ALIGNLEFT", setSpeakerAlignment.bind(1), true).bind(self).setArgHint("speaker")
+	DracominoCommandManager.addCommand("ALIGNRIGHT", setSpeakerAlignment.bind(-1), true).bind(self).setArgHint("speaker")
+	DracominoCommandManager.addSignalCommand("CONTINUE").bind(self)
+	DracominoCommandManager.addCommand("FILLBOARDOBJECTCONTEXT", fillBoardObjectContext.unbind(1), true).bind(self)
+	DracominoCommandManager.addCommand("FILLLINECLEARCONTEXT", fillLineClearContext.unbind(1), true).bind(self)
+	DracominoCommandManager.addCommand("FILLITEMCONTEXT", fillCollectedItemContextByName, true).bind(self)
 
 
 	DracominoCommandManager.COMMANDS["CONTINUE"].command_activated.connect(_on_continue_command)

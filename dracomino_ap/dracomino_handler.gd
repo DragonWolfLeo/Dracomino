@@ -616,8 +616,8 @@ func _ready() -> void:
 	add_child(effectHandler)
 
 	# Add Dracomino specific commands
-	DracominoCommandManager.addCommand("GETITEM", giveItemCommand).setArgHint("name")
-	DracominoCommandManager.addCommand("TRIGGEREFFECT", triggerEffectCommand).setArgHint("name").setInvisible()
+	DracominoCommandManager.addCommand("GETITEM", giveItemCommand).bind(self).setArgHint("name")
+	DracominoCommandManager.addCommand("TRIGGEREFFECT", triggerEffectCommand).bind(self).setArgHint("name").setInvisible()
 
 	# Set up trap link signal
 	SignalBus.getSignal("stateflag_set", "trap_link").connect(Archipelago.set_traplink.bind(true))
