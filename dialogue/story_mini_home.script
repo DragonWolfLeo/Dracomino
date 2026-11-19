@@ -83,6 +83,7 @@ Mini (cute): Heh, oh well. If all you have to do is put these together, I'm sure
 [Announce All nuggets collected!]
 Mini (cute): Yay! I got everything picked up! Nice and tidy!
 [End if storycontext_foundweb]
+[End if storycontext_clearedallwebs]
 [GotoState discoverweb]
 
 /////////////////////////////////////
@@ -95,6 +96,7 @@ Mini (cute): I'm glad I figured out how to rotate stuff. That came in very handy
 Mini (uncomfortable): Though, it was pretty hard to line up all those blocks. If only I could [b]rotate[/b] them somehow.
 [always]
 [End if storycontext_foundweb]
+[End if storycontext_clearedallwebs]
 [GotoState discoverweb]
 
 /////////////////////////////////////
