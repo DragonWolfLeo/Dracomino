@@ -40,6 +40,7 @@ class DialogueState:
 
 var TEXT_SPEED = 0.015
 var IMAGEOVERLAY_SHIFT := Vector2(128, 0)
+var CONTINUE_DELAY:float = 0.3
 	
 var dialogue:Dialogue:
 	get:
@@ -121,7 +122,6 @@ func updateDialogue(line):
 	# if line.body:
 	updatePortrait(line.speaker, line.expression)
 	panelDelayTimer.start()
-	SoundManager.play("progressdialogue")
 
 func completeDialoguePrint():
 	dialogueLabel.visible_characters = -1
@@ -313,6 +313,7 @@ func _gui_input(_event: InputEvent):
 			_was_focused = true
 		elif state.textPrintDone:
 			if panelDelayTimer.is_stopped():
+				SoundManager.play("progressdialogue")
 				dialogue.proceedDialogue()
 			else:
 				panelDelayTimer.stop()
@@ -352,4 +353,11 @@ func _on_ChoiceLabel_pressed(data):
 
 func _on_continue_command():
 	if state and dialogue:
-		state.text_print_done.connect(dialogue.proceedDialogue, CONNECT_ONE_SHOT)
+		state.text_print_done.connect(_autoProceed, CONNECT_ONE_SHOT)
+
+var _autoProceedTween:Tween
+func _autoProceed() -> void:
+	if _autoProceedTween:
+		_autoProceedTween.kill()
+	_autoProceedTween = dialogue.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_autoProceedTween.tween_callback(dialogue.proceedDialogue).set_delay(CONTINUE_DELAY)
