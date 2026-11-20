@@ -52,6 +52,8 @@ var LINE_THRESHOLD_FOR_NO_ROTATE_DEATH_CONTEXT:int = 8 ## For death context
 var _canUseDeathContext_NO_ROTATE:bool = false ## For death context
 var _energySendBuffer:int = 0 ## Energy to send to server when reconnecting
 var _effectBuffer:Array[StateItem] = [] ## Next traps to apply to next pieces
+var _obtainedItemNum:int ## Number of items received from server
+var _obtainedItemIndex:int ## Index of current item being sent from server
 
 signal lineMappings_updated(mappings:Dictionary[int, int])
 signal gotLines_updated(_gotLines:Dictionary[int, bool])
@@ -764,8 +766,8 @@ func _ready() -> void:
 	add_child(effectHandler)
 
 	# Add Dracomino specific commands
-	DracominoCommandManager.addCommand("GETITEM", giveItemCommand).setArgHint("name")
-	DracominoCommandManager.addCommand("TRIGGEREFFECT", triggerEffectCommand).setArgHint("name").setInvisible()
+	DracominoCommandManager.addCommand("GETITEM", giveItemCommand).bind(self).setArgHint("name")
+	DracominoCommandManager.addCommand("TRIGGEREFFECT", triggerEffectCommand).bind(self).setArgHint("name").setInvisible()
 	DracominoCommandManager.addCommand("SAVE", func(_a):
 		UserData.saveDataToFile(addToSaveData(), "user://testsave.json")
 	)
@@ -827,6 +829,8 @@ func newSeedReset():
 		campaign = null
 	
 	seedFlagHolder.count("lines_cleared", "starting_line", 0)
+	seedFlagHolder.count("shapes_left", "collected", 0)
+	seedFlagHolder.count("total_aether_value", "collected", 0)
 	hintedRotateAbilities.clear()
 	resetSeedFlagHolder()
 	# Reset randoms
@@ -1310,10 +1314,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		seedFlagHolder.clearFlag("randomize_orientations")
 
 	# Reset collected items
-	seedFlagHolder.count("shapes_left", "collected", 0)
-	seedFlagHolder.count("total_aether_value", "collected", 0)
-	collectedItems.clear()
-	collectedAbilities.clear()
+	_obtainedItemIndex = 0 # Reset index because items are going to be sent again
 	allLineLocations.clear()
 	boardObjects.clear()
 	missingLines.clear()
@@ -1485,6 +1486,12 @@ func _on_traplink(source: String, trapname: String, json: Dictionary):
 func _on_obtained_item(item: NetworkItem):
 	if not seedIsValid:
 		return
+	# Check if this item has been obtained already (because reconnecting)
+	if _obtainedItemIndex < _obtainedItemNum:
+		_obtainedItemIndex += 1
+		return
+	_obtainedItemIndex += 1
+	_obtainedItemNum += 1
 	if not isJustConnected:
 		var color = (
 			CONSTANTS.COLOR.PROGUSEFUL if item.is_prog() and (item.flags & AP.ItemClassification.USEFUL)

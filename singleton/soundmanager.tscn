@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=3 uid="uid://gov6o57aw668"]
+[gd_scene load_steps=35 format=3 uid="uid://gov6o57aw668"]
 
 [ext_resource type="Script" uid="uid://cj7q6qijx22yq" path="res://singleton/soundmanager.gd" id="1_u1q4g"]
 [ext_resource type="AudioStream" uid="uid://0ovedth7jefi" path="res://assets/audio/sfx/rotate.wav" id="2_tb4q0"]
@@ -23,6 +23,7 @@
 [ext_resource type="AudioStream" uid="uid://crgtl4vga5xna" path="res://assets/audio/sfx/select.wav" id="17_16vb8"]
 [ext_resource type="AudioStream" uid="uid://b87c1wrx32sm4" path="res://assets/audio/sfx/progressdialogue.wav" id="17_50rnd"]
 [ext_resource type="AudioStream" uid="uid://unibtnrcgx5x" path="res://assets/audio/voice/youdidit.wav" id="17_pmnmq"]
+[ext_resource type="AudioStream" uid="uid://cmdowwutnbur" path="res://assets/audio/sfx/textprogress.wav" id="18_q1hrt"]
 [ext_resource type="AudioStream" uid="uid://d4jsh2xy60lc3" path="res://assets/audio/sfx/web.wav" id="19_g2xsl"]
 [ext_resource type="AudioStream" uid="uid://mgag3gexgwqq" path="res://assets/audio/sfx/splat.wav" id="20_38coc"]
 [ext_resource type="AudioStream" uid="uid://ctn2njcd2o1cj" path="res://assets/audio/sfx/dink.wav" id="21_38coc"]
@@ -136,6 +137,12 @@ bus = &"Sfx"
 [node name="progressdialogue" type="AudioStreamPlayer" parent="sfx"]
 stream = ExtResource("17_50rnd")
 volume_db = -5.466
+bus = &"Sfx"
+
+[node name="textprogress" type="AudioStreamPlayer" parent="sfx"]
+stream = ExtResource("18_q1hrt")
+volume_db = -9.86
+pitch_scale = 3.0
 bus = &"Sfx"
 
 [node name="fishget" type="AudioStreamPlayer" parent="sfx"]

@@ -1440,12 +1440,12 @@ func _on_DracominoState_missing_lines_updated(lineLocs: Dictionary[int, bool]) -
 
 func _on_DracominoHandler_board_objects_updated(lookup:Dictionary[int, DracominoHandler.StateBoardObject]) -> void:
 	# Add anything that doesn't exist
-	for index:int in lookup:
+	for index:int in lookup.keys():
 		var state:DracominoHandler.StateBoardObject = lookup[index]
 		registerBoardObjectIfNotAlready(state)
 
 	# Remove anything that's disappeared
-	for index:int in boardObjectLookup:
+	for index:int in boardObjectLookup.keys():
 		if not lookup.has(index):
 			unregisterBoardObject(boardObjectLookup[index].state)
 	_on_DracominoState_line_mappings_updated()
