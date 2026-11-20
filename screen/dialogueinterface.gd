@@ -12,12 +12,14 @@ signal portrait_changed()
 @onready var portraitContainerRight:Control = $DialogueGroup/DialoguePanel/PortraitContainerRight
 @onready var dialogueGroup:Control = $DialogueGroup
 @onready var panelDelayTimer:Timer = $PanelDelayTimer
+@onready var textProgressSoundTimer:Timer = $TextProgressSoundTimer
 var portrait:CanvasItem
 var CHOICE_LABEL_SCENE_RESOURCE_PATH := "res://ui/choicelabel.tscn"
 var SHOW_NAME_LABEL:bool = false
 
 class DialogueState:
 	signal text_print_done()
+	signal text_print_started()
 	var currentSpeaker
 	var targetLine:String = ""
 	var textTimer:float = 0
@@ -25,7 +27,10 @@ class DialogueState:
 		set(value):
 			if textPrintDone == value: return
 			textPrintDone = value
-			if textPrintDone: text_print_done.emit()
+			if textPrintDone:
+				text_print_done.emit()
+			else:
+				text_print_started.emit()
 
 	var visibleCharacters:int = 0
 	var totalCharacters:int = 0
@@ -75,6 +80,9 @@ func _ready():
 
 	DracominoCommandManager.COMMANDS["CONTINUE"].command_activated.connect(_on_continue_command)
 
+	textProgressSoundTimer.timeout.connect(playTextProgressSound)
+	finished.connect(textProgressSoundTimer.stop)
+				
 func _process(delta):
 	# Print text procedurally
 	if state.textPrintDone: return
@@ -100,6 +108,8 @@ func resetInterface():
 
 	# Reset variables
 	state = DialogueState.new()
+	state.text_print_done.connect(textProgressSoundTimer.stop)
+	state.text_print_started.connect(textProgressSoundTimer.start)
 	
 func updateDialogue(line):
 	if get_parent().visible: grab_focus() # Only grab focus if a prompt isn't trying to grab one
@@ -122,6 +132,7 @@ func updateDialogue(line):
 	# if line.body:
 	updatePortrait(line.speaker, line.expression)
 	panelDelayTimer.start()
+	playTextProgressSound()
 
 func completeDialoguePrint():
 	dialogueLabel.visible_characters = -1
@@ -216,6 +227,12 @@ func setPortraitExpression(expression:String = "", isInitial:bool = false) -> vo
 func setSpeakerAlignment(speaker:String, dir:int=1) -> void:
 	speaker = speaker.to_lower()
 	speakerAlignment[speaker] = dir
+
+func playTextProgressSound() -> void: ## Play text progress sound based on speaker
+	if state:
+		match state.currentSpeaker:
+			"", null: pass
+			_: SoundManager.play("textprogress")
 
 func fillBoardObjectContext() -> void: ## Fill format values with board object location context
 	fillLocationContextFromLocationId(DracominoHandler.LocationContext.lastBoardObjectLocation)
@@ -313,7 +330,6 @@ func _gui_input(_event: InputEvent):
 			_was_focused = true
 		elif state.textPrintDone:
 			if panelDelayTimer.is_stopped():
-				SoundManager.play("progressdialogue")
 				dialogue.proceedDialogue()
 			else:
 				panelDelayTimer.stop()
