@@ -1,5 +1,6 @@
 Version 0.3.5 (dev-beta)
  - Coins reflect the item class of the item they hold
+ - Fix traps resetting when reconnecting during a session
  - Behinds-the-scenes changes in preparation for story mode
 
 Version 0.3.4.1 (2026 November 14)
