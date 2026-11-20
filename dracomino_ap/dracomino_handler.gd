@@ -210,11 +210,13 @@ class SeedState:
 	static var player_id:int
 	static var playerNames:Dictionary[int, StringName]
 	static var gameNames:Dictionary[int, StringName]
+	static var slotData:Dictionary
 
 	static func syncWithAP(conn:ConnectionInfo) -> void: ## Populate with player names and their games' names
 		playerNames.clear()
 		gameNames.clear()
 		if conn:
+			slotData = conn.slot_data.duplicate(true)
 			player_id = conn.player_id
 			for player:NetworkPlayer in conn.players:
 				playerNames[player.slot] = player.get_name()
@@ -222,6 +224,7 @@ class SeedState:
 	
 	static func addToSaveData(data:Dictionary) -> void:
 		data["seedState"] = {
+			slotData = slotData,
 			player_id = player_id,
 			playerNames = playerNames.duplicate(),
 			gameNames = gameNames.duplicate(),
@@ -230,6 +233,10 @@ class SeedState:
 	static func loadFromSaveData(data:Dictionary) -> void:
 		var seedData:Variant = data.get("seedState")
 		if seedData is Dictionary:
+			if seedData.get("slotData") is Dictionary:
+				slotData = seedData["slotData"]
+			else:
+				slotData = {}
 			player_id = int(seedData.get("player_id", 0))
 			playerNames.clear()
 			gameNames.clear()
@@ -870,9 +877,19 @@ func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json di
 		checkedLocations.merge(DracominoUtil.arrayToIntSet(data["checkedLocations"]))
 	if data.get("stateFlags") is Dictionary:
 		seedFlagHolder.stateFlags = data["stateFlags"]
-
-	_connectSignalsToCampaign()
-		
+	loadSlotData(SeedState.slotData)
+	# Resync if connected already
+	if Archipelago.conn:
+		syncLocationsWithConnection(Archipelago.conn)
+	else:
+		buildLocationsFromSlotData(SeedState.slotData)
+	# Send state to board
+	missingLines_updated.emit(missingLines)
+	boardObjects_updated.emit(boardObjects)
+	# Add new features to older games
+	upgradeFeatures(SeedState.slotData.get("generator_version", "0.0.0"))
+	_on_newSeed_refresh_items()
+	started.emit()
 
 func resetSeedFlagHolder():
 	if seedFlagHolder: seedFlagHolder.queue_free()
@@ -1169,6 +1186,199 @@ func triggerEffect(stateItem:StateItem, context:Array[StringName] = []) -> bool:
 func addLocationToCoinCurrency(loc_id): ## Add coins to currency (be careful not to use line locations here)
 	seedFlagHolder.count("coins", "coin_%s"%loc_id, 1)
 
+func loadSlotData(slotData:Dictionary) -> void: ## Load variables from slot data when connecting or loading a save
+	goal = slotData.get("goal", -1)
+
+	# Set death link
+	Archipelago.set_deathlink(slotData.get("death_link", false) as bool)
+	if "death_on_restart" in slotData:
+		SignalBus.getSignal(
+			"deathOnRestart_enabled" if slotData.get("death_on_restart", false)
+			else "deathOnRestart_disabled"
+		).emit()
+	# Set energy link
+	if slotData.get("energy_link", true):
+		FlagManager.setFlag("energy_link")
+	else:
+		FlagManager.clearFlag("energy_link")
+	# Set trap link
+	if slotData.get("trap_link"):
+		FlagManager.setFlag("trap_link")
+	elif slotData.get("trap_link") == false:
+		FlagManager.clearFlag("trap_link")
+	else:
+		Archipelago.set_traplink(FlagManager.isFlagSet("trap_link"))
+	# Existing items
+	var itemCounts:Variant = slotData.get("item_counts")
+	if itemCounts is Dictionary:
+		for id in itemCounts.keys():
+			var item:CONSTANTS.ItemData = CONSTANTS.ITEMS.get(int(id))
+			if item:
+				seedFlagHolder.setFlag("existing_"+item.internalName, int(itemCounts[id]))
+	else:
+		# Older gens are unaware of item counts, so assume the abilities
+		for abilityname in ["rotate_clockwise", "rotate_counterclockwise", "gravity", "soft_drop", "hard_drop"]:
+			seedFlagHolder.setFlag("existing_"+abilityname)
+			
+	# Set randomize orientations
+	var randomizeOrientations = slotData.get("randomize_orientations", false)
+	if randomizeOrientations:
+		seedFlagHolder.setFlag("randomize_orientations")
+	else:
+		seedFlagHolder.clearFlag("randomize_orientations")
+	
+	# Set up campaign
+	var requirements:Array = slotData.get("requirements", []) as Array
+	var chapterNames:Dictionary = slotData.get("chapter_names", {}) as Dictionary
+	if campaign == null:
+		var actDataList:Variant = slotData.get("acts")
+		if actDataList is Array:
+			campaign = CampaignContext.StoryCampaign(actDataList as Array)
+
+		# Make a classic campaign if there isn't one
+		if campaign == null:	
+			campaign = CampaignContext.ClassicCampaign(goal)
+		
+		_connectSignalsToCampaign()
+
+	seedIsValid = campaign.errors.size() == 0
+
+func syncLocationsWithConnection(conn:ConnectionInfo) -> void: ## Sync and build locations after connecting or loading from save
+	# Sync locations
+	var locsToCollect:Array[int] = []
+	for loc_id:int in conn.slot_locations:
+		var loc_data:CONSTANTS.LocationData = CONSTANTS.LOCATIONS.get(loc_id)
+		if loc_data is CONSTANTS.LocationData:
+			var checked:bool = conn.slot_locations[loc_id]
+			# Sync missingLocations and checkedLocations with server
+			if not checked:
+				if checkedLocations.get(loc_id, false):
+					# We got this while offline and need to sync to server
+					locsToCollect.append(loc_id)
+					checked = true
+				else:
+					if not missingLocations.get(loc_id, false):
+						# This is a fresh load or different seed
+						missingLocations[loc_id] = true
+			else:
+				checkedLocations[loc_id] = true
+				if missingLocations.get(loc_id, false):
+					missingLocations.erase(loc_id)
+			# Scout this
+			conn.scout(loc_id, 0, _on_location_scouted)
+		elif loc_id > 0:
+			var _loc:APLocation = conn.locations.get(loc_id)
+			printerr("Got invalid location: id: {id}; name: {name}; You may be running an outdated version of the client!"
+				.format({id=loc_id, name=_loc.name if _loc else "unknown"})
+			)
+	
+	# Create lines and board objects
+	buildLocationsFromSlotData(conn.slot_data)
+	
+	# Sync with campaign (because reconnect)
+	if campaign:
+		for loc_id:int in missingLocations.keys():
+			campaign.removeMissingLocation(loc_id)
+
+	if victory:
+		sendVictory()
+
+	# Send new state to board
+	missingLines_updated.emit(missingLines)
+	boardObjects_updated.emit(boardObjects)
+
+	# Sync with server
+	if locsToCollect.size():
+		Archipelago.collect_locations(locsToCollect)
+
+func buildLocationsFromSlotData(slotData:Dictionary) -> void: ## Make lines and board object when connecting or loading a save
+	boardObjects.clear()
+	allLineLocations.clear()
+	missingLines.clear()
+	missingPickups.clear()
+	id_to_line.clear()
+	id_to_boardObject.clear()
+
+	var _allLocations:Array[int] = []
+	_allLocations.append_array(missingLocations.keys())
+	_allLocations.append_array(checkedLocations.keys())
+	var _allPickupLocations:Dictionary[StringName, Array]
+	for loc_id:int in _allLocations:
+		var loc_data:CONSTANTS.LocationData = CONSTANTS.LOCATIONS.get(loc_id)
+		if loc_data is CONSTANTS.LocationData: 
+			var checked:bool = checkedLocations.get(loc_id, false)
+			if loc_data.isLineClear:
+				allLineLocations.append(loc_id)
+			elif loc_data.isBoardObject:
+				if loc_data.objectName:
+					if not _allPickupLocations.has(loc_data.objectName):
+						_allPickupLocations[loc_data.objectName] = []
+					_allPickupLocations[loc_data.objectName].append(loc_id)
+				if not checked:
+					missingPickups.append(loc_id)
+				else:
+					addLocationToCoinCurrency(loc_id)
+		else:
+			printerr("Got invalid location: id: {id}; You may be running an outdated version of the client!".format({id=loc_id}))
+	#
+	allLineLocations.sort()
+	for k:StringName in _allPickupLocations:
+		_allPickupLocations[k].sort()
+		_allPickupLocations[k].reverse() # Prepare to pop the first objects first
+	missingPickups.sort()
+	
+	# Set up lookup tables
+	for i:int in range(allLineLocations.size()):
+		id_to_line[allLineLocations[i]] = i
+		missingLines[i] = missingLocations.get(allLineLocations[i], false)
+		if missingLines[i]:
+			campaign.registerMissingLocationByLine(allLineLocations[i], i)
+
+	for sbo:StateBoardObject in boardObjects.values():
+		if sbo.isLocation:
+			id_to_boardObject[sbo.loc_id] = sbo
+			if missingLocations.get(sbo.loc_id, false):
+				campaign.registerMissingLocationByLine(sbo.loc_id, sbo.coordinates.y)
+
+	# Create item pickup data
+	var item_pickup_placements:Variant = slotData.get("item_pickup_placements", [])
+	# Added version 1.0.0 probably
+	var item_pickup_ids:Variant = slotData.get("item_pickup_ids")
+	var item_pickup_id_mappings:Variant = slotData.get("item_pickup_id_mappings")
+	# Create board objects states
+	if item_pickup_placements is Array:
+		for i:int in range(item_pickup_placements.size()):
+			var placement:int = item_pickup_placements[i]
+			# Map pickup id to object name
+			var objectName:StringName = &"error" # Make default an error. TODO: Can put APWorld-specific error object here
+			if item_pickup_ids is Array:
+				if item_pickup_ids.size() > i:
+					var item_pickup_id:int = 0
+					item_pickup_id = int(item_pickup_ids[i])
+					if item_pickup_id_mappings is Dictionary:
+						# Get the mapped object name, or make error object if something weird is happening
+						if item_pickup_id_mappings.has(item_pickup_id):
+							objectName = item_pickup_id_mappings[item_pickup_id] as StringName
+						else:
+							# Unknown mapping (something is wrong with the APWorld)
+							printerr("Error: Malformed slot data. Found missing item pickup id: ", item_pickup_id)
+				else:
+					# Out of bounds (something is wrong with the APWorld)
+					printerr("Error: Malformed slot data. Index %s exceeds item_pickup_ids size"%i)
+			else:
+				# There is no item pickup mappings, so default to coin
+				objectName = &"coin"
+			#
+			var vec:Vector2i = Vector2i(placement % Board.BOUNDS.size.x, floor(placement/Board.BOUNDS.size.x))
+			var loc_id:Variant = _allPickupLocations.get(objectName, []).pop_back()
+			if loc_id != null:
+				# This is a location
+				if missingLocations.get(loc_id, false):
+					boardObjects[i] = StateBoardObject.new(vec, objectName, loc_id as int, i)
+			else:
+				# This isn't a location; it's just a regular board object or an error
+				boardObjects[i] = StateBoardObject.new(vec, objectName, -1, i)
+
 #===== Private Functions =====
 func _connectSignalsToCampaign() -> void:
 	if campaign:
@@ -1222,59 +1432,15 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 
 		conn.force_scout_all()
 
-	goal = conn.slot_data.get("goal", -1)
-
-	# Set death link
-	Archipelago.set_deathlink(conn.slot_data.get("death_link", false) as bool)
-	if "death_on_restart" in conn.slot_data:
-		SignalBus.getSignal(
-			"deathOnRestart_enabled" if conn.slot_data.get("death_on_restart", false)
-			else "deathOnRestart_disabled"
-		).emit()
-	# Set energy link
-	if conn.slot_data.get("energy_link", true):
-		FlagManager.setFlag("energy_link")
-	else:
-		FlagManager.clearFlag("energy_link")
-	# Set trap link
-	if conn.slot_data.get("trap_link"):
-		FlagManager.setFlag("trap_link")
-	elif conn.slot_data.get("trap_link") == false:
-		FlagManager.clearFlag("trap_link")
-	else:
-		Archipelago.set_traplink(FlagManager.isFlagSet("trap_link"))
-	# Existing items
-	var itemCounts:Variant = conn.slot_data.get("item_counts")
-	if itemCounts is Dictionary:
-		for id in itemCounts.keys():
-			var item:CONSTANTS.ItemData = CONSTANTS.ITEMS.get(int(id))
-			if item:
-				seedFlagHolder.setFlag("existing_"+item.internalName, int(itemCounts[id]))
-	else:
-		# Older gens are unaware of item counts, so assume the abilities
-		for abilityname in ["rotate_clockwise", "rotate_counterclockwise", "gravity", "soft_drop", "hard_drop"]:
-			seedFlagHolder.setFlag("existing_"+abilityname)
-	var requirements:Array = conn.slot_data.get("requirements", []) as Array
-	var chapterNames:Dictionary = conn.slot_data.get("chapter_names", {}) as Dictionary
-	# Set up campaign
-	if campaign == null:
-		var actDataList:Variant = conn.slot_data.get("acts")
-		if actDataList is Array:
-			campaign = CampaignContext.StoryCampaign(actDataList as Array)
-
-		# Make a classic campaign if there isn't one
-		if campaign == null:	
-			campaign = CampaignContext.ClassicCampaign(goal)
+		loadSlotData(conn.slot_data)
 		
-		_connectSignalsToCampaign()
-
 	# Check if there were errors before aborting this load
-	if campaign.errors.size():
-		seedIsValid = false
+	if not seedIsValid:
 		var errorDialog:AcceptDialog = VERSION_WARNING_DIALOG_SCENE.instantiate()
 		errorDialog.dialog_text = "There were errors loading the story campaign:"
 		var missingChapters:Array[StringName] = []
 		var missingActs:Array[StringName] = []
+		var chapterNames:Dictionary = conn.slot_data.get("chapter_names", {}) as Dictionary
 		for error:Dictionary in campaign.errors:
 			match error.get("type", ""):
 				CampaignContext.ERROR_TYPE.MISSING_CHAPTER:
@@ -1296,148 +1462,17 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 			})
 		errorDialog.dialog_text += ""
 		add_child(errorDialog)
-		if warningDialog:
-			warningDialog.tree_exiting.connect(errorDialog.popup_centered, CONNECT_ONE_SHOT)
-		else:
-			errorDialog.popup_centered()
+		errorDialog.popup_centered()
 		errorDialog.visibility_changed.connect(errorDialog.queue_free)
 
 		return
-	else:
-		seedIsValid = true
-
-	# Set randomize orientations
-	var randomizeOrientations = conn.slot_data.get("randomize_orientations", false)
-	if randomizeOrientations:
-		seedFlagHolder.setFlag("randomize_orientations")
-	else:
-		seedFlagHolder.clearFlag("randomize_orientations")
 
 	# Reset collected items
 	_obtainedItemIndex = 0 # Reset index because items are going to be sent again
-	allLineLocations.clear()
-	boardObjects.clear()
-	missingLines.clear()
-	missingPickups.clear()
-	id_to_line.clear()
-	id_to_boardObject.clear()
 
-	var locsToCollect:Array[int] = []
-	var _missingLocations_changed:bool = false
-	var _allPickupLocations:Dictionary[StringName, Array]
-	for loc_id:int in conn.slot_locations:
-		var loc_data:CONSTANTS.LocationData = CONSTANTS.LOCATIONS.get(loc_id)
-		if loc_data is CONSTANTS.LocationData:
-			var checked:bool = conn.slot_locations[loc_id]
-			# Sync missingLocations and checkedLocations with server
-			if not checked:
-				if checkedLocations.get(loc_id, false):
-					# We got this while offline and need to sync to server
-					locsToCollect.append(loc_id)
-					checked = true
-				else:
-					if not missingLocations.get(loc_id, false):
-						# This is a fresh load or different seed
-						missingLocations[loc_id] = true
-						_missingLocations_changed = true
-			else:
-				checkedLocations[loc_id] = true
-				if missingLocations.get(loc_id, false):
-					missingLocations.erase(loc_id)
-					_missingLocations_changed = true
-			if loc_data.isLineClear:
-				allLineLocations.append(loc_id)
-			elif loc_data.isBoardObject:
-				if loc_data.objectName:
-					if not _allPickupLocations.has(loc_data.objectName):
-						_allPickupLocations[loc_data.objectName] = []
-					_allPickupLocations[loc_data.objectName].append(loc_id)
-				if not checked:
-					missingPickups.append(loc_id)
-				else:
-					addLocationToCoinCurrency(loc_id)
-			# Scout this
-			conn.scout(loc_id, 0, _on_location_scouted)
-		else:
-			printerr("Got invalid location: id: {id}; name: {name}; You may be running an outdated version of the client!"
-				.format({id=loc_id, name=conn.locations[loc_id].name})
-			)
-	#
-	allLineLocations.sort()
-	for k:StringName in _allPickupLocations:
-		_allPickupLocations[k].sort()
-		_allPickupLocations[k].reverse() # Prepare to pop the first objects first
-	missingPickups.sort()
-
-	# Create item pickup data
-	var item_pickup_placements:Variant = conn.slot_data.get("item_pickup_placements", [])
-	# Added version 1.0.0 probably
-	var item_pickup_ids:Variant = conn.slot_data.get("item_pickup_ids")
-	var item_pickup_id_mappings:Variant = conn.slot_data.get("item_pickup_id_mappings")
-	# Create board objects states
-	if item_pickup_placements is Array:
-		for i:int in range(item_pickup_placements.size()):
-			var placement:int = item_pickup_placements[i]
-			# Map pickup id to object name
-			var objectName:StringName = &"error" # Make default an error. TODO: Can put APWorld-specific error object here
-			if item_pickup_ids is Array:
-				if item_pickup_ids.size() > i:
-					var item_pickup_id:int = 0
-					item_pickup_id = int(item_pickup_ids[i])
-					if item_pickup_id_mappings is Dictionary:
-						# Get the mapped object name, or make error object if something weird is happening
-						if item_pickup_id_mappings.has(item_pickup_id):
-							objectName = item_pickup_id_mappings[item_pickup_id] as StringName
-						else:
-							# Unknown mapping (something is wrong with the APWorld)
-							printerr("Error: Malformed slot data. Found missing item pickup id: ", item_pickup_id)
-				else:
-					# Out of bounds (something is wrong with the APWorld)
-					printerr("Error: Malformed slot data. Index %s exceeds item_pickup_ids size"%i)
-			else:
-				# There is no item pickup mappings, so default to coin
-				objectName = &"coin"
-			#
-			var vec:Vector2i = Vector2i(placement % Board.BOUNDS.size.x, floor(placement/Board.BOUNDS.size.x))
-			var loc_id:Variant = _allPickupLocations.get(objectName, []).pop_back()
-			if loc_id != null:
-				# This is a location
-				if missingLocations.get(loc_id, false):
-					boardObjects[i] = StateBoardObject.new(vec, objectName, loc_id as int, i)
-			else:
-				# This isn't a location; it's just a regular board object or an error
-				boardObjects[i] = StateBoardObject.new(vec, objectName, -1, i)
-			
+	# Sync locations
+	syncLocationsWithConnection(conn)
 	
-	# Set up lookup tables
-	for i:int in range(allLineLocations.size()):
-		id_to_line[allLineLocations[i]] = i
-		missingLines[i] = missingLocations.get(allLineLocations[i], false)
-		if missingLines[i]:
-			campaign.registerMissingLocationByLine(allLineLocations[i], i)
-
-	for sbo:StateBoardObject in boardObjects.values():
-		if sbo.isLocation:
-			id_to_boardObject[sbo.loc_id] = sbo
-			if missingLocations.get(sbo.loc_id, false):
-				campaign.registerMissingLocationByLine(sbo.loc_id, sbo.coordinates.y)
-
-	# Sync with campaign (because reconnect)
-	for loc_id:int in locsToCollect:
-		campaign.removeMissingLocation(loc_id)
-
-	if victory:
-		sendVictory()
-
-	# Send new state to board
-	if _missingLocations_changed:
-		missingLines_updated.emit(missingLines)
-		boardObjects_updated.emit(boardObjects)
-
-	# Sync with server
-	if locsToCollect.size():
-		Archipelago.collect_locations(locsToCollect)
-
 	# Add new features to older games
 	upgradeFeatures(conn.slot_data.get("generator_version", "0.0.0"))
 
