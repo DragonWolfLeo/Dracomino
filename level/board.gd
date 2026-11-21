@@ -486,7 +486,7 @@ func getFocusPiece() -> Piece:
 
 func getCameraFocus() -> Piece:
 	for piece in activePieces:
-		if piece.isFocus or (piece.moveLock and not piece.momentumPhysics and FlagManager.isFlagSet("hard_drop")):
+		if piece.isFocus or piece.isHardDropped:
 			return piece
 	return null
 
@@ -772,7 +772,10 @@ func checkIfWaitingToChooseNewFocusPiece() -> void: ## Wait for a dropped piece 
 		if isPieceOnTopRow(piece):
 			return
 	if is_instance_valid(_waitingForPieceToGetOutOfTopRow):
-		chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(_waitingForPieceToGetOutOfTopRow.attachedEffects.get("on_lock")))
+		chooseNewFocusPiece(
+			_waitingForPieceToGetOutOfTopRow.isSlowDropped
+			or not effectHandler.willBlockRequestPiece(_waitingForPieceToGetOutOfTopRow.attachedEffects.get("on_lock"))
+		)
 	else:
 		chooseNewFocusPiece(true)
 
@@ -1333,10 +1336,13 @@ func _on_Piece_ghost_cells_requested(_piece:Piece, _ghost:GhostPiece):
 	updateAllGhosts()
 
 func _on_Piece_focus_lost(piece:Piece):
-	if not piece.momentumPhysics and FlagManager.isFlagSet("hard_drop") and is_instance_valid(piece) and isPieceOnTopRow(piece):
+	if piece.isHardDropped and is_instance_valid(piece) and isPieceOnTopRow(piece):
 		_waitingForPieceToGetOutOfTopRow = piece
 	else:
-		chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(null if not is_instance_valid(piece) else piece.attachedEffects.get("on_lock")))
+		chooseNewFocusPiece(
+			piece.isSlowDropped
+			or not effectHandler.willBlockRequestPiece(null if not is_instance_valid(piece) else piece.attachedEffects.get("on_lock"))
+		)
 
 func _on_Piece_tree_exiting(piece:Piece): # Fallback if piece didn't delete properly
 	activePieces.erase(piece)

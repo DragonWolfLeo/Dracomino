@@ -198,7 +198,7 @@ func getNextValidBufferedEffect(context:Array[StringName] = []) -> DracominoHand
 	return null
 
 func willBlockRequestPiece(stateItem:DracominoHandler.StateItem, ignoreUsed:bool = false) -> bool:
-	if stateItem == null or (stateItem.used and not ignoreUsed):
+	if stateItem == null or (stateItem.used and not ignoreUsed) or FlagManager.isFlagSet("versus_mode"):
 		return false
 	var fx:Effect = getEffectObject(stateItem)
 	return fx and fx.canTriggerFn.call() and fx.blockRequestPiece
