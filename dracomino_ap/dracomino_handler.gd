@@ -804,7 +804,8 @@ func _ready() -> void:
 		UserData.saveDataToFile(addToSaveData(), "user://testsave.json")
 	)
 	DracominoCommandManager.addCommand("LOAD", func(_a):
-		loadFromSaveData(UserData.loadDataFromFile("user://testsave.json"))
+		if UserData.doesSaveFileExist("user://testsave.json"):
+			loadFromSaveData(UserData.loadDataFromFile("user://testsave.json"))
 	)
 
 	# Set up trap link signal
@@ -814,6 +815,9 @@ func _ready() -> void:
 	# Make the EnergyLink tag appear when energy link is enabled
 	SignalBus.getSignal("stateflag_set", "energy_link").connect(Archipelago.set_tag.bind("EnergyLink", true))
 	SignalBus.getSignal("stateflag_cleared", "energy_link").connect(Archipelago.set_tag.bind("EnergyLink", false))
+
+	SignalBus.getSignal("saveGame").connect(DracominoCommandManager.activateCommand.bind("SAVE"))
+	SignalBus.getSignal("loadGame").connect(DracominoCommandManager.activateCommand.bind("LOAD"))
 
 #===== Functions =====
 func reset():
