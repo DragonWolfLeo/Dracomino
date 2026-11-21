@@ -802,10 +802,13 @@ func _ready() -> void:
 	DracominoCommandManager.addCommand("TRIGGEREFFECT", triggerEffectCommand).bind(self).setArgHint("name").setInvisible()
 	DracominoCommandManager.addCommand("SAVE", func(_a):
 		UserData.saveDataToFile(addToSaveData(), "user://testsave.json")
+		Archipelago.save_manager.write_save(0)
 	)
 	DracominoCommandManager.addCommand("LOAD", func(_a):
 		if UserData.doesSaveFileExist("user://testsave.json"):
 			loadFromSaveData(UserData.loadDataFromFile("user://testsave.json"))
+			Archipelago.save_manager.read_save(0)
+			Archipelago.aplock = null
 	)
 
 	# Set up trap link signal
