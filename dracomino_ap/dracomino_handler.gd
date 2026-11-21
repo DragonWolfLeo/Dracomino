@@ -51,8 +51,7 @@ var LINE_THRESHOLD_FOR_NO_ROTATE_DEATH_CONTEXT:int = 8 ## For death context
 var _canUseDeathContext_NO_ROTATE:bool = false ## For death context
 var _energySendBuffer:int = 0 ## Energy to send to server when reconnecting
 var _effectBuffer:Array[StateItem] = [] ## Next traps to apply to next pieces
-var obtainedItemNum:int ## Number of items received from server
-var _obtainedItemIndex:int ## Index of current item being sent from server
+var obtainedItemCounts:Dictionary[int, int] = {} ## Item id to count; Number of copies of an item received from server
 
 signal lineMappings_updated(mappings:Dictionary[int, int])
 signal gotLines_updated(_gotLines:Dictionary[int, bool])
@@ -92,6 +91,7 @@ class StateItem:
 			if flags & AP.ItemClassification.TRAP:
 				return "trap" 
 			return "filler"
+	var itemCopy:int = -1 ## Which copy of an item of this id is this as an AP item?
 	var isLocal:bool:
 		get:
 			return (sender_id == 0) or (sender_id == receiver_id)
@@ -104,6 +104,10 @@ class StateItem:
 	var data:CONSTANTS.ItemData:
 		get:
 			return CONSTANTS.ITEMS.get(id)
+
+	static var _itemCopies:Dictionary[int, int] = {} ## Item id to count; the number of copies of an AP item made
+	static var _itemCache:Dictionary[Vector2i, bool] = {} ## Cache for AP items, key is Vector2i(id, itemCopy)
+
 	static func fromNetworkItem(netItem:NetworkItem) -> StateItem: ## Get existing state item from location context, or create it if it doesn't exist
 		var si:StateItem
 		var loc_ctx:LocationContext
@@ -137,6 +141,17 @@ class StateItem:
 		var si := StateItem.fromId(CONSTANTS.ITEM_NAME_TO_ID.get(internalName, 0))
 		return si
 
+	func itemize(copyNum:int = -1) -> StateItem: ## Make this an AP item; If it already itemized, this returns null
+		if copyNum < 0:
+			copyNum = _itemCopies.get(id, 0)
+		var vec:Vector2i = Vector2i(id, copyNum)
+		if _itemCache.has(vec):
+			return null
+		itemCopy = copyNum
+		_itemCopies[id] = copyNum + 1
+		_itemCache[vec] = true
+		return self
+
 	func getClassificationColor() -> Color:
 		match classification:
 			"proguseful": return CONSTANTS.COLOR.PROGUSEFUL
@@ -152,12 +167,12 @@ class StateItem:
 			sender_id = sender_id,
 			receiver_id = receiver_id,
 			flags = flags,
+			itemCopy = int(itemCopy),
+			used = int(used),
+			usedTrapLink = int(usedTrapLink),
 		}
 		if not locationLocal:
 			dict["locationName"] = locationName
-		else:
-			dict["used"] = used
-			dict["usedTrapLink"] = usedTrapLink
 		return dict
 
 	static func fromDictionary(dict:Dictionary) -> StateItem: ## Rebuild a state item from save data. Do this after loading location context cache!
@@ -179,8 +194,9 @@ class StateItem:
 			if loc_data is CONSTANTS.LocationData:
 				si.locationName = loc_data.prettyName
 		si.flags = int(dict.get("flags", 0))
-		si.used = bool(dict.get("used", false))
-		si.usedTrapLink = bool(dict.get("usedTrapLink", false))
+		si.itemCopy = int(dict.get("itemCopy", -1))
+		si.used = bool(dict.get("used", 0))
+		si.usedTrapLink = bool(dict.get("usedTrapLink", 0))
 		return si
 
 	func toLocationContextDictionary() -> Dictionary[StringName, Variant]: ## Convert to dictionary for saving location context
@@ -204,6 +220,10 @@ class StateItem:
 			si.locationName = "Somewhere"
 		si.flags = int(dict.get("flags", 0))
 		return si
+
+	static func clearCache() -> void: ## Clear item cache when loading a new seed
+		_itemCopies.clear()
+		_itemCache.clear()
 
 class SeedState:
 	static var player_id:int
@@ -829,7 +849,8 @@ func newSeedReset():
 	missingLocations.clear()
 	checkedLocations.clear()
 	collectedAbilities.clear()
-	obtainedItemNum = 0
+	obtainedItemCounts.clear()
+	StateItem.clearCache()
 	LocationContext.clearCache()
 	if campaign is CampaignContext:
 		campaign.cleanUp()
@@ -852,7 +873,6 @@ func addToSaveData(data:Dictionary = {}) -> Dictionary: ## Record state to dicti
 	data["victory"] = victory
 	LocationContext.addToSaveData(data)
 	data["collectedItems"] = []
-	data["obtainedItemNum"] = obtainedItemNum
 	for si:StateItem in collectedItems:
 		data["collectedItems"].append(si.toDictionary())
 	data["missingLocations"] = DracominoUtil.setToArray(missingLocations)
@@ -863,16 +883,21 @@ func addToSaveData(data:Dictionary = {}) -> Dictionary: ## Record state to dicti
 func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json dictionary
 	isJustConnected = true
 	get_tree().create_timer(2, true).timeout.connect(set.bind("isJustConnected", false))
-	slotContextHash = int(data.get("slotContextHash", 0))
-	SeedState.loadFromSaveData(data)
-	newSeedReset()
+	var slotContextHash_new:int = int(data.get("slotContextHash", 0))
+	if not Archipelago.conn or slotContextHash != slotContextHash_new:
+		slotContextHash = slotContextHash_new
+		SeedState.loadFromSaveData(data)
+		newSeedReset()
 	victory = data.get("victory", false)
 	LocationContext.loadFromSaveData(data)
 	if data.get("collectedItems") is Array:
 		for dict:Variant in data["collectedItems"]:
 			if dict is Dictionary:
-				giveItem(StateItem.fromDictionary(dict))
-	obtainedItemNum = int(data.get("obtainedItemNum", collectedItems.size()))
+				var si:StateItem = StateItem.fromDictionary(dict)
+				if si.itemCopy >= 0:
+					# If this is an AP item, this prevents it from being made again
+					si = si.itemize(si.itemCopy)
+				giveItem(si)
 	if data.get("missingLocations") is Array:
 		missingLocations.merge(DracominoUtil.arrayToIntSet(data["missingLocations"]))
 	if data.get("checkedLocations") is Array:
@@ -1472,7 +1497,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		return
 
 	# Reset collected items
-	_obtainedItemIndex = 0 # Reset index because items are going to be sent again
+	obtainedItemCounts.clear() # Reset index because items are going to be sent again
 
 	# Sync locations
 	syncLocationsWithConnection(conn)
@@ -1526,12 +1551,10 @@ func _on_obtained_item(item: NetworkItem):
 	if not seedIsValid:
 		return
 	# Check if this item has been obtained already (because reconnecting)
-	if _obtainedItemIndex < obtainedItemNum:
-		_obtainedItemIndex += 1
-		return
-	_obtainedItemIndex += 1
-	obtainedItemNum += 1
-	if not isJustConnected:
+	var itemCopy:int = obtainedItemCounts.get(item.id, 0)
+	var si:StateItem = StateItem.fromNetworkItem(item).itemize(itemCopy)
+	obtainedItemCounts[item.id] = itemCopy + 1 # Increment the counter
+	if si and not isJustConnected:
 		var color = (
 			CONSTANTS.COLOR.PROGUSEFUL if item.is_prog() and (item.flags & AP.ItemClassification.USEFUL)
 			else CONSTANTS.COLOR.PROGRESSION if item.is_prog()
@@ -1545,7 +1568,6 @@ func _on_obtained_item(item: NetworkItem):
 			notification_signal.emit("{source} sent you your {item}!"
 				.format({source=Archipelago.conn.get_player_name(item.src_player_id), item=item.get_name()}), color, false
 			)
-	var si:StateItem = StateItem.fromNetworkItem(item)
 	giveItem(si)
 
 func _on_on_hint_update(hints: Array[NetworkHint]):
