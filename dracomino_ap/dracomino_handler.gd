@@ -1195,7 +1195,7 @@ func giveItem(item:StateItem):
 					if not result:
 						# Is this a delayed effect?
 						var fx = effectHandler.getEffectObject(item)
-						if fx.context.has("delayed"):
+						if fx and fx.context.has("delayed"):
 							# Then spawn it again delayed
 							var tween:Tween = create_tween()
 							tween.tween_callback(triggerEffect.bind(item, ["delayed"] as Array[StringName]))\
