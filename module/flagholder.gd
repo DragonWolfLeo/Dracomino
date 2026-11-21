@@ -10,10 +10,11 @@ signal stateflags_reset()
 
 ### Static Variables
 static var PRIORITY:Dictionary[StringName, float] = {
-	OBJECT = 5,
-	DIALOGUE = 4,
-	LEVEL = 3,
-	WORLD = 2,
+	OBJECT = 6,
+	DIALOGUE = 5,
+	LEVEL = 4,
+	WORLD = 3,
+	SEED = 2,
 	MAIN = 1,
 }
 

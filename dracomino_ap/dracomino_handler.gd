@@ -35,8 +35,8 @@ var campaign:CampaignContext:
 			return
 		campaign = value
 		campaign_changed.emit(campaign)
-var seedFlagHolder:FlagHolder
-var retroFlagHolder:FlagHolder
+var worldFlagHolder:FlagHolder ## Persisting flag holder controlled by dialogue; Saved
+var seedFlagHolder:FlagHolder ## Temporary flag holder that controls game state; Not saved
 var effectHandler:EffectHandler
 
 var color_random:RandomNumberGenerator = RandomNumberGenerator.new()
@@ -856,7 +856,7 @@ func addToSaveData(data:Dictionary = {}) -> Dictionary: ## Record state to dicti
 		data["collectedItems"].append(si.toDictionary())
 	data["missingLocations"] = DracominoUtil.setToArray(missingLocations)
 	data["checkedLocations"] = DracominoUtil.setToArray(checkedLocations)
-	data["stateFlags"] = seedFlagHolder.stateFlags.duplicate()
+	data["stateFlags"] = worldFlagHolder.stateFlags.duplicate()
 	return data
 
 func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json dictionary
@@ -876,7 +876,7 @@ func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json di
 	if data.get("checkedLocations") is Array:
 		checkedLocations.merge(DracominoUtil.arrayToIntSet(data["checkedLocations"]))
 	if data.get("stateFlags") is Dictionary:
-		seedFlagHolder.stateFlags = data["stateFlags"]
+		worldFlagHolder.stateFlags = data["stateFlags"]
 	loadSlotData(SeedState.slotData)
 	# Resync if connected already
 	if Archipelago.conn:
@@ -892,13 +892,14 @@ func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json di
 	started.emit()
 
 func resetSeedFlagHolder():
+	if worldFlagHolder: worldFlagHolder.queue_free()
 	if seedFlagHolder: seedFlagHolder.queue_free()
-	if retroFlagHolder: retroFlagHolder.queue_free()
+	worldFlagHolder = FlagHolder.new(FlagHolder.PRIORITY.WORLD)
 	seedFlagHolder = FlagHolder.new(FlagHolder.PRIORITY.WORLD)
-	retroFlagHolder = FlagHolder.new(FlagHolder.PRIORITY.WORLD)
-	FlagManager.HANDLERS.WORLD.setAsFlagHolder(seedFlagHolder)
+	FlagManager.HANDLERS.WORLD.setAsFlagHolder(worldFlagHolder)
+	FlagManager.HANDLERS.SEED.setAsFlagHolder(seedFlagHolder)
+	add_child(worldFlagHolder)
 	add_child(seedFlagHolder)
-	add_child(retroFlagHolder)
 
 func getNextPiece() -> PieceContext:
 	var numItems := collectedItems.size()
@@ -985,7 +986,7 @@ func giveMana(amount:float, shareThroughEnergyLink:bool = true) -> void:
 	if shareThroughEnergyLink and FlagManager.isFlagSet("energy_link"):
 		sharedMana = manaEarned * CONSTANTS.ENERGY_LINK_SHARE
 		sendEnergy(round(sharedMana * CONSTANTS.MANA_TO_ENERGY_RATIO))
-	seedFlagHolder.count("mana", "earned", manaEarned - sharedMana, true)
+	worldFlagHolder.count("mana", "earned", manaEarned - sharedMana, true)
 
 func sendEnergy(amount:int = 0):
 	amount += _energySendBuffer
@@ -1136,7 +1137,7 @@ func giveItem(item:StateItem):
 
 				# We were given an item that doesn't exist, so put it in our other flag holder so it appears in the ability bar
 				if not seedFlagHolder.isFlagSet("existing_"+item.data.internalName):
-					retroFlagHolder.setFlag("existing_"+item.data.internalName, collectedAbilities[item.id])
+					seedFlagHolder.count("existing_"+item.data.internalName, "retrofitted", collectedAbilities[item.id])
 
 				# Keep track of rotate abilities collected
 				if item.data.tags.get("rotate"):

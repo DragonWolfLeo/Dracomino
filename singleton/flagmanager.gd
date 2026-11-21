@@ -37,6 +37,7 @@ class SpecialFlagHolderHandler:
 var HANDLERS:Dictionary[StringName, SpecialFlagHolderHandler] = {
 	MAIN = SpecialFlagHolderHandler.new(),
 	WORLD = SpecialFlagHolderHandler.new(),
+	SEED = SpecialFlagHolderHandler.new(),
 	LEVEL = SpecialFlagHolderHandler.new(),
 }
 

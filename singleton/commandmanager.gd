@@ -65,6 +65,10 @@ func _ready():
 	addCommand("SETLEVELFLAG", FlagManager.HANDLERS.LEVEL.setFlag, true).setArgHint(DESC.SETFLAG)
 	addCommand("CLEARLEVELFLAG", FlagManager.HANDLERS.LEVEL.clearFlag, true).setArgHint("flag")
 	addCommand("LEVELCOUNT", FlagManager.HANDLERS.LEVEL.count, true).setArgHint(DESC.COUNT)
+	# Seed flag setting
+	addCommand("SETSEEDFLAG", FlagManager.HANDLERS.SEED.setFlag, true).setArgHint(DESC.SETFLAG)
+	addCommand("CLEARSEEDFLAG", FlagManager.HANDLERS.SEED.clearFlag, true).setArgHint("flag")
+	addCommand("SEEDCOUNT", FlagManager.HANDLERS.SEED.count, true).setArgHint(DESC.COUNT)
 	# World flag setting
 	addCommand("SETWORLDFLAG", FlagManager.HANDLERS.WORLD.setFlag, true).setArgHint(DESC.SETFLAG).setDeprecated()
 	addCommand("CLEARWORLDFLAG", FlagManager.HANDLERS.WORLD.clearFlag, true).setArgHint("flag").setDeprecated()
