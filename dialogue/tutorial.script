@@ -14,7 +14,7 @@ Mini: [ShowObject dracomino] These are Dracominos. They're colorful blocks made 
 
 [Response SecondTime]
 Mini: You're back! I'm always happy to talk Dracominos, coins, magic, and fresh fish with you! What would you like to know?
-[SetWorldFlag mentioned_freshfish]
+[SetFlag mentioned_freshfish]
 [NextState]
 
 [State Tutorial_Contents]
@@ -44,7 +44,7 @@ Mini (neutral): We need to hurry! Our moves are on a time limit now!
 Mini (neutral): Not only that, but if you press the {UP} button, you'll let go of your Dracomino, and another will appear. You may want to be careful about pressing that button.
 Mini (think): Though, it could allow for some advanced moves, like, if you wanted one piece to go under another. You can quickly slide a piece under another while it's still falling.
 [always]
-[ClearWorldFlag prev_no_gravity]
+[ClearFlag prev_no_gravity]
 
 [Response Tutorial_JustGot_SoftDrop]
 Mini (eager): Hey! {DOWN} button now does a thing! It makes things go down!
@@ -52,7 +52,7 @@ Mini (eager): Hey! {DOWN} button now does a thing! It makes things go down!
 Mini (content): So no more needing to press {UP} to go down. Man, that was so confusing.
 Mini (confused): Though, {UP} makes things go down a lot faster than pressing {DOWN}. What's up with that?
 [always]
-[ClearWorldFlag prev_no_softdrop]
+[ClearFlag prev_no_softdrop]
 
 [Response Tutorial_JustGot_HardDrop]
 Mini (eager): Guess what! The {UP} button [if not gravity] now does a thing! Pressing it [always] makes Dracominos fall down fast!
@@ -61,13 +61,13 @@ Mini (cute): So, no more having to wait for pieces to featherfall their way down
 Mini (annoyed): I don't know, why {UP} though. There's a {DOWN} button. Why doesn't it do anything?!
 [always]
 Mini: This is so useful. We can place Dracominos down so quickly! But I don't know why it has to be the {UP} button.
-[ClearWorldFlag prev_no_harddrop]
+[ClearFlag prev_no_harddrop]
 
 [Response Tutorial_Move]
 // Set memory
-[if not gravity][SetWorldFlag prev_no_gravity]
-[if not soft_drop][SetWorldFlag prev_no_softdrop]
-[if not hard_drop][SetWorldFlag prev_no_harddrop]
+[if not gravity][SetFlag prev_no_gravity]
+[if not soft_drop][SetFlag prev_no_softdrop]
+[if not hard_drop][SetFlag prev_no_harddrop]
 //
 [if explained_move]
 Mini: Oh! If you're wondering about the exact controls, the WASD keys and arrow keys both work.
@@ -97,11 +97,11 @@ Mini (smile): Don't leave any gaps either! [if not rotate] Well, try your best a
 [if hard_drop+gravity not soft_drop]
 Mini (annoyed): Also, be careful about slamming a Dracomino over an edge. Because then you'll have to wait for the Dracomino to slowly fall to fill it. It's such a huge waste of time.
 [always]
-[SetWorldFlag explained_move]
+[SetFlag explained_move]
 
 // === Hold ===
 [Response Tutorial_Hold]
-[if not hold_slot][SetWorldFlag prev_no_hold]
+[if not hold_slot][SetFlag prev_no_hold]
 [Jump Tutorial_JustGotHold if hold_slot+prev_no_hold]
 [Jump Tutorial_HasHold if hold_slot]
 [Jump Tutorial_NoHold]
@@ -112,7 +112,7 @@ Mini (eager): Hey! Remember before, when you asked about how to hold Dracominos 
 [else]
 Mini (eager): Hey! Good news! We can now hold on to Dracominos to use them whenever we want!
 [always]
-[ClearWorldFlag explained_no_hold]
+[ClearFlag explained_no_hold]
 [Jump Tutorial_HasHold]
 
 [Response Tutorial_HasHold]
@@ -123,8 +123,8 @@ Mini: On a keyboard, the Shift and Space keys both do this. On a controller, it'
 Mini: Then press {HOLD} again to take it back out. You can also use the number keys to take out just the one you need. Or use the right stick if you're on a controller.
 Mini (think): But be warned: once you take out of storage again, you can't put it back! So only take it out when you're sure you need it. Or if your current piece is that bad.
 Mini (cute): Whoops. There's no such thing as a bad Dracomino. All Dracominos are important, and we need every single one of them! Do your best to find a place for each one!
-[SetWorldFlag explained_hold]
-[ClearWorldFlag prev_no_hold]
+[SetFlag explained_hold]
+[ClearFlag prev_no_hold]
 
 [Response Tutorial_NoHold]
 Mini (neutral): Holding Dracominos? There's nowhere to put them though...
@@ -132,11 +132,11 @@ Mini (awkward): Once you get a Dracomino, you have to find a place for it. [if r
 [if not rotate]
 Mini (think): Which is tricky though... You'll just have to be smart about where they go. I'm not very good at it.
 [always]
-[SetWorldFlag explained_no_hold]
+[SetFlag explained_no_hold]
 
 // === Rotate explanations ===
 [Response Tutorial_Rotate]
-[if not rotate][SetWorldFlag prev_no_rotate]
+[if not rotate][SetFlag prev_no_rotate]
 [Jump Tutorial_JustGotRotate if rotate+prev_no_rotate]
 [Jump Tutorial_HasRotate if rotate]
 [Jump Tutorial_NoRotate]
@@ -148,7 +148,7 @@ Mini (smile): I remember you were having a lot of trouble with this before. Clea
 [else]
 Mini (tough): You've been trying so hard to clear lines without it. I appreciate the dedication you put into helping us! But no longer do you have to act so tough.
 [always]
-[ClearWorldFlag explained_no_rotate]
+[ClearFlag explained_no_rotate]
 [Jump Tutorial_HasRotate]
 
 [Response Tutorial_HasRotate]
@@ -161,8 +161,8 @@ Mini (awkward): And just so you know, [b]you were never expected to make lines w
 [always]
 Mini (happy): Build up as many lines as you can! Dracominos are compressed magic. When you put them in a line, they'll burst into magic crystals, which are much easier for us to use.
 Mini (smile): We need to collect as much magic as we can! And grab the coins while you're at it, too!
-[SetWorldFlag explained_rotate]
-[ClearWorldFlag prev_no_rotate]
+[SetFlag explained_rotate]
+[ClearFlag prev_no_rotate]
 
 [Response Tutorial_NoRotate]
 Mini (awkward): Rotating Dracominos? I don't think that's possible.
@@ -170,7 +170,7 @@ Mini: With no way to turn Dracominos, you have to be very careful about where yo
 Mini: You might be able to manage to clear a few lines, but [b]you're better off going for coins[/b]. Hopefully we'll get a useful ability from it.
 Mini (smile): Don't worry about lining up Dracominos for now. I think later on, we'll discover a way to rotate.
 Mini (content): But as it is, making lines is like fishing without a fishing rod. Sure, it's possible. But if you wait and actually get the proper tool, you'll save so much time and effort.
-[SetWorldFlag explained_no_rotate]
+[SetFlag explained_no_rotate]
 
 
 // === Coin explanations ===
@@ -190,13 +190,13 @@ Mini (think): ...Or other items. Like abilities, which are very useful. But also
 Mini (think): Or even weirder things like swords, potions, keys, collectibles, and traps. And then some other person takes it.
 Mini (smile): I don't mind though. I like making people happy with the random stuff I get from time to time. All I need are the coins and Dracominos.
 Mini (happy): With more Dracominos, we could reach further! Which means getting more coins! And then more Dracominos! It's a fun cycle!
-[SetWorldFlag explained_coins]
+[SetFlag explained_coins]
 
 // === Done ===
 [Response Tutorial_Done]
 Mini (happy): And that's it for my lesson! Now you can help me and my partner with our goal of collecting as much gold and mana as we can!
 Mini: Before we get back to it, do you have any questions?
-[SetWorldFlag explained_done]
+[SetFlag explained_done]
 
 [Response Dracominos]
 Mini (think): Oh... Still confused about Dracominos? I guess... I'm not quite sure myself.
@@ -215,7 +215,7 @@ Mini: Anyway, to make better use of Dracominos, you have to line them up to get 
 Mini: Mana can be used for magic stuff! Like spells, or enchanting.
 Mini (cute): While I'm not good at magic, it's still very important to dragons. We'd get sick if we didn't get enough of the stuff.
 Mini: Anyway... I explained Dracominos and magic the best I can. We're working for an important goal, so we need as much magic as we can get. Coins, too!
-[SetWorldFlag explained_dracominos]
+[SetFlag explained_dracominos]
 
 [Response Tutorial_DoneForReal]
 Mini (happy): Alrighty! Best of luck on converting the Dracominos for us! [if rotate]I appreciate your help tons!
@@ -226,7 +226,7 @@ Mini (happy): And thanks for being such a good listener. I'm happy to meet someo
 [if not tutorial]
 Mini (cute): Oh! And if you ever want my help again, press the F1 button! I'm always happy to help!
 [always]
-[SetWorldFlag tutorial]
+[SetFlag tutorial]
 [End]
 
 // === The fishing tutorial part ===
@@ -250,31 +250,31 @@ Mini (cute): Once you hooked a yummy fish, pull it in!
 Mini (tough): Some fish will try to get away. If you shake the rod too much, the fish will go faster, so don't do that. You ideally want to pull for a couple seconds at a time before tugging again.
 Mini: Once you get the fish close to you, pull again, and you'll catch it!
 Mini (cute): From that point, you can then make a tasty meal out of your fresh fish! Or you can sell it to get some coins. This is what I do. More coins means more Dracominos!
-[SetWorldFlag explained_fishing]
+[SetFlag explained_fishing]
 [if not tutorial]
 Mini: I hope that was helpful. If you need me again, press the F1 button! I'm always happy to help!
 [always]
-[SetWorldFlag tutorial]
+[SetFlag tutorial]
 [End]
 
 [Response No]
 [if fishing_tutorial_refused=2]
 Mini (bored): Okay...
-[ClearWorldFlag fishing_tutorial_hoard_mentioned]
+[ClearFlag fishing_tutorial_hoard_mentioned]
 [else if fishing_tutorial_refused=1]
 Mini (annoyed): ...Why are you looking me like that? Is it because of what I said earlier?
 Mini (sad): I have a hoard to rebuild. Don't ask what happened...
 Mini (awkward): Anyway, I'm still willing to teach you to fish if you change your mind.
-[SetWorldFlag fishing_tutorial_refused 2]
-[SetWorldFlag fishing_tutorial_hoard_mentioned]
+[SetFlag fishing_tutorial_refused 2]
+[SetFlag fishing_tutorial_hoard_mentioned]
 [else]
 Mini (bothered): Oh...
 Mini (evil): Well, that's okay. If you ever want fresh fish, I'd be happy to sell some to you! Bring all your shiny coins to me!
-[SetWorldFlag fishing_tutorial_refused 1]
+[SetFlag fishing_tutorial_refused 1]
 [if not tutorial]
 Mini: And also, if you ever change your mind, press the F1 button! I'll happily teach you how to fish!
 [always]
-[SetWorldFlag tutorial]
+[SetFlag tutorial]
 [End]
 
 [Response No_ExplainedAlready]
@@ -289,5 +289,5 @@ Mini (bothered): ...
 Mini (sad): There were adventurers. You know, the kind that like to invade your home and take your stuff. Even if it's infused with life-giving magic.
 Mini (sad): ...I'm not a fighter. Besides, fighting would only cause more problems.
 Mini (awkward): Hey... can we get back to fishing?
-[ClearWorldFlag fishing_tutorial_hoard_mentioned]
+[ClearFlag fishing_tutorial_hoard_mentioned]
 [End]

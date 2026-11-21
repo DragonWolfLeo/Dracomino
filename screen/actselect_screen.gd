@@ -10,6 +10,7 @@ func _ready() -> void:
 	clearButtonContainer()
 	SignalBus.getSignal("openActSelect").connect(_on_openActSelect_signal)
 	SignalBus.getSignal("restartGame").connect(hide)
+	DialogueManager.dialogue_started.connect(hide)
 	visibility_changed.connect(_on_visibility_changed)
 	set_process_input(visible) # Don't process input while invisible
 	# Cancel button
@@ -61,7 +62,8 @@ func _on_visibility_changed() -> void:
 		btn_checkpoint.grab_focus()
 
 func _on_openActSelect_signal() -> void:
-	visible = !visible
+	if DialogueManager.dialogue == null:
+		visible = !visible
 
 func _on_actButton_selectable_changed(isSelectable:bool, btn:Button, showOtherActs:bool = true) -> void:
 	if is_instance_valid(btn):
@@ -70,10 +72,15 @@ func _on_actButton_selectable_changed(isSelectable:bool, btn:Button, showOtherAc
 			otherActsSection.show()
 
 func _on_campaign_checkpoint_changed(act:DracominoHandler.ActContext) -> void:
-	btn_checkpoint.text = act.prettyName
+	if act:
+		btn_checkpoint.text = act.prettyName
+	else:
+		btn_checkpoint.text = "None"
 
 func _on_ClickMask_gui_input(event:InputEvent) -> void:
 	# Hide when clicking outside the window
 	if event is InputEventMouseButton:
 		if event.pressed:
-			hide()
+			match event.button_index:
+				MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT:
+					hide()

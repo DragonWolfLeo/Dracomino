@@ -1,6 +1,19 @@
 class_name DracominoUtil # TODO: Rename to Util when cleaning up GodotAP
 extends Node
 
+# === Helpers ===
+static func setToArray(_set:Dictionary) -> Array: ## Converts a Dictionary[Variant, bool] to Array with all keys mapped to true
+	var array:Array = []
+	for k:Variant in _set.keys():
+		if _set[k]: array.append(k)
+	return array
+
+static func arrayToIntSet(array:Array) -> Dictionary[int, bool]: ## Converts an Array of ints to a Dictionary[int, bool]
+	var intSet:Dictionary[int, bool] = {}
+	for v:Variant in array:
+		intSet[int(v)] = true
+	return intSet
+
 # Death Link Messages
 class DeathLinkMessageTemplate:
 	var messageTemplate:String

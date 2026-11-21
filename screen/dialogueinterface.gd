@@ -12,15 +12,26 @@ signal portrait_changed()
 @onready var portraitContainerRight:Control = $DialogueGroup/DialoguePanel/PortraitContainerRight
 @onready var dialogueGroup:Control = $DialogueGroup
 @onready var panelDelayTimer:Timer = $PanelDelayTimer
+@onready var textProgressSoundTimer:Timer = $TextProgressSoundTimer
 var portrait:CanvasItem
 var CHOICE_LABEL_SCENE_RESOURCE_PATH := "res://ui/choicelabel.tscn"
 var SHOW_NAME_LABEL:bool = false
 
 class DialogueState:
+	signal text_print_done()
+	signal text_print_started()
 	var currentSpeaker
 	var targetLine:String = ""
 	var textTimer:float = 0
-	var textPrintDone:bool = true
+	var textPrintDone:bool = true:
+		set(value):
+			if textPrintDone == value: return
+			textPrintDone = value
+			if textPrintDone:
+				text_print_done.emit()
+			else:
+				text_print_started.emit()
+
 	var visibleCharacters:int = 0
 	var totalCharacters:int = 0
 	var speakerDir:int = -2
@@ -34,6 +45,7 @@ class DialogueState:
 
 var TEXT_SPEED = 0.015
 var IMAGEOVERLAY_SHIFT := Vector2(128, 0)
+var CONTINUE_DELAY:float = 0.3
 	
 var dialogue:Dialogue:
 	get:
@@ -58,9 +70,19 @@ func _ready():
 	DialogueManager.speaker_updated.connect(updatePortrait)
 	SignalBus.getSignal("stateflag_set","game_focus").connect(set.bind("_was_focused", true), CONNECT_DEFERRED)
 	SignalBus.getSignal("stateflag_cleared","game_focus").connect(set.bind("_was_focused", false), CONNECT_DEFERRED)
-	DracominoCommandManager.addCommand("ALIGNLEFT", setSpeakerAlignment.bind(1), true).setArgHint("speaker")
-	DracominoCommandManager.addCommand("ALIGNRIGHT", setSpeakerAlignment.bind(-1), true).setArgHint("speaker")
+	DracominoCommandManager.addCommand("ALIGNLEFT", setSpeakerAlignment.bind(1), true).bind(self).setArgHint("speaker")
+	DracominoCommandManager.addCommand("ALIGNRIGHT", setSpeakerAlignment.bind(-1), true).bind(self).setArgHint("speaker")
+	DracominoCommandManager.addSignalCommand("CONTINUE").bind(self)
+	DracominoCommandManager.addCommand("FILLBOARDOBJECTCONTEXT", fillBoardObjectContext.unbind(1), true).bind(self)
+	DracominoCommandManager.addCommand("FILLLINECLEARCONTEXT", fillLineClearContext.unbind(1), true).bind(self)
+	DracominoCommandManager.addCommand("FILLITEMCONTEXT", fillCollectedItemContextByName, true).bind(self)
 
+
+	DracominoCommandManager.COMMANDS["CONTINUE"].command_activated.connect(_on_continue_command)
+
+	textProgressSoundTimer.timeout.connect(playTextProgressSound)
+	finished.connect(textProgressSoundTimer.stop)
+				
 func _process(delta):
 	# Print text procedurally
 	if state.textPrintDone: return
@@ -86,6 +108,8 @@ func resetInterface():
 
 	# Reset variables
 	state = DialogueState.new()
+	state.text_print_done.connect(textProgressSoundTimer.stop)
+	state.text_print_started.connect(textProgressSoundTimer.start)
 	
 func updateDialogue(line):
 	if get_parent().visible: grab_focus() # Only grab focus if a prompt isn't trying to grab one
@@ -108,7 +132,7 @@ func updateDialogue(line):
 	# if line.body:
 	updatePortrait(line.speaker, line.expression)
 	panelDelayTimer.start()
-	SoundManager.play("progressdialogue")
+	playTextProgressSound()
 
 func completeDialoguePrint():
 	dialogueLabel.visible_characters = -1
@@ -203,7 +227,76 @@ func setPortraitExpression(expression:String = "", isInitial:bool = false) -> vo
 func setSpeakerAlignment(speaker:String, dir:int=1) -> void:
 	speaker = speaker.to_lower()
 	speakerAlignment[speaker] = dir
-	
+
+func playTextProgressSound() -> void: ## Play text progress sound based on speaker
+	if state:
+		match state.currentSpeaker:
+			"", null: pass
+			_: SoundManager.play("textprogress")
+
+func fillBoardObjectContext() -> void: ## Fill format values with board object location context
+	fillLocationContextFromLocationId(DracominoHandler.LocationContext.lastBoardObjectLocation)
+
+func fillLineClearContext() -> void: ## Fill format values with line location context
+	fillLocationContextFromLocationId(DracominoHandler.LocationContext.lastLineLocation)
+
+func fillLocationContextFromLocationId(loc_id:int) -> void: ## Fill format values with location context from id
+	if loc_id > 0:
+		var loc_ctx:DracominoHandler.LocationContext = DracominoHandler.LocationContext.getFromId(loc_id)
+		var si:DracominoHandler.StateItem = loc_ctx.item
+		fillStateItemContext(si)
+		return
+	fillStateItemContext()
+
+func fillStateItemContext(stateItem:DracominoHandler.StateItem = null) -> void: ## Fill format values with location context from state item or null
+	if state and stateItem:
+		state.formatValues.merge({
+			item_name = itemNameTemplate(stateItem),
+			location_name = coloredBoldedSanitizedString(stateItem.locationName, CONSTANTS.COLOR.LOCATION),
+			game_name = coloredBoldedSanitizedString(stateItem.gameName, CONSTANTS.COLOR.GAME),
+			sender_name = coloredBoldedSanitizedString(stateItem.senderName, CONSTANTS.COLOR.PLAYER),
+			receiver_name = coloredBoldedSanitizedString(stateItem.receiverName, CONSTANTS.COLOR.PLAYER),
+		}, true)
+	else:
+		state.formatValues.merge({
+			item_name = "Something",
+			location_name = "Somewhere",
+			game_name = "Another World",
+			sender_name = "Someone",
+			receiver_name = "Someone",
+		})
+
+func fillCollectedItemContextByName(internalName:StringName) -> void: ## Fill format values with first instance of collected item
+	var id:int = CONSTANTS.ITEM_NAME_TO_ID.get(internalName, 0)
+	for si:DracominoHandler.StateItem in DracominoHandler.collectedItems:
+		if si.id == id:
+			fillStateItemContext(si)
+			return
+	fillStateItemContext()
+
+static func sanitizeString(string:String) -> String: ## Escape brackets from third-party strings
+	var newString:String = ""
+	for i:int in range(string.length()):
+		var c:String = string[i]
+		match c:
+			"[": newString += "[lb]"
+			"]": newString += "[rb]"
+			_: newString += c
+	return newString
+
+static func itemNameTemplate(stateItem:DracominoHandler.StateItem) -> String: ## Format a string for an item
+	if stateItem and stateItem.data:
+		return coloredBoldedSanitizedString(
+			stateItem.data.prettyName,
+			stateItem.getClassificationColor()
+		)
+	return "Something"
+
+static func coloredBoldedSanitizedString(string:String, color:Color) -> String: ## Format a string to be colored, bolded, and escaped
+	return "[color=#{color}][b]{string}[/b][/color]".format({
+		string = sanitizeString(string),
+		color = color.to_html(),
+	})
 ### 
 func isSkippable()->bool:
 	return state.skippable
@@ -271,4 +364,14 @@ func _on_ChoiceLabel_pressed(data):
 	grab_focus()
 	SoundManager.play("confirm")
 	dialogue.selectChoice(data)
-		
+
+func _on_continue_command():
+	if state and dialogue:
+		state.text_print_done.connect(_autoProceed, CONNECT_ONE_SHOT)
+
+var _autoProceedTween:Tween
+func _autoProceed() -> void:
+	if _autoProceedTween:
+		_autoProceedTween.kill()
+	_autoProceedTween = dialogue.create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_autoProceedTween.tween_callback(dialogue.proceedDialogue).set_delay(CONTINUE_DELAY)

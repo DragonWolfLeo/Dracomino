@@ -10,9 +10,11 @@ signal stateflags_reset()
 
 ### Static Variables
 static var PRIORITY:Dictionary[StringName, float] = {
-	OBJECT = 4,
-	LEVEL = 3,
-	WORLD = 2,
+	OBJECT = 6,
+	DIALOGUE = 5,
+	LEVEL = 4,
+	WORLD = 3,
+	SEED = 2,
 	MAIN = 1,
 }
 
@@ -41,7 +43,7 @@ var tempFlags:Dictionary
 var queuedFlags:Array
 var monitoring:bool = true:
 	set(value):
-		if stateFlags.is_empty():
+		if stateFlags.is_empty() and tempFlags.is_empty():
 			# No need to be dirty if this is just empty
 			monitoring = value
 		elif value != monitoring:

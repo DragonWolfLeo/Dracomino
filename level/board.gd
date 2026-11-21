@@ -57,7 +57,8 @@ var sendDeathOnRestart:bool = false
 var boardIsFresh:bool = true
 var hasOfflineDeath:bool = false
 var lineNumberLabels:Array[Label] = []
-var tileSpaces:Dictionary[Vector2i, TileSpace] = {}
+var tileSpaces:Dictionary[Vector2i, TileSpace] = {} ## Tile spaces mapped to real coordinates
+var temp_tileSpaces:Dictionary[Vector2i, TileSpace] = {} ## Temporary tile spaces that extend "in between" acts
 var boardObjectLookup:Dictionary[int, BoardObjectContext] ## StateBoardObject index to BoardObjectContext
 var temp_boardObjectLookup:Dictionary[DracominoHandler.StateBoardObject, BoardObjectContext] ## StateBoardObject to BoardObjectContext
 var linesCleared:int = 0:
@@ -71,9 +72,11 @@ var upsidedownRows:bool = false
 
 var _lastHeldPieceContext:DracominoHandler.PieceContext ## For deathlink message context; TODO: Obsolete
 
-var _linemappings:Dictionary[int, int] = {}
+var _linemappings:Dictionary[int, int] = {} ## Line mappings as reported by DracominoHandler. May end early
+var lineMappings_local:Dictionary[int, int] = {} ## Local line mappings that extend to the full board
 var _lineoffsets:Dictionary[int, int] = {}
 var _missinglines:Dictionary[int, bool] = {}
+var _currentLineSet:Dictionary[int, bool] = {} ## Set of lines that is present in the current line mappings
 
 var rowOffsets:Dictionary[int, int] = {}
 var rowEnds:Dictionary[int, int] = {}
@@ -82,7 +85,8 @@ var _waitingForPieceToGetOutOfTopRow:Piece = null
 var _lineoffset_random:RandomNumberGenerator = RandomNumberGenerator.new()
 var _lineoffset_randomSaveState:int = _lineoffset_random.state
 
-signal lines_cleared(lines:Array)
+signal lines_cleared(lines:Array) # TODO: Replace with line_cleared
+signal line_cleared(line:int)
 signal linesCleared_updated(num:int)
 signal game_over_earned()
 signal game_started()
@@ -392,7 +396,15 @@ static func createBoardObject(objectName:String) -> Node2D: ## Instantiates a bo
 		objectScenePath = "res://object/boardobject/error.tscn"
 	
 	var node:Node = (load(objectScenePath) as PackedScene).instantiate()
+	if node is BoardObject:
+		(node as BoardObject).objectName = objectName
 	if node is Node2D:
+		# Attach a flag holder to the board object so we can keep track of how many is on the board
+		var fh:FlagHolder = FlagHolder.new(FlagHolder.PRIORITY.OBJECT)
+		fh.count("boardobjects_active_"+objectName, "active", 1)
+		fh.count("boardobjects_active", "active", 1)
+		node.add_child(fh)
+
 		return node as Node2D
 	
 	printerr("Board.createBoardObject error: %s is not a Node2D"%objectScenePath)
@@ -483,7 +495,7 @@ func getFocusPiece() -> Piece:
 
 func getCameraFocus() -> Piece:
 	for piece in activePieces:
-		if piece.isFocus or (piece.moveLock and not piece.momentumPhysics and FlagManager.isFlagSet("hard_drop")):
+		if piece.isFocus or piece.isHardDropped:
 			return piece
 	return null
 
@@ -520,6 +532,7 @@ func processClearingChunk(chunk:ClearingChunk) -> void:
 			chunk.completed.emit()
 			pushRows(chunk)
 			lines_cleared.emit([getAdjustedRow(chunk.mappedLine)])
+			line_cleared.emit(getAdjustedRow(chunk.mappedLine))
 			if not clearingChunks.size():
 				checkForEvent(["line_clear"])
 	)
@@ -569,7 +582,7 @@ func requestPiece(allowMultiplePieces:bool = false):
 	if poppedPiece:
 		print("Spawned {pieceName} from {sender}'s {location} in {game}".format({
 			pieceName = poppedPiece.prettyName,
-			sender = "self" if poppedPiece.stateItem.isLocal else poppedPiece.stateItem.senderName,
+			sender = "self" if poppedPiece.stateItem.isLocal else str(poppedPiece.stateItem.senderName),
 			location = poppedPiece.stateItem.locationName,
 			game = poppedPiece.stateItem.gameName,
 		}))
@@ -768,7 +781,10 @@ func checkIfWaitingToChooseNewFocusPiece() -> void: ## Wait for a dropped piece 
 		if isPieceOnTopRow(piece):
 			return
 	if is_instance_valid(_waitingForPieceToGetOutOfTopRow):
-		chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(_waitingForPieceToGetOutOfTopRow.attachedEffects.get("on_lock")))
+		chooseNewFocusPiece(
+			_waitingForPieceToGetOutOfTopRow.isSlowDropped
+			or not effectHandler.willBlockRequestPiece(_waitingForPieceToGetOutOfTopRow.attachedEffects.get("on_lock"))
+		)
 	else:
 		chooseNewFocusPiece(true)
 
@@ -850,8 +866,13 @@ func resetGame():
 		sendDeathLink(deathContext)
 	
 	# Clean up tile space objects	
-	for k:Vector2i in tileSpaces:
-		tileSpaces[k].reset()
+	for space:TileSpace in tileSpaces.values():
+		space.reset()
+
+	# Destroy temporary tile spaces
+	for space:TileSpace in temp_tileSpaces.values():
+		space.destroy()
+	temp_tileSpaces.clear()
 
 	# Clean up temporary objects
 	for ctx:BoardObjectContext in temp_boardObjectLookup.values():
@@ -1020,8 +1041,10 @@ func getFullRows() -> Array[int]:
 		# Figure out if this is a check or not so we can play the correct sound
 		var isMissingLineCheck:bool = false
 		for i in fullRows:
-			var line:int = _linemappings.get(getAdjustedRow(BOUNDS.end.y - i - 1), 0) 
-			isMissingLineCheck = _missinglines.get(line, false)
+			var row:int = BOUNDS.end.y - i - 1
+			if _linemappings.has(getAdjustedRow(row)):
+				var line:int = _linemappings.get(getAdjustedRow(row), 0) 
+				isMissingLineCheck = _missinglines.get(line, false)
 		SoundManager.play("lineclear_check" if isMissingLineCheck else "lineclear")
 	return fullRows
 
@@ -1170,23 +1193,41 @@ func updateAllGhosts():
 				relativePositions[piece] += piece.fallDirection
 
 # Tile space helpers
-func getTileSpace(coordinates:Vector2i) -> TileSpace:
+func getTileSpace(coordinates:Vector2i) -> TileSpace: ## Get a real tile space
 	return tileSpaces.get(coordinates, null)
 
-func makeOrGetTileSpace(coordinates:Vector2i) -> TileSpace:
+func getTempTileSpace(coordinates:Vector2i) -> TileSpace: ## Get a temporary tile space
+	return temp_tileSpaces.get(coordinates, null)
+
+func makeOrGetTileSpace(coordinates:Vector2i) -> TileSpace: ## Make a real tile space
 	var space:TileSpace = tileSpaces.get(coordinates, null)
 	if space is not TileSpace:
 		space = TileSpace.new(coordinates)
 		tileSpaces[coordinates] = space
 	return space
 
-func getTileSpaceAtMapCoord(mapCoordinates:Vector2i) -> TileSpace: ## Get the correlating tile space at the board's native coordinates
-	var tileSpaceCoordinates:Vector2i = mapToTileSpaceCoordinates(mapCoordinates)
-	return getTileSpace(tileSpaceCoordinates)
+func makeOrGetTempTileSpace(coordinates:Vector2i) -> TileSpace: ## Make a temporary tile space
+	var space:TileSpace = temp_tileSpaces.get(coordinates, null)
+	if space is not TileSpace:
+		space = TileSpace.new(coordinates)
+		temp_tileSpaces[coordinates] = space
+	return space
 
-func makeOrGetTileSpaceAtMapCoord(mapCoordinates:Vector2i) -> TileSpace: ## Make the correlating tile space at the board's native coordinates
+func getTileSpaceAtMapCoord(mapCoordinates:Vector2i) -> TileSpace: ## Get the correlating tile space (real or temporary) at the board's native coordinates
 	var tileSpaceCoordinates:Vector2i = mapToTileSpaceCoordinates(mapCoordinates)
-	return makeOrGetTileSpace(tileSpaceCoordinates)
+	if isMappedCoordinates(mapCoordinates):
+		return getTileSpace(tileSpaceCoordinates)
+	return getTempTileSpace(tileSpaceCoordinates)
+
+func makeOrGetTileSpaceAtMapCoord(mapCoordinates:Vector2i) -> TileSpace: ## Make the correlating tile space (real or temporary) at the board's native coordinates
+	var tileSpaceCoordinates:Vector2i = mapToTileSpaceCoordinates(mapCoordinates)
+	if isMappedCoordinates(mapCoordinates):
+		return makeOrGetTileSpace(tileSpaceCoordinates)
+	return makeOrGetTempTileSpace(tileSpaceCoordinates)
+
+func isMappedCoordinates(mapCoordinates:Vector2i) -> bool:
+	var _row:int = BOUNDS.end.y - mapCoordinates.y - 1 # Get row counting from the bottom
+	return _linemappings.has(_row)
 
 func registerBoardObjectIfNotAlready(state:DracominoHandler.StateBoardObject) -> void: ## Adds board object to lookups if not there already
 	if state.index >= 0:
@@ -1197,7 +1238,10 @@ func registerBoardObjectIfNotAlready(state:DracominoHandler.StateBoardObject) ->
 			boardObjectLookup[state.index] = ctx
 	else:
 		if not temp_boardObjectLookup.has(state):
-			var space:TileSpace = makeOrGetTileSpace(state.coordinates)
+			var space:TileSpace = (
+				makeOrGetTileSpace(state.coordinates) if _currentLineSet.get(state.coordinates.y, false)
+				else makeOrGetTempTileSpace(state.coordinates)
+			)
 			var ctx:BoardObjectContext = BoardObjectContext.new(state)
 			space.addObject(ctx)
 			temp_boardObjectLookup[state] = ctx
@@ -1218,7 +1262,7 @@ func unregisterBoardObject(state:DracominoHandler.StateBoardObject) -> void: ## 
 
 func mapToTileSpaceCoordinates(mapCoordinates:Vector2i) -> Vector2i:
 	var _row:int = BOUNDS.end.y - mapCoordinates.y - 1 # Get row counting from the bottom
-	var line:int = _linemappings.get(getAdjustedRow(_row), 0) # Get line this row is mapped to
+	var line:int = lineMappings_local.get(getAdjustedRow(_row), 0) # Get line this row is mapped to
 	var tileSpaceCoordinates:Vector2i = Vector2i(mapCoordinates.x - BOUNDS.position.x, line)
 	tileSpaceCoordinates.x -= _lineoffsets.get(line, 0) # Adjust from offset
 	return tileSpaceCoordinates
@@ -1331,10 +1375,13 @@ func _on_Piece_ghost_cells_requested(_piece:Piece, _ghost:GhostPiece):
 	updateAllGhosts()
 
 func _on_Piece_focus_lost(piece:Piece):
-	if not piece.momentumPhysics and FlagManager.isFlagSet("hard_drop") and is_instance_valid(piece) and isPieceOnTopRow(piece):
+	if piece.isHardDropped and is_instance_valid(piece) and isPieceOnTopRow(piece):
 		_waitingForPieceToGetOutOfTopRow = piece
 	else:
-		chooseNewFocusPiece(not effectHandler.willBlockRequestPiece(null if not is_instance_valid(piece) else piece.attachedEffects.get("on_lock")))
+		chooseNewFocusPiece(
+			piece.isSlowDropped
+			or not effectHandler.willBlockRequestPiece(null if not is_instance_valid(piece) else piece.attachedEffects.get("on_lock"))
+		)
 
 func _on_Piece_tree_exiting(piece:Piece): # Fallback if piece didn't delete properly
 	activePieces.erase(piece)
@@ -1364,9 +1411,12 @@ func getAdjustedRow(_row:int) -> int: ## Flips row as if flipping the board upsi
 
 func _on_DracominoHandler_slot_context_hash_updated(_slotContextHash:int) -> void:
 	# New seed loaded so do a full cleanup
-	for k:Vector2i in tileSpaces:
-		tileSpaces[k].destroy()
+	for space:TileSpace in tileSpaces.values():
+		space.destroy()
 	tileSpaces.clear()
+	for space:TileSpace in temp_tileSpaces.values():
+		space.destroy()
+	temp_tileSpaces.clear()
 	boardObjectLookup.clear()
 	temp_boardObjectLookup.clear()
 	# Reseed random
@@ -1377,16 +1427,27 @@ func _on_DracominoHandler_slot_context_hash_updated(_slotContextHash:int) -> voi
 
 func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemappings) -> void:
 	_linemappings = lineMappings
+	lineMappings_local = lineMappings.duplicate()
+	_currentLineSet.clear()
+
+	# Extend local linemappings
+	for i:int in range(lineNumberLabels.size()):
+		if not lineMappings_local.has(i) and lineMappings_local.has(i-1):
+			lineMappings_local[i] = lineMappings_local.get(i-1, 0) + 1
 
 	# Clear background
 	if _is_irregular_board:
 		backgroundTileMap.clear()
 
 	for i:int in range(lineNumberLabels.size()):
+		var renderLine:bool = false
+		if lineMappings.has(i):
+			renderLine = true
+			_currentLineSet[lineMappings[i]] = true
 		# Re-number the labels
-		var line:int = lineMappings.get(getAdjustedRow(i), 0)
+		var line:int = lineMappings_local.get(getAdjustedRow(i), 0)
 		var _offset:int = _lineoffsets.get(line, 0)
-		lineNumberLabels[i].text = str(line + 1)
+		lineNumberLabels[i].text = str(line + 1) if renderLine else ""
 		lineNumberLabels[i].modulate = Color.WHITE if _missinglines.get(line, false) else Color8(0x55,0x55,0x55) # Make dark if collected
 		var _p:Node2D = lineNumberLabels[i].get_parent()
 		if _p is Node2D:
@@ -1405,7 +1466,7 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 			# Draw board
 			if _is_irregular_board:
 				backgroundTileMap.set_cell(mapCoord, 0, BACKGROUND_TILE_ATLAS_COORD)
-			var space:TileSpace = getTileSpace(vec)
+			var space:TileSpace = getTileSpace(vec) if renderLine else getTempTileSpace(vec)
 			if space:
 				for ctx:BoardObjectContext in space.allObjects:
 					# Create if it doesn't exist
@@ -1421,6 +1482,7 @@ func _on_DracominoState_line_mappings_updated(lineMappings:Dictionary = _linemap
 							bo.attachTimerAndOffset(syncTimer, line)
 							# Connect signal
 							if ctx.state:
+								bo.attachState(ctx.state)
 								bo.collected.connect(collectBoardObject.bind(ctx.state))
 					# Move into the proper place
 					ctx.node.position = map_to_local(mapCoord)
@@ -1431,12 +1493,12 @@ func _on_DracominoState_missing_lines_updated(lineLocs: Dictionary[int, bool]) -
 
 func _on_DracominoHandler_board_objects_updated(lookup:Dictionary[int, DracominoHandler.StateBoardObject]) -> void:
 	# Add anything that doesn't exist
-	for index:int in lookup:
+	for index:int in lookup.keys():
 		var state:DracominoHandler.StateBoardObject = lookup[index]
 		registerBoardObjectIfNotAlready(state)
 
 	# Remove anything that's disappeared
-	for index:int in boardObjectLookup:
+	for index:int in boardObjectLookup.keys():
 		if not lookup.has(index):
 			unregisterBoardObject(boardObjectLookup[index].state)
 	_on_DracominoState_line_mappings_updated()
@@ -1475,21 +1537,27 @@ func _on_effect_impatience():
 func _on_effect_web():
 	SoundManager.play("trap")
 	# Get a list of empty spaces
-	var validMapCoords:Array[Vector2i] = []
+	var validTileSpaceCoords:Array[Vector2i] = []
 	for y in range(EFFECT_WEB_BOUNDS.position.y, EFFECT_WEB_BOUNDS.end.y):
 		for x in range(rowOffsets.get(y, EFFECT_WEB_BOUNDS.position.x), rowEnds.get(y, EFFECT_WEB_BOUNDS.end.x)):
 			var vec:Vector2i = Vector2i(x, y)
 			if not isTileFilled(vec):
 				var space:TileSpace = getTileSpaceAtMapCoord(vec)
 				if not space or not space.hasObjects():
-					validMapCoords.append(mapToTileSpaceCoordinates(vec))
+					validTileSpaceCoords.append(mapToTileSpaceCoordinates(vec))
 
 	# Make webs
 	for i in range(EFFECT_WEB_NUM_TO_SPAWN):
-		if validMapCoords.is_empty():
+		if validTileSpaceCoords.is_empty():
 			break
-		var mapCoords:Vector2i = validMapCoords.pop_at(randi_range(0, validMapCoords.size()-1))
-		var state:DracominoHandler.StateBoardObject = DracominoHandler.StateBoardObject.new(mapCoords, &"web")
+		var coords:Vector2i = validTileSpaceCoords.pop_at(randi_range(0, validTileSpaceCoords.size()-1))
+		var state:DracominoHandler.StateBoardObject = DracominoHandler.StateBoardObject.new(coords, &"web")
+		# Bind to a line in this act
+		state.homeLine = coords.y
+		var _linemapping_values:Array[int] = _linemappings.values()
+		while state.homeLine >= 0 and not _linemapping_values.has(state.homeLine):
+			state.homeLine -= 1
+		#
 		var ctx:BoardObjectContext = BoardObjectContext.new(state)
 		registerBoardObjectIfNotAlready(state)
 

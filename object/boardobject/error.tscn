@@ -1,10 +1,8 @@
 [gd_scene load_steps=2 format=3 uid="uid://by35xvkygwqwt"]
 
-[ext_resource type="Texture2D" uid="uid://xv8twcset8nu" path="res://assets/art/coin.png" id="1_tw4do"]
+[ext_resource type="Texture2D" uid="uid://be1jdv63np5ds" path="res://assets/art/object/coin_nothing.png" id="1_gpay7"]
 
 [node name="Error" type="Sprite2D"]
 z_index = 1
-texture = ExtResource("1_tw4do")
+texture = ExtResource("1_gpay7")
 hframes = 10
-vframes = 5
-frame = 40

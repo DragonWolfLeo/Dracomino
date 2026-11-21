@@ -1,3 +1,18 @@
+Version 0.3.5 (dev-beta)
+ - Coins reflect the item class of the item they hold
+ - Local items can be received while offline
+ - Picked up items for other players now show a message
+ - Fix traps resetting when reconnecting during a session
+ - Piece spawning when a piece is slow-dropped is no longer interrupted by fishing
+ - Add new dialogue text progress sound
+ - (Experimental) Add Save and Load buttons to the debug menu
+ - Behinds-the-scenes changes in preparation for story mode
+
+Version 0.3.4.1 (2026 November 14)
+ - Fix mouse wheel scrolling on console and act select
+ - Fix checkpoint updating
+ - Prevent checkpoints re-announcing when reconnecting
+
 Version 0.3.4 (2026 November 6)
  - Add checkpoint system
  - Add Spider Web Trap and Spin Spin. Not available in the APWorld yet, but can trigger through Random Trap or Trap Link.

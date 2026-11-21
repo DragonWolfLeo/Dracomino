@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3 uid="uid://skb5hvh6r0x1"]
 
-[ext_resource type="Texture2D" uid="uid://bqnrch1x4v8ty" path="res://assets/art/object/orechunk.png" id="1_d47py"]
+[ext_resource type="Texture2D" uid="uid://bqnrch1x4v8ty" path="res://assets/art/object/nugget.png" id="1_d47py"]
 [ext_resource type="Script" uid="uid://6uieedcjeaar" path="res://object/boardobject/boardobject.gd" id="1_dgyna"]
 [ext_resource type="Script" uid="uid://d0khoq25o6yrt" path="res://module/animationsyncconfig.gd" id="2_dgyna"]
 
@@ -43,7 +43,7 @@ _data = {
 &"anim": SubResource("Animation_lcvo8")
 }
 
-[node name="OreChunk" type="Node2D" node_paths=PackedStringArray("animSync")]
+[node name="Nugget" type="Node2D" node_paths=PackedStringArray("animSync")]
 script = ExtResource("1_dgyna")
 animSync = NodePath("Sprite2D/AnimationPlayer/AnimationSyncConfig")
 metadata/_custom_type_script = "uid://6uieedcjeaar"

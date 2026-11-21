@@ -1,0 +1,179 @@
+// Cutscene: Beginning cutscene - Mini finds a nice empty cave to live in.
+[State dragonlair_start]
+** Show scenery of a cave opening **
+** Mini arrives to cave **
+** Show interior of empty cave **
+Mini (eager): This looks like a nice cave to live in.
+[if not boardobjects_active]
+[End]
+[always]
+** Mini holds a sack of treasure **
+** Mini trips on a pebble, spilling sack **
+Mini (panicked): Eeeek!
+** Nuggets would then appear on the board. **
+Mini (annoyed): Clumsy me. I just got here and I've already made a mess of my hoard!
+Mini (awkward): If this is gonna be my new home, I better take care of it! I'm an independent earth dragon now!
+[Jump if explained_move][End]
+[Jump Tutorial_Move]
+
+[Response Tutorial_Move]
+: Pick up nuggets by placing a Dracomino over it.
+: You can move Dracominos around using the [if not soft_drop]{LEFT} and {RIGHT} [if soft_drop]{LEFT}, {RIGHT}, and {DOWN} [always]buttons.
+[if gravity]
+: Dracominos will fall slowly until they land. [if hard_drop] To drop them quickly, press the {UP} button.
+[if gravity/feather_drop not hard_drop]
+: To let go of a piece early, press the {UP} button. You will lose control of this Dracomino and spawn a new one.
+[if hard_drop not gravity/feather_drop]
+: To drop down the Dracomino quickly, press the {UP} button.
+[always]
+[SetFlag explained_move]
+[End]
+
+////////////////////////////////////
+// Cutscene: Mini touches first nugget
+[State dragonlair_nugget_1]
+[FillBoardObjectContext]
+** Mini is about to pick up a nugget **
+** Mini then pulls their hand back **
+Mini (think): Hm... If I touch metal, it's gonna conjure one of those colorful blocks.
+Mini (awkward): However! I live on my own now! No one is gonna get mad at me this time. And it's something to fill this empty space with!
+Mini (tough): Yeah! Let's do it!
+** A cool image/animation of Mini touching a nugget and it magically shining **
+[SetFlag storycontext_gotfirstcollectible]
+[Jump is_dracomino if is_dracomino]
+[Jump is_other]
+
+[Response is_dracomino]
+** Show this specific piece **
+Mini (content): Awesome! This freedom... it feels so nice!
+Mini (cute): I can't wait to fill up my new home with a whole bunch of these!
+[NextState]
+
+[Response is_other]
+Mini (neutral): Huh? That's different... It's a {item_name}?
+Mini (think): I guess it can come in handy. Hmm, I wonder... what else could I get from these nuggets?
+[NextState]
+
+[State]
+[Jump is_nonlocal if is_nonlocal]
+[Jump][End]
+[Response is_nonlocal]
+** The item poofs from Mini's hands **
+: *The {item_name} suddenly vanishes from Mini's claws, instead appearing in the world of {game_name} in the hands of {receiver_name}.*
+Mini (panicked): Eek! Where did it go?
+[End]
+// TODO: Important! Make sure format values are escaped!
+
+
+/////////////////////////////////////
+// Cutscene: Mini clears a line
+[State dragonlair_lineclear_1]
+[FillLineClearContext]
+** Mini clears a line, leaving behind a bunch of mana crystals and an item **
+Mini (panicked): Whoa, what just happened to those blocks?!
+Mini (think): They turned into magic crystals? And also a {item_name}?
+Mini (awkward): Huh, I wish I knew that a lot sooner. I was starting to think these blocks were indestructible.
+Mini (cute): Heh, oh well. If all you have to do is put these together, I'm sure they'll figure that out back at the old place.
+[SetFlag storycontext_discover_line_crystallization]
+[End]
+
+/////////////////////////////////////
+// Cutscene: Picks up all nuggets
+[State dragonlair_allnuggets]
+[Announce All nuggets collected!]
+Mini (cute): Yay! I got everything picked up! Nice and tidy!
+[End if storycontext_foundweb]
+[End if storycontext_clearedallwebs]
+[GotoState discoverweb]
+
+/////////////////////////////////////
+// Cutscene: Mini clears half the lines
+[State dragonlair_halflineprogress]
+Mini (content): Sweet! I turned so many blocks into crystals. I'm sure these would work well in a hoard.
+[if rotate]
+Mini (cute): I'm glad I figured out how to rotate stuff. That came in very handy!
+[else]
+Mini (uncomfortable): Though, it was pretty hard to line up all those blocks. If only I could [b]rotate[/b] them somehow.
+[always]
+[End if storycontext_foundweb]
+[End if storycontext_clearedallwebs]
+[GotoState discoverweb]
+
+/////////////////////////////////////
+// Cutscene Part: Discover Webs
+[State discoverweb]
+Mini (content): Now, time to choose a cozy corner to put my hoard.
+[SetLevelFlag storycontext_foundweb]
+[TriggerEffect web_trap]
+[if storycontext_touchedweb]
+Mini (grumpy): ...There's still gross, sticky stuff here. [i]THIS[/i] time it goes! [if hold_slot]I should try hitting it with that little magic bolt when I swap block-thingies.
+[else]
+Mini (neutral): ...Hey, what's that white stuff?
+[always]
+[End]
+
+/////////////////////////////////////
+// Cutscene: Touch a web
+[State dragonlair_ontouchweb]
+Mini (panicked): [shake]EEEEK! It's so sticky![/shake]
+Mini (grumpy): Okay, this stuff's gotta go! [if hold_slot]Maybe with a little magic, I can get rid of these without touching them. [else]I might get a little messy, but this place will be a TIDY dragon lair!
+[SetFlag storycontext_touchedweb]
+[End]
+
+/////////////////////////////////////
+// Cutscene: Clean up all the webs
+[State dragonlair_allwebs]
+[Announce Webs cleared!]
+Mini (cute): Yay! All that gross, sticky stuff is gone!
+[SetFlag storycontext_clearedallwebs]
+[Jump Crystallize if storycontext_discover_line_crystallization]
+[Jump NoCrystallize]
+
+[Response Crystallize]
+Mini (content): Now, time to turn the rest of these blocks into magic crystals.
+[if not rotate]
+Mini (confused): ...Which seems like a lot of work honestly. I might want to wait a bit until I figure out how to [b]rotate[/b] them.
+[if boardobjects_active_nugget]
+Mini (cute): I should also pick up the rest of my gold nuggets while I'm at it, too. [if not rotate]That, at least, would be much easier to do! Hey, that rhymed! Hehe!
+[else]
+Mini (awkward): I already have my gold bunched up in one, cozy pile.
+    [if rotate] I'm not sure how to get more, but the crystals make a nice substitute.
+    [else] I might as well rest for now. Maybe the answer will come to me in my slumber.
+[always]
+[End]
+
+[Response NoCrystallize]
+Mini (think): Wow. This place is starting to look a lot like the old place. 
+Mini (uncomfortable): ...Minus all the kobolds.
+Mini (annoyed): At the very least I should try placing these blocks a lot more compact.
+[End]
+
+/////////////////////////////////////
+// Cutscene: Mini reaches the end of Dragon Lair, uncovering a spider nest
+[State dragonlair_clear]
+** Mini breaks a boulder and uncovers a spider nests **
+Mini (panicked): [font size=28][shake]AAAAAAAAA! Spiders![/shake]
+** Mini runs away **
+[End]
+
+/////////////////////////////////////
+// Cutscene: Mini runs into the Spooky Woods
+[State spookywoods_start]
+** Mini runs into the spooky woods **
+Mini (uncomfortable): *Huff... huff...*
+** Mini stops. **
+Mini (neutral): Where even am I?
+Mini (panicked): Wait... Where am I even supposed to live now? My lair is full of [shake]spiders[/shake]!
+Mini (annoyed): ...
+** Show visual of an earth dragon looking powerful with earth magic **
+Mini (annoyed): I'm [i]supposed[/i] to be an [b]independent[/b] dragon now. A [wave][b]Mighty Creature[/b][/wave] capable of [shake]crushing [b]everything[/b][/shake] in my path with [b][shake]Rock-Shattering[/shake] [wave][color=#ffaa00]Earth Magic[/color][/wave][/b].
+Mini (sad): ...all by myself.
+Mini (uncomfortable): [shake][b]Except I'm not actually good at magic![/b][/shake]
+Mini (uncomfortable): What am I supposed to do about [shake][b]SPIDERS[/b][/shake]? They're so [i][shake]creepy[/shake][/i]! I'm not brave enough to fight them!
+Mini (sad): ...
+Mini (grumpy): No... I need to get my home back! I need to get tougher!
+Mini (think): Looks like this forest is haunted. So...
+Mini (tough): Starting today, I'm gonna practice being brave! First I'll find some ghosts to not be afraid of!
+Mini (think): And then... Uh...
+Mini (cute): Once I've learned to not be afraid of ghosts, I can then be brave enough to remove those spiders! And I'll have my home back!
+[End]

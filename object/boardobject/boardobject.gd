@@ -9,11 +9,34 @@ class_name BoardObject extends Node2D
 @export var collectSound:StringName = &"itempickup"
 @export var deathParticlesScene:PackedScene
 
+var objectName:StringName
+
+var state:DracominoHandler.StateBoardObject:
+	set(value):
+		if state == value:
+			return
+		if state:
+			var loc_ctx:DracominoHandler.LocationContext = state.getLocationContext()
+			if loc_ctx:
+				if loc_ctx.updated.is_connected(locationContext_updated.emit):
+					loc_ctx.updated.disconnect(locationContext_updated.emit)
+		state = value
+		if state:
+			var loc_ctx:DracominoHandler.LocationContext = state.getLocationContext()
+			if loc_ctx:
+				if not loc_ctx.updated.is_connected(locationContext_updated.emit):
+					loc_ctx.updated.connect(locationContext_updated.emit.bind(loc_ctx))
+				if loc_ctx.item: locationContext_updated.emit(loc_ctx)
+
 signal collected()
+signal locationContext_updated(loc_ctx:DracominoHandler.LocationContext)
 
 func attachTimerAndOffset(timer:ActivityTimer, offset:float) -> void: ## Pass anim sync setup to AnimationSyncConfig
 	if animSync:
 		animSync.attachTimerAndOffset(timer, offset)
+
+func attachState(_state:DracominoHandler.StateBoardObject) -> void:
+	state = _state
 
 func collect() -> void: ## Play sound as if this is collected
 	if collectSound:
@@ -26,6 +49,8 @@ func reactToCover(_piece:Piece) -> void: ## Reaction to a piece locking on it
 		collect()
 
 func reactToTouch(_piece:Piece) -> void: ## Reaction to a piece touching it
+	if objectName:
+		SignalBus.getSignal("boardObject_%s_touched"%objectName).emit()
 	if collectOnTouch:
 		collect()
 

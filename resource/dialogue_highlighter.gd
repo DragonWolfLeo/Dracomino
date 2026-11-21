@@ -11,6 +11,7 @@ var actionColor:Color = Color("cdcfd2") # Text color
 var speakerColor:Color = Color("42ffc2") # Base type color
 var expressionColor:Color = Color("bce0ff") # Member variable color
 var symbolColor:Color = Color("abc9ff") # Symbol color
+var _highlightingCache:Dictionary[int, Dictionary] = {}
 
 func readAtUntil(index, until, string:String, includeEnd = false) -> String:
 	var contents = ""
@@ -36,7 +37,9 @@ func positionUntil(index, until:String, string:String) -> int:
 				return i
 	return -1
 
-func _get_line_syntax_highlighting(lineNum: int) -> Dictionary:
+func _get_line_syntax_highlighting(lineNum: int, fromCache:bool = false) -> Dictionary:
+	if fromCache:
+		return _highlightingCache.get(lineNum, {})
 	var te:TextEdit = get_text_edit()
 	var line:String = te.get_line(lineNum)	
 	var sh:Dictionary = {
@@ -50,17 +53,18 @@ func _get_line_syntax_highlighting(lineNum: int) -> Dictionary:
 	# Check if this is an empty line and then just get whether its continued or not
 	if line.strip_edges().is_empty():
 		if lineNum > 0:
-			var prev = _get_line_syntax_highlighting(lineNum - 1)
+			var prev = _get_line_syntax_highlighting(lineNum - 1, true)
 			sh.speaker = prev.get("speaker", false)
 			sh.expression = prev.get("expression", false)
 			sh.mainColor = prev.get("mainColor", sh.mainColor)
 			sh.isContinued = prev.get("isContinued", false)
+		_highlightingCache[lineNum] = sh
 		return sh
 
 	# Check if this is a continuation
 	var isContinuedFromPrevious:bool = false
 	if lineNum > 0:
-		var prev = _get_line_syntax_highlighting(lineNum - 1)
+		var prev = _get_line_syntax_highlighting(lineNum - 1, true)
 		
 		isContinuedFromPrevious = prev.get("isContinued", false) or line[0].strip_edges().is_empty()
 
@@ -176,5 +180,8 @@ func _get_line_syntax_highlighting(lineNum: int) -> Dictionary:
 				break
 		if nextLineIsContinuation:
 			sh[0] = {color = speakerColor}
-
+	_highlightingCache[lineNum] = sh
 	return sh
+
+func _clear_highlighting_cache() -> void:
+	_highlightingCache.clear()

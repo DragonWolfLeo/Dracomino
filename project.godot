@@ -37,6 +37,7 @@ UserData="*res://singleton/userdata.gd"
 DracominoCommandManager="*res://singleton/commandmanager.gd"
 DialogueManager="*res://singleton/dialoguemanager.gd"
 SoundManager="*res://singleton/soundmanager.tscn"
+Story="*res://singleton/story.gd"
 Archipelago="*res://godot_ap/autoloads/archipelago.tscn"
 
 [debug]

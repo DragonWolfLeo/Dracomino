@@ -91,8 +91,8 @@ func versionIsOlderThan(numA:String, numB:String)->bool:
 		a.to_int() < b.to_int()
 	)
 
-func doesSaveFileExist():
-	return FileAccess.file_exists(Config.SAVEFILEPATH)
+func doesSaveFileExist(path:String = Config.SAVEFILEPATH):
+	return FileAccess.file_exists(path)
 	
 func isNewVersion(data:Dictionary) -> bool:
 	var ver = data.get("versionCompatible", data.get("versionNum", ""))

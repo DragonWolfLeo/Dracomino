@@ -288,6 +288,8 @@ var moveLock:bool = false: ## Prevent moving this anymore
 		if value:
 			isFocus = false
 			set_process_unhandled_input(false)
+var isHardDropped:bool = false
+var isSlowDropped:bool = false
 var holdLock:bool = false ## Prevent from holding this anymore
 var lockDelayed:bool = false: ## Prevent from locking for a bit
 	set(value):
@@ -623,6 +625,7 @@ func setCells(cells:Array[Vector2i]) -> void:
 	updateTiles()
 
 func hardDrop():
+	isHardDropped = true
 	moveLock = true
 	canRotate = false
 	gravityTimer.wait_time = HARD_DROP_WAIT_TIME * modifiers.get("movement", 1)
@@ -630,6 +633,7 @@ func hardDrop():
 
 func gravityDrop():
 	if not moveLock:
+		isSlowDropped = true
 		canRotate = false
 		if momentumPhysics:
 			momentumDirection = fallDirection
@@ -644,7 +648,7 @@ func gravityDrop():
 func move(direction:Vector2i, isRotate:bool = false):
 	currentPosition += direction
 	if placed: return
-	if moveLock:
+	if isHardDropped:
 		playHardDropSound = true
 	if isRotate:
 		# Avoid falling/locking too soon

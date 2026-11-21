@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://bujktwm1f2onj"]
+[gd_scene load_steps=4 format=3 uid="uid://bujktwm1f2onj"]
 
 [ext_resource type="Script" uid="uid://cfbgk8vq58w0h" path="res://dracomino_ap/option_toggle_button.gd" id="1_2aojs"]
 [ext_resource type="Script" uid="uid://bi07x0bnmtu8d" path="res://dracomino_ap/flag_toggle_button.gd" id="2_5smlf"]
+[ext_resource type="Script" uid="uid://2boegynt1jx3" path="res://dracomino_ap/signal_button.gd" id="3_5smlf"]
 
 [node name="Debug" type="ScrollContainer"]
 anchors_preset = 15
@@ -141,3 +142,21 @@ script = ExtResource("2_5smlf")
 flag = "effect_riptide"
 ignoreExternalSignals = true
 debugOnly = true
+
+[node name="HFlowContainer" type="HFlowContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Button_Save" type="Button" parent="MarginContainer/VBoxContainer/HFlowContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Test Save"
+script = ExtResource("3_5smlf")
+signalKey = &"saveGame"
+
+[node name="Button_Load" type="Button" parent="MarginContainer/VBoxContainer/HFlowContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Test Load"
+script = ExtResource("3_5smlf")
+signalKey = &"loadGame"

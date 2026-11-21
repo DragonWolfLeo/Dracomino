@@ -19,6 +19,9 @@ class COLOR:
 	static var TRAP =        Color8(0xFF, 0x55, 0x00)
 	static var DEATH =       Color8(0xFF, 0x00, 0x00)
 	static var SPECIAL =     Color8(0x55, 0xAA, 0x00)
+	static var LOCATION =    Color8(0x55, 0xAA, 0x00)
+	static var GAME =        Color8(0xFF, 0xFF, 0x00)
+	static var PLAYER =      Color8(0xFF, 0xFF, 0xAA)
 	static var ERROR =       Color8(0xFF, 0x55, 0x00)
 
 # Piece Color Ids
@@ -53,12 +56,14 @@ class Data:
 	static var OBJECT_TYPES:PackedStringArray = [
 		"shape",
 		"ability",
+		"misc",
 		"on_spawn",
 		"on_lock",
 		"modifier",
 		"line_clear",
 		"item_pickup",
-		"boss_defeat",
+		"act_completion",
+		"milestone",
 	]
 	var id:int
 	var prettyName:StringName
@@ -161,7 +166,7 @@ class LocationData extends Data:
 	# [000, "Sleep Trap",               "", [ "trap" ] ],
 	# [000, "Wyrmino Trap",             "", [ "trap" ] ],
 	
-	# Shapes (301-)                                                                     Last two values are poor height, safe height
+	# Shapes (301-1000)                                                                 Last two values are poor height, safe height
 	[301, "Monomino",       "", [ "progression_skip_balancing", "shape", "monomino" ],                                             1, 1],
 
 	[302, "Domino",         "", [ "progression_skip_balancing", "shape", "domino" ],                                               1, 2],
@@ -195,6 +200,11 @@ class LocationData extends Data:
 	[327, "Q Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap" ],                          2, 3],
 	[328, "Y Pentomino",    "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
 	[329, "Y' Pentomino",   "",  [ "progression_skip_balancing", "shape", "pentomino", "has_corner_gap", "has_second_tile_gap" ],   1, 3],
+
+	# Misc Items (1001-) - Will be filler unless it's an actual key item
+	[1001, "Fishing Rod",   "fishingrod",     [ "misc" ] ],
+	[1002, "Fresh Fish",    "fish",           [ "misc" ] ],
+
 ].reduce(_generateDataTable.bind(ItemData.new), {} as Dictionary[int, ItemData])
 
 @onready var ITEM_NAME_TO_ID:Dictionary[StringName, int] = ITEMS.values().reduce(
@@ -210,9 +220,13 @@ class LocationData extends Data:
 	_locationRangeConfig(      0,  1_000, "Line {n} Cleared",         "",                [ "line_clear" ]),
 	_locationRangeConfig( 10_000, 10_000, "Dragon Coin {n}",          "coin",            [ "item_pickup" ]),
 	# Reserve 20_000 for unique locations
+	[
+		[20001, "Home Sweet Home - Dragon Lair: Pick Up All Nuggets", "",                [ "milestone" ] ],
+		[20002, "Home Sweet Home - Dragon Lair: Clear All Webs",      "",                [ "milestone" ] ],
+	],
 	# Story mode
-	_locationRangeConfig( 30_000,    100, "Boss {n} Defeated",        "",                [ "boss_defeat" ]),
-	_locationRangeConfig( 40_000,  1_000, "Ore Chunk {n}",            "orechunk",        [ "item_pickup" ]), # Home Sweet Home - Dragon Lair
+	_locationRangeConfig( 30_000,    100, "Act {n} Completed",        "",                [ "act_completion" ]),
+	_locationRangeConfig( 40_000,  1_000, "Nugget {n}",               "nugget",          [ "item_pickup" ]), # Home Sweet Home - Dragon Lair
 	_locationRangeConfig( 50_000,  1_000, "Ghost {n} Defeated",       "ghost",           [ "item_pickup" ]), # Home Sweet Home - Spooky Woods
 	_locationRangeConfig( 60_000,  1_000, "Treasure Piece {n}",       "treasurepiece",   [ "item_pickup" ]), # Home Sweet Home - Riverside
 	_locationRangeConfig( 70_000,  1_000, "Fish {n} Caught",          "fish",            [ "item_pickup" ]), # Home Sweet Home - Riverside

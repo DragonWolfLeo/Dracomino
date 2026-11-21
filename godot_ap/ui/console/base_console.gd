@@ -1,4 +1,4 @@
-# @tool
+@tool
 class_name BaseConsole extends Control
 
 @export_group("Nodes")
@@ -16,7 +16,7 @@ class_name BaseConsole extends Control
 		return parts_cont.get_theme_constant(&"separation")
 @export var scroll_to_bottom_on_new_message: bool = false
 ## Maximum number of elements that can be in the parts container. Setting to 0 disables this.
-@export var max_parts:int = 1000
+@export var max_parts: int = 1000
 
 static var console_label_fonts: FontStorage
 
@@ -67,13 +67,10 @@ func add(part: Control) -> Control:
 	parts_cont.add_child(part)
 	if max_parts > 0:
 		# Remove excess elements
-		var num_to_queue_free:int = parts_cont.get_child_count() - max_parts
+		var num_to_queue_free: int = parts_cont.get_child_count() - max_parts
 		if num_to_queue_free > 0:
-			var children_to_queue_free:Array[Node] = []
-			for i:int in range(num_to_queue_free):
-				children_to_queue_free.append(parts_cont.get_child(i))
-			for child:Node in children_to_queue_free:
-				child.queue_free()
+			for i: int in range(num_to_queue_free):
+				parts_cont.get_child(i).queue_free()
 	queue_redraw()
 	return part
 
@@ -176,7 +173,6 @@ func _ready():
 
 func _on_new_message(_node: Node) -> void:
 	if scroll_to_bottom_on_new_message:
-		await get_tree().create_timer(0.1).timeout
 		scroll_bottom()
 
 func _notification(what: int) -> void:
@@ -293,6 +289,8 @@ func printjson_command(json: Dictionary) -> String:
 			output_data = true
 	if flowbox.get_child_count() > 0:
 		add(flowbox)
+	else:
+		flowbox.queue_free()
 		flowbox = null
 	if pre_space and output_data:
 		add_header_spacing()
@@ -368,18 +366,24 @@ static func printjson_out_str(elems: Array) -> String:
 		match elem.get("type", "text"):
 			"player_id":
 				var plyr_id = int(txt)
-				txt = Archipelago.conn.get_player(plyr_id).output().text
+				var label: ConsoleLabel = Archipelago.conn.get_player(plyr_id).output()
+				txt = label.text
+				label.queue_free()
 			"item_id":
 				var item_id = int(txt)
 				var plyr_id = int(elem["player"])
 				var data: DataCache = Archipelago.conn.get_gamedata_for_player(plyr_id)
 				var flags := int(elem["flags"])
-				txt = make_item(item_id, flags, data).text
+				var label: ConsoleLabel = make_item(item_id, flags, data)
+				txt = label.text
+				label.queue_free()
 			"location_id":
 				var loc_id = int(txt)
 				var plyr_id = int(elem["player"])
 				var data: DataCache = Archipelago.conn.get_gamedata_for_player(plyr_id)
-				txt = make_location(loc_id, data).text
+				var label: ConsoleLabel = make_location(loc_id, data)
+				txt = label.text
+				label.queue_free()
 		s += txt
 	return s
 

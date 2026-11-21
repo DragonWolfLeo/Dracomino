@@ -119,7 +119,7 @@ func _canLoadNewDialogue() -> bool:
 	return DialogueManager.dialogue == null
 
 func _activateEffect(flag:String, duration:int = 8, annoying:bool = true) -> void:
-	var ae:ActiveEffect = ActiveEffect.instantiateEffect(flag, duration, annoying)
+	var ae:ActiveEffect = ActiveEffect.instantiateEffect(flag, duration, annoying).connectDefaultTickSignal()
 	add_child(ae)
 
 func _activateTimedEffect(flag:String, duration:float = 1.0) -> void:
@@ -198,7 +198,7 @@ func getNextValidBufferedEffect(context:Array[StringName] = []) -> DracominoHand
 	return null
 
 func willBlockRequestPiece(stateItem:DracominoHandler.StateItem, ignoreUsed:bool = false) -> bool:
-	if stateItem == null or (stateItem.used and not ignoreUsed):
+	if stateItem == null or (stateItem.used and not ignoreUsed) or FlagManager.isFlagSet("versus_mode"):
 		return false
 	var fx:Effect = getEffectObject(stateItem)
 	return fx and fx.canTriggerFn.call() and fx.blockRequestPiece

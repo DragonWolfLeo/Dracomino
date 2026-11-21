@@ -37,6 +37,7 @@ class SpecialFlagHolderHandler:
 var HANDLERS:Dictionary[StringName, SpecialFlagHolderHandler] = {
 	MAIN = SpecialFlagHolderHandler.new(),
 	WORLD = SpecialFlagHolderHandler.new(),
+	SEED = SpecialFlagHolderHandler.new(),
 	LEVEL = SpecialFlagHolderHandler.new(),
 }
 
@@ -88,9 +89,15 @@ func _ready() -> void:
 ### Registration (Flag holders call on enter_tree) ###
 func registerMonitoredFlagHolder(object: FlagHolder):
 	if not flagHolders.has(object):
-		flagHolders.append(object)
 		object.stateflags_aboutToDirty.connect(_on_stateflags_aboutToDirty.bind(object))
 		object.tree_exiting.connect(_unregisterMonitoredFlagHolder.bind(object), CONNECT_ONE_SHOT)
+		# Send dirty signal if it comes with flags
+		if object.monitoring and not(object.stateFlags.is_empty() and object.tempFlags.is_empty()):
+			object.stateflags_aboutToDirty.emit(object.stateFlags.keys())
+			flagHolders.append(object)
+			object.stateflags_dirty.emit()
+		else:
+			flagHolders.append(object)
 
 func _unregisterMonitoredFlagHolder(object: FlagHolder):
 	object.stateflags_aboutToDirty.disconnect(_on_stateflags_aboutToDirty)

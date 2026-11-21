@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://c0ovofocoscyg"]
+[gd_scene load_steps=7 format=3 uid="uid://c0ovofocoscyg"]
 
 [ext_resource type="Script" uid="uid://0mq4s883pbat" path="res://godot_ap/autoloads/archipelago.gd" id="1_41ph8"]
 [ext_resource type="Script" uid="uid://dc70htepylffm" path="res://godot_ap/ap_files/version.gd" id="2_2e7gq"]
 [ext_resource type="Script" uid="uid://67nujmuigaei" path="res://dracomino_ap/dracomino_config.gd" id="3_rcf7h"]
+[ext_resource type="Script" uid="uid://dv6lal7ho4a4" path="res://godot_ap/managers/saves.gd" id="4_fmraa"]
 
 [sub_resource type="Resource" id="Resource_pmgvy"]
 script = ExtResource("2_2e7gq")
@@ -30,5 +31,10 @@ one_shot = true
 [node name="DracominoConfigManager" type="Node" parent="."]
 script = ExtResource("3_rcf7h")
 metadata/_custom_type_script = "uid://67nujmuigaei"
+
+[node name="APSaveManager" type="Node" parent="."]
+script = ExtResource("4_fmraa")
+SAVE_HEADER = "Dracomino_Save_File"
+metadata/_custom_type_script = "uid://dv6lal7ho4a4"
 
 [connection signal="timeout" from="HangTimer" to="." method="force_disconnect"]
