@@ -80,17 +80,6 @@ class StateItem:
 		get:
 			return SeedState.getGameName(sender_id)
 	var flags:int
-	var classification:StringName:
-		get:
-			if (flags & AP.ItemClassification.PROG) and (flags & AP.ItemClassification.USEFUL):
-				return "proguseful"
-			if flags & AP.ItemClassification.PROG:
-				return "progression"
-			if flags & AP.ItemClassification.USEFUL:
-				return "useful"
-			if flags & AP.ItemClassification.TRAP:
-				return "trap" 
-			return "filler"
 	var itemCopy:int = -1 ## Which copy of an item of this id is this as an AP item?
 	var isLocal:bool:
 		get:
@@ -152,8 +141,25 @@ class StateItem:
 		_itemCache[vec] = true
 		return self
 
-	func getClassificationColor() -> Color:
-		match classification:
+	func getClassification(prioritizeUsefulOverTrap:bool = true) -> StringName:
+		if (flags & AP.ItemClassification.PROG) and (flags & AP.ItemClassification.USEFUL):
+			return "proguseful"
+		if flags & AP.ItemClassification.PROG:
+			return "progression"
+		if prioritizeUsefulOverTrap:
+			if flags & AP.ItemClassification.USEFUL:
+				return "useful"
+			if flags & AP.ItemClassification.TRAP:
+				return "trap" 
+		else:
+			if flags & AP.ItemClassification.TRAP:
+				return "trap" 
+			if flags & AP.ItemClassification.USEFUL:
+				return "useful"
+		return "filler"
+
+	func getClassificationColor(prioritizeUsefulOverTrap:bool = true) -> Color:
+		match getClassification(prioritizeUsefulOverTrap):
 			"proguseful": return CONSTANTS.COLOR.PROGUSEFUL
 			"progression": return CONSTANTS.COLOR.PROGRESSION
 			"trap": return CONSTANTS.COLOR.TRAP
@@ -1555,13 +1561,7 @@ func _on_obtained_item(item: NetworkItem):
 	var si:StateItem = StateItem.fromNetworkItem(item).itemize(itemCopy)
 	obtainedItemCounts[item.id] = itemCopy + 1 # Increment the counter
 	if si and not isJustConnected:
-		var color = (
-			CONSTANTS.COLOR.PROGUSEFUL if item.is_prog() and (item.flags & AP.ItemClassification.USEFUL)
-			else CONSTANTS.COLOR.PROGRESSION if item.is_prog()
-			else CONSTANTS.COLOR.TRAP if item.flags & AP.ItemClassification.TRAP
-			else CONSTANTS.COLOR.USEFUL if item.flags & AP.ItemClassification.USEFUL
-			else CONSTANTS.COLOR.FILLER
-		)
+		var color = si.getClassificationColor(false)
 		if item.is_local():
 			notification_signal.emit("You found your {item}!".format({item=item.get_name()}), color, false)
 		else:

@@ -14,7 +14,7 @@ func _on_locationContext_updated(loc_ctx:DracominoHandler.LocationContext) -> vo
 	var item:DracominoHandler.StateItem = loc_ctx.item
 	if not item:
 		return
-	match item.classification:
+	match item.getClassification():
 		&"proguseful": play(progusefulAnimationName)
 		&"progression": play(progressionAnimationName)
 		&"useful": play(usefulAnimationName)
