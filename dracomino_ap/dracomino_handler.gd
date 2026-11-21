@@ -51,7 +51,7 @@ var LINE_THRESHOLD_FOR_NO_ROTATE_DEATH_CONTEXT:int = 8 ## For death context
 var _canUseDeathContext_NO_ROTATE:bool = false ## For death context
 var _energySendBuffer:int = 0 ## Energy to send to server when reconnecting
 var _effectBuffer:Array[StateItem] = [] ## Next traps to apply to next pieces
-var _obtainedItemNum:int ## Number of items received from server
+var obtainedItemNum:int ## Number of items received from server
 var _obtainedItemIndex:int ## Index of current item being sent from server
 
 signal lineMappings_updated(mappings:Dictionary[int, int])
@@ -829,6 +829,7 @@ func newSeedReset():
 	missingLocations.clear()
 	checkedLocations.clear()
 	collectedAbilities.clear()
+	obtainedItemNum = 0
 	LocationContext.clearCache()
 	if campaign is CampaignContext:
 		campaign.cleanUp()
@@ -851,6 +852,7 @@ func addToSaveData(data:Dictionary = {}) -> Dictionary: ## Record state to dicti
 	data["victory"] = victory
 	LocationContext.addToSaveData(data)
 	data["collectedItems"] = []
+	data["obtainedItemNum"] = obtainedItemNum
 	for si:StateItem in collectedItems:
 		data["collectedItems"].append(si.toDictionary())
 	data["missingLocations"] = DracominoUtil.setToArray(missingLocations)
@@ -870,6 +872,7 @@ func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json di
 		for dict:Variant in data["collectedItems"]:
 			if dict is Dictionary:
 				giveItem(StateItem.fromDictionary(dict))
+	obtainedItemNum = int(data.get("obtainedItemNum", collectedItems.size()))
 	if data.get("missingLocations") is Array:
 		missingLocations.merge(DracominoUtil.arrayToIntSet(data["missingLocations"]))
 	if data.get("checkedLocations") is Array:
@@ -1523,11 +1526,11 @@ func _on_obtained_item(item: NetworkItem):
 	if not seedIsValid:
 		return
 	# Check if this item has been obtained already (because reconnecting)
-	if _obtainedItemIndex < _obtainedItemNum:
+	if _obtainedItemIndex < obtainedItemNum:
 		_obtainedItemIndex += 1
 		return
 	_obtainedItemIndex += 1
-	_obtainedItemNum += 1
+	obtainedItemNum += 1
 	if not isJustConnected:
 		var color = (
 			CONSTANTS.COLOR.PROGUSEFUL if item.is_prog() and (item.flags & AP.ItemClassification.USEFUL)
