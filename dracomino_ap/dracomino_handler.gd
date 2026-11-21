@@ -985,6 +985,11 @@ func sendLocation(loc_id:int):
 		return
 	# Send the location
 	if missingLocations.get(loc_id, false):
+		# Check if location has a local item and create it before getting it from the server
+		var loc_ctx:LocationContext = LocationContext.getFromId(loc_id)
+		if loc_ctx and loc_ctx.item:
+			obtainServerItem(loc_ctx.item)
+
 		if Archipelago.conn:
 			Archipelago.collect_location(loc_id)
 			print("Sending location: ", CONSTANTS.LOCATIONS[loc_id].prettyName)
@@ -1132,6 +1137,28 @@ func triggerTrapLinkTrap(trapname:String, source:String = "") -> String: ## Trig
 	print("No traps were triggered: ", trapsToTrigger)
 	return ""
 
+func obtainServerItem(item:StateItem) -> void: ## Get an AP item, either directly from the server, or one that is scouted and given early/offline
+	if not seedIsValid or not item:
+		return
+	var itemName:String = str(item.data.prettyName) if item.data else "Item"
+	var color:Color = item.getClassificationColor(false)
+	if item.receiver_id == SeedState.player_id:
+		# This is your item; Check that it's not a copy and then give it
+		var id:int = item.id # Get id before item potentially gets destroyed by itemize
+		var itemCopy:int = obtainedItemCounts.get(id, 0)
+		item = item.itemize(itemCopy)
+		obtainedItemCounts[id] = itemCopy + 1 # Increment the counter
+		if item and not isJustConnected:
+			if item.isLocal:
+				notification_signal.emit("You found your {itemName}!".format({itemName=itemName}), color, false)
+			else:
+				notification_signal.emit("{source} found your {itemName}!"
+					.format({source=item.senderName, itemName=itemName}), color, false
+				)
+		giveItem(item)
+	else:
+		# This is another player's item. Announce that you got it!
+		notification_signal.emit("You found {receiver}'s {itemName}!".format({itemName=itemName, receiver=item.receiverName}), color, false)
 
 func giveItem(item:StateItem):
 	if not item: return
@@ -1561,19 +1588,7 @@ func _on_traplink(source: String, trapname: String, json: Dictionary):
 func _on_obtained_item(item: NetworkItem):
 	if not seedIsValid:
 		return
-	# Check if this item has been obtained already (because reconnecting)
-	var itemCopy:int = obtainedItemCounts.get(item.id, 0)
-	var si:StateItem = StateItem.fromNetworkItem(item).itemize(itemCopy)
-	obtainedItemCounts[item.id] = itemCopy + 1 # Increment the counter
-	if si and not isJustConnected:
-		var color = si.getClassificationColor(false)
-		if item.is_local():
-			notification_signal.emit("You found your {item}!".format({item=item.get_name()}), color, false)
-		else:
-			notification_signal.emit("{source} sent you your {item}!"
-				.format({source=Archipelago.conn.get_player_name(item.src_player_id), item=item.get_name()}), color, false
-			)
-	giveItem(si)
+	obtainServerItem(StateItem.fromNetworkItem(item))
 
 func _on_on_hint_update(hints: Array[NetworkHint]):
 	if Archipelago.conn:
