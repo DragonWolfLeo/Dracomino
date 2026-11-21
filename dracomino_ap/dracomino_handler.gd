@@ -1277,7 +1277,7 @@ func syncLocationsWithConnection(conn:ConnectionInfo) -> void: ## Sync and build
 	
 	# Sync with campaign (because reconnect)
 	if campaign:
-		for loc_id:int in missingLocations.keys():
+		for loc_id:int in checkedLocations.keys():
 			campaign.removeMissingLocation(loc_id)
 
 	if victory:
@@ -1327,19 +1327,6 @@ func buildLocationsFromSlotData(slotData:Dictionary) -> void: ## Make lines and 
 		_allPickupLocations[k].reverse() # Prepare to pop the first objects first
 	missingPickups.sort()
 	
-	# Set up lookup tables
-	for i:int in range(allLineLocations.size()):
-		id_to_line[allLineLocations[i]] = i
-		missingLines[i] = missingLocations.get(allLineLocations[i], false)
-		if missingLines[i]:
-			campaign.registerMissingLocationByLine(allLineLocations[i], i)
-
-	for sbo:StateBoardObject in boardObjects.values():
-		if sbo.isLocation:
-			id_to_boardObject[sbo.loc_id] = sbo
-			if missingLocations.get(sbo.loc_id, false):
-				campaign.registerMissingLocationByLine(sbo.loc_id, sbo.coordinates.y)
-
 	# Create item pickup data
 	var item_pickup_placements:Variant = slotData.get("item_pickup_placements", [])
 	# Added version 1.0.0 probably
@@ -1378,6 +1365,20 @@ func buildLocationsFromSlotData(slotData:Dictionary) -> void: ## Make lines and 
 			else:
 				# This isn't a location; it's just a regular board object or an error
 				boardObjects[i] = StateBoardObject.new(vec, objectName, -1, i)
+	
+	# Set up lookup tables
+	for i:int in range(allLineLocations.size()):
+		id_to_line[allLineLocations[i]] = i
+		missingLines[i] = missingLocations.get(allLineLocations[i], false)
+		if missingLines[i]:
+			campaign.registerMissingLocationByLine(allLineLocations[i], i)
+
+	for sbo:StateBoardObject in boardObjects.values():
+		if sbo.isLocation:
+			id_to_boardObject[sbo.loc_id] = sbo
+			if missingLocations.get(sbo.loc_id, false):
+				campaign.registerMissingLocationByLine(sbo.loc_id, sbo.coordinates.y)
+
 
 #===== Private Functions =====
 func _connectSignalsToCampaign() -> void:
