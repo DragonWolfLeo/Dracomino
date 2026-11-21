@@ -18,7 +18,6 @@ var hintedRotateAbilities:Dictionary[int, StateItem] = {}
 var seedIsValid:bool = false
 var goal:int = -1:
 	set(value):
-		if goal == value: return
 		goal = value
 		goal_updated.emit(goal)
 		if seedFlagHolder:
