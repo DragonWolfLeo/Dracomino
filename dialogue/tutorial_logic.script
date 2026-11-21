@@ -1,5 +1,5 @@
 [State]
-[AlignRight Mega][Count mega_annoyed threshold 3]
+[AlignRight Mega][SeedCount mega_annoyed threshold 3]
 // Deny dispelling fishing if you annoyed Mega before
 [if mode=fishing+mega_annoyed]
 [GotoState DispelDenied_Mini]
@@ -9,7 +9,7 @@ Mega (annoyed): [ShowCutscene boardcutscene]...
 [if annoying_effects_active+mega_annoyed not mega_very_annoyed]
 Mega (annoyed): You know, it costs mana to dispel these traps. 
 [if annoying_effects_active+mega_annoyed]
-[Count mega_very_annoyed amount 1 add][SubDialogue tutorial_logic Dispel_Macro]
+[SeedCount mega_very_annoyed amount 1 add][SubDialogue tutorial_logic Dispel_Macro]
 Mega: In Dracomino, the locations you're expected to reach depends on the Rotate ability and the total amount of blocks your pieces make up.
 [else]
 // The actual beginning of the tutorial
@@ -17,7 +17,7 @@ Mega: [ShowCutscene boardcutscene] In Dracomino, the locations you're expected t
 // Mega is annoyed (Phase 2)
 [if annoying_effects_active+dispels_done not mega_annoyed]
 Mega (annoyed): Really? Again?
-[Count mega_annoyed amount 1 add][SubDialogue tutorial_logic Dispel_Macro]
+[SeedCount mega_annoyed amount 1 add][SubDialogue tutorial_logic Dispel_Macro]
 Mega (unimpressed): I wish you would take my time seriously.
 Mega: Anyway, back to the tutorial.
 [always]
@@ -63,7 +63,7 @@ Mini (grumpy): I can't believe this!
 
 
 [State Dispel_Macro]
-Mega (cast): *Mega casts a spell!* [Emit dispel_annoying_effects][Count dispels_done amount 1 add]
+Mega (cast): *Mega casts a spell!* [Emit dispel_annoying_effects][SeedCount dispels_done amount 1 add]
 // Check for results of energy transaction
 [SubDialogue tutorial_logic DispelResult_Macro]
 // End here if we succeeded
