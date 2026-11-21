@@ -88,10 +88,10 @@ class StateItem:
 				return "proguseful"
 			if flags & AP.ItemClassification.PROG:
 				return "progression"
-			if flags & AP.ItemClassification.TRAP:
-				return "trap" 
 			if flags & AP.ItemClassification.USEFUL:
 				return "useful"
+			if flags & AP.ItemClassification.TRAP:
+				return "trap" 
 			return "filler"
 	var isLocal:bool:
 		get:
