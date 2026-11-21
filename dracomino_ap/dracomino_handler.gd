@@ -890,7 +890,12 @@ func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json di
 	isJustConnected = true
 	get_tree().create_timer(2, true).timeout.connect(set.bind("isJustConnected", false))
 	var slotContextHash_new:int = int(data.get("slotContextHash", 0))
-	if not Archipelago.conn or slotContextHash != slotContextHash_new:
+	var isNewSeed:bool = slotContextHash != slotContextHash_new
+	var isForceDisconnecting:bool = false
+	if Archipelago.conn and isNewSeed:
+		isForceDisconnecting = true
+		Archipelago.ap_disconnect()
+	if not Archipelago.conn or isNewSeed:
 		slotContextHash = slotContextHash_new
 		SeedState.loadFromSaveData(data)
 		newSeedReset()
@@ -912,7 +917,7 @@ func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json di
 		worldFlagHolder.stateFlags = data["stateFlags"]
 	loadSlotData(SeedState.slotData)
 	# Resync if connected already
-	if Archipelago.conn:
+	if Archipelago.conn and not isForceDisconnecting:
 		syncLocationsWithConnection(Archipelago.conn)
 	else:
 		buildLocationsFromSlotData(SeedState.slotData)
