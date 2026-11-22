@@ -40,7 +40,7 @@ func _ready() -> void:
 	if OS.is_debug_build():
 		Archipelago.cmd_manager.debug_hidden = false
 	AP.log(Archipelago.AP_CLIENT_VERSION)
-	Archipelago.creds.updated.connect((Archipelago.config as DracominoConfigManager).update_credentials)
+	Archipelago.creds_updated.connect((Archipelago.config as DracominoConfigManager).update_credentials)
 
 	Archipelago.load_console(get_parent(), false)
 
