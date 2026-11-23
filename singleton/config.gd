@@ -34,11 +34,7 @@ const DEFAULT_SETTINGS:Dictionary[StringName, Variant] = {
 	showAnnouncements = true,
 }
 var settings:Dictionary[StringName, Variant] = DEFAULT_SETTINGS.duplicate()
-var VERSION_UPGRADES:Dictionary[String, Callable] = {
-	"0.2.2.1": func(data:Dictionary): # TODO: Delete on next major version
-		if data.get("gravity") is float: # Try to preserve current gravity settings
-			data["gravity"] = snapped(data["gravity"]*0.8, 0.1) as float
-}
+var VERSION_UPGRADES:Dictionary[String, Callable] = {}
 
 func _ready():
 	loadConfig()
