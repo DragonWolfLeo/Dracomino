@@ -234,3 +234,41 @@ static func getAetherValueOfItem(itemData:CONSTANTS.ItemData) -> float:
 		if itemData.tags.has(shapeType):
 			return CONSTANTS.NUMBER_OF_BLOCKS_PER_SHAPE_TYPE[shapeType] * CONSTANTS.AETHER_PER_BLOCK
 	return 0
+
+## Lazy caller that calls a function infrequently
+class LazyCaller:
+	var tween:Tween
+	var node:Node
+	var fn:Callable
+	var delay:int = 3
+
+	## Set up a lazy caller to only call a function infrequently
+	static func Make(boundNode:Node, _fn:Callable, _delay:int = 3) -> LazyCaller:
+		assert(boundNode != null)
+		var lc:LazyCaller = LazyCaller.new()
+		lc.node = boundNode
+		lc.fn = _fn
+		lc.delay = _delay
+		if boundNode:
+			boundNode.tree_exiting.connect(lc._cleanUp, CONNECT_ONE_SHOT)
+		return lc
+
+	func lazyCall() -> void: ## Call a function with a delay between calls; Does nothing if already waiting
+		if not is_instance_valid(node):
+			return 
+		if tween:
+			# Trying to save again, so queue it
+			if not tween.finished.is_connected(fn):
+				tween.finished.connect(fn, CONNECT_ONE_SHOT)
+			return
+		# No timer is running so save and start one
+		fn.call()
+		tween = node.create_tween().set_pause_mode(Tween.TweenPauseMode.TWEEN_PAUSE_PROCESS)
+		tween.tween_callback(fn).set_delay(delay)
+		tween.finished.connect(set.bind("tween", null), CONNECT_ONE_SHOT)
+
+	func _cleanUp() -> void:
+		if tween:
+			tween.kill()
+			tween = null
+		node = null

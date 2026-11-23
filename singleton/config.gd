@@ -41,6 +41,7 @@ var DISABLED_FEATURES:Array[StringName] = [
 	"story",
 ]
 var VERSION_UPGRADES:Dictionary[String, Callable] = {}
+var lazySaver:DracominoUtil.LazyCaller = DracominoUtil.LazyCaller.Make(self, saveConfig, 3)
 
 func _ready():
 	loadConfig()
@@ -65,18 +66,6 @@ func loadConfig():
 func saveConfig():
 	UserData.saveDataToFile(export(), CONFIGPATH)
 
-var _saveTimer:SceneTreeTimer
-func lazySaveConfig(): ## A lazy, less frequent save function
-	if _saveTimer:
-		# Trying to save again, so queue it
-		if not _saveTimer.timeout.is_connected(saveConfig):
-			_saveTimer.timeout.connect(saveConfig, CONNECT_ONE_SHOT)
-		return
-	# No timer is running so save and start one
-	saveConfig()
-	_saveTimer = get_tree().create_timer(3)
-	_saveTimer.timeout.connect(set.bind("_saveTimer", null), CONNECT_ONE_SHOT)
-
 func exportVersion() -> Dictionary:
 	return {
 		versionNum = versionNum,
@@ -98,7 +87,7 @@ func changeSetting(key:StringName, value:Variant, saveAfterwards:bool = true) ->
 		settings[key] = value
 		setting_changed.emit(key)
 		if saveAfterwards:
-			lazySaveConfig()
+			lazySaver.lazyCall()
 
 func getSetting(key:StringName, fallback:Variant = null) -> Variant:
 	return settings.get(key, DEFAULT_SETTINGS.get(key, fallback))
