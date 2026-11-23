@@ -416,6 +416,7 @@ class CampaignContext:
 			if checkpoint == value: return
 			checkpoint = value
 			checkpoint_changed.emit(value)
+	var chapterNames:Dictionary[StringName, StringName] = {} ## Lookup of chapter internal name to pretty name
 	var errors:Array[Dictionary] ## A list of errors that gets filled on creation
 
 	static var CLASSIC_CAMPAIGN_LINES_PER_ACT:int = 20
@@ -806,8 +807,10 @@ func _ready() -> void:
 	)
 	DracominoCommandManager.addCommand("LOAD", func(_a):
 		if UserData.doesSaveFileExist("user://testsave.json"):
-			loadFromSaveData(UserData.loadDataFromFile("user://testsave.json"))
-			Archipelago.save_manager.read_save(0)
+			var success:bool = loadFromSaveData(UserData.loadDataFromFile("user://testsave.json"))
+			if not success: return
+			if not Archipelago.conn:
+				Archipelago.save_manager.read_save(0)
 			Archipelago.aplock = null
 	)
 
@@ -893,7 +896,7 @@ func addToSaveData(data:Dictionary = {}) -> Dictionary: ## Record state to dicti
 	data["stateFlags"] = worldFlagHolder.stateFlags.duplicate()
 	return data
 
-func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json dictionary
+func loadFromSaveData(data:Dictionary) -> bool: ## Load saved state from json dictionary; Returns true on success
 	isJustConnected = true
 	get_tree().create_timer(2, true).timeout.connect(set.bind("isJustConnected", false))
 	var slotContextHash_new:int = int(data.get("slotContextHash", 0))
@@ -906,6 +909,10 @@ func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json di
 		slotContextHash = slotContextHash_new
 		SeedState.loadFromSaveData(data)
 		newSeedReset()
+	loadSlotData(SeedState.slotData)
+	if not seedIsValid:
+		displayCampaignError()
+		return false
 	victory = data.get("victory", false)
 	LocationContext.loadFromSaveData(data)
 	if data.get("collectedItems") is Array:
@@ -922,7 +929,6 @@ func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json di
 		checkedLocations.merge(DracominoUtil.arrayToIntSet(data["checkedLocations"]))
 	if data.get("stateFlags") is Dictionary:
 		worldFlagHolder.stateFlags = data["stateFlags"]
-	loadSlotData(SeedState.slotData)
 	# Resync if connected already
 	if Archipelago.conn and not isForceDisconnecting:
 		syncLocationsWithConnection(Archipelago.conn)
@@ -935,6 +941,7 @@ func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json di
 	upgradeFeatures(SeedState.slotData.get("generator_version", "0.0.0"))
 	_on_newSeed_refresh_items()
 	started.emit()
+	return true
 
 func resetSeedFlagHolder():
 	if worldFlagHolder: worldFlagHolder.queue_free()
@@ -1302,7 +1309,7 @@ func loadSlotData(slotData:Dictionary) -> void: ## Load variables from slot data
 	
 	# Set up campaign
 	var requirements:Array = slotData.get("requirements", []) as Array
-	var chapterNames:Dictionary = slotData.get("chapter_names", {}) as Dictionary
+	var chapterNames:Variant = slotData.get("chapter_names", {})
 	if campaign == null:
 		var actDataList:Variant = slotData.get("acts")
 		if actDataList is Array:
@@ -1313,6 +1320,9 @@ func loadSlotData(slotData:Dictionary) -> void: ## Load variables from slot data
 			campaign = CampaignContext.ClassicCampaign(goal)
 		
 		_connectSignalsToCampaign()
+
+		if chapterNames is Dictionary:
+			campaign.chapterNames.merge(chapterNames)
 
 	seedIsValid = campaign.errors.size() == 0
 
@@ -1438,7 +1448,6 @@ func buildLocationsFromSlotData(slotData:Dictionary) -> void: ## Make lines and 
 			else:
 				# This isn't a location; it's just a regular board object or an error
 				boardObjects[i] = StateBoardObject.new(vec, objectName, -1, i)
-	
 	# Set up lookup tables
 	for i:int in range(allLineLocations.size()):
 		id_to_line[allLineLocations[i]] = i
@@ -1451,6 +1460,37 @@ func buildLocationsFromSlotData(slotData:Dictionary) -> void: ## Make lines and 
 			id_to_boardObject[sbo.loc_id] = sbo
 			if missingLocations.get(sbo.loc_id, false):
 				campaign.registerMissingLocationByLine(sbo.loc_id, sbo.coordinates.y)
+
+func displayCampaignError() -> void: ## Show an error message if there were errors loading the campaign
+	if not campaign or campaign.errors.size(): return
+	assert(campaign != null)
+	var errorDialog:AcceptDialog = VERSION_WARNING_DIALOG_SCENE.instantiate()
+	errorDialog.dialog_text = "There were errors loading the story campaign:"
+	var missingChapters:Array[StringName] = []
+	var missingActs:Array[StringName] = []
+	for error:Dictionary in campaign.errors:
+		match error.get("type", ""):
+			CampaignContext.ERROR_TYPE.MISSING_CHAPTER:
+				var chapterName:String = campaign.chapterNames.get(error.get("chapterId"), error.get("chapterId", "Unknown Chapter"))
+				if not missingChapters.has(chapterName):
+					missingChapters.append(chapterName)
+			CampaignContext.ERROR_TYPE.MISSING_ACT:
+				var chapterName:String = campaign.chapterNames.get(error.get("chapterId"), error.get("chapterId", "Unknown Chapter"))
+				var actName:String = chapterName + " - " + error.get("actName", "Unknown Act")
+				if not missingActs.has(actName):
+					missingActs.append(actName)
+	if missingChapters.size():
+		errorDialog.dialog_text += "\n Chapters are missing in this version: {chapters}".format({
+			chapters = ", ".join(missingChapters)
+		})
+	if missingActs.size():
+		errorDialog.dialog_text += "\n Acts are missing in this version: {chapters}".format({
+			chapters = ", ".join(missingActs)
+		})
+	errorDialog.dialog_text += ""
+	add_child(errorDialog)
+	errorDialog.popup_centered()
+	errorDialog.visibility_changed.connect(errorDialog.queue_free)
 
 
 #===== Private Functions =====
@@ -1510,35 +1550,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		
 	# Check if there were errors before aborting this load
 	if not seedIsValid:
-		var errorDialog:AcceptDialog = VERSION_WARNING_DIALOG_SCENE.instantiate()
-		errorDialog.dialog_text = "There were errors loading the story campaign:"
-		var missingChapters:Array[StringName] = []
-		var missingActs:Array[StringName] = []
-		var chapterNames:Dictionary = conn.slot_data.get("chapter_names", {}) as Dictionary
-		for error:Dictionary in campaign.errors:
-			match error.get("type", ""):
-				CampaignContext.ERROR_TYPE.MISSING_CHAPTER:
-					var chapterName:String = chapterNames.get(error.get("chapterId"), error.get("chapterId", "Unknown Chapter"))
-					if not missingChapters.has(chapterName):
-						missingChapters.append(chapterName)
-				CampaignContext.ERROR_TYPE.MISSING_ACT:
-					var chapterName:String = chapterNames.get(error.get("chapterId"), error.get("chapterId", "Unknown Chapter"))
-					var actName:String = chapterName + " - " + error.get("actName", "Unknown Act")
-					if not missingActs.has(actName):
-						missingActs.append(actName)
-		if missingChapters.size():
-			errorDialog.dialog_text += "\n Chapters are missing in this version: {chapters}".format({
-				chapters = ", ".join(missingChapters)
-			})
-		if missingActs.size():
-			errorDialog.dialog_text += "\n Acts are missing in this version: {chapters}".format({
-				chapters = ", ".join(missingActs)
-			})
-		errorDialog.dialog_text += ""
-		add_child(errorDialog)
-		errorDialog.popup_centered()
-		errorDialog.visibility_changed.connect(errorDialog.queue_free)
-
+		displayCampaignError()
 		return
 
 	# Reset collected items
