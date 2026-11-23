@@ -807,19 +807,9 @@ func _ready() -> void:
 
 	# Add Dracomino specific commands
 	DracominoCommandManager.addCommand("GETITEM", giveItemCommand).bind(self).setArgHint("name")
-	DracominoCommandManager.addCommand("TRIGGEREFFECT", triggerEffectCommand).bind(self).setArgHint("name").setInvisible()
-	DracominoCommandManager.addCommand("SAVE", func(_a):
-		UserData.saveDataToFile(addToSaveData(), "user://testsave.json")
-		Archipelago.save_manager.write_save(0)
-	)
-	DracominoCommandManager.addCommand("LOAD", func(_a):
-		if UserData.doesSaveFileExist("user://testsave.json"):
-			var success:bool = loadFromSaveData(UserData.loadDataFromFile("user://testsave.json"))
-			if not success: return
-			if not Archipelago.conn:
-				Archipelago.save_manager.read_save(0)
-			Archipelago.aplock = null
-	)
+	DracominoCommandManager.addCommand("TRIGGEREFFECT", triggerEffectCommand, true).bind(self).setArgHint("name")
+	DracominoCommandManager.addCommand("SAVE", saveToFile, true).setArgHint("file_number(optional)")
+	DracominoCommandManager.addCommand("LOAD", loadFromFile, true).setArgHint("file_number(optional)")
 
 	# Set up trap link signal
 	SignalBus.getSignal("stateflag_set", "trap_link").connect(Archipelago.set_traplink.bind(true))
@@ -889,6 +879,41 @@ func newSeedReset():
 	color_randomSaveState = color_random.state
 	rotate_random.seed = slotContextHash+1
 	rotate_randomSaveState = rotate_random.state
+
+func saveToFile(fileNum) -> void:
+	fileNum = int(fileNum)
+	if not seedIsValid:
+		notification_signal.emit("Cannot save invalid game.", CONSTANTS.COLOR.ERROR)
+		return
+	if fileNum < 0:
+		notification_signal.emit("Cannot save - Number must be non-negative.", CONSTANTS.COLOR.ERROR)
+		return
+	var path:String = "user://dracomino_saves/%s.save"%fileNum
+	var err:Error = UserData.saveDataToFile(addToSaveData(), path)
+	notification_signal.emit("Error saving (Error %s)"%err, CONSTANTS.COLOR.ERROR)
+	Archipelago.save_manager.write_save(fileNum)
+
+func loadFromFile(fileNum) -> void:
+	fileNum = int(fileNum)
+	if fileNum < 0: return
+	var path:String = "user://dracomino_saves/%s.save"%fileNum
+	if UserData.doesSaveFileExist(path):
+		var data:Dictionary = UserData.loadDataFromFile(path)
+		if data.get("error"):
+			notification_signal.emit("Cannot load - Error loading file (Error %s)."%data.get("error"), CONSTANTS.COLOR.ERROR)
+			return
+		var success:bool = loadFromSaveData(data)
+		if not success:
+			notification_signal.emit("Cannot load - Error loading data.", CONSTANTS.COLOR.ERROR)
+			return
+		if data.get("isAP", false):
+			if not Archipelago.conn:
+				Archipelago.save_manager.read_save(fileNum)
+			else:
+				Archipelago.save_manager.open_save_ind = fileNum
+		Archipelago.aplock = null
+	else:
+		notification_signal.emit("Cannot load - File %s does not exist."%fileNum, CONSTANTS.COLOR.ERROR)
 
 func addToSaveData(data:Dictionary = {}) -> Dictionary: ## Record state to dictionary to save to json file
 	SeedState.addToSaveData(data)
