@@ -2,7 +2,9 @@ extends Node
 
 func saveDataToFile(data:Dictionary, path:String)->Error:
 	if data.is_empty(): return ERR_UNCONFIGURED
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	var file := FileAccess.open(path, FileAccess.WRITE)
+	if not file: return ERR_FILE_CANT_OPEN
 	var json_string = JSON.stringify(data, "\t")
 	file.store_line(json_string)
 	return OK

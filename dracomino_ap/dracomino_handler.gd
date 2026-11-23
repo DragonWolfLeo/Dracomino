@@ -236,6 +236,7 @@ class SeedState:
 	static var playerNames:Dictionary[int, StringName]
 	static var gameNames:Dictionary[int, StringName]
 	static var slotData:Dictionary
+	static var isAP:bool ## Is this an Archipelago game?
 
 	static func syncWithAP(conn:ConnectionInfo) -> void: ## Populate with player names and their games' names
 		playerNames.clear()
@@ -246,6 +247,10 @@ class SeedState:
 			for player:NetworkPlayer in conn.players:
 				playerNames[player.slot] = player.get_name()
 				gameNames[player.slot] = conn.get_game_for_player(player.slot)
+			isAP = true
+
+	static func makeStandalone() -> void: ## Set this as not an Archipelago game
+		isAP = false
 	
 	static func addToSaveData(data:Dictionary) -> void:
 		data["seedState"] = {
@@ -253,6 +258,7 @@ class SeedState:
 			player_id = player_id,
 			playerNames = playerNames.duplicate(),
 			gameNames = gameNames.duplicate(),
+			isAP = int(isAP),
 		}
 
 	static func loadFromSaveData(data:Dictionary) -> void:
@@ -271,6 +277,7 @@ class SeedState:
 			if seedData.get("gameNames") is Dictionary:
 				for k:Variant in seedData["gameNames"].keys():
 					gameNames[int(k)] = str(seedData["gameNames"][k])
+			isAP = bool(seedData.get("isAP", 0))
 
 	static func getPlayerName(slotNum:int) -> StringName:
 		return playerNames.get(slotNum, "Someone")
@@ -416,6 +423,8 @@ class CampaignContext:
 			if checkpoint == value: return
 			checkpoint = value
 			checkpoint_changed.emit(value)
+	var chapterNames:Dictionary[StringName, StringName] = {} ## Lookup of chapter internal name to pretty name
+	var requirements:Array[StringName] = [] ## List of required features. These are in Config.FEATURES; Add requirements using addRequirements
 	var errors:Array[Dictionary] ## A list of errors that gets filled on creation
 
 	static var CLASSIC_CAMPAIGN_LINES_PER_ACT:int = 20
@@ -423,6 +432,7 @@ class CampaignContext:
 	enum ERROR_TYPE {
 		MISSING_CHAPTER,
 		MISSING_ACT,
+		UNMET_REQUIREMENT,
 	}
 	var _updateActs_deferred_called:bool = false
 
@@ -626,6 +636,17 @@ class CampaignContext:
 		for act:ActContext in acts:
 			if act.isActive:
 				act.triggerItemReceived(itemName, amount)
+
+	func addRequirements(_requirements:Array) -> void: ## Add requirements and make errors if a disabled feature
+		for v:Variant in _requirements:
+			if Config.DISABLED_FEATURES.has(v):
+				requirements.append(v)
+				errors.append({
+					type = ERROR_TYPE.UNMET_REQUIREMENT,
+					requirement = v,
+				})
+			elif not Config.FEATURES.has(v):
+				requirements.append(v)
 	
 	# === Events ===
 	func _on_act_selectable_changed(isSelectable:bool, act:ActContext) -> void:
@@ -799,17 +820,9 @@ func _ready() -> void:
 
 	# Add Dracomino specific commands
 	DracominoCommandManager.addCommand("GETITEM", giveItemCommand).bind(self).setArgHint("name")
-	DracominoCommandManager.addCommand("TRIGGEREFFECT", triggerEffectCommand).bind(self).setArgHint("name").setInvisible()
-	DracominoCommandManager.addCommand("SAVE", func(_a):
-		UserData.saveDataToFile(addToSaveData(), "user://testsave.json")
-		Archipelago.save_manager.write_save(0)
-	)
-	DracominoCommandManager.addCommand("LOAD", func(_a):
-		if UserData.doesSaveFileExist("user://testsave.json"):
-			loadFromSaveData(UserData.loadDataFromFile("user://testsave.json"))
-			Archipelago.save_manager.read_save(0)
-			Archipelago.aplock = null
-	)
+	DracominoCommandManager.addCommand("TRIGGEREFFECT", triggerEffectCommand, true).bind(self).setArgHint("name")
+	DracominoCommandManager.addCommand("SAVE", saveToFile, true).setArgHint("file_number(optional)")
+	DracominoCommandManager.addCommand("LOAD", loadFromFile, true).setArgHint("file_number(optional)")
 
 	# Set up trap link signal
 	SignalBus.getSignal("stateflag_set", "trap_link").connect(Archipelago.set_traplink.bind(true))
@@ -880,6 +893,41 @@ func newSeedReset():
 	rotate_random.seed = slotContextHash+1
 	rotate_randomSaveState = rotate_random.state
 
+func saveToFile(fileNum) -> void:
+	fileNum = int(fileNum)
+	if not seedIsValid:
+		notification_signal.emit("Cannot save invalid game.", CONSTANTS.COLOR.ERROR)
+		return
+	if fileNum < 0:
+		notification_signal.emit("Cannot save - Number must be non-negative.", CONSTANTS.COLOR.ERROR)
+		return
+	var path:String = "user://dracomino_saves/%s.save"%fileNum
+	var err:Error = UserData.saveDataToFile(addToSaveData(), path)
+	notification_signal.emit("Error saving (Error %s)"%err, CONSTANTS.COLOR.ERROR)
+	Archipelago.save_manager.write_save(fileNum)
+
+func loadFromFile(fileNum) -> void:
+	fileNum = int(fileNum)
+	if fileNum < 0: return
+	var path:String = "user://dracomino_saves/%s.save"%fileNum
+	if UserData.doesSaveFileExist(path):
+		var data:Dictionary = UserData.loadDataFromFile(path)
+		if data.get("error"):
+			notification_signal.emit("Cannot load - Error loading file (Error %s)."%data.get("error"), CONSTANTS.COLOR.ERROR)
+			return
+		var success:bool = loadFromSaveData(data)
+		if not success:
+			notification_signal.emit("Cannot load - Error loading data.", CONSTANTS.COLOR.ERROR)
+			return
+		if data.get("isAP", false):
+			if not Archipelago.conn:
+				Archipelago.save_manager.read_save(fileNum)
+			else:
+				Archipelago.save_manager.open_save_ind = fileNum
+		Archipelago.aplock = null
+	else:
+		notification_signal.emit("Cannot load - File %s does not exist."%fileNum, CONSTANTS.COLOR.ERROR)
+
 func addToSaveData(data:Dictionary = {}) -> Dictionary: ## Record state to dictionary to save to json file
 	SeedState.addToSaveData(data)
 	data["slotContextHash"] = slotContextHash
@@ -893,7 +941,7 @@ func addToSaveData(data:Dictionary = {}) -> Dictionary: ## Record state to dicti
 	data["stateFlags"] = worldFlagHolder.stateFlags.duplicate()
 	return data
 
-func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json dictionary
+func loadFromSaveData(data:Dictionary) -> bool: ## Load saved state from json dictionary; Returns true on success
 	isJustConnected = true
 	get_tree().create_timer(2, true).timeout.connect(set.bind("isJustConnected", false))
 	var slotContextHash_new:int = int(data.get("slotContextHash", 0))
@@ -906,6 +954,10 @@ func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json di
 		slotContextHash = slotContextHash_new
 		SeedState.loadFromSaveData(data)
 		newSeedReset()
+	loadSlotData(SeedState.slotData)
+	if not seedIsValid:
+		displayCampaignError()
+		return false
 	victory = data.get("victory", false)
 	LocationContext.loadFromSaveData(data)
 	if data.get("collectedItems") is Array:
@@ -922,7 +974,6 @@ func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json di
 		checkedLocations.merge(DracominoUtil.arrayToIntSet(data["checkedLocations"]))
 	if data.get("stateFlags") is Dictionary:
 		worldFlagHolder.stateFlags = data["stateFlags"]
-	loadSlotData(SeedState.slotData)
 	# Resync if connected already
 	if Archipelago.conn and not isForceDisconnecting:
 		syncLocationsWithConnection(Archipelago.conn)
@@ -935,6 +986,7 @@ func loadFromSaveData(data:Dictionary) -> void: ## Load saved state from json di
 	upgradeFeatures(SeedState.slotData.get("generator_version", "0.0.0"))
 	_on_newSeed_refresh_items()
 	started.emit()
+	return true
 
 func resetSeedFlagHolder():
 	if worldFlagHolder: worldFlagHolder.queue_free()
@@ -1301,8 +1353,8 @@ func loadSlotData(slotData:Dictionary) -> void: ## Load variables from slot data
 		seedFlagHolder.clearFlag("randomize_orientations")
 	
 	# Set up campaign
-	var requirements:Array = slotData.get("requirements", []) as Array
-	var chapterNames:Dictionary = slotData.get("chapter_names", {}) as Dictionary
+	var requirements:Variant = slotData.get("requirements", [])
+	var chapterNames:Variant = slotData.get("chapter_names", {})
 	if campaign == null:
 		var actDataList:Variant = slotData.get("acts")
 		if actDataList is Array:
@@ -1313,6 +1365,12 @@ func loadSlotData(slotData:Dictionary) -> void: ## Load variables from slot data
 			campaign = CampaignContext.ClassicCampaign(goal)
 		
 		_connectSignalsToCampaign()
+
+		if chapterNames is Dictionary:
+			campaign.chapterNames.merge(chapterNames)
+
+		if requirements is Array:
+			campaign.addRequirements(requirements)
 
 	seedIsValid = campaign.errors.size() == 0
 
@@ -1438,7 +1496,6 @@ func buildLocationsFromSlotData(slotData:Dictionary) -> void: ## Make lines and 
 			else:
 				# This isn't a location; it's just a regular board object or an error
 				boardObjects[i] = StateBoardObject.new(vec, objectName, -1, i)
-	
 	# Set up lookup tables
 	for i:int in range(allLineLocations.size()):
 		id_to_line[allLineLocations[i]] = i
@@ -1451,6 +1508,40 @@ func buildLocationsFromSlotData(slotData:Dictionary) -> void: ## Make lines and 
 			id_to_boardObject[sbo.loc_id] = sbo
 			if missingLocations.get(sbo.loc_id, false):
 				campaign.registerMissingLocationByLine(sbo.loc_id, sbo.coordinates.y)
+
+func displayCampaignError() -> void: ## Show an error message if there were errors loading the campaign
+	if not campaign or campaign.errors.size() == 0: return
+	assert(campaign != null)
+	var errorDialog:AcceptDialog = VERSION_WARNING_DIALOG_SCENE.instantiate()
+	errorDialog.dialog_text = "There were errors loading the seed:"
+	var missingChapters:Array[StringName] = []
+	var missingActs:Array[StringName] = []
+	for requirement:StringName in campaign.requirements:
+		errorDialog.dialog_text += "\n"
+		errorDialog.dialog_text += CONSTANTS.REQUIREMENT_MESSAGE.get(requirement, CONSTANTS.REQUIREMENT_MESSAGE.other + requirement)
+	for error:Dictionary in campaign.errors:
+		match error.get("type", ""):
+			CampaignContext.ERROR_TYPE.MISSING_CHAPTER:
+				var chapterName:String = campaign.chapterNames.get(error.get("chapterId"), error.get("chapterId", "Unknown Chapter"))
+				if not missingChapters.has(chapterName):
+					missingChapters.append(chapterName)
+			CampaignContext.ERROR_TYPE.MISSING_ACT:
+				var chapterName:String = campaign.chapterNames.get(error.get("chapterId"), error.get("chapterId", "Unknown Chapter"))
+				var actName:String = chapterName + " - " + error.get("actName", "Unknown Act")
+				if not missingActs.has(actName):
+					missingActs.append(actName)
+	if missingChapters.size():
+		errorDialog.dialog_text += "\n Chapters are missing in this version: {chapters}".format({
+			chapters = ", ".join(missingChapters)
+		})
+	if missingActs.size():
+		errorDialog.dialog_text += "\n Acts are missing in this version: {chapters}".format({
+			chapters = ", ".join(missingActs)
+		})
+	errorDialog.dialog_text += ""
+	add_child(errorDialog)
+	errorDialog.popup_centered()
+	errorDialog.visibility_changed.connect(errorDialog.queue_free)
 
 
 #===== Private Functions =====
@@ -1510,35 +1601,7 @@ func _on_connected(conn:ConnectionInfo, json:Dictionary):
 		
 	# Check if there were errors before aborting this load
 	if not seedIsValid:
-		var errorDialog:AcceptDialog = VERSION_WARNING_DIALOG_SCENE.instantiate()
-		errorDialog.dialog_text = "There were errors loading the story campaign:"
-		var missingChapters:Array[StringName] = []
-		var missingActs:Array[StringName] = []
-		var chapterNames:Dictionary = conn.slot_data.get("chapter_names", {}) as Dictionary
-		for error:Dictionary in campaign.errors:
-			match error.get("type", ""):
-				CampaignContext.ERROR_TYPE.MISSING_CHAPTER:
-					var chapterName:String = chapterNames.get(error.get("chapterId"), error.get("chapterId", "Unknown Chapter"))
-					if not missingChapters.has(chapterName):
-						missingChapters.append(chapterName)
-				CampaignContext.ERROR_TYPE.MISSING_ACT:
-					var chapterName:String = chapterNames.get(error.get("chapterId"), error.get("chapterId", "Unknown Chapter"))
-					var actName:String = chapterName + " - " + error.get("actName", "Unknown Act")
-					if not missingActs.has(actName):
-						missingActs.append(actName)
-		if missingChapters.size():
-			errorDialog.dialog_text += "\n Chapters are missing in this version: {chapters}".format({
-				chapters = ", ".join(missingChapters)
-			})
-		if missingActs.size():
-			errorDialog.dialog_text += "\n Acts are missing in this version: {chapters}".format({
-				chapters = ", ".join(missingActs)
-			})
-		errorDialog.dialog_text += ""
-		add_child(errorDialog)
-		errorDialog.popup_centered()
-		errorDialog.visibility_changed.connect(errorDialog.queue_free)
-
+		displayCampaignError()
 		return
 
 	# Reset collected items

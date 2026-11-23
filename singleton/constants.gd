@@ -743,3 +743,10 @@ var	DIALOGUE_FORMAT_TEMPLATE = {
 	MANA = _IconLabel("mana","Mana"),
 }
 
+# Requirements
+## Requirement messages. These messages are displayed if a tag is missing from Config.FEATURES
+var REQUIREMENT_MESSAGE:Dictionary[StringName, String] = {
+	other = "A requirement is not met: ",
+	story = "Story mode is not available in this game version.",
+	beta = "This requires a beta version of the game.",
+}
