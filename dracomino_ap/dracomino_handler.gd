@@ -236,6 +236,7 @@ class SeedState:
 	static var playerNames:Dictionary[int, StringName]
 	static var gameNames:Dictionary[int, StringName]
 	static var slotData:Dictionary
+	static var isAP:bool ## Is this an Archipelago game?
 
 	static func syncWithAP(conn:ConnectionInfo) -> void: ## Populate with player names and their games' names
 		playerNames.clear()
@@ -246,6 +247,10 @@ class SeedState:
 			for player:NetworkPlayer in conn.players:
 				playerNames[player.slot] = player.get_name()
 				gameNames[player.slot] = conn.get_game_for_player(player.slot)
+			isAP = true
+
+	static func makeStandalone() -> void: ## Set this as not an Archipelago game
+		isAP = false
 	
 	static func addToSaveData(data:Dictionary) -> void:
 		data["seedState"] = {
@@ -253,6 +258,7 @@ class SeedState:
 			player_id = player_id,
 			playerNames = playerNames.duplicate(),
 			gameNames = gameNames.duplicate(),
+			isAP = int(isAP),
 		}
 
 	static func loadFromSaveData(data:Dictionary) -> void:
@@ -271,6 +277,7 @@ class SeedState:
 			if seedData.get("gameNames") is Dictionary:
 				for k:Variant in seedData["gameNames"].keys():
 					gameNames[int(k)] = str(seedData["gameNames"][k])
+			isAP = bool(seedData.get("isAP", 0))
 
 	static func getPlayerName(slotNum:int) -> StringName:
 		return playerNames.get(slotNum, "Someone")
