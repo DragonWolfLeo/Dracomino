@@ -903,7 +903,7 @@ func saveToFile(fileNum) -> void:
 		return
 	var path:String = "user://dracomino_saves/%s.save"%fileNum
 	var err:Error = UserData.saveDataToFile(addToSaveData(), path)
-	notification_signal.emit("Error saving (Error %s)"%err, CONSTANTS.COLOR.ERROR)
+	if err: notification_signal.emit("Error saving (Error %s)"%err, CONSTANTS.COLOR.ERROR)
 	Archipelago.save_manager.write_save(fileNum)
 
 func loadFromFile(fileNum) -> void:
@@ -966,6 +966,7 @@ func loadFromSaveData(data:Dictionary) -> bool: ## Load saved state from json di
 				var si:StateItem = StateItem.fromDictionary(dict)
 				if si.itemCopy >= 0:
 					# If this is an AP item, this prevents it from being made again
+					obtainedItemCounts[si.id] = obtainedItemCounts.get(si.id, 0) + 1
 					si = si.itemize(si.itemCopy)
 				giveItem(si)
 	if data.get("missingLocations") is Array:
@@ -1205,7 +1206,12 @@ func obtainServerItem(item:StateItem) -> void: ## Get an AP item, either directl
 		# This is your item; Check that it's not a copy and then give it
 		var id:int = item.id # Get id before item potentially gets destroyed by itemize
 		var itemCopy:int = obtainedItemCounts.get(id, 0)
-		item = item.itemize(itemCopy)
+		if item.itemCopy >= 0:
+			# Don't remake items we just made
+			item = null
+		else:
+			# Try to make this an item if it wasn't made already
+			item = item.itemize(itemCopy)
 		obtainedItemCounts[id] = itemCopy + 1 # Increment the counter
 		if item and not isJustConnected:
 			if item.isLocal:
