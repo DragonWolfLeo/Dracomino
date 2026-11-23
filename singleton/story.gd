@@ -204,7 +204,7 @@ const APWORLD_SLOTDATA:Dictionary[StringName, Variant] = { # TODO: Temporary
 	chapter_names = {
 		story_mini_home = "Home Sweet Home",
 	},
-	requirements = [],
+	requirements = ["story", "beta"],
 }
 
 

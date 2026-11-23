@@ -34,6 +34,12 @@ const DEFAULT_SETTINGS:Dictionary[StringName, Variant] = {
 	showAnnouncements = true,
 }
 var settings:Dictionary[StringName, Variant] = DEFAULT_SETTINGS.duplicate()
+## Features that will satisfy requirements in slot data
+var FEATURES:Array[StringName] = []
+## Features that will force a seed to be invalid if a requirement
+var DISABLED_FEATURES:Array[StringName] = [
+	"story",
+]
 var VERSION_UPGRADES:Dictionary[String, Callable] = {}
 
 func _ready():

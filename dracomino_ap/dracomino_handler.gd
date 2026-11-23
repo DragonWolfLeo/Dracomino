@@ -424,6 +424,7 @@ class CampaignContext:
 			checkpoint = value
 			checkpoint_changed.emit(value)
 	var chapterNames:Dictionary[StringName, StringName] = {} ## Lookup of chapter internal name to pretty name
+	var requirements:Array[StringName] = [] ## List of required features. These are in Config.FEATURES; Add requirements using addRequirements
 	var errors:Array[Dictionary] ## A list of errors that gets filled on creation
 
 	static var CLASSIC_CAMPAIGN_LINES_PER_ACT:int = 20
@@ -431,6 +432,7 @@ class CampaignContext:
 	enum ERROR_TYPE {
 		MISSING_CHAPTER,
 		MISSING_ACT,
+		UNMET_REQUIREMENT,
 	}
 	var _updateActs_deferred_called:bool = false
 
@@ -634,6 +636,17 @@ class CampaignContext:
 		for act:ActContext in acts:
 			if act.isActive:
 				act.triggerItemReceived(itemName, amount)
+
+	func addRequirements(_requirements:Array) -> void: ## Add requirements and make errors if a disabled feature
+		for v:Variant in _requirements:
+			if Config.DISABLED_FEATURES.has(v):
+				requirements.append(v)
+				errors.append({
+					type = ERROR_TYPE.UNMET_REQUIREMENT,
+					requirement = v,
+				})
+			elif not Config.FEATURES.has(v):
+				requirements.append(v)
 	
 	# === Events ===
 	func _on_act_selectable_changed(isSelectable:bool, act:ActContext) -> void:
@@ -1340,7 +1353,7 @@ func loadSlotData(slotData:Dictionary) -> void: ## Load variables from slot data
 		seedFlagHolder.clearFlag("randomize_orientations")
 	
 	# Set up campaign
-	var requirements:Array = slotData.get("requirements", []) as Array
+	var requirements:Variant = slotData.get("requirements", [])
 	var chapterNames:Variant = slotData.get("chapter_names", {})
 	if campaign == null:
 		var actDataList:Variant = slotData.get("acts")
@@ -1355,6 +1368,9 @@ func loadSlotData(slotData:Dictionary) -> void: ## Load variables from slot data
 
 		if chapterNames is Dictionary:
 			campaign.chapterNames.merge(chapterNames)
+
+		if requirements is Array:
+			campaign.addRequirements(requirements)
 
 	seedIsValid = campaign.errors.size() == 0
 
@@ -1494,12 +1510,15 @@ func buildLocationsFromSlotData(slotData:Dictionary) -> void: ## Make lines and 
 				campaign.registerMissingLocationByLine(sbo.loc_id, sbo.coordinates.y)
 
 func displayCampaignError() -> void: ## Show an error message if there were errors loading the campaign
-	if not campaign or campaign.errors.size(): return
+	if not campaign or campaign.errors.size() == 0: return
 	assert(campaign != null)
 	var errorDialog:AcceptDialog = VERSION_WARNING_DIALOG_SCENE.instantiate()
-	errorDialog.dialog_text = "There were errors loading the story campaign:"
+	errorDialog.dialog_text = "There were errors loading the seed:"
 	var missingChapters:Array[StringName] = []
 	var missingActs:Array[StringName] = []
+	for requirement:StringName in campaign.requirements:
+		errorDialog.dialog_text += "\n"
+		errorDialog.dialog_text += CONSTANTS.REQUIREMENT_MESSAGE.get(requirement, CONSTANTS.REQUIREMENT_MESSAGE.other + requirement)
 	for error:Dictionary in campaign.errors:
 		match error.get("type", ""):
 			CampaignContext.ERROR_TYPE.MISSING_CHAPTER:
