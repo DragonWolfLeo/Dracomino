@@ -903,7 +903,7 @@ func saveToFile(fileNum) -> void:
 		return
 	var path:String = "user://dracomino_saves/%s.save"%fileNum
 	var err:Error = UserData.saveDataToFile(addToSaveData(), path)
-	notification_signal.emit("Error saving (Error %s)"%err, CONSTANTS.COLOR.ERROR)
+	if err: notification_signal.emit("Error saving (Error %s)"%err, CONSTANTS.COLOR.ERROR)
 	Archipelago.save_manager.write_save(fileNum)
 
 func loadFromFile(fileNum) -> void:
