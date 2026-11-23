@@ -51,6 +51,9 @@ func loadConfig():
 	if !FileAccess.file_exists(path): return
 	
 	var data:Dictionary = UserData.loadDataFromFile(path)
+	if data.get("error"):
+		printerr("Error loading config file (Error %s"%data.get("error"))
+		data = {}
 	UserData.upgradeDataToCurrentVersion(data, VERSION_UPGRADES)
 	import(data)
 	
