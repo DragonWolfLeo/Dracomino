@@ -2,6 +2,8 @@ extends Node
 
 var DRACOMINO_SAVE_DIRECTORY:String = "user://dracomino_saves/"
 
+class DATATYPE:
+	const DRACOMINO_DATA:String = "dracominodata"
 
 # === Functions ===
 # --- General saving functions ---
@@ -27,8 +29,13 @@ func loadDataFromFile(path:String) -> Dictionary: ## Load a file and return a di
 		return {error=ERR_PARSE_ERROR}
 	return json.get_data()
 
+func initFileData(data:Dictionary, dataType:String) -> void: ## Add data type and version
+	data["dataType"] = dataType
+	data.merge(Config.exportVersion(), true)
+
 # --- Dracomino saving functions ---
 func saveDracominoDataToFile(data:Dictionary, fileNum:int, printErrorFn:Callable = _noop) -> Error:
+	initFileData(data, DATATYPE.DRACOMINO_DATA)
 	var source:String = "UserData.saveDracominoDataToFile"
 	if fileNum < 0:
 		_callPrintErrorCallable(printErrorFn, "Cannot save game - File number must be non-negative", source)
@@ -53,6 +60,11 @@ func loadDracominoDataFromFile(fileNum:int, printErrorFn:Callable = _noop) -> Di
 		if data.get("error"):
 			_callPrintErrorCallable(printErrorFn, "Cannot load - Error loading file (Error %s)."%data.get("error"), source)
 			return data
+		if not isDataCompatibleVersion(data):
+			_callPrintErrorCallable(printErrorFn, "Load error - incompatible version; Requires version %s"%data.get("versionCompatible"), source)
+			data["error"] = ERR_INVALID_DATA
+			return data
+		upgradeDataToCurrentVersion(data, DRACOMINO_DATA_VERSION_UPGRADES)
 		if data.get("isAP", false):
 			if not Archipelago.conn:
 				Archipelago.save_manager.read_save(fileNum)
@@ -67,10 +79,12 @@ func loadDracominoDataFromFile(fileNum:int, printErrorFn:Callable = _noop) -> Di
 func _makeDracominoSaveFilePath(fileNum) -> String:
 	return "{dir}/{fileNum}.save".format({dir = DRACOMINO_SAVE_DIRECTORY, fileNum = fileNum})
 
+var DRACOMINO_DATA_VERSION_UPGRADES:Dictionary[StringName, Callable] = {}
+
 ## Functions to upgrade old save data
 var VERSION_UPGRADES:Dictionary[StringName, Callable] = {}
 ## Upgrades old save data to current version by calling functions in `VERSION_UPGRADES`
-func upgradeDataToCurrentVersion(data:Dictionary, versionUpgrades:Dictionary[StringName, Callable] = VERSION_UPGRADES):
+func upgradeDataToCurrentVersion(data:Dictionary, versionUpgrades:Dictionary[StringName, Callable] = VERSION_UPGRADES) -> void:
 	_convertFloatsToInt(data.get("stateFlags", {}))
 	if !data.has("versionNum"): return
 	var datahash := data.hash()
