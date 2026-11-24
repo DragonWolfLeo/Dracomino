@@ -1355,7 +1355,12 @@ func loadSlotData(slotData:Dictionary) -> void: ## Load variables from slot data
 		_connectSignalsToCampaign()
 
 		if chapterNames is Dictionary:
-			campaign.chapterNames.merge(chapterNames)
+			for k:Variant in chapterNames.keys():
+				var chapter:Story.Chapter = Story.CHAPTERS.get(k)
+				if chapter is Story.Chapter:
+					campaign.chapterNames[str(k)] = chapter.prettyName
+				else:
+					campaign.chapterNames[str(k)] = str(chapterNames[k])
 
 		if requirements is Array:
 			campaign.addRequirements(requirements)
