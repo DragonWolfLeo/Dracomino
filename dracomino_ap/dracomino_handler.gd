@@ -896,37 +896,19 @@ func newSeedReset():
 func saveToFile(fileNum) -> void:
 	fileNum = int(fileNum)
 	if not seedIsValid:
-		notification_signal.emit("Cannot save invalid game.", CONSTANTS.COLOR.ERROR)
+		_displayErrorMessage("Cannot save invalid game.")
 		return
-	if fileNum < 0:
-		notification_signal.emit("Cannot save - Number must be non-negative.", CONSTANTS.COLOR.ERROR)
-		return
-	var path:String = "user://dracomino_saves/%s.save"%fileNum
-	var err:Error = UserData.saveDataToFile(addToSaveData(), path)
-	if err: notification_signal.emit("Error saving (Error %s)"%err, CONSTANTS.COLOR.ERROR)
-	Archipelago.save_manager.write_save(fileNum)
+	UserData.saveDracominoDataToFile(addToSaveData(), fileNum, _displayErrorMessage)
 
 func loadFromFile(fileNum) -> void:
 	fileNum = int(fileNum)
-	if fileNum < 0: return
-	var path:String = "user://dracomino_saves/%s.save"%fileNum
-	if UserData.doesFileExist(path):
-		var data:Dictionary = UserData.loadDataFromFile(path)
-		if data.get("error"):
-			notification_signal.emit("Cannot load - Error loading file (Error %s)."%data.get("error"), CONSTANTS.COLOR.ERROR)
-			return
-		var success:bool = loadFromSaveData(data)
-		if not success:
-			notification_signal.emit("Cannot load - Error loading data.", CONSTANTS.COLOR.ERROR)
-			return
-		if data.get("isAP", false):
-			if not Archipelago.conn:
-				Archipelago.save_manager.read_save(fileNum)
-			else:
-				Archipelago.save_manager.open_save_ind = fileNum
-		Archipelago.aplock = null
-	else:
-		notification_signal.emit("Cannot load - File %s does not exist."%fileNum, CONSTANTS.COLOR.ERROR)
+	var data:Dictionary = UserData.loadDracominoDataFromFile(fileNum, _displayErrorMessage)
+	if data.get("error"):
+		return
+	var success:bool = loadFromSaveData(data)
+	if not success:
+		_displayErrorMessage("Cannot load - Error loading data.")
+		return
 
 func addToSaveData(data:Dictionary = {}) -> Dictionary: ## Record state to dictionary to save to json file
 	SeedState.addToSaveData(data)
@@ -1555,6 +1537,9 @@ func _connectSignalsToCampaign() -> void:
 	if campaign:
 		lineMappings_updated.connect(campaign._on_DracominoHandler_lineMappings_updated)
 		gotLines_updated.connect(campaign._on_DracominoHandler_gotLines_updated)
+
+func _displayErrorMessage(message:String) -> void:
+	notification_signal.emit(message, CONSTANTS.COLOR.ERROR)
 
 #===== Events =====
 func _on_connected(conn:ConnectionInfo, json:Dictionary):
