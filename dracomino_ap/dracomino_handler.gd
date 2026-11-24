@@ -424,7 +424,9 @@ class CampaignContext:
 			checkpoint = value
 			checkpoint_changed.emit(value)
 	var chapterNames:Dictionary[StringName, StringName] = {} ## Lookup of chapter internal name to pretty name
+	var mainChapterId:StringName ## Only relevant to classic and story; Internal name of main chapter
 	var requirements:Array[StringName] = [] ## List of required features. These are in Config.FEATURES; Add requirements using addRequirements
+	var gameType:StringName
 	var errors:Array[Dictionary] ## A list of errors that gets filled on creation
 
 	static var CLASSIC_CAMPAIGN_LINES_PER_ACT:int = 20
@@ -434,15 +436,22 @@ class CampaignContext:
 		MISSING_ACT,
 		UNMET_REQUIREMENT,
 	}
+	const GAME_TYPE:Dictionary[StringName, StringName] = {
+		classic = "Classic",
+		story = "Story",
+	}
+
 	var _updateActs_deferred_called:bool = false
 
-	func _init() -> void:
+	func _init(_gameType:StringName = GAME_TYPE.classic) -> void:
 		SignalBus.getSignal("stateflag_changed", "total_aether_value").connect(updateActs_deferred)
 		SignalBus.getSignal("stateflag_changed", "rotate").connect(updateActs_deferred)
+		gameType = _gameType
 
 	## Generate a classic campaign
 	static func ClassicCampaign(lines:int, linesPerAct:int = CLASSIC_CAMPAIGN_LINES_PER_ACT) -> CampaignContext:
-		var c:CampaignContext = CampaignContext.new()
+		var c:CampaignContext = CampaignContext.new(GAME_TYPE.classic)
+		c.mainChapterId = "classic"
 
 		# Force minimum 1 line
 		lines = max(1, lines)
@@ -468,10 +477,12 @@ class CampaignContext:
 
 	## Generate a story campaign
 	static func StoryCampaign(actDataList:Array = []) -> CampaignContext:
-		var c:CampaignContext = CampaignContext.new()
+		var c:CampaignContext = CampaignContext.new(GAME_TYPE.story)
 		for actData:Variant in actDataList:
 			if actData is Dictionary:
 				var chapterId:StringName = actData.get("chapter", "") as StringName
+				if c.mainChapterId.is_empty():
+					c.mainChapterId = chapterId
 				var chapter:Story.Chapter = Story.CHAPTERS.get(chapterId)
 				var act:ActContext = ActContext.new(actData.get("lines", 20) as int, bool(actData.get("continuation", false)))
 				act.prettyName = actData.get("name", "Unknown Act")
@@ -647,6 +658,11 @@ class CampaignContext:
 				})
 			elif not Config.FEATURES.has(v):
 				requirements.append(v)
+
+	func addToSaveData(data:Dictionary) -> void: ## Save some campaign info to a dictionary
+		data["requirements"] = requirements.duplicate()
+		data["gameType"] = gameType
+		data["mainChapterId"] = mainChapterId
 	
 	# === Events ===
 	func _on_act_selectable_changed(isSelectable:bool, act:ActContext) -> void:
@@ -921,6 +937,8 @@ func addToSaveData(data:Dictionary = {}) -> Dictionary: ## Record state to dicti
 	data["missingLocations"] = DracominoUtil.setToArray(missingLocations)
 	data["checkedLocations"] = DracominoUtil.setToArray(checkedLocations)
 	data["stateFlags"] = worldFlagHolder.stateFlags.duplicate()
+	if campaign:
+		campaign.addToSaveData(data)
 	return data
 
 func loadFromSaveData(data:Dictionary) -> bool: ## Load saved state from json dictionary; Returns true on success

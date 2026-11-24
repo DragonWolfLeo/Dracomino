@@ -1,9 +1,19 @@
 extends Node
 
+var SAVE_INDEX_PATH:String = "user://saveindex.json"
 var DRACOMINO_SAVE_DIRECTORY:String = "user://dracomino_saves/"
+
+var saveIndex:Dictionary[StringName, Dictionary] = {}
+
+var saveIndexSaver:DracominoUtil.LazyCaller = DracominoUtil.LazyCaller.Make(self, saveSaveIndex, 5)
 
 class DATATYPE:
 	const DRACOMINO_DATA:String = "dracominodata"
+
+# === Virtuals ===
+func _ready():
+	loadSaveIndex()
+	buildMissingSaveIndex()
 
 # === Functions ===
 # --- General saving functions ---
@@ -47,6 +57,11 @@ func saveDracominoDataToFile(data:Dictionary, fileNum:int, printErrorFn:Callable
 	else:
 		Archipelago.save_manager.delete_save(fileNum)
 	if err: _callPrintErrorCallable(printErrorFn, "Error saving (Error %s)"%err, source)
+	# Update index
+	var saveInfo:Dictionary = makeSaveInfoDict(data, "File %s"%fileNum)
+	saveInfo["timestamp"] = Time.get_unix_time_from_system()
+	saveIndex[str(fileNum)] = saveInfo
+	saveSaveIndex()
 	return err
 
 func loadDracominoDataFromFile(fileNum:int, printErrorFn:Callable = _noop) -> Dictionary:
@@ -80,6 +95,72 @@ func _makeDracominoSaveFilePath(fileNum) -> String:
 	return "{dir}/{fileNum}.save".format({dir = DRACOMINO_SAVE_DIRECTORY, fileNum = fileNum})
 
 var DRACOMINO_DATA_VERSION_UPGRADES:Dictionary[StringName, Callable] = {}
+
+# --- Save index functions ---
+func loadSaveIndex() -> void: ## Loads the save index from file
+	var path:String = SAVE_INDEX_PATH
+	# Load current file
+	if FileAccess.file_exists(path):
+		# Load save index from file
+		var data:Dictionary = loadDataFromFile(path)
+		if data.get("error"):
+			printerr("Error loading save index file (Error %s"%data.get("error"))
+			data = {}
+		for k:Variant in data.keys():
+			var indexData:Variant = data[k]
+			if indexData is Dictionary:
+				saveIndex[k] = indexData
+
+func saveSaveIndex() -> void: ## Saves the save index to file
+	UserData.saveDataToFile(saveIndex, SAVE_INDEX_PATH)
+
+func buildMissingSaveIndex() -> void: ## Search save directory and fill missing save indexes
+	var dir:String = DRACOMINO_SAVE_DIRECTORY
+	if not DirAccess.dir_exists_absolute(dir):
+		return
+	var files:PackedStringArray = DirAccess.get_files_at(dir)
+	var saveIndexUpdated:bool = false
+	for fileName:String in files:
+		var fileNum:String = fileName.get_basename()
+		if fileNum.is_valid_int() and not saveIndex.has(fileNum):
+			var path:String = _makeDracominoSaveFilePath(int(fileNum))
+			var data = loadDataFromFile(path)
+			saveIndex[fileNum] = makeSaveInfoDict(data, "File %s"%fileNum)
+			saveIndexUpdated = true
+	if saveIndexUpdated:
+		saveSaveIndex()
+
+func makeSaveInfoDict(data:Dictionary, saveSlotName:StringName) -> Dictionary: ## Makes the data for a save index entry
+	var info:Dictionary = {}
+	if data.get("error"):
+		return {error = 1}
+	var numChecked:int = 0
+	var totalLocations:int = 0
+	var requirements:Array = []
+	var seedStateData:Dictionary = {}
+	var slotData:Dictionary = {}
+	if data.get("checkedLocations") is Array:
+		numChecked = (data["checkedLocations"] as Array).size()
+		if data.get("missingLocations") is Array:
+			totalLocations = numChecked + (data["missingLocations"] as Array).size()
+	if data.get("requirements") is Array:
+		requirements = data["requirements"]
+	if data.get("seedState") is Dictionary:
+		seedStateData = data["seedState"]
+		if seedStateData.get("slotData") is Dictionary:
+			slotData = seedStateData["slotData"]
+	info = {
+		saveSlotName = str(seedStateData["slotData"].get("save_slot_name", saveSlotName)),
+		isAP = int(seedStateData.get("isAP", 0)),
+		victory = int(data.get("victory", 0)),
+		numChecked = numChecked,
+		totalLocations = totalLocations,
+		gameType = str(data.get("gameType", "")),
+		mainChapterId = str(data.get("mainChapterId", "")),
+		requirements = requirements,
+		icon = "",
+	}
+	return info
 
 ## Functions to upgrade old save data
 var VERSION_UPGRADES:Dictionary[StringName, Callable] = {}
