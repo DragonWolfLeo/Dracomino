@@ -39,6 +39,9 @@ func loadDataFromFile(path:String) -> Dictionary: ## Load a file and return a di
 		return {error=ERR_PARSE_ERROR}
 	return json.get_data()
 
+func deleteFile(path:String) -> Error: ## Delete a file
+	return DirAccess.remove_absolute(path)
+
 func initFileData(data:Dictionary, dataType:String) -> void: ## Add data type and version
 	data["dataType"] = dataType
 	data.merge(Config.exportVersion(), true)
@@ -90,6 +93,14 @@ func loadDracominoDataFromFile(fileNum:int, printErrorFn:Callable = _noop) -> Di
 
 	_callPrintErrorCallable(printErrorFn, "Cannot load - File %s does not exist."%fileNum, source)
 	return {error=ERR_FILE_NOT_FOUND}
+
+func deleteDracominoDataFile(fileNum:int) -> Error:
+	var path:String = _makeDracominoSaveFilePath(fileNum)
+	var err:Error = deleteFile(path)
+	Archipelago.save_manager.delete_save(fileNum)
+	saveIndex.erase(str(fileNum))
+	saveSaveIndex()
+	return err
 
 func _makeDracominoSaveFilePath(fileNum) -> String:
 	return "{dir}/{fileNum}.save".format({dir = DRACOMINO_SAVE_DIRECTORY, fileNum = fileNum})
