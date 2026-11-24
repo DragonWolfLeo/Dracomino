@@ -55,10 +55,12 @@ func saveDracominoDataToFile(data:Dictionary, fileNum:int, printErrorFn:Callable
 		return ERR_PARAMETER_RANGE_ERROR
 	var path:String = _makeDracominoSaveFilePath(fileNum)
 	var err:Error = saveDataToFile(data, path)
-	if data.get("isAP", false):
-		Archipelago.save_manager.write_save(fileNum)
-	else:
-		Archipelago.save_manager.delete_save(fileNum)
+	var seedData:Dictionary = data.get("seedState")
+	if seedData is Dictionary:
+		if seedData.get("isAP", false):
+			Archipelago.save_manager.write_save(fileNum)
+		else:
+			Archipelago.save_manager.delete_save(fileNum)
 	if err: _callPrintErrorCallable(printErrorFn, "Error saving (Error %s)"%err, source)
 	# Update index
 	var saveInfo:Dictionary = makeSaveInfoDict(data, "File %s"%fileNum)
@@ -83,11 +85,14 @@ func loadDracominoDataFromFile(fileNum:int, printErrorFn:Callable = _noop) -> Di
 			data["error"] = ERR_INVALID_DATA
 			return data
 		upgradeDataToCurrentVersion(data, DRACOMINO_DATA_VERSION_UPGRADES)
-		if data.get("isAP", false):
-			if not Archipelago.conn:
-				Archipelago.save_manager.read_save(fileNum)
-			else:
-				Archipelago.save_manager.open_save_ind = fileNum
+		
+		var seedData:Dictionary = data.get("seedState")
+		if seedData is Dictionary:
+			if seedData.get("isAP", false):
+				if not Archipelago.conn:
+					Archipelago.save_manager.read_save(fileNum)
+				else:
+					Archipelago.save_manager.open_save_ind = fileNum
 		Archipelago.aplock = null
 		return data
 
