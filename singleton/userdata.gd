@@ -44,6 +44,7 @@ func deleteFile(path:String) -> Error: ## Delete a file
 
 func initFileData(data:Dictionary, dataType:String) -> void: ## Add data type and version
 	data["dataType"] = dataType
+	data["timestamp"] = Time.get_unix_time_from_system()
 	data.merge(Config.exportVersion(), true)
 
 # --- Dracomino saving functions ---
@@ -64,7 +65,6 @@ func saveDracominoDataToFile(data:Dictionary, fileNum:int, printErrorFn:Callable
 	if err: _callPrintErrorCallable(printErrorFn, "Error saving (Error %s)"%err, source)
 	# Update index
 	var saveInfo:Dictionary = makeSaveInfoDict(data, "File %s"%fileNum)
-	saveInfo["timestamp"] = Time.get_unix_time_from_system()
 	saveIndex[str(fileNum)] = saveInfo
 	saveSaveIndex()
 	return err
@@ -166,6 +166,7 @@ func makeSaveInfoDict(data:Dictionary, saveSlotName:StringName) -> Dictionary: #
 		if seedStateData.get("slotData") is Dictionary:
 			slotData = seedStateData["slotData"]
 	info = {
+		timestamp = float(data.get("timestamp", 0)),
 		saveSlotName = str(seedStateData["slotData"].get("save_slot_name", saveSlotName)),
 		isAP = int(seedStateData.get("isAP", 0)),
 		victory = int(data.get("victory", 0)),
