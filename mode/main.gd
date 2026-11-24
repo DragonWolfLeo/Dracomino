@@ -189,7 +189,8 @@ func _on_Board_game_started() -> void:
 
 func _on_DracominoHandler_started() -> void:
 	setMode(puzzleMode)
-	grab_focus()
+	if focus_mode != FOCUS_NONE:
+		grab_focus()
 
 func _on_effectDurationTicker_timeout() -> void:
 	effectDurationTicker.start()
