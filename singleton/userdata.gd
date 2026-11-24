@@ -168,6 +168,7 @@ func makeSaveInfoDict(data:Dictionary, saveSlotName:StringName) -> Dictionary: #
 	info = {
 		timestamp = float(data.get("timestamp", 0)),
 		saveSlotName = str(seedStateData["slotData"].get("save_slot_name", saveSlotName)),
+		slotContextHash = str(data.get("slotContextHash", "")),
 		isAP = int(seedStateData.get("isAP", 0)),
 		victory = int(data.get("victory", 0)),
 		numChecked = numChecked,
