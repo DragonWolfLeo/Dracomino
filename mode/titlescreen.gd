@@ -15,7 +15,7 @@ func _ready():
 	showSubmenu()
 	
 	updateVersionInfo()		
-	(find_child("Button_Continue") as Button).disabled = !UserData.doesSaveFileExist()
+	(find_child("Button_Continue") as Button).disabled = !UserData.doesFileExist(Config.SAVEFILEPATH)
 
 func _gui_input(event: InputEvent) -> void:
 	if (

@@ -910,7 +910,7 @@ func loadFromFile(fileNum) -> void:
 	fileNum = int(fileNum)
 	if fileNum < 0: return
 	var path:String = "user://dracomino_saves/%s.save"%fileNum
-	if UserData.doesSaveFileExist(path):
+	if UserData.doesFileExist(path):
 		var data:Dictionary = UserData.loadDataFromFile(path)
 		if data.get("error"):
 			notification_signal.emit("Cannot load - Error loading file (Error %s)."%data.get("error"), CONSTANTS.COLOR.ERROR)

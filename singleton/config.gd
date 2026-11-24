@@ -40,7 +40,7 @@ var FEATURES:Array[StringName] = []
 var DISABLED_FEATURES:Array[StringName] = [
 	"story",
 ]
-var VERSION_UPGRADES:Dictionary[String, Callable] = {}
+var VERSION_UPGRADES:Dictionary[StringName, Callable] = {}
 var lazySaver:DracominoUtil.LazyCaller = DracominoUtil.LazyCaller.Make(self, saveConfig, 3)
 
 func _ready():
