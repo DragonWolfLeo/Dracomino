@@ -19,11 +19,7 @@ func displaySaveInfo(_fileNum:int = fileNum) -> void:
 			update(saveInfo)
 
 func _on_lineEdit_saveSlotName_updated(lineEdit:LineEdit) -> void:
-	var saveInfo:Dictionary = UserData.saveIndex.get(str(fileNum), {})
-	if saveInfo is Dictionary:
-		if not saveInfo.get("error"):
-			saveInfo["saveSlotName"] = lineEdit.text
-			UserData.lazySaveIndex()
+	UserData.modifySaveInfo(fileNum, {saveSlotName = lineEdit.text})
 
 func update(data:Dictionary):
 	# Save slot name

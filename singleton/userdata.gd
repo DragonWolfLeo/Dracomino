@@ -1,5 +1,7 @@
 extends Node
 
+signal saveIndex_updated()
+
 var SAVE_INDEX_PATH:String = "user://saveindex.json"
 var DRACOMINO_SAVE_DIRECTORY:String = "user://dracomino_saves/"
 
@@ -12,8 +14,9 @@ class DATATYPE:
 
 # === Virtuals ===
 func _ready():
-	loadSaveIndex()
-	buildMissingSaveIndex()
+	_loadSaveIndex()
+	_buildMissingSaveIndex()
+	saveIndex_updated.emit()
 
 # === Functions ===
 # --- General saving functions ---
@@ -66,6 +69,7 @@ func saveDracominoDataToFile(data:Dictionary, fileNum:int, printErrorFn:Callable
 	# Update index
 	var saveInfo:Dictionary = makeSaveInfoDict(data, "File %s"%fileNum)
 	saveIndex[str(fileNum)] = saveInfo
+	saveIndex_updated.emit()
 	saveSaveIndex()
 	return err
 
@@ -104,6 +108,7 @@ func deleteDracominoDataFile(fileNum:int) -> Error:
 	var err:Error = deleteFile(path)
 	Archipelago.save_manager.delete_save(fileNum)
 	saveIndex.erase(str(fileNum))
+	saveIndex_updated.emit()
 	saveSaveIndex()
 	return err
 
@@ -113,7 +118,7 @@ func _makeDracominoSaveFilePath(fileNum) -> String:
 var DRACOMINO_DATA_VERSION_UPGRADES:Dictionary[StringName, Callable] = {}
 
 # --- Save index functions ---
-func loadSaveIndex() -> void: ## Loads the save index from file
+func _loadSaveIndex() -> void: ## Loads the save index from file
 	var path:String = SAVE_INDEX_PATH
 	# Load current file
 	if FileAccess.file_exists(path):
@@ -133,7 +138,15 @@ func saveSaveIndex() -> void: ## Saves the save index to file. Use `lazySaveInde
 func lazySaveIndex() -> void: ## Saves the save index to file with an enforced delay
 	saveIndexSaver.lazyCall()
 
-func buildMissingSaveIndex() -> void: ## Search save directory and fill missing save indexes
+func modifySaveInfo(fileNum:int, modifiedValues:Dictionary) -> void: ## Modify and save an entry in the save index
+	var saveInfo:Dictionary = saveIndex.get(str(fileNum), {})
+	if saveInfo is Dictionary:
+		if not saveInfo.get("error"):
+			saveInfo.merge(modifiedValues, true)
+			UserData.lazySaveIndex()
+			saveIndex_updated.emit()
+
+func _buildMissingSaveIndex() -> void: ## Search save directory and fill missing save indexes
 	var dir:String = DRACOMINO_SAVE_DIRECTORY
 	if not DirAccess.dir_exists_absolute(dir):
 		return
