@@ -826,6 +826,7 @@ class EventTriggerContext:
 func _ready() -> void:
 	Archipelago.connected.connect(_on_connected)
 	Archipelago.remove_location.connect(_on_remove_location)
+	Game.game_data_loaded.connect(loadFromSaveData)
 
 	# Create flag holder
 	resetSeedFlagHolder()

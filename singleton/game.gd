@@ -5,6 +5,7 @@ var ui:Node
 var isLoaded:bool = false # TODO: Move this to mode
 
 signal game_loaded()
+signal game_data_loaded(data:Dictionary)
 
 func changeMode(packedScene:PackedScene):
 	if packedScene == null:
@@ -40,12 +41,10 @@ func loadGameData(data:Dictionary):
 		printerr("Error loading file")
 		return
 
-	# Fix save data from old versions
-	UserData.upgradeDataToCurrentVersion(data)
-	reset()
+	newGame()
 	isLoaded = true
 	game_loaded.emit()
-	
+	game_data_loaded.emit(data)
 	
 func newGame():
 	var packedScene = load("res://mode/gamesplit.tscn")

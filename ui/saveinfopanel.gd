@@ -37,7 +37,7 @@ func _ready() -> void:
 		lineEdit_SaveSlotName.text_submitted.connect(_on_lineEdit_saveSlotName_updated.bind(lineEdit_SaveSlotName).unbind(1))
 	# Load button
 	if button_Load:
-		pass
+		button_Load.pressed.connect(loadFile)
 	# Delete button
 	if button_Delete is Button:
 		button_Delete.pressed.connect(_on_Button_Delete_pressed)
