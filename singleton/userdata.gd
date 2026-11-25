@@ -1,6 +1,8 @@
 extends Node
 
 signal saveIndex_updated()
+signal saveInfo_updated(index:int)
+signal saveInfo_deleted(index:int)
 
 var SAVE_INDEX_PATH:String = "user://saveindex.json"
 var DRACOMINO_SAVE_DIRECTORY:String = "user://dracomino_saves/"
@@ -14,6 +16,8 @@ class DATATYPE:
 
 # === Virtuals ===
 func _ready():
+	SignalBus.registerSignalDistributor(saveInfo_updated, "saveInfo_updated")
+	SignalBus.registerSignalDistributor(saveInfo_deleted, "saveInfo_deleted")
 	_loadSaveIndex()
 	_buildMissingSaveIndex()
 	saveIndex_updated.emit()
@@ -108,6 +112,7 @@ func deleteDracominoDataFile(fileNum:int) -> Error:
 	var err:Error = deleteFile(path)
 	Archipelago.save_manager.delete_save(fileNum)
 	saveIndex.erase(str(fileNum))
+	saveInfo_deleted.emit(fileNum)
 	saveIndex_updated.emit()
 	saveSaveIndex()
 	return err
@@ -131,6 +136,7 @@ func _loadSaveIndex() -> void: ## Loads the save index from file
 			var indexData:Variant = data[k]
 			if indexData is Dictionary:
 				saveIndex[k] = indexData
+				saveInfo_updated.emit(int(k))
 
 func saveSaveIndex() -> void: ## Saves the save index to file. Use `lazySaveIndex` for potentially frequent saving
 	UserData.saveDataToFile(saveIndex, SAVE_INDEX_PATH)
@@ -144,6 +150,7 @@ func modifySaveInfo(fileNum:int, modifiedValues:Dictionary) -> void: ## Modify a
 		if not saveInfo.get("error"):
 			saveInfo.merge(modifiedValues, true)
 			UserData.lazySaveIndex()
+			saveInfo_updated.emit(fileNum)
 			saveIndex_updated.emit()
 
 func _buildMissingSaveIndex() -> void: ## Search save directory and fill missing save indexes
@@ -159,6 +166,7 @@ func _buildMissingSaveIndex() -> void: ## Search save directory and fill missing
 			var data = loadDataFromFile(path)
 			saveIndex[fileNum] = makeSaveInfoDict(data, "File %s"%fileNum)
 			saveIndexUpdated = true
+			saveInfo_updated.emit(int(fileNum))
 	if saveIndexUpdated:
 		saveSaveIndex()
 
