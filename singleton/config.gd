@@ -32,6 +32,8 @@ const DEFAULT_SETTINGS:Dictionary[StringName, Variant] = {
 	fishResisting = true,
 	allowUnfocusedInputs = false,
 	showAnnouncements = true,
+	# Save index
+	previousSaveFile = 0,
 }
 var settings:Dictionary[StringName, Variant] = DEFAULT_SETTINGS.duplicate()
 ## Features that will satisfy requirements in slot data

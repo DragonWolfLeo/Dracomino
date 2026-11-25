@@ -1,21 +1,50 @@
 extends Control
 
 #signal game_started()
-@onready var versionLabel = $MainScreen/VersionLabel
+@onready var versionLabel = %VersionLabel
 @onready var SUBMENU = {
-	MAIN = $MainScreen,
+	MAIN = %MainScreen,
 }
 
 var CHANGELOG_WINDOW_SCENE:PackedScene = load("res://ui/changelog_window.tscn")
 var LICENSES_WINDOW_SCENE:PackedScene = load("res://ui/licenses_window.tscn")
+var VERSION_WARNING_DIALOG_SCENE:PackedScene = load("res://ui/versionwarning_dialog.tscn")
+var previousSaveFile:int = 0
 
 # === Virtuals ===
 func _ready():
-	find_child("Button_Exit").visible = !Config.isWeb
+	previousSaveFile = int(Config.getSetting("previousSaveFile", 0))
+	var previousSaveFileExists:bool = UserData.doesDracominoFileExist(previousSaveFile)
+	
 	showSubmenu()
 	
-	updateVersionInfo()		
-	(find_child("Button_Continue") as Button).disabled = !UserData.doesFileExist(Config.SAVEFILEPATH)
+	updateVersionInfo()
+	var btn_exit:Button = %Button_Exit
+	if btn_exit is Button:
+		btn_exit.visible = !Config.isWeb
+		var tree:SceneTree = get_tree()
+		if tree:
+			btn_exit.pressed.connect(tree.quit)
+
+	var btn_continue:Button = %Button_Continue
+	var saveInfoPanel_continue:SaveInfoPanel = %SaveInfoPanel_Continue
+
+	# Continue button
+	if btn_continue is Button:
+		btn_continue.disabled = !previousSaveFileExists
+		if not btn_continue.disabled:
+			btn_continue.pressed.connect(_on_ButtonContinue_pressed)
+
+		# Save info panel
+		if saveInfoPanel_continue is SaveInfoPanel:
+			if previousSaveFileExists:
+				saveInfoPanel_continue.displaySaveInfo(previousSaveFile)
+				btn_continue.mouse_entered.connect(_on_ButtonContinue_focus_entered.bind(saveInfoPanel_continue.show))
+				btn_continue.mouse_exited.connect(_on_ButtonContinue_focus_entered.bind(saveInfoPanel_continue.hide))
+				btn_continue.focus_entered.connect(_on_ButtonContinue_focus_entered.bind(saveInfoPanel_continue.show))
+				btn_continue.focus_exited.connect(_on_ButtonContinue_focus_entered.bind(saveInfoPanel_continue.hide))
+			else:
+				saveInfoPanel_continue.hide()
 
 func _gui_input(event: InputEvent) -> void:
 	if (
@@ -51,11 +80,7 @@ func showSubmenu(menu:Control = null) -> void:
 	
 # === Events ===
 func _on_ButtonPlay_pressed() -> void:
-	SoundManager.play("confirm")
 	Game.newGame()
-
-func _on_ButtonExit_pressed():
-	get_tree().quit()
 
 func _on_ButtonChangeLog_pressed():
 	var _window:Window = CHANGELOG_WINDOW_SCENE.instantiate() as Window
@@ -65,17 +90,21 @@ func _on_ButtonLicenses_pressed():
 	var _window:Window = LICENSES_WINDOW_SCENE.instantiate() as Window
 	_window.popup_exclusive_centered(self)
 
-func _on_ButtonContinue_pressed():
-	SoundManager.play("confirm")
-	if not FileAccess.file_exists(Config.SAVEFILEPATH):
-		print("There's no file to load!!!")
-		return # Error! We don't have a save to load.	
-	
-	var data = UserData.loadDataFromFile(Config.SAVEFILEPATH)
-	
+func _on_ButtonContinue_pressed():	
+	var data = UserData.loadDracominoDataFromFile(previousSaveFile, showErrorMessage)
+
 	# TODO: Check if version compatible
 	
 	Game.loadGameData(data)
 
-func _on_button_focus_entered() -> void:
-	SoundManager.play("select")
+func _on_ButtonContinue_focus_entered(fn:Callable) -> void:
+	if fn.is_valid():
+		fn.call()
+
+func showErrorMessage(message:String):
+	var errorDialog:AcceptDialog = VERSION_WARNING_DIALOG_SCENE.instantiate()
+	errorDialog.dialog_text = message
+
+	add_child(errorDialog)
+	errorDialog.popup_centered()
+	errorDialog.visibility_changed.connect(errorDialog.queue_free)

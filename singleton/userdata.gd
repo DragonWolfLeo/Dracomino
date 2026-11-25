@@ -127,8 +127,11 @@ func loadSaveIndex() -> void: ## Loads the save index from file
 			if indexData is Dictionary:
 				saveIndex[k] = indexData
 
-func saveSaveIndex() -> void: ## Saves the save index to file
+func saveSaveIndex() -> void: ## Saves the save index to file. Use `lazySaveIndex` for potentially frequent saving
 	UserData.saveDataToFile(saveIndex, SAVE_INDEX_PATH)
+
+func lazySaveIndex() -> void: ## Saves the save index to file with an enforced delay
+	saveIndexSaver.lazyCall()
 
 func buildMissingSaveIndex() -> void: ## Search save directory and fill missing save indexes
 	var dir:String = DRACOMINO_SAVE_DIRECTORY
@@ -253,6 +256,9 @@ func versionIsOlderThan(numA:String, numB:String) -> bool: ## Compares version n
 
 func doesFileExist(path:String = Config.SAVEFILEPATH) -> bool: ## Checks if a file exists
 	return FileAccess.file_exists(path)
+
+func doesDracominoFileExist(fileNum:int) -> bool: ## Checks if a Dracomino file exists
+	return saveIndex.has(str(fileNum)) and FileAccess.file_exists(_makeDracominoSaveFilePath(fileNum))
 	
 func isDataCompatibleVersion(data:Dictionary) -> bool: ## Check if a data dictionary is compatible with current version
 	var minVersion:String = str(data.get("versionCompatible", data.get("versionNum", "")))

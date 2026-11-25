@@ -1,0 +1,106 @@
+[gd_scene load_steps=9 format=3 uid="uid://cb388r2pbabou"]
+
+[ext_resource type="Theme" uid="uid://co2jbnbqhvpa1" path="res://resource/style/saveinfopanel.tres" id="1_jufnt"]
+[ext_resource type="Texture2D" uid="uid://djkedv7qa2eob" path="res://assets/art/icons/coin.png" id="2_jufnt"]
+[ext_resource type="Script" uid="uid://bwt8pwkangm62" path="res://ui/saveinfopanel.gd" id="2_nyh55"]
+[ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="4_nyh55"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n5i2c"]
+bg_color = Color(0.333333, 0.333333, 0.666667, 1)
+corner_radius_top_left = 6
+corner_detail = 1
+expand_margin_left = 2.0
+expand_margin_top = 1.0
+expand_margin_right = 1.0
+anti_aliasing = false
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_nyh55"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nyh55"]
+bg_color = Color(0, 0, 0, 1)
+
+[sub_resource type="Theme" id="Theme_khphj"]
+Label/colors/font_color = Color(1, 1, 0, 1)
+Label/font_sizes/font_size = 14
+Label/fonts/font = ExtResource("4_nyh55")
+Label/styles/normal = SubResource("StyleBoxFlat_n5i2c")
+TooltipLabel/colors/font_color = Color(0.875, 0.875, 0.875, 1)
+TooltipLabel/styles/normal = SubResource("StyleBoxEmpty_nyh55")
+TooltipPanel/styles/panel = SubResource("StyleBoxFlat_nyh55")
+
+[node name="SaveInfoPanel" type="PanelContainer"]
+offset_right = 26.0
+offset_bottom = 26.0
+focus_mode = 1
+theme = ExtResource("1_jufnt")
+script = ExtResource("2_nyh55")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Icon" type="TextureRect" parent="MarginContainer/HBoxContainer"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_jufnt")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="LineEdit_SaveSlotName" type="LineEdit" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Save Slot Name"
+placeholder_text = "Save Slot Name"
+max_length = 40
+select_all_on_focus = true
+
+[node name="Label_GameType" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Game Type - Chapter Name"
+
+[node name="Label_Date" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "DD Month YYYY"
+
+[node name="Label_Progress" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Progress: 10000 / 10000"
+
+[node name="Label_Version" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Generated on APWorld V0.0.0"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme = SubResource("Theme_khphj")
+theme_override_constants/separation = 8
+
+[node name="Tag_Archipelago" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "This is associated with an Archipelago room."
+mouse_filter = 1
+text = "Archipelago"
+
+[node name="Tag_Completed" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "You've completed this seed already."
+mouse_filter = 1
+text = "Completed"
