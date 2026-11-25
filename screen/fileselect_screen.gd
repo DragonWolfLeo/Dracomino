@@ -42,6 +42,10 @@ func _ready() -> void:
 				btn.pressed.connect(saveInfoPanel.displaySaveInfo.bind(int(fileNum)))
 			fileButtonContainer.add_child(btn)
 
+		if saves.size() and saveInfoPanel is SaveInfoPanel:
+			var recentSave:Dictionary = saves.front()
+			saveInfoPanel.displaySaveInfo(int(recentSave.get("fileNum", 0)))
+
 # === Private Functions ===
 func _changeButtonTextToIndexSaveSlotName(btn:Button, fileNum:StringName) -> void:
 	var saveInfo:Dictionary = UserData.saveIndex.get(fileNum)
