@@ -177,6 +177,7 @@ func makeSaveInfoDict(data:Dictionary, saveSlotName:StringName) -> Dictionary: #
 		timestamp = float(data.get("timestamp", 0)),
 		saveSlotName = str(seedStateData["slotData"].get("save_slot_name", saveSlotName)),
 		generatorVersion = str(slotData.get("generator_version", "")),
+		versionNum = Config.versionNum,
 		slotContextHash = str(data.get("slotContextHash", "")),
 		isAP = int(seedStateData.get("isAP", 0)),
 		victory = int(data.get("victory", 0)),
