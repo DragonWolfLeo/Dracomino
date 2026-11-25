@@ -71,6 +71,7 @@ func waitIfNotLoaded() -> void:
 	if !isLoaded:
 		await game_loaded
 
-func loadTitle():
+func loadTitle() -> void: ## Return to title screen # TODO: This doesn't work correctly!
+	Archipelago.force_disconnect()
 	var packedScene = load("res://mode/titlescreen.tscn")
 	changeMode(packedScene)
