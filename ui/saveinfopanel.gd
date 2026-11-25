@@ -51,9 +51,7 @@ func displaySaveInfo(_fileNum:int = fileNum) -> void:
 		errorContainer.visible = isError
 		fileButtonBar.show()
 		emptyFileContainer.hide()
-		if isError:
-			printerr("There was an error displaying save slot info for file ")
-		else:
+		if not isError:
 			update(saveInfo)
 	else:
 		saveInfoContainer.hide()

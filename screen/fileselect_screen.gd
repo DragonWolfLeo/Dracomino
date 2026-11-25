@@ -15,11 +15,10 @@ func _ready() -> void:
 
 		var saves:Array[Dictionary] = []
 		for k:StringName in UserData.saveIndex.keys():
-			if not UserData.saveIndex[k].has("error"):
-				saves.append({
-					fileNum = k,
-					timestamp = int(UserData.saveIndex[k].get("timestamp", 0)),
-				})
+			saves.append({
+				fileNum = k,
+				timestamp = int(UserData.saveIndex[k].get("timestamp", 0)),
+			})
 
 		saves.sort_custom(
 			func(a:Dictionary, b:Dictionary):

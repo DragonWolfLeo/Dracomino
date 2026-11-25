@@ -52,6 +52,7 @@ mouse_filter = 2
 [node name="SaveInfoContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_vertical = 3
 mouse_filter = 2
 
 [node name="Icon" type="TextureRect" parent="MarginContainer/VBoxContainer/SaveInfoContainer"]
@@ -119,23 +120,27 @@ text = "Completed"
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+size_flags_vertical = 3
 mouse_filter = 2
 
 [node name="Label" type="Label" parent="MarginContainer/VBoxContainer/ErrorContainer"]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
-text = "There was an error loading the file info."
+size_flags_vertical = 0
+text = "There was an error loading the file info. It may be corrupted."
 autowrap_mode = 2
 
 [node name="EmptyFileContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+size_flags_vertical = 3
 mouse_filter = 2
 
 [node name="Label" type="Label" parent="MarginContainer/VBoxContainer/EmptyFileContainer"]
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
+size_flags_vertical = 0
 text = "No file is selected."
 autowrap_mode = 2
 
