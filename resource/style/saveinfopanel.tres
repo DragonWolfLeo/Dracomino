@@ -4,18 +4,26 @@
 [ext_resource type="FontFile" uid="uid://dsmco8aopu3b6" path="res://resource/font/ChakraPetch-Bold.ttf" id="2_uiluf"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e1xws"]
+content_margin_left = 8.0
+content_margin_right = 8.0
 bg_color = Color(0.333333, 0.333333, 0.333333, 1)
 anti_aliasing = false
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kr83f"]
+content_margin_left = 8.0
+content_margin_right = 8.0
 bg_color = Color(0.666667, 0.333333, 1, 1)
 anti_aliasing = false
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p1tab"]
-bg_color = Color(0.666667, 0.333333, 1, 1)
+content_margin_left = 8.0
+content_margin_right = 8.0
+bg_color = Color(0.666667, 0.666667, 1, 1)
 anti_aliasing = false
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cndkl"]
+content_margin_left = 8.0
+content_margin_right = 8.0
 bg_color = Color(0.333333, 0.333333, 0.666667, 1)
 anti_aliasing = false
 

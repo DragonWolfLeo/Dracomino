@@ -1,22 +1,42 @@
-[gd_resource type="Theme" load_steps=8 format=3 uid="uid://dld1yt1on6jy7"]
+[gd_resource type="Theme" load_steps=10 format=3 uid="uid://dld1yt1on6jy7"]
 
 [ext_resource type="FontFile" uid="uid://g3itr7tagcaw" path="res://resource/font/ChakraPetch-Regular.ttf" id="1_e1xws"]
 [ext_resource type="FontFile" uid="uid://dsmco8aopu3b6" path="res://resource/font/ChakraPetch-Bold.ttf" id="2_kr83f"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e1xws"]
+content_margin_left = 8.0
+content_margin_right = 8.0
 bg_color = Color(0.333333, 0.333333, 0.333333, 1)
 anti_aliasing = false
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kr83f"]
+content_margin_left = 8.0
+content_margin_right = 8.0
 bg_color = Color(0.666667, 0.333333, 1, 1)
 anti_aliasing = false
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p1tab"]
+content_margin_left = 8.0
+content_margin_right = 8.0
 bg_color = Color(0.666667, 0.333333, 1, 1)
 anti_aliasing = false
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3h2r8"]
+content_margin_left = 8.0
+content_margin_right = 8.0
+bg_color = Color(0.666667, 0.666667, 1, 1)
+anti_aliasing = false
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cndkl"]
+content_margin_left = 8.0
+content_margin_right = 8.0
 bg_color = Color(0.333333, 0.333333, 0.666667, 1)
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hnjha"]
+content_margin_left = 8.0
+content_margin_right = 8.0
+bg_color = Color(0.666667, 0.666667, 1, 1)
 anti_aliasing = false
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hqd04"]
@@ -36,10 +56,15 @@ anti_aliasing = false
 [resource]
 Button/colors/font_color = Color(1, 1, 1, 1)
 Button/colors/font_disabled_color = Color(0, 0, 0, 1)
+Button/colors/font_focus_color = Color(1, 1, 1, 1)
+Button/colors/font_hover_color = Color(1, 1, 1, 1)
+Button/colors/font_pressed_color = Color(1, 1, 0, 1)
 Button/fonts/font = ExtResource("1_e1xws")
 Button/styles/disabled = SubResource("StyleBoxFlat_e1xws")
 Button/styles/focus = SubResource("StyleBoxFlat_kr83f")
 Button/styles/hover = SubResource("StyleBoxFlat_p1tab")
+Button/styles/hover_pressed = SubResource("StyleBoxFlat_3h2r8")
 Button/styles/normal = SubResource("StyleBoxFlat_cndkl")
+Button/styles/pressed = SubResource("StyleBoxFlat_hnjha")
 Label/fonts/font = ExtResource("2_kr83f")
 PanelContainer/styles/panel = SubResource("StyleBoxFlat_hqd04")
