@@ -1,9 +1,10 @@
-[gd_scene load_steps=9 format=3 uid="uid://cb388r2pbabou"]
+[gd_scene load_steps=10 format=3 uid="uid://cb388r2pbabou"]
 
 [ext_resource type="Theme" uid="uid://co2jbnbqhvpa1" path="res://resource/style/saveinfopanel.tres" id="1_jufnt"]
 [ext_resource type="Texture2D" uid="uid://djkedv7qa2eob" path="res://assets/art/icons/coin.png" id="2_jufnt"]
 [ext_resource type="Script" uid="uid://bwt8pwkangm62" path="res://ui/saveinfopanel.gd" id="2_nyh55"]
 [ext_resource type="FontFile" uid="uid://crnuyoeevgsuo" path="res://resource/font/Goldman-Regular.ttf" id="4_nyh55"]
+[ext_resource type="Script" uid="uid://cflsu5kjgurav" path="res://ui/menubutton.gd" id="5_n5i2c"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n5i2c"]
 bg_color = Color(0.333333, 0.333333, 0.666667, 1)
@@ -29,6 +30,7 @@ TooltipLabel/styles/normal = SubResource("StyleBoxEmpty_nyh55")
 TooltipPanel/styles/panel = SubResource("StyleBoxFlat_nyh55")
 
 [node name="SaveInfoPanel" type="PanelContainer"]
+custom_minimum_size = Vector2(300, 220)
 offset_right = 26.0
 offset_bottom = 26.0
 focus_mode = 1
@@ -43,11 +45,16 @@ theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Icon" type="TextureRect" parent="MarginContainer/HBoxContainer"]
+[node name="SaveInfoContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Icon" type="TextureRect" parent="MarginContainer/VBoxContainer/SaveInfoContainer"]
 visible = false
 layout_mode = 2
 mouse_filter = 2
@@ -55,10 +62,12 @@ texture = ExtResource("2_jufnt")
 expand_mode = 3
 stretch_mode = 5
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/SaveInfoContainer"]
 layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
 
-[node name="LineEdit_SaveSlotName" type="LineEdit" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+[node name="LineEdit_SaveSlotName" type="LineEdit" parent="MarginContainer/VBoxContainer/SaveInfoContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Save Slot Name"
@@ -66,41 +75,90 @@ placeholder_text = "Save Slot Name"
 max_length = 40
 select_all_on_focus = true
 
-[node name="Label_GameType" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+[node name="Label_GameType" type="Label" parent="MarginContainer/VBoxContainer/SaveInfoContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Game Type - Chapter Name"
 
-[node name="Label_Date" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+[node name="Label_Date" type="Label" parent="MarginContainer/VBoxContainer/SaveInfoContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "DD Month YYYY"
 
-[node name="Label_Progress" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+[node name="Label_Progress" type="Label" parent="MarginContainer/VBoxContainer/SaveInfoContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Progress: 10000 / 10000"
 
-[node name="Label_Version" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+[node name="Label_Version" type="Label" parent="MarginContainer/VBoxContainer/SaveInfoContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Generated on APWorld V0.0.0"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/SaveInfoContainer/VBoxContainer"]
 layout_mode = 2
+mouse_filter = 2
 theme = SubResource("Theme_khphj")
 theme_override_constants/separation = 8
 
-[node name="Tag_Archipelago" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer/HBoxContainer"]
+[node name="Tag_Archipelago" type="Label" parent="MarginContainer/VBoxContainer/SaveInfoContainer/VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "This is associated with an Archipelago room."
 mouse_filter = 1
 text = "Archipelago"
 
-[node name="Tag_Completed" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer/HBoxContainer"]
+[node name="Tag_Completed" type="Label" parent="MarginContainer/VBoxContainer/SaveInfoContainer/VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 tooltip_text = "You've completed this seed already."
 mouse_filter = 1
 text = "Completed"
+
+[node name="ErrorContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/ErrorContainer"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "There was an error loading the file info."
+autowrap_mode = 2
+
+[node name="EmptyFileContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/EmptyFileContainer"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "No file is selected."
+autowrap_mode = 2
+
+[node name="Spacer" type="Control" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="FileButtonBar" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="Button_Load" type="Button" parent="MarginContainer/VBoxContainer/FileButtonBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Load Game"
+script = ExtResource("5_n5i2c")
+
+[node name="Button_Delete" type="Button" parent="MarginContainer/VBoxContainer/FileButtonBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Delete File"
+script = ExtResource("5_n5i2c")

@@ -211,6 +211,9 @@ func makeSaveInfoDict(data:Dictionary, saveSlotName:StringName) -> Dictionary: #
 	}
 	return info
 
+func doSavesExist() -> bool: ## Returns true if saves are in the save index
+	return not saveIndex.is_empty()
+
 ## Functions to upgrade old save data
 var VERSION_UPGRADES:Dictionary[StringName, Callable] = {}
 ## Upgrades old save data to current version by calling functions in `VERSION_UPGRADES`

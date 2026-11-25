@@ -6,7 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://i7wrqoanvm8e" path="res://ui/title.tscn" id="4_ikb7m"]
 [ext_resource type="FontFile" uid="uid://brbxrenwotboe" path="res://resource/font/Galindo-Regular.ttf" id="5_ikb7m"]
 [ext_resource type="Script" uid="uid://cflsu5kjgurav" path="res://ui/menubutton.gd" id="6_2xfe4"]
-[ext_resource type="PackedScene" uid="uid://cb388r2pbabou" path="res://ui/saveinfopanel.tscn" id="7_45wws"]
+[ext_resource type="PackedScene" uid="uid://cmnj528bn42mk" path="res://screen/fileselect_screen.tscn" id="7_45wws"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_45wws"]
 content_margin_left = 16.0
@@ -212,38 +212,10 @@ layout_mode = 2
 text = "Continue"
 script = ExtResource("6_2xfe4")
 
-[node name="Anchor" type="Control" parent="TitleScreen/Menus/MainScreen/VBoxContainer/Button_Continue"]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -168.0
-grow_horizontal = 0
-mouse_filter = 2
-
-[node name="SaveInfoPanel_Continue" parent="TitleScreen/Menus/MainScreen/VBoxContainer/Button_Continue/Anchor" instance=ExtResource("7_45wws")]
-unique_name_in_owner = true
-visible = false
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = 14.0
-offset_right = 245.0
-offset_bottom = 175.0
-grow_horizontal = 0
-
 [node name="Button_New" type="Button" parent="TitleScreen/Menus/MainScreen/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "New File"
-script = ExtResource("6_2xfe4")
-
-[node name="Button_FileSelect" type="Button" parent="TitleScreen/Menus/MainScreen/VBoxContainer"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-text = "File Select"
+text = "New Game"
 script = ExtResource("6_2xfe4")
 
 [node name="Button_Exit" type="Button" parent="TitleScreen/Menus/MainScreen/VBoxContainer"]
@@ -251,6 +223,10 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Exit"
 script = ExtResource("6_2xfe4")
+
+[node name="FileSelectScreen" parent="TitleScreen/Menus" instance=ExtResource("7_45wws")]
+unique_name_in_owner = true
+layout_mode = 1
 
 [node name="NewFileScreen" type="Control" parent="TitleScreen/Menus"]
 layout_mode = 1
