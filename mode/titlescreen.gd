@@ -1,7 +1,6 @@
 extends Control
 
-#signal game_started()
-@onready var versionLabel = %VersionLabel
+@onready var versionLabel:Label = %VersionLabel
 @onready var SUBMENU:Dictionary[StringName, Control] = {
 	MAIN = %MainScreen,
 	FILE_SELECT = %FileSelectScreen,
@@ -11,7 +10,7 @@ var CHANGELOG_WINDOW_SCENE:PackedScene = load("res://ui/changelog_window.tscn")
 var LICENSES_WINDOW_SCENE:PackedScene = load("res://ui/licenses_window.tscn")
 
 # === Virtuals ===
-func _ready():
+func _ready() -> void:
 	var savesExist:bool = UserData.doSavesExist()
 	
 	for v:Control in SUBMENU.values():
@@ -26,9 +25,8 @@ func _ready():
 		if tree:
 			btn_exit.pressed.connect(tree.quit)
 
-	var btn_continue:Button = %Button_Continue
-
 	# Continue button
+	var btn_continue:Button = %Button_Continue
 	if btn_continue is Button:
 		btn_continue.disabled = !savesExist
 		btn_continue.pressed.connect(showSubmenu.bind(SUBMENU.FILE_SELECT))
@@ -49,12 +47,13 @@ func _gui_input(event: InputEvent) -> void:
 # === Functions ===
 func updateVersionInfo() -> void: ## Fill in version info on bottom of title screen
 	var versionInfo:String = Config.getVersionNum(true)
-	versionLabel.text = versionLabel.text.format({
-		versionNum=versionInfo,
-		patchInfo = "",
-	})
+	if versionLabel is Label:
+		versionLabel.text = versionLabel.text.format({
+			versionNum=versionInfo,
+			patchInfo = "",
+		})
 
-func showSubmenu(menu:Control = SUBMENU.MAIN) -> void:
+func showSubmenu(menu:Control = SUBMENU.MAIN) -> void: ## Show menu while hiding other menus
 	# Hide all menus
 	for v:Control in SUBMENU.values():
 		v.visible = menu == v
@@ -65,17 +64,13 @@ func showSubmenu(menu:Control = SUBMENU.MAIN) -> void:
 func _on_ButtonPlay_pressed() -> void:
 	Game.newGame()
 
-func _on_ButtonChangeLog_pressed():
+func _on_ButtonChangeLog_pressed() -> void:
 	var _window:Window = CHANGELOG_WINDOW_SCENE.instantiate() as Window
 	_window.popup_exclusive_centered(self)
 
-func _on_ButtonLicenses_pressed():
+func _on_ButtonLicenses_pressed() -> void:
 	var _window:Window = LICENSES_WINDOW_SCENE.instantiate() as Window
 	_window.popup_exclusive_centered(self)
-
-func _on_ButtonContinue_focus_entered(fn:Callable) -> void:
-	if fn.is_valid():
-		fn.call()
 
 func _on_submenu_hidden(menu:Control) -> void:
 	for v:Control in SUBMENU.values():
