@@ -838,8 +838,8 @@ func _ready() -> void:
 	# Add Dracomino specific commands
 	DracominoCommandManager.addCommand("GETITEM", giveItemCommand).bind(self).setArgHint("name")
 	DracominoCommandManager.addCommand("TRIGGEREFFECT", triggerEffectCommand, true).bind(self).setArgHint("name")
-	DracominoCommandManager.addCommand("SAVE", saveToFile, true).setArgHint("file_number(optional)")
-	DracominoCommandManager.addCommand("LOAD", loadFromFile, true).setArgHint("file_number(optional)")
+	DracominoCommandManager.addCommand("SAVE", saveToFile, true).bind(self).setArgHint("file_number(optional)")
+	DracominoCommandManager.addCommand("LOAD", loadFromFile, true).bind(self).setArgHint("file_number(optional)")
 
 	# Set up trap link signal
 	SignalBus.getSignal("stateflag_set", "trap_link").connect(Archipelago.set_traplink.bind(true))
