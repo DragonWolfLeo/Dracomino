@@ -19,7 +19,20 @@ func changeMode(packedScene:PackedScene):
 	add_child(mode)
 
 func _ready():
+	_setUpSingletonSignals.call_deferred()
 	loadMainScene.call_deferred()
+
+func _setUpSingletonSignals() -> void: # Set up signals to singleton objects
+	# Set up trap link signal
+	SignalBus.getSignal("stateflag_set", "trap_link").connect(Archipelago.set_traplink.bind(true))
+	SignalBus.getSignal("stateflag_cleared", "trap_link").connect(Archipelago.set_traplink.bind(false))
+
+	# Make the EnergyLink tag appear when energy link is enabled
+	SignalBus.getSignal("stateflag_set", "energy_link").connect(Archipelago.set_tag.bind("EnergyLink", true))
+	SignalBus.getSignal("stateflag_cleared", "energy_link").connect(Archipelago.set_tag.bind("EnergyLink", false))
+
+	SignalBus.getSignal("saveGame").connect(DracominoCommandManager.activateCommand.bind("SAVE"))
+	SignalBus.getSignal("loadGame").connect(DracominoCommandManager.activateCommand.bind("LOAD"))
 
 func loadMainScene():
 	get_tree().change_scene_to_file("res://singleton/main.tscn") # Overwrite the previous version's scene

@@ -96,7 +96,7 @@ func addCommand(id:StringName, fnWithOptionalArgument: Callable, invisible:bool 
 			removeCommand(id, COMMANDS[id])
 		else:
 			printerr("Error adding command {id}: id already exists and is not forced!".format({id = id}))
-			return null
+			return COMMANDS[id]
 	COMMANDS[id] = Command.new(fnWithOptionalArgument, invisible)
 	COMMANDS[id].bound_node_tree_exiting.connect(removeCommand.bind(id, COMMANDS[id]))
 	return COMMANDS[id]

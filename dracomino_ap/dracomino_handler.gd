@@ -841,17 +841,6 @@ func _ready() -> void:
 	DracominoCommandManager.addCommand("SAVE", saveToFile, true).bind(self).setArgHint("file_number(optional)")
 	DracominoCommandManager.addCommand("LOAD", loadFromFile, true).bind(self).setArgHint("file_number(optional)")
 
-	# Set up trap link signal
-	SignalBus.getSignal("stateflag_set", "trap_link").connect(Archipelago.set_traplink.bind(true))
-	SignalBus.getSignal("stateflag_cleared", "trap_link").connect(Archipelago.set_traplink.bind(false))
-
-	# Make the EnergyLink tag appear when energy link is enabled
-	SignalBus.getSignal("stateflag_set", "energy_link").connect(Archipelago.set_tag.bind("EnergyLink", true))
-	SignalBus.getSignal("stateflag_cleared", "energy_link").connect(Archipelago.set_tag.bind("EnergyLink", false))
-
-	SignalBus.getSignal("saveGame").connect(DracominoCommandManager.activateCommand.bind("SAVE"))
-	SignalBus.getSignal("loadGame").connect(DracominoCommandManager.activateCommand.bind("LOAD"))
-
 #===== Functions =====
 func reset():
 	currentIndex = 0

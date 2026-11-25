@@ -24,11 +24,14 @@ func _ready() -> void:
 	if enableFlag:
 		SignalBus.getSignal("stateflag_set", enableFlag).connect(set.bind("enabled", true))
 		if soundToPlay:
-			SignalBus.getSignal("stateflag_set", enableFlag).connect(SoundManager.play.bind(soundToPlay))
+			SignalBus.getSignal("stateflag_set", enableFlag).connect(_playSound)
 		SignalBus.getSignal("stateflag_cleared", enableFlag).connect(set.bind("enabled", false))
 	elif disableFlag:
 		SignalBus.getSignal("stateflag_set", disableFlag).connect(set.bind("enabled", false))
 		SignalBus.getSignal("stateflag_cleared", disableFlag).connect(set.bind("enabled", true))
+
+func _playSound() -> void:
+	SoundManager.play(soundToPlay)
 
 func _on_resized() -> void:
 	await get_tree().process_frame
