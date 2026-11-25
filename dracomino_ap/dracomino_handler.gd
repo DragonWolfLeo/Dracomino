@@ -977,6 +977,8 @@ func loadFromSaveData(data:Dictionary) -> bool: ## Load saved state from json di
 	upgradeFeatures(SeedState.slotData.get("generator_version", "0.0.0"))
 	_on_newSeed_refresh_items()
 	started.emit()
+	if (not Archipelago.conn or isForceDisconnecting) and SeedState.isAP:
+		notification_signal.emit("Game restored. Connect to Archipelago to sync your progress.", CONSTANTS.COLOR.SPECIAL)
 	return true
 
 func resetSeedFlagHolder():
