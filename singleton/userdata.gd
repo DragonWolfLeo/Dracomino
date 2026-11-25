@@ -133,14 +133,20 @@ func _loadSaveIndex() -> void: ## Loads the save index from file
 		if data.get("error"):
 			printerr("Error loading save index file (Error %s"%data.get("error"))
 			data = {}
-		for k:Variant in data.keys():
-			var indexData:Variant = data[k]
-			if indexData is Dictionary:
-				saveIndex[k] = indexData
-				saveInfo_updated.emit(int(k))
+		var saveIndexData:Variant = data.get("index")
+		if saveIndexData is Dictionary:
+			for k:Variant in saveIndexData.keys():
+				var indexData:Variant = saveIndexData[k]
+				if indexData is Dictionary:
+					saveIndex[k] = indexData
+					saveInfo_updated.emit(int(k))
 
 func saveSaveIndex() -> void: ## Saves the save index to file. Use `lazySaveIndex` for potentially frequent saving
-	UserData.saveDataToFile(saveIndex, SAVE_INDEX_PATH)
+	var data:Dictionary = {
+		index = saveIndex,
+	}
+	data.merge(Config.exportVersion())
+	UserData.saveDataToFile(data, SAVE_INDEX_PATH)
 
 func lazySaveIndex() -> void: ## Saves the save index to file with an enforced delay
 	saveIndexSaver.lazyCall()
