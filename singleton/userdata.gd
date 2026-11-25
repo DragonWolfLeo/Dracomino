@@ -66,6 +66,7 @@ func saveDracominoDataToFile(data:Dictionary, fileNum:int, printErrorFn:Callable
 	var seedData:Dictionary = data.get("seedState")
 	if seedData is Dictionary:
 		if seedData.get("isAP", false):
+			Archipelago.save_manager.open_save.creds = Archipelago.creds
 			Archipelago.save_manager.write_save(fileNum)
 		else:
 			Archipelago.save_manager.delete_save(fileNum)
