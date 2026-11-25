@@ -165,6 +165,11 @@ func makeSaveInfoDict(data:Dictionary, saveSlotName:StringName) -> Dictionary: #
 		seedStateData = data["seedState"]
 		if seedStateData.get("slotData") is Dictionary:
 			slotData = seedStateData["slotData"]
+	var mainChapterId:StringName = str(data.get("mainChapterId", ""))
+	var mainChapterName:StringName = mainChapterId
+	var chapter:Story.Chapter = Story.CHAPTERS.get(mainChapterId)
+	if chapter is Story.Chapter:
+		mainChapterName = chapter.prettyName
 	info = {
 		timestamp = float(data.get("timestamp", 0)),
 		saveSlotName = str(seedStateData["slotData"].get("save_slot_name", saveSlotName)),
@@ -174,7 +179,7 @@ func makeSaveInfoDict(data:Dictionary, saveSlotName:StringName) -> Dictionary: #
 		numChecked = numChecked,
 		totalLocations = totalLocations,
 		gameType = str(data.get("gameType", "")),
-		mainChapterId = str(data.get("mainChapterId", "")),
+		mainChapterName = mainChapterName,
 		requirements = requirements,
 		icon = "",
 	}
