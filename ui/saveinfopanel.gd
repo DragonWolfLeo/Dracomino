@@ -116,6 +116,10 @@ func loadFile():
 	var data:Dictionary = UserData.loadDracominoDataFromFile(fileNum, showErrorMessage)
 	Game.loadGameData(data)
 
+func giveFocusToLoadButton() -> void:
+	if button_Load and button_Load.is_visible_in_tree():
+		button_Load.grab_focus()
+
 # === Events ===
 func _on_visibility_changed() -> void:
 	if is_visible_in_tree():

@@ -71,6 +71,7 @@ mouse_filter = 2
 [node name="LineEdit_SaveSlotName" type="LineEdit" parent="MarginContainer/VBoxContainer/SaveInfoContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
+focus_neighbor_bottom = NodePath("../../../FileButtonBar/Button_Load")
 text = "Save Slot Name"
 placeholder_text = "Save Slot Name"
 max_length = 40
@@ -159,11 +160,13 @@ alignment = 1
 [node name="Button_Load" type="Button" parent="MarginContainer/VBoxContainer/FileButtonBar"]
 unique_name_in_owner = true
 layout_mode = 2
+focus_neighbor_top = NodePath("../../SaveInfoContainer/VBoxContainer/LineEdit_SaveSlotName")
 text = "Load Game"
 script = ExtResource("5_n5i2c")
 
 [node name="Button_Delete" type="Button" parent="MarginContainer/VBoxContainer/FileButtonBar"]
 unique_name_in_owner = true
 layout_mode = 2
+focus_neighbor_top = NodePath("../../SaveInfoContainer/VBoxContainer/LineEdit_SaveSlotName")
 text = "Delete File"
 script = ExtResource("5_n5i2c")

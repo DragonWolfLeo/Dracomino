@@ -40,6 +40,8 @@ func _ready() -> void:
 			btn.tree_exiting.connect(saveInfo_updated.disconnect.bind(_changeButtonTextToIndexSaveSlotName), CONNECT_ONE_SHOT)
 			if saveInfoPanel is SaveInfoPanel:
 				btn.pressed.connect(saveInfoPanel.displaySaveInfo.bind(int(fileNum)))
+				btn.pressed.connect(saveInfoPanel.giveFocusToLoadButton)
+				btn.focus_entered.connect(saveInfoPanel.displaySaveInfo.bind(int(fileNum)))
 			fileButtonContainer.add_child(btn)
 
 		if saves.size() and saveInfoPanel is SaveInfoPanel:
