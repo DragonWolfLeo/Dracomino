@@ -11,8 +11,7 @@ extends VBoxContainer
 var CHANGELOG_WINDOW_SCENE:PackedScene = load("res://ui/changelog_window.tscn")
 
 func _ready() -> void:
-	# Disable buttons
-	btnQuit.disabled = Config.isWeb
+	# Hide buttons
 	btnTutorial.hide()
 	btnLogic.hide()
 
@@ -23,7 +22,12 @@ func _ready() -> void:
 	btnLogic.pressed.connect(_on_btnLogic_pressed)
 	btnActSelect.pressed.connect(_on_btnActSelect_pressed)
 	btnRestart.pressed.connect(_on_btnRestart_pressed)
-	btnQuit.pressed.connect(_on_btnQuit_pressed)
+	if Config.isWeb:
+		# Turn quit button into save on web
+		btnQuit.text = "Save"
+		btnQuit.pressed.connect(_on_btnSave_pressed)
+	else:
+		btnQuit.pressed.connect(_on_btnQuit_pressed)
 
 	# Connect other signals
 	SignalBus.getSignal("stateflag_set", "tutorial").connect(btnTutorial.show)
@@ -53,3 +57,6 @@ func _on_btnRestart_pressed() -> void:
 func _on_btnQuit_pressed() -> void:
 	get_tree().root.propagate_notification(NOTIFICATION_WM_CLOSE_REQUEST)
 	get_tree().quit()
+
+func _on_btnSave_pressed() -> void:
+	SignalBus.getSignal("saveGame").emit()

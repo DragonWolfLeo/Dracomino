@@ -842,6 +842,8 @@ func _ready() -> void:
 	DracominoCommandManager.addCommand("SAVE", saveToFile, true).bind(self).setArgHint("file_number(optional)")
 	DracominoCommandManager.addCommand("LOAD", loadFromFile, true).bind(self).setArgHint("file_number(optional)")
 
+	SignalBus.getSignal("saveGame").connect(saveToFile)
+
 func _notification(what:int) -> void:
 	# Save when about to close or paused
 	match what:
