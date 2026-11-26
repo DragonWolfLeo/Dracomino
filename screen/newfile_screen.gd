@@ -15,12 +15,13 @@ func _ready() -> void:
 
 func _on_Button_Start_pressed() -> void:
 	Game.targetSaveFileNum = 1
-	while not UserData.saveIndex.has(str(Game.targetSaveFileNum)):
+	while UserData.saveIndex.has(str(Game.targetSaveFileNum)):
 		Game.targetSaveFileNum += 1
 	Game.targetSaveSlotName = "File %s"%Game.targetSaveFileNum
 	if lineEdit_SaveSlotName is LineEdit:
 		if not lineEdit_SaveSlotName.text.is_empty():
 			Game.targetSaveSlotName = lineEdit_SaveSlotName.text
+	print("Making a new game on slot ", Game.targetSaveFileNum)
 	Game.newGame()
 
 func _on_visibility_changed() -> void:
