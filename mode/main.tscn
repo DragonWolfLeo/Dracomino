@@ -52,6 +52,11 @@ render_target_update_mode = 4
 [node name="DracominoHandler" type="Node" parent="Main/SubViewport"]
 script = ExtResource("4_d6dmn")
 
+[node name="Autosaver" type="Timer" parent="Main/SubViewport/DracominoHandler"]
+process_mode = 3
+wait_time = 120.0
+autostart = true
+
 [node name="UI" parent="Main/SubViewport" instance=ExtResource("2_yivgv")]
 unique_name_in_owner = true
 
@@ -234,6 +239,7 @@ layout_mode = 2
 [connection signal="notification_signal" from="Main/SubViewport/DracominoHandler" to="NotificationScreen" method="_on_DracominoHandler_notification_signal"]
 [connection signal="slotContextHash_updated" from="Main/SubViewport/DracominoHandler" to="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" method="_on_DracominoHandler_slot_context_hash_updated"]
 [connection signal="started" from="Main/SubViewport/DracominoHandler" to="Main" method="_on_DracominoHandler_started"]
+[connection signal="timeout" from="Main/SubViewport/DracominoHandler/Autosaver" to="Main/SubViewport/DracominoHandler" method="_on_Autosaver_timeout"]
 [connection signal="resized" from="Main/SubViewport/PuzzleMode/SubViewportContainer" to="Main/SubViewport/PuzzleMode" method="_on_SubViewportContainer_resized"]
 [connection signal="deathlink_earned" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="Main/SubViewport/DracominoHandler" method="_on_Board_deathlink_earned"]
 [connection signal="effect_activated" from="Main/SubViewport/PuzzleMode/SubViewportContainer/SubViewport/Board" to="NotificationScreen" method="_on_Board_effect_activated"]

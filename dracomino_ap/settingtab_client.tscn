@@ -50,6 +50,13 @@ script = ExtResource("2_x2ppi")
 target_theme_path = "res://godot_ap/ui/themes/light_theme.tres"
 metadata/_custom_type_script = "uid://cttniyxj6oq7h"
 
+[node name="Btn_Autosave" type="CheckButton" parent="MarginContainer/Row/Col1"]
+layout_mode = 2
+tooltip_text = "Save your progress automatically"
+text = "Autosave"
+script = ExtResource("3_6wts0")
+optionKey = "autosave"
+
 [node name="Btn_ShowNonlocalItemSends" type="CheckButton" parent="MarginContainer/Row/Col1"]
 layout_mode = 2
 tooltip_text = "Show messages for item-sends that do not involve you"

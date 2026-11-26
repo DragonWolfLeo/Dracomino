@@ -37,6 +37,7 @@ var campaign:CampaignContext:
 var worldFlagHolder:FlagHolder ## Persisting flag holder controlled by dialogue; Saved
 var seedFlagHolder:FlagHolder ## Temporary flag holder that controls game state; Not saved
 var effectHandler:EffectHandler
+var autosaver:DracominoUtil.LazyCaller = DracominoUtil.LazyCaller.Make(self, saveToFile, 10)
 
 var color_random:RandomNumberGenerator = RandomNumberGenerator.new()
 var color_randomSaveState:int = color_random.state
@@ -918,6 +919,10 @@ func loadFromFile(fileNum = Game.targetSaveFileNum) -> void:
 		_displayErrorMessage("Cannot load - Error loading data.")
 		return
 
+func autosave() -> void:
+	if Config.getSetting("autosave"):
+		autosaver.lazyCall.call_deferred()
+
 func addToSaveData(data:Dictionary = {}) -> Dictionary: ## Record state to dictionary to save to json file
 	SeedState.addToSaveData(data)
 	data["slotContextHash"] = slotContextHash
@@ -1215,6 +1220,9 @@ func obtainServerItem(item:StateItem) -> void: ## Get an AP item, either directl
 					.format({source=item.senderName, itemName=itemName}), color, false
 				)
 		giveItem(item)
+		
+		# Autosave
+		autosave()
 	else:
 		# This is another player's item. Announce that you got it!
 		notification_signal.emit("You found {receiver}'s {itemName}!".format({itemName=itemName, receiver=item.receiverName}), color, false)
@@ -1694,6 +1702,8 @@ func _on_remove_location(loc_id:int):
 			boardObjects.erase(id_to_boardObject[loc_id].index)
 			boardObjects_updated.emit(boardObjects)
 			addLocationToCoinCurrency(loc_id)
+		# Autosave
+		autosave()
 
 func _on_Board_pieces_requested(callback:Callable, num:int) -> void:
 	for i:int in range(num):
@@ -1746,6 +1756,9 @@ func _on_Board_lines_cleared(lines:Array) -> void:
 	
 	giveMana(lines.size() * Board.BOUNDS.size.x * CONSTANTS.MANA_PER_BLOCK)
 
+	# Autosave
+	autosave()
+
 func _on_Board_item_pickedup(state:StateBoardObject) -> void:
 	if state and state.isLocation:
 		print("Picked up ", CONSTANTS.LOCATIONS[state.loc_id].prettyName)
@@ -1754,6 +1767,8 @@ func _on_Board_item_pickedup(state:StateBoardObject) -> void:
 	if campaign:
 		campaign.triggerObjectCollected(state)
 	giveMana(CONSTANTS.MANA_PER_COIN)
+	# Autosave
+	autosave()
 
 func _on_Board_lines_cleared_updated(num:int) -> void:
 	if not seedIsValid:
@@ -1765,6 +1780,8 @@ func _on_Board_lines_cleared_updated(num:int) -> void:
 		sendVictory()
 	# Send mana/energy
 	sendEnergy()
+	# Autosave
+	autosave()
 
 func _on_Board_deathlink_earned(deathContext:DracominoUtil.DeathContext) -> void:
 	if Archipelago.conn:
@@ -1817,3 +1834,6 @@ func _on_Board_deathlink_earned(deathContext:DracominoUtil.DeathContext) -> void
 
 func _on_location_scouted(item:NetworkItem) -> void:
 	LocationContext.getOrCreateFromNetItem(item)
+
+func _on_Autosaver_timeout() -> void:
+	autosave()
