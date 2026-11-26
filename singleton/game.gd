@@ -34,6 +34,10 @@ func _setUpSingletonSignals() -> void: # Set up signals to singleton objects
 	SignalBus.getSignal("stateflag_set", "energy_link").connect(Archipelago.set_tag.bind("EnergyLink", true))
 	SignalBus.getSignal("stateflag_cleared", "energy_link").connect(Archipelago.set_tag.bind("EnergyLink", false))
 
+	# Debug touch flag
+	SignalBus.getSignal("stateflag_set", "emulate_touch").connect(Input.set.bind("emulate_touch_from_mouse", true))
+	SignalBus.getSignal("stateflag_cleared", "emulate_touch").connect(Input.set.bind("emulate_touch_from_mouse", false))
+
 func loadMainScene():
 	get_tree().change_scene_to_file("res://singleton/main.tscn") # Overwrite the previous version's scene
 	changeMode(load("res://mode/titlescreen.tscn"))
