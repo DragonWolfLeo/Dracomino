@@ -34,9 +34,6 @@ func _setUpSingletonSignals() -> void: # Set up signals to singleton objects
 	SignalBus.getSignal("stateflag_set", "energy_link").connect(Archipelago.set_tag.bind("EnergyLink", true))
 	SignalBus.getSignal("stateflag_cleared", "energy_link").connect(Archipelago.set_tag.bind("EnergyLink", false))
 
-	SignalBus.getSignal("saveGame").connect(DracominoCommandManager.activateCommand.bind("SAVE"))
-	SignalBus.getSignal("loadGame").connect(DracominoCommandManager.activateCommand.bind("LOAD"))
-
 func loadMainScene():
 	get_tree().change_scene_to_file("res://singleton/main.tscn") # Overwrite the previous version's scene
 	changeMode(load("res://mode/titlescreen.tscn"))
