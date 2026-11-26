@@ -68,6 +68,7 @@ var linesCleared:int = 0:
 		linesCleared_updated.emit(linesCleared)
 var flagHolder:FlagHolder
 var effectHandler:EffectHandler
+var touchState:DracominoUtil.TouchState = DracominoUtil.TouchState.new().setWatchedActions(["hardDrop"])
 
 var _lastHeldPieceContext:DracominoHandler.PieceContext ## For deathlink message context; TODO: Obsolete
 
@@ -443,6 +444,9 @@ func _ready():
 	SignalBus.getSignal("boardeffect_queued").connect(_on_boardeffect_queued)
 	## Reset when changing irregular board
 	SignalBus.getSignal("stateflag_changed", "irregular_board").connect(resetGame)
+	# Touch state
+	touchState.drag_action_activated.connect(_on_drag_action_activated)
+	# Generate line offsets
 	_generateLineOffsets()
 	for i:int in range(BOUNDS.end.y):
 		# Make line numbers labels
@@ -1232,6 +1236,17 @@ func mapToTileSpaceCoordinates(mapCoordinates:Vector2i) -> Vector2i:
 func _input(event: InputEvent) -> void:
 	if event.is_action_type():
 		inputTimer.reset()
+	
+	# Reset pressed state without handling event
+	if event is InputEventMouseButton:
+		inputTimer.reset()
+		if not event.pressed and touchState.isPressed():
+			touchState.release_mouse()
+
+	elif event is InputEventScreenTouch:
+		inputTimer.reset()
+		if not event.pressed and touchState.isPressed():
+			touchState.release_touch(event.index)
 
 func _unhandled_input(event: InputEvent) -> void:
 	var focusPiece:Piece = getFocusPiece()
@@ -1266,28 +1281,47 @@ func _unhandled_input(event: InputEvent) -> void:
 					holdSlotCycleTimer.timeout.connect(_on_holdSlotCycleTimer_timeout.bind(fn))
 			get_viewport().set_input_as_handled()
 			return
+	# Mouse press
+	if event is InputEventMouseButton:
+		if event.pressed and Config.getSetting("mouseControls", false):
+			match event.button_index:
+				MOUSE_BUTTON_LEFT:
+					touchState.press_mouse()
+		return
+	elif event is InputEventScreenTouch:
+		# Rotate when touching screen
+		if event.pressed:
+			touchState.press_touch(event.index)
+		return
+	elif event is InputEventMouseMotion or event is InputEventScreenDrag:
+		if event.screen_velocity.y > 1000:
+			touchState.accumulateDrag(event.screen_relative)
 
 	if focusPiece == null: return
-	
 	# Stuff that requires an active piece
 	if event.is_action_pressed("hardDrop") and Input.is_action_just_pressed("hardDrop"): # Double check to ignore events from slight axis movement
-		if focusPiece.momentumPhysics:
-			focusPiece.gravityDrop()
-		else:
-			if FlagManager.isFlagSet("hard_drop"):
-				focusPiece.hardDrop()
-			elif (
-				ALLOW_GRAVITY_DROP
-				and FlagManager.isFlagSet("gravity")
-				and activePieces.size() < MAX_PIECES
-				# Only gravity drop if it's not your last piece
-				and (countNonlockedPieces() > 1 or (previewStorage and previewStorage.getNumStored()))
-			):
-				focusPiece.gravityDrop()
+		_on_hardDrop_input(focusPiece)
 	else:
 		return
 	
 	get_viewport().set_input_as_handled()
+
+func _on_hardDrop_input(focusPiece:Piece) -> bool: ## Return true when input should be handled
+	if focusPiece.momentumPhysics:
+		focusPiece.gravityDrop()
+	else:
+		if FlagManager.isFlagSet("hard_drop"):
+			focusPiece.hardDrop()
+		elif (
+			ALLOW_GRAVITY_DROP
+			and FlagManager.isFlagSet("gravity")
+			and activePieces.size() < MAX_PIECES
+			# Only gravity drop if it's not your last piece
+			and (countNonlockedPieces() > 1 or (previewStorage and previewStorage.getNumStored()))
+		):
+			focusPiece.gravityDrop()
+	touchState.release_all()
+	return true
 
 func _on_holdSlotCycleTimer_timeout(callback:Callable):
 	callback.call()
@@ -1522,3 +1556,9 @@ func _on_boardeffect_queued():
 
 func _on_versusMode_setting_changed():
 	if effectHandler: effectHandler.allowTriggeringEffects = not FlagManager.isFlagSet("versus_mode")
+
+func _on_drag_action_activated(action:StringName, isEcho:bool = false):
+	var focusPiece:Piece = getFocusPiece()
+	if focusPiece == null: return
+	match action:
+		"hardDrop": _on_hardDrop_input(focusPiece)
