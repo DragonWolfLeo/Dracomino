@@ -842,6 +842,13 @@ func _ready() -> void:
 	DracominoCommandManager.addCommand("SAVE", saveToFile, true).bind(self).setArgHint("file_number(optional)")
 	DracominoCommandManager.addCommand("LOAD", loadFromFile, true).bind(self).setArgHint("file_number(optional)")
 
+func _notification(what:int) -> void:
+	# Save when about to close or paused
+	match what:
+		NOTIFICATION_WM_CLOSE_REQUEST, NOTIFICATION_APPLICATION_PAUSED:
+			print("Saving the game before quitting/pausing")
+			saveToFile()
+
 #===== Functions =====
 func reset():
 	currentIndex = 0

@@ -51,4 +51,5 @@ func _on_btnRestart_pressed() -> void:
 	SignalBus.getSignal("restartGame").emit()
 
 func _on_btnQuit_pressed() -> void:
+	get_tree().root.propagate_notification(NOTIFICATION_WM_CLOSE_REQUEST)
 	get_tree().quit()
