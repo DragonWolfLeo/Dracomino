@@ -412,7 +412,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("moveRight") and Input.is_action_just_pressed("moveRight"):
 		handleInput(_on_moveRight_input)
 		return
-	elif event.is_action_pressed("moveDown") and Input.is_action_just_pressed("moveDown") and FlagManager.isFlagSet("soft_drop"):
+	elif event.is_action_pressed("moveDown") and Input.is_action_just_pressed("moveDown"):
 		handleInput(_on_moveDown_input)
 		return
 
@@ -456,14 +456,16 @@ func _on_moveRight_input() -> bool: ## Return true when input should be handled
 	return true
 
 func _on_moveDown_input() -> bool: ## Return true when input should be handled
-	softDropTimer.start(SOFT_DROP_WAIT_TIME)
-	movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP_LOCK)
-	if momentumPhysics:
-		# Apply a momentum
-		momentumDirection = Vector2i.DOWN
-	# Avoid falling too soon
-	resetGravityTimer()
-	return true
+	if FlagManager.isFlagSet("soft_drop"):
+		softDropTimer.start(SOFT_DROP_WAIT_TIME)
+		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP_LOCK)
+		if momentumPhysics:
+			# Apply a momentum
+			momentumDirection = Vector2i.DOWN
+		# Avoid falling too soon
+		resetGravityTimer()
+		return true
+	return false
 
 #==== Functions ======
 func handleInput(fnThatReturnsTrueToAcceptEvent:Callable) -> bool: ## Call function and handles input if returns true; Returns true if handled
