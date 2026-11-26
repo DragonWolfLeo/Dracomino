@@ -272,3 +272,17 @@ class LazyCaller:
 			tween.kill()
 			tween = null
 		node = null
+
+# Randomized save slot names
+static func generateRandomSaveSlotName() -> String: ## Generate a random save slot name
+	var words:Array[String] = []
+	for array:PackedStringArray in [CONSTANTS.WORD_LIST.ARTICLE, CONSTANTS.WORD_LIST.ADJECTIVE, CONSTANTS.WORD_LIST.NOUN]:
+		var word:String = chooseRandomFromPackedStringArray(array)
+		if not word.is_empty():
+			words.append(word)
+	return " ".join(words)
+
+static func chooseRandomFromPackedStringArray(array:PackedStringArray) -> String: ## Choose a random string from PackedStringArray
+	if array.size():
+		return array[randi_range(0, array.size() - 1)]
+	return ""
