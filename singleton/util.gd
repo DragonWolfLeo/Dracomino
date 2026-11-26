@@ -300,6 +300,7 @@ class TouchState:
 			if not hasDragged:
 				_lastDragAction = ""
 	var _lastDragAction:StringName
+	var watchedActions:Array[StringName]
 
 	signal drag_action_activated(action:StringName, isEcho:bool)
 
@@ -308,8 +309,17 @@ class TouchState:
 		moveRight = Vector2.RIGHT,
 		moveDown = Vector2.DOWN,
 		moveUp = Vector2.UP,
+		hardDrop = Vector2.DOWN,
 	}
-	static var DRAG_ACTION_DOT_THRESHOLD:int = 16
+	static var DRAG_DEFAULT_ACTION_DOT_THRESHOLD:int = 16
+	static var DRAG_ACTION_DOT_THRESHOLD:Dictionary[StringName, int] = {
+		hardDrop = DRAG_DEFAULT_ACTION_DOT_THRESHOLD * 3,
+	}
+
+
+	func setWatchedActions(actions:Array[StringName]) -> TouchState:
+		watchedActions.append_array(actions)
+		return self
 	
 	func press_mouse() -> void: ## Make mouse pressed
 		hasDragged = false
@@ -319,6 +329,10 @@ class TouchState:
 	
 	func release_mouse() -> void: ## Make mouse released
 		mousePressed = false
+
+	func release_all() -> void: ## Release mouse and touch
+		mousePressed = false
+		touchPresses.clear()
 
 	func press_touch(index:int) -> void: ## Press touch
 		hasDragged = false
@@ -342,12 +356,14 @@ class TouchState:
 
 	func accumulateDrag(amount:Vector2) -> void: ## Add to current drag and emit drag actions
 		if isPressed():
-			var threshold:float = DRAG_ACTION_DOT_THRESHOLD * FlagManager.getIntFlagValue("current_zoom")
+			var thresholdMult:float = FlagManager.getIntFlagValue("current_zoom")
 			drag += amount
-			for action:StringName in DRAG_ACTION_DIRECTION.keys():
-				while drag.dot(DRAG_ACTION_DIRECTION[action]) > threshold:
-					drag -= DRAG_ACTION_DIRECTION[action] * threshold
-					drag *= DRAG_ACTION_DIRECTION[action] # Make drag straighter
-					drag_action_activated.emit(action, action == _lastDragAction)
-					_lastDragAction = action
-					hasDragged = true
+			for action:StringName in watchedActions:
+				if DRAG_ACTION_DIRECTION.has(action):
+					var threshold:float = thresholdMult * DRAG_ACTION_DOT_THRESHOLD.get(action, DRAG_DEFAULT_ACTION_DOT_THRESHOLD)
+					while drag.dot(DRAG_ACTION_DIRECTION[action]) > threshold:
+						drag -= DRAG_ACTION_DIRECTION[action] * threshold
+						drag *= DRAG_ACTION_DIRECTION[action] # Make drag straighter
+						drag_action_activated.emit(action, action == _lastDragAction)
+						_lastDragAction = action
+						hasDragged = true

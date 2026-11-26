@@ -340,7 +340,7 @@ var isFocus:bool: ## Decides whether or not piece listens to inputs
 var rarity:StringName
 var modifiers:Dictionary[StringName, float] = {}
 var flagHolder:FlagHolder
-var touchState:DracominoUtil.TouchState = DracominoUtil.TouchState.new()
+var touchState:DracominoUtil.TouchState = DracominoUtil.TouchState.new().setWatchedActions(["moveLeft", "moveRight", "moveDown", "moveUp"])
 
 static var GHOSTPIECE_SCENE:PackedScene = load("res://object/ghostpiece.tscn")
 static var PIECEAFTERIMAGE_EFFECT_SCENE:PackedScene = load("res://object/pieceafterimage_effect.tscn")
