@@ -51,6 +51,8 @@ var casted:bool = false:
 		if fishingHook:
 			fishingHook.set_physics_process(casted)
 
+var touchState:DracominoUtil.TouchState = DracominoUtil.TouchState.new()
+
 # === Virtuals ===
 func _ready() -> void:
 	reset()
@@ -59,24 +61,61 @@ func _ready() -> void:
 		mode.mode_enabled.connect(reset)
 	
 func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("cast"):
-		if casted:
-			if fishingHook.position.distance_squared_to(fishingRodMarker_idle.position) < RETRIEVE_DIST_SQ:
-				retrieve()
-			else:
-				startReel()
+	# Mouse button
+	if event is InputEventMouseButton:
+		match event.button_index:
+			MOUSE_BUTTON_LEFT:
+				if event.pressed:
+					if Config.getSetting("mouseControls"):
+						touchState.press_mouse()
+						if touchState.isPressed():
+							_on_cast_input_pressed()
+				else:
+					if touchState.isPressed():
+						touchState.release_mouse()
+						if not touchState.isPressed():
+							_on_cast_input_released()
+	
+	# Screen touch
+	elif event is InputEventScreenTouch:
+		if event.pressed:
+			touchState.press_touch(event.index)
+			if touchState.isPressed():
+				_on_cast_input_pressed()
 		else:
-			startCharge()
-		get_viewport().set_input_as_handled()
+			if touchState.isPressed():
+				touchState.release_touch(event.index)
+				if not touchState.isPressed():
+					_on_cast_input_released()
+
+	# Keyboard/Controller
+	elif event.is_action_pressed("cast"):
+		if _on_cast_input_pressed():
+			get_viewport().set_input_as_handled()
 	elif event.is_action_released("cast"):
-		if casted:
-			stopReel()
-		else:
-			releaseCast()
-		get_viewport().set_input_as_handled()
+		if _on_cast_input_released():
+			get_viewport().set_input_as_handled()
 
 func _process(delta: float) -> void:
 	drawFishingLine()
+
+# === Private Functions ===
+func _on_cast_input_pressed() -> bool: ## Return true when input should be handled
+	if casted:
+		if fishingHook.position.distance_squared_to(fishingRodMarker_idle.position) < RETRIEVE_DIST_SQ:
+			retrieve()
+		else:
+			startReel()
+	else:
+		startCharge()
+	return true
+
+func _on_cast_input_released() -> bool: ## Return true when input should be handled
+	if casted:
+		stopReel()
+	else:
+		releaseCast()
+	return true
 
 # === Functions ===
 func reset(immediate:bool = true):

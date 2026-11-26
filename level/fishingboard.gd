@@ -19,9 +19,19 @@ func _enter_tree() -> void:
 		printerr("FishingBoard._enter_tree warning: does not have mode parent!")
 
 func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_accept") and fishes.size() == 0:
-		spawnFishes()
-		get_viewport().set_input_as_handled()
+	if fishes.size() == 0:
+		if event is InputEventMouseButton:
+			if event.pressed:
+				if Config.getSetting("mouseControls", false):
+					spawnFishes()
+					get_viewport().set_input_as_handled()
+		elif event is InputEventScreenTouch:
+			if event.pressed:
+				spawnFishes()
+				get_viewport().set_input_as_handled()
+		elif event.is_action_pressed("ui_accept"):
+			spawnFishes()
+			get_viewport().set_input_as_handled()
 
 # === Functions ===
 func spawnFish(piece:Piece):
