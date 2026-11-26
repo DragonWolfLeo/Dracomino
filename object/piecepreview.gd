@@ -22,6 +22,17 @@ func _ready() -> void:
 	setLabel()
 	pieceTiles = find_child("PieceTiles")
 
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			if Config.getSetting("mouseControls", false):
+				triggered.emit()
+				accept_event()
+	elif event is InputEventScreenTouch:
+		if event.pressed:
+			triggered.emit()
+			accept_event()
+
 func _unhandled_key_input(event: InputEvent) -> void:
 	if shortcut.is_empty(): return
 	if event.is_action_pressed(shortcut):
