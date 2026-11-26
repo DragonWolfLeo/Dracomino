@@ -116,6 +116,12 @@ func showErrorMessage(message:String):
 
 func loadFile():	
 	var data:Dictionary = UserData.loadDracominoDataFromFile(fileNum, showErrorMessage)
+	var saveInfo:Dictionary = UserData.saveIndex.get(str(fileNum), {})
+	if saveInfo is Dictionary:
+		if saveInfo.has("saveSlotName"):
+			Game.targetSaveSlotName = str(saveInfo["saveSlotName"])
+	Game.targetSaveFileNum = fileNum
+	print("Loading file ", fileNum)
 	Game.loadGameData(data)
 
 func giveFocusToLoadButton() -> void:
