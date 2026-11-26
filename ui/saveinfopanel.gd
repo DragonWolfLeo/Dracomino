@@ -99,6 +99,8 @@ func update(data:Dictionary):
 
 func getTimeString(timestamp:int) -> String:
 	if timestamp:
+		var timezone:Dictionary = Time.get_time_zone_from_system()
+		timestamp += timezone.get("bias", 0) * 60
 		var dict:Dictionary = Time.get_date_dict_from_unix_time(timestamp)
 		dict["month"] = MONTHS.get(dict.get("month"))
 		return "{day} {month} {year}".format(dict)
