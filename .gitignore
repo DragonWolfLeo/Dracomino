@@ -1,3 +1,6 @@
+# Dracomino specific ignores
+.dracomino/
+
 # Godot 4+ specific ignores
 .godot/
 
