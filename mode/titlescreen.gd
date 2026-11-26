@@ -4,6 +4,7 @@ extends Control
 @onready var SUBMENU:Dictionary[StringName, Control] = {
 	MAIN = %MainScreen,
 	FILE_SELECT = %FileSelectScreen,
+	NEW_GAME = %NewGameScreen,
 }
 
 var CHANGELOG_WINDOW_SCENE:PackedScene = load("res://ui/changelog_window.tscn")
@@ -26,10 +27,15 @@ func _ready() -> void:
 			btn_exit.pressed.connect(tree.quit)
 
 	# Continue button
-	var btn_continue:Button = %Button_Continue
-	if btn_continue is Button:
-		btn_continue.disabled = !savesExist
-		btn_continue.pressed.connect(showSubmenu.bind(SUBMENU.FILE_SELECT))
+	var btn_Continue:Button = %Button_Continue
+	if btn_Continue is Button:
+		btn_Continue.disabled = !savesExist
+		btn_Continue.pressed.connect(showSubmenu.bind(SUBMENU.FILE_SELECT))
+
+	# Continue button
+	var btn_New:Button = %Button_New
+	if btn_New is Button:
+		btn_New.pressed.connect(showSubmenu.bind(SUBMENU.NEW_GAME))
 
 func _gui_input(event: InputEvent) -> void:
 	if (
@@ -61,9 +67,6 @@ func showSubmenu(menu:Control = SUBMENU.MAIN) -> void: ## Show menu while hiding
 	grab_focus()
 	
 # === Events ===
-func _on_ButtonPlay_pressed() -> void:
-	Game.newGame()
-
 func _on_ButtonChangeLog_pressed() -> void:
 	var _window:Window = CHANGELOG_WINDOW_SCENE.instantiate() as Window
 	_window.popup_exclusive_centered(self)

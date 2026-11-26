@@ -4,9 +4,9 @@ var MENU_BUTTON_SCRIPT:Script = load("res://ui/menubutton.gd")
 
 # === Virtuals ===
 func _ready() -> void:
-	var button_back:Button = %Button_Back
-	if button_back is Button:
-		button_back.pressed.connect(hide)
+	var button_Back:Button = %Button_Back
+	if button_Back is Button:
+		button_Back.pressed.connect(hide)
 
 	var fileButtonContainer:Control = %FileButtonContainer
 	if fileButtonContainer is Control:

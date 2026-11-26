@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://cm37gcyopdca4"]
+[gd_scene load_steps=15 format=3 uid="uid://cm37gcyopdca4"]
 
 [ext_resource type="Script" uid="uid://bugig0un80q2l" path="res://mode/titlescreen.gd" id="1_ps0hi"]
 [ext_resource type="Material" uid="uid://ftvia48v2ph6" path="res://resource/shader/ega_object.tres" id="2_ikb7m"]
@@ -7,6 +7,7 @@
 [ext_resource type="FontFile" uid="uid://brbxrenwotboe" path="res://resource/font/Galindo-Regular.ttf" id="5_ikb7m"]
 [ext_resource type="Script" uid="uid://cflsu5kjgurav" path="res://ui/menubutton.gd" id="6_2xfe4"]
 [ext_resource type="PackedScene" uid="uid://cmnj528bn42mk" path="res://screen/fileselect_screen.tscn" id="7_45wws"]
+[ext_resource type="PackedScene" uid="uid://dnwpdn48gk6x8" path="res://screen/newfile_screen.tscn" id="8_t5f1u"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_45wws"]
 content_margin_left = 16.0
@@ -226,17 +227,13 @@ script = ExtResource("6_2xfe4")
 
 [node name="FileSelectScreen" parent="TitleScreen/Menus" instance=ExtResource("7_45wws")]
 unique_name_in_owner = true
+visible = false
 layout_mode = 1
 
-[node name="NewFileScreen" type="Control" parent="TitleScreen/Menus"]
+[node name="NewGameScreen" parent="TitleScreen/Menus" instance=ExtResource("8_t5f1u")]
+unique_name_in_owner = true
+visible = false
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-metadata/_edit_lock_ = true
 
 [node name="Footer" type="Control" parent="TitleScreen"]
 layout_mode = 1
@@ -283,6 +280,5 @@ text = "Changelog"
 layout_mode = 2
 text = "Licenses"
 
-[connection signal="pressed" from="TitleScreen/Menus/MainScreen/VBoxContainer/Button_New" to="TitleScreen" method="_on_ButtonPlay_pressed"]
 [connection signal="pressed" from="TitleScreen/Footer/VersionLabel/HBoxContainer/Button_ChangeLog" to="TitleScreen" method="_on_ButtonChangeLog_pressed"]
 [connection signal="pressed" from="TitleScreen/Footer/VersionLabel/HBoxContainer/Button_Licenses" to="TitleScreen" method="_on_ButtonLicenses_pressed"]
