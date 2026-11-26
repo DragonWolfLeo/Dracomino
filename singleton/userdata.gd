@@ -72,7 +72,7 @@ func saveDracominoDataToFile(data:Dictionary, fileNum:int, printErrorFn:Callable
 			Archipelago.save_manager.delete_save(fileNum)
 	if err: _callPrintErrorCallable(printErrorFn, "Error saving (Error %s)"%err, source)
 	# Update index
-	var saveInfo:Dictionary = makeSaveInfoDict(data, "File %s"%fileNum)
+	var saveInfo:Dictionary = makeSaveInfoDict(data, Game.targetSaveSlotName)
 	saveIndex[str(fileNum)] = saveInfo
 	saveIndex_updated.emit()
 	saveSaveIndex()

@@ -899,15 +899,17 @@ func newSeedReset():
 	rotate_random.seed = slotContextHash+1
 	rotate_randomSaveState = rotate_random.state
 
-func saveToFile(fileNum) -> void:
+func saveToFile(fileNum = Game.targetSaveFileNum) -> void:
 	fileNum = int(fileNum)
+	Game.targetSaveFileNum = fileNum
 	if not seedIsValid:
 		_displayErrorMessage("Cannot save invalid game.")
 		return
 	UserData.saveDracominoDataToFile(addToSaveData(), fileNum, _displayErrorMessage)
 
-func loadFromFile(fileNum) -> void:
+func loadFromFile(fileNum = Game.targetSaveFileNum) -> void:
 	fileNum = int(fileNum)
+	Game.targetSaveFileNum = fileNum
 	var data:Dictionary = UserData.loadDracominoDataFromFile(fileNum, _displayErrorMessage)
 	if data.get("error"):
 		return

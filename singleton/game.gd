@@ -4,6 +4,9 @@ var mode:Node
 var ui:Node
 var isLoaded:bool = false # TODO: Move this to mode
 
+var targetSaveFileNum:int = 0
+var targetSaveSlotName:String = "File 0"
+
 signal game_loaded()
 signal game_data_loaded(data:Dictionary)
 
