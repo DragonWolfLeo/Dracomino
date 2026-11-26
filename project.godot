@@ -56,6 +56,7 @@ shapes/navigation/enable_geometry_face_random_color=false
 
 window/size/viewport_width=960
 window/size/viewport_height=540
+window/handheld/orientation=1
 window/size/width=1280
 window/size/height=720
 
@@ -350,6 +351,7 @@ cast={
 
 textures/canvas_textures/default_texture_filter=3
 renderer/rendering_method="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
 shader_compiler/shader_cache/enabled=false
 environment/defaults/default_clear_color=Color(0, 0, 0, 1)
 2d/snap/snap_2d_transforms_to_pixel=true
