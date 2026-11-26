@@ -340,6 +340,7 @@ var isFocus:bool: ## Decides whether or not piece listens to inputs
 var rarity:StringName
 var modifiers:Dictionary[StringName, float] = {}
 var flagHolder:FlagHolder
+var touchState:TouchState = TouchState.new()
 
 static var GHOSTPIECE_SCENE:PackedScene = load("res://object/ghostpiece.tscn")
 static var PIECEAFTERIMAGE_EFFECT_SCENE:PackedScene = load("res://object/pieceafterimage_effect.tscn")
@@ -356,6 +357,70 @@ signal kicked_by(piece:Piece, direction:Vector2i)
 signal crystallized_on(lines:int)
 signal moved(piece:Piece)
 
+class TouchState:
+	var mousePressed:bool = false
+	var touchPresses:Dictionary[int, bool] = {}
+	var drag:Vector2 ## Amount of distance moved unspent
+	var hasDragged:bool = false:
+		set(value):
+			if hasDragged == value:
+				return
+			hasDragged = value
+			if not hasDragged:
+				_lastDragAction = ""
+	var _lastDragAction:StringName
+
+	signal drag_action_activated(action:StringName, isEcho:bool)
+
+	static var DRAG_ACTION_DIRECTION:Dictionary[StringName, Vector2] = {
+		moveLeft = Vector2.LEFT,
+		moveRight = Vector2.RIGHT,
+		moveDown = Vector2.DOWN,
+		moveUp = Vector2.UP,
+	}
+	static var DRAG_ACTION_DOT_THRESHOLD:int = 16
+	
+	func press_mouse() -> void:
+		hasDragged = false
+		if not isPressed():
+			drag = Vector2.ZERO
+		mousePressed = true
+	
+	func release_mouse() -> void:
+		mousePressed = false
+
+	func press_touch(index:int) -> void:
+		hasDragged = false
+		if not isPressed():
+			drag = Vector2.ZERO
+		touchPresses[index] = true
+
+	func release_touch(index:int) -> void: ## Release index
+		touchPresses.erase(index)
+
+	func isPressed() -> bool: ## Is this pressed with mouse or any touch
+		if mousePressed:
+			return true
+		for v:bool in touchPresses.values():
+			if v:
+				return true
+		return false
+	
+	func isDragged() -> bool: ## Did this get dragged?
+		return hasDragged
+
+	func accumulateDrag(amount:Vector2) -> void: ## Add to current drag
+		if isPressed():
+			var threshold:float = DRAG_ACTION_DOT_THRESHOLD * FlagManager.getIntFlagValue("current_zoom")
+			drag += amount
+			for action:StringName in DRAG_ACTION_DIRECTION.keys():
+				while drag.dot(DRAG_ACTION_DIRECTION[action]) > threshold:
+					drag -= DRAG_ACTION_DIRECTION[action] * threshold
+					drag *= DRAG_ACTION_DIRECTION[action] # Make drag straighter
+					drag_action_activated.emit(action, action == _lastDragAction)
+					_lastDragAction = action
+					hasDragged = true
+
 #==== Virtuals ======
 func _ready() -> void:
 	flagHolder = FlagHolder.new(FlagHolder.PRIORITY.OBJECT)
@@ -364,56 +429,113 @@ func _ready() -> void:
 	SignalBus.getSignal("setting_changed", "gravity").connect(_on_gravity_setting_changed)
 	SignalBus.getSignal("stateflag_set", "effect_space").connect(set.bind("momentumPhysics", true))
 	SignalBus.getSignal("stateflag_cleared", "effect_space").connect(set.bind("momentumPhysics", false))
+	touchState.drag_action_activated.connect(_on_drag_action_activated)
 	momentumPhysics = FlagManager.isFlagSet("effect_space")
 	_on_gravity_setting_changed()
 
+func _input(event: InputEvent) -> void:
+	# Reset pressed state without handling event
+	if event is InputEventMouseButton:
+		if not event.pressed and touchState.isPressed():
+			touchState.release_mouse()
+			if not touchState.isDragged():
+				if event.position.x > get_viewport_rect().get_center().x:
+					_on_rotateClockwise_input()
+				else:
+					_on_rotateCounterclockwise_input()
+
+	elif event is InputEventScreenTouch:
+		if not event.pressed and touchState.isPressed():
+			touchState.release_touch(event.index)
+			if not touchState.isDragged():
+				if event.position.x > get_viewport_rect().get_center().x:
+					_on_rotateClockwise_input()
+				else:
+					_on_rotateCounterclockwise_input()
+
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("rotateClockwise"):
-		if FlagManager.isFlagSet("rotate_clockwise") or modifiers.get("rotate"):
-			rotateClockwise()
-			get_viewport().set_input_as_handled()
-			if modifiers.get("rotate"): rotateTimer.start(ROTATE_WAIT_TIME*modifiers.get("rotate", 1.0))
-		elif USE_ALT_ROTATE and FlagManager.isFlagSet("rotate_counterclockwise"):
-			rotateCounterclockwise()
-			get_viewport().set_input_as_handled()
+	if event is InputEventMouseButton:
+		# Rotate when pressing with mouse
+		if event.pressed and Config.getSetting("mouseControls", false):
+			match event.button_index:
+				MOUSE_BUTTON_LEFT:
+					touchState.press_mouse()
+	elif event is InputEventScreenTouch:
+		# Rotate when touching screen
+		if event.pressed:
+			touchState.press_touch(event.index)
+	elif event is InputEventMouseMotion or event is InputEventScreenDrag:
+		touchState.accumulateDrag(event.screen_relative*Vector2(Config.getSetting("horizontal_speed", 1.0), Config.getSetting("softDrop_speed", 1.0)))
+	elif event.is_action_pressed("rotateClockwise"):
+		handleInput(_on_rotateClockwise_input)
 	elif event.is_action_pressed("rotateCounterclockwise"):
-		if FlagManager.isFlagSet("rotate_counterclockwise") or modifiers.get("rotate"):
-			rotateCounterclockwise()
-			get_viewport().set_input_as_handled()
-			if modifiers.get("rotate"): rotateTimer.start(ROTATE_WAIT_TIME*modifiers.get("rotate", 1.0))
-		elif USE_ALT_ROTATE and FlagManager.isFlagSet("rotate_clockwise"):
-			rotateClockwise()
-			get_viewport().set_input_as_handled()
+		handleInput(_on_rotateCounterclockwise_input)
 	elif event.is_action_pressed("moveLeft") and Input.is_action_just_pressed("moveLeft"):
-		horizontalTimer.start(HORIZONTAL_WAIT_TIME)
-		movement_requested.emit(self, Vector2i.LEFT, MOVEMENT.HORIZONTAL)
-		if momentumPhysics:
-			# Apply a momentum
-			momentumDirection = Vector2i.LEFT
-			resetGravityTimer()
-		get_viewport().set_input_as_handled()
+		handleInput(_on_moveLeft_input)
 		return
 	elif event.is_action_pressed("moveRight") and Input.is_action_just_pressed("moveRight"):
-		horizontalTimer.start(HORIZONTAL_WAIT_TIME)
-		movement_requested.emit(self, Vector2i.RIGHT, MOVEMENT.HORIZONTAL)
-		if momentumPhysics:
-			# Apply a momentum
-			momentumDirection = Vector2i.RIGHT
-			resetGravityTimer()
-		get_viewport().set_input_as_handled()
+		handleInput(_on_moveRight_input)
 		return
 	elif event.is_action_pressed("moveDown") and Input.is_action_just_pressed("moveDown") and FlagManager.isFlagSet("soft_drop"):
-		softDropTimer.start(SOFT_DROP_WAIT_TIME)
-		movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP_LOCK)
-		if momentumPhysics:
-			# Apply a momentum
-			momentumDirection = Vector2i.DOWN
-		# Avoid falling too soon
-		resetGravityTimer()
-		get_viewport().set_input_as_handled()
+		handleInput(_on_moveDown_input)
 		return
 
+# === Private Functions ===
+func _on_rotateClockwise_input() -> bool: ## Return true when input should be handled
+	if FlagManager.isFlagSet("rotate_clockwise") or modifiers.get("rotate"):
+		rotateClockwise()
+		return true
+		if modifiers.get("rotate"): rotateTimer.start(ROTATE_WAIT_TIME*modifiers.get("rotate", 1.0))
+	elif USE_ALT_ROTATE and FlagManager.isFlagSet("rotate_counterclockwise"):
+		rotateCounterclockwise()
+		return true
+	return false
+
+func _on_rotateCounterclockwise_input() -> bool: ## Return true when input should be handled
+	if FlagManager.isFlagSet("rotate_counterclockwise") or modifiers.get("rotate"):
+		rotateCounterclockwise()
+		return true
+		if modifiers.get("rotate"): rotateTimer.start(ROTATE_WAIT_TIME*modifiers.get("rotate", 1.0))
+	elif USE_ALT_ROTATE and FlagManager.isFlagSet("rotate_clockwise"):
+		rotateClockwise()
+		return true
+	return false
+
+func _on_moveLeft_input() -> bool: ## Return true when input should be handled
+	horizontalTimer.start(HORIZONTAL_WAIT_TIME)
+	movement_requested.emit(self, Vector2i.LEFT, MOVEMENT.HORIZONTAL)
+	if momentumPhysics:
+		# Apply a momentum
+		momentumDirection = Vector2i.LEFT
+		resetGravityTimer()
+	return true
+
+func _on_moveRight_input() -> bool: ## Return true when input should be handled
+	horizontalTimer.start(HORIZONTAL_WAIT_TIME)
+	movement_requested.emit(self, Vector2i.RIGHT, MOVEMENT.HORIZONTAL)
+	if momentumPhysics:
+		# Apply a momentum
+		momentumDirection = Vector2i.RIGHT
+		resetGravityTimer()
+	return true
+
+func _on_moveDown_input() -> bool: ## Return true when input should be handled
+	softDropTimer.start(SOFT_DROP_WAIT_TIME)
+	movement_requested.emit(self, Vector2i.DOWN, MOVEMENT.SOFT_DROP_LOCK)
+	if momentumPhysics:
+		# Apply a momentum
+		momentumDirection = Vector2i.DOWN
+	# Avoid falling too soon
+	resetGravityTimer()
+	return true
+
 #==== Functions ======
+func handleInput(fnThatReturnsTrueToAcceptEvent:Callable) -> bool: ## Call function and handles input if returns true; Returns true if handled
+	if fnThatReturnsTrueToAcceptEvent.call():
+		get_viewport().set_input_as_handled()
+		return true
+	return false
+
 func makeActive():
 	process_mode = Node.PROCESS_MODE_INHERIT
 	set_process_unhandled_input(isFocus)
@@ -765,3 +887,12 @@ func _setCurrentPosition(value:Vector2i):
 
 func _on_gravity_setting_changed():
 	resetGravityTimer()
+
+func _on_drag_action_activated(action:StringName, isEcho:bool = false):
+	if momentumPhysics and isEcho:
+		pass
+	else:
+		match action:
+			"moveLeft": _on_moveLeft_input()
+			"moveRight": _on_moveRight_input()
+			"moveDown": _on_moveDown_input()

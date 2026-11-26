@@ -6,6 +6,7 @@ extends Camera2D
 @export var disableFlag:String = ""
 @export var soundToPlay:StringName = ""
 var masterControl:Control
+var flagHolder:FlagHolder
 
 func _enter_tree() -> void:
 	if not masterControl:
@@ -20,15 +21,23 @@ func _enter_tree() -> void:
 		printerr("autoresize.gd error: no target control found")
 
 func _ready() -> void:
+	flagHolder = FlagHolder.new(FlagHolder.PRIORITY.OBJECT)
+	add_child(flagHolder)
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	if enableFlag:
 		SignalBus.getSignal("stateflag_set", enableFlag).connect(set.bind("enabled", true))
 		if soundToPlay:
 			SignalBus.getSignal("stateflag_set", enableFlag).connect(_playSound)
 		SignalBus.getSignal("stateflag_cleared", enableFlag).connect(set.bind("enabled", false))
+		# Flag holder
+		SignalBus.getSignal("stateflag_set", enableFlag).connect(flagHolder.set.bind("monitoring", true))
+		SignalBus.getSignal("stateflag_cleared", enableFlag).connect(flagHolder.set.bind("monitoring", false))
 	elif disableFlag:
 		SignalBus.getSignal("stateflag_set", disableFlag).connect(set.bind("enabled", false))
 		SignalBus.getSignal("stateflag_cleared", disableFlag).connect(set.bind("enabled", true))
+		# Flag holder
+		SignalBus.getSignal("stateflag_set", enableFlag).connect(flagHolder.set.bind("monitoring", false))
+		SignalBus.getSignal("stateflag_cleared", enableFlag).connect(flagHolder.set.bind("monitoring", true))
 
 func _playSound() -> void:
 	SoundManager.play(soundToPlay)
@@ -41,3 +50,5 @@ func _on_resized() -> void:
 		else zoomMultiplier*Config.getSetting("scale_amount", 1.0)
 	)
 	zoom = Vector2(scaleMultiplier, scaleMultiplier)
+	if flagHolder:
+		flagHolder.setFlag("current_zoom", roundi(scaleMultiplier))
