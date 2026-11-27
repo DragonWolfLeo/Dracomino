@@ -301,6 +301,8 @@ class TouchState:
 				_lastDragAction = ""
 	var _lastDragAction:StringName
 	var watchedActions:Array[StringName]
+	var dragStart:int
+	var releaseVelocity:int
 
 	signal drag_action_activated(action:StringName, isEcho:bool)
 
@@ -309,22 +311,23 @@ class TouchState:
 		moveRight = Vector2.RIGHT,
 		moveDown = Vector2.DOWN,
 		moveUp = Vector2.UP,
-		hardDrop = Vector2.DOWN,
 	}
 	static var DRAG_DEFAULT_ACTION_DOT_THRESHOLD:int = 16
-	static var DRAG_ACTION_DOT_THRESHOLD:Dictionary[StringName, int] = {
-		hardDrop = DRAG_DEFAULT_ACTION_DOT_THRESHOLD * 3,
-	}
-
 
 	func setWatchedActions(actions:Array[StringName]) -> TouchState:
 		watchedActions.append_array(actions)
 		return self
 	
+	func reset(): ## Release presses and reset drag
+		release_all()
+		drag = Vector2.ZERO
+		dragStart = 0
+
 	func press_mouse() -> void: ## Make mouse pressed
 		hasDragged = false
 		if not isPressed():
 			drag = Vector2.ZERO
+			dragStart = Time.get_ticks_msec()
 		mousePressed = true
 	
 	func release_mouse() -> void: ## Make mouse released
@@ -338,6 +341,7 @@ class TouchState:
 		hasDragged = false
 		if not isPressed():
 			drag = Vector2.ZERO
+			dragStart = Time.get_ticks_msec()
 		touchPresses[index] = true
 
 	func release_touch(index:int) -> void: ## Release touch index
@@ -356,14 +360,19 @@ class TouchState:
 
 	func accumulateDrag(amount:Vector2) -> void: ## Add to current drag and emit drag actions
 		if isPressed():
-			var thresholdMult:float = FlagManager.getIntFlagValue("current_zoom")
+			var threshold:float = FlagManager.getIntFlagValue("current_zoom") * DRAG_DEFAULT_ACTION_DOT_THRESHOLD
 			drag += amount
 			for action:StringName in watchedActions:
 				if DRAG_ACTION_DIRECTION.has(action):
-					var threshold:float = thresholdMult * DRAG_ACTION_DOT_THRESHOLD.get(action, DRAG_DEFAULT_ACTION_DOT_THRESHOLD)
 					while drag.dot(DRAG_ACTION_DIRECTION[action]) > threshold:
 						drag -= DRAG_ACTION_DIRECTION[action] * threshold
 						drag *= DRAG_ACTION_DIRECTION[action] # Make drag straighter
 						drag_action_activated.emit(action, action == _lastDragAction)
 						_lastDragAction = action
 						hasDragged = true
+
+	func getDragVelocity() -> Vector2: ## Get velocity in pixels a second
+		if dragStart:
+			var pressTime:int = Time.get_ticks_msec() - dragStart
+			return drag * 1000 / float(pressTime)
+		return Vector2.ZERO

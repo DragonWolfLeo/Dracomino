@@ -14,6 +14,7 @@ var EFFECT_IMPATIENCE_NUM_PIECES_TO_SPAWN:int = 2
 var EFFECT_WEB_NUM_TO_SPAWN:int = 3
 var EFFECT_WEB_BOUNDS := BOUNDS.grow_individual(0, -8, 0, -1)
 var DELAYED_EFFECT_CONTEXT_DURATION:float = 1.3
+var TOUCH_DRAG_HARD_DROP_SPEED:float = 2000 # Pixels per second you must drag to hard drop
 
 static var ACTIVE_TILE_ATLAS_ROW:int = 0
 static var SET_TILE_ATLAS_ROW:int = 1
@@ -68,7 +69,7 @@ var linesCleared:int = 0:
 		linesCleared_updated.emit(linesCleared)
 var flagHolder:FlagHolder
 var effectHandler:EffectHandler
-var touchState:DracominoUtil.TouchState = DracominoUtil.TouchState.new().setWatchedActions(["hardDrop"])
+var touchState:DracominoUtil.TouchState = DracominoUtil.TouchState.new()
 
 var _lastHeldPieceContext:DracominoHandler.PieceContext ## For deathlink message context; TODO: Obsolete
 
@@ -444,8 +445,6 @@ func _ready():
 	SignalBus.getSignal("boardeffect_queued").connect(_on_boardeffect_queued)
 	## Reset when changing irregular board
 	SignalBus.getSignal("stateflag_changed", "irregular_board").connect(resetGame)
-	# Touch state
-	touchState.drag_action_activated.connect(_on_drag_action_activated)
 	# Generate line offsets
 	_generateLineOffsets()
 	for i:int in range(BOUNDS.end.y):
@@ -495,6 +494,7 @@ func getCameraFocus() -> Piece:
 	return null
 
 func chooseNewFocusPiece(requestIfNone:bool = false) -> void:
+	touchState.reset()
 	var focusPiece:Piece = null
 	for piece in activePieces:
 		if not piece.moveLock and not piece.placed and not focusPiece:
@@ -1240,8 +1240,13 @@ func _input(event: InputEvent) -> void:
 	# Reset pressed state without handling event
 	if event is InputEventMouseButton:
 		inputTimer.reset()
-		if not event.pressed and touchState.isPressed():
+		if not event.pressed and touchState.isPressed() and event.button_index == MOUSE_BUTTON_LEFT:
 			touchState.release_mouse()
+			if Config.getSetting("mouseControls", false):
+				var focusPiece:Piece = getFocusPiece()
+				if focusPiece:
+					if touchState.getDragVelocity().y > TOUCH_DRAG_HARD_DROP_SPEED:
+						_on_hardDrop_input(focusPiece)
 
 func _unhandled_input(event: InputEvent) -> void:
 	var focusPiece:Piece = getFocusPiece()
@@ -1284,8 +1289,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					touchState.press_mouse()
 		return
 	elif event is InputEventMouseMotion:
-		if event.screen_velocity.y > 1000:
-			touchState.accumulateDrag(event.screen_relative)
+		touchState.accumulateDrag(event.screen_relative)
 
 	if focusPiece == null: return
 	# Stuff that requires an active piece
@@ -1310,7 +1314,6 @@ func _on_hardDrop_input(focusPiece:Piece) -> bool: ## Return true when input sho
 			and (countNonlockedPieces() > 1 or (previewStorage and previewStorage.getNumStored()))
 		):
 			focusPiece.gravityDrop()
-	touchState.release_all()
 	return true
 
 func _on_holdSlotCycleTimer_timeout(callback:Callable):
