@@ -66,11 +66,10 @@ func activateFocusMask():
 	focusMask.grab_focus()
 
 func _on_focus_mask_gui_input(event:InputEvent):
-	if (event.is_action_pressed("mouse1") 
-	or event.is_action_pressed("ui_accept") 
+	if (event.is_action_pressed("ui_accept") 
 	or event.is_action_pressed("ui_cancel")
 	or event.is_action_pressed("back")
-	or (event is InputEventScreenTouch and event.is_pressed())
+	or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT)
 	):
 		get_viewport().set_input_as_handled()
 		focusmask_pressed.emit()

@@ -54,14 +54,16 @@ func _gui_input(event: InputEvent) -> void:
 		return
 
 	if event is InputEventMouseButton:
-		var mouseEvent:InputEventMouseButton = event as InputEventMouseButton
-		if mouseEvent.is_pressed():
-			match mouseEvent.button_index:
+		if event.is_pressed():
+			match event.button_index:
 				MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT:
-					if FlagManager.isFlagSet("gameover"):
-						giveFocusToMain()
+					if _restartIfGameOver():
 						accept_event()
-						SignalBus.getSignal("restartGame").emit()
+
+	elif event is InputEventScreenTouch:
+		if event.is_pressed():
+			if _restartIfGameOver():
+				accept_event()
 						
 func _input(event: InputEvent) -> void:
 	if not thisOrChildrenHasFocus():
@@ -88,6 +90,15 @@ func _input(event: InputEvent) -> void:
 		SignalBus.getSignal("give_focus_to_client").emit()
 		accept_event()
 		return
+
+# === Private Functions ===
+func _restartIfGameOver() -> bool: ## Return true if input should be handled
+	if FlagManager.isFlagSet("gameover"):
+		giveFocusToMain()
+		accept_event()
+		SignalBus.getSignal("restartGame").emit()
+		return true
+	return false
 
 #==== Functions ====
 func setMode(mode:Control = null):

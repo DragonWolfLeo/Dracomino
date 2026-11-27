@@ -21,12 +21,7 @@ func _enter_tree() -> void:
 func _input(event: InputEvent) -> void:
 	if fishes.size() == 0:
 		if event is InputEventMouseButton:
-			if event.pressed:
-				if Config.getSetting("mouseControls", false):
-					spawnFishes()
-					get_viewport().set_input_as_handled()
-		elif event is InputEventScreenTouch:
-			if event.pressed:
+			if event.pressed and Config.getSetting("mouseControls", false):
 				spawnFishes()
 				get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("ui_accept"):

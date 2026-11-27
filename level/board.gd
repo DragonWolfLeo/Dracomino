@@ -1243,11 +1243,6 @@ func _input(event: InputEvent) -> void:
 		if not event.pressed and touchState.isPressed():
 			touchState.release_mouse()
 
-	elif event is InputEventScreenTouch:
-		inputTimer.reset()
-		if not event.pressed and touchState.isPressed():
-			touchState.release_touch(event.index)
-
 func _unhandled_input(event: InputEvent) -> void:
 	var focusPiece:Piece = getFocusPiece()
 	if not isGameOver:
@@ -1288,12 +1283,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				MOUSE_BUTTON_LEFT:
 					touchState.press_mouse()
 		return
-	elif event is InputEventScreenTouch:
-		# Rotate when touching screen
-		if event.pressed:
-			touchState.press_touch(event.index)
-		return
-	elif event is InputEventMouseMotion or event is InputEventScreenDrag:
+	elif event is InputEventMouseMotion:
 		if event.screen_velocity.y > 1000:
 			touchState.accumulateDrag(event.screen_relative)
 

@@ -75,18 +75,6 @@ func _input(event: InputEvent) -> void:
 						touchState.release_mouse()
 						if not touchState.isPressed():
 							_on_cast_input_released()
-	
-	# Screen touch
-	elif event is InputEventScreenTouch:
-		if event.pressed:
-			touchState.press_touch(event.index)
-			if touchState.isPressed():
-				_on_cast_input_pressed()
-		else:
-			if touchState.isPressed():
-				touchState.release_touch(event.index)
-				if not touchState.isPressed():
-					_on_cast_input_released()
 
 	# Keyboard/Controller
 	elif event.is_action_pressed("cast"):

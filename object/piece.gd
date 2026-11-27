@@ -370,7 +370,7 @@ func _ready() -> void:
 	_on_gravity_setting_changed()
 
 func _input(event: InputEvent) -> void:
-	# Reset pressed state without handling event
+	# Reset pressed state without handling event and rotate
 	if event is InputEventMouseButton:
 		if not event.pressed and touchState.isPressed():
 			touchState.release_mouse()
@@ -380,27 +380,13 @@ func _input(event: InputEvent) -> void:
 				else:
 					_on_rotateCounterclockwise_input()
 
-	elif event is InputEventScreenTouch:
-		if not event.pressed and touchState.isPressed():
-			touchState.release_touch(event.index)
-			if not touchState.isDragged():
-				if event.position.x > get_viewport_rect().get_center().x:
-					_on_rotateClockwise_input()
-				else:
-					_on_rotateCounterclockwise_input()
-
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
-		# Rotate when pressing with mouse
 		if event.pressed and Config.getSetting("mouseControls", false):
 			match event.button_index:
 				MOUSE_BUTTON_LEFT:
 					touchState.press_mouse()
-	elif event is InputEventScreenTouch:
-		# Rotate when touching screen
-		if event.pressed:
-			touchState.press_touch(event.index)
-	elif event is InputEventMouseMotion or event is InputEventScreenDrag:
+	elif event is InputEventMouseMotion:
 		touchState.accumulateDrag(event.screen_relative*Vector2(Config.getSetting("horizontal_speed", 1.0), Config.getSetting("softDrop_speed", 1.0)))
 	elif event.is_action_pressed("rotateClockwise"):
 		handleInput(_on_rotateClockwise_input)

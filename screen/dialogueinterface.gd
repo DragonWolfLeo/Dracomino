@@ -318,10 +318,9 @@ func _gui_input(_event: InputEvent):
 			return
 	#
 	if (
-		_event.is_action_pressed("mouse1") 
-		or _event.is_action_pressed("back")
+		_event.is_action_pressed("back")
 		or _event.is_action_pressed("ui_accept")
-		or (_event is InputEventScreenTouch and _event.is_pressed())
+		or (_event is InputEventMouseButton and _event.pressed and _event.button_index == MOUSE_BUTTON_LEFT)
 	):
 		get_viewport().set_input_as_handled()
 		if not _was_focused:
