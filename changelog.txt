@@ -1,6 +1,6 @@
 Version 0.3.5 (dev-beta)
  - Add saving and loading
- - (Work in progress!) Add mouse controls (enabled in debug menu) and touch controls (very buggy)
+ - (Work in progress!) Add mouse and touch controls (enabled in debug menu - very buggy)
  - Coins reflect the item class of the item they hold
  - Local items can be received while offline
  - Picked up items for other players now show a message

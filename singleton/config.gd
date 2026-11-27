@@ -11,9 +11,10 @@ var debugMode:bool:
 		return getSetting("debug", false)
 var showHints := true
 @onready var isWeb:bool = OS.get_name() == "Web"
+@onready var isMobile:bool = OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios")
 var SAVEFILEPATH = "user://auto.save"
 var CONFIGPATH = "user://config.json"
-const DEFAULT_SETTINGS:Dictionary[StringName, Variant] = {
+@onready var DEFAULT_SETTINGS:Dictionary[StringName, Variant] = {
 	# Debug
 	debug = false,
 	# Audio
@@ -35,8 +36,10 @@ const DEFAULT_SETTINGS:Dictionary[StringName, Variant] = {
 	# Save index
 	previousSaveFile = 0,
 	autosave = true,
+	# Controls
+	mouseControls = isMobile,
 }
-var settings:Dictionary[StringName, Variant] = DEFAULT_SETTINGS.duplicate()
+@onready var settings:Dictionary[StringName, Variant] = DEFAULT_SETTINGS.duplicate()
 ## Features that will satisfy requirements in slot data
 var FEATURES:Array[StringName] = []
 ## Features that will force a seed to be invalid if a requirement
