@@ -17,17 +17,20 @@ class QueuedSoundContext:
 		duration = _duration
 
 # === Functions ===
-func play(trackName:String, soundType:String = "sfx"):
+func play(trackName:String, soundType:String = "sfx") -> AudioStreamPlayer:
 	var targetPlayer:Node = get_node_or_null(soundType+"/"+trackName)
 	var resName = "res://assets/audio/{soundType}/{trackName}.wav".format({soundType=soundType, trackName=trackName})
 	if targetPlayer is AudioStreamPlayer:
 		targetPlayer.play()
+		return targetPlayer
 	elif ResourceLoader.exists(resName):
 		defaultPlayer = $default
 		defaultPlayer.stream = load(resName)
 		defaultPlayer.play()
+		return defaultPlayer
 	else:
 		printerr("Tried to play invalid %s sound: %s"%[soundType, trackName])
+	return null
 
 # Volume set helper
 func setVolume(busName:String, percent:float):
