@@ -23,7 +23,7 @@ enum STATES {
 	NOTIFICATION_PAUSE = PAUSE | GAMEOVER | NOT_FOCUSED | DEBUG | DIALOGUE_EDIT | ACT_SELECT
 }
 
-@onready var allowedScreens = {
+@onready var allowedScreens:Dictionary[Node, int] = {
 	pauseScreen: STATES.PAUSE | STATES.GAMEOVER | STATES.NOT_FOCUSED,
 	dialogueScreen: STATES.DIALOGUE,
 	debugScreen: STATES.DEBUG,
@@ -39,13 +39,22 @@ func _ready():
 	SignalBus.getSignal("stateflag_cleared", "gameover").connect(bitclearState.bind(STATES.GAMEOVER), CONNECT_DEFERRED)
 	SignalBus.getSignal("stateflag_set", "game_focus").connect(bitclearState.bind(STATES.NOT_FOCUSED), CONNECT_DEFERRED)
 	SignalBus.getSignal("stateflag_cleared", "game_focus").connect(bitsetState.bind(STATES.NOT_FOCUSED), CONNECT_DEFERRED)
-
-	DialogueManager.dialogue_updated.connect(SignalBus.getSignal("effect_duration_down").emit.unbind(2)) # Updating dialogue lowers trap duration
 	
 	dialogueEdit.text = ""
 
 	if actSelectScreen:
 		actSelectScreen.visibility_changed.connect(_on_ActSelectScreen_visibility_changed)
+
+	# Sync debug state with debug setting on mobile
+	if Config.isMobile:
+		SignalBus.getSignal("setting_changed", "debug").connect(
+			func():
+				if Config.debugMode:
+					bitsetState(STATES.DEBUG)
+				else:
+					bitclearState(STATES.DEBUG)
+		)
+		DracominoCommandManager.addCommand("DIALOGUEEDIT", bittoggleState.bind(STATES.DIALOGUE_EDIT).unbind(1)).bind(self)
 	
 func bitclearState(_state: int):
 	changeState(state &~ _state)
@@ -59,6 +68,12 @@ func bittoggleState(_state: int):
 func changeState(_state: int):
 	if _state == 0:
 		_state = STATES.NORMAL
+
+	# Make debug state always active if mobile and debug
+	if Config.isMobile and Config.debugMode:
+		_state |= STATES.DEBUG
+		if _state == STATES.DEBUG:
+			_state |= STATES.NORMAL
 
 	if _state == state: return
 	state = _state # Set this here to avoid race conditions

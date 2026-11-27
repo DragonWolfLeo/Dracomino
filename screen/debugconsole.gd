@@ -21,6 +21,10 @@ func _ready():
 	lineEdit.focus_exited.connect(_on_LineEdit_focus_exited)
 	lineEdit.text_submitted.connect(_on_LineEdit_text_submitted)
 
+	# Ignore mouse on mobile since this will always be visible when debug is on
+	if Config.isMobile:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
 func parseCommand(commandString:String):
 	var params := commandString.split(" ", false, 1)
 	if !params.size():
