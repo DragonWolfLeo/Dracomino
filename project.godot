@@ -30,7 +30,7 @@ buses/channel_disable_threshold_db=-59.0
 
 Config="*res://singleton/config.gd"
 CONSTANTS="*res://singleton/constants.gd"
-Game="*res://singleton/game.gd"
+Game="*res://singleton/game.tscn"
 SignalBus="*res://singleton/signalbus.gd"
 FlagManager="*res://singleton/flagmanager.gd"
 UserData="*res://singleton/userdata.gd"

@@ -1,4 +1,4 @@
-extends Node
+extends MarginContainer
 
 var mode:Node
 var ui:Node
