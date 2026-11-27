@@ -20,6 +20,9 @@ func _ready():
 	lineEdit.gui_input.connect(_on_LineEdit_gui_input)
 	lineEdit.focus_exited.connect(_on_LineEdit_focus_exited)
 	lineEdit.text_submitted.connect(_on_LineEdit_text_submitted)
+	DracominoCommandManager.commands_changed.connect(_updateKnownCommands)
+	DialogueManager.dialogue_started.connect(_updateKnownCommands)
+	DialogueManager.dialogue_ended.connect(_updateKnownCommands)
 
 	# Ignore mouse on mobile since this will always be visible when debug is on
 	if Config.isMobile:
@@ -78,9 +81,12 @@ func _on_visibility_changed():
 		get_viewport().set_input_as_handled()
 		lineEdit.grab_focus()
 		currentHistoryIndex = -1
-		_knownCommands = []
-		if DialogueManager.dialogue: _knownCommands += Dialogue.NAVTAGS.keys()
-		_knownCommands += DracominoCommandManager.COMMANDS.keys()
+		_updateKnownCommands()
+
+func _updateKnownCommands() -> void:
+	_knownCommands = []
+	if DialogueManager.dialogue: _knownCommands += Dialogue.NAVTAGS.keys()
+	_knownCommands += DracominoCommandManager.COMMANDS.keys()
 
 func _on_LineEdit_gui_input(event:InputEvent):
 	var prevHistoryIndex = currentHistoryIndex

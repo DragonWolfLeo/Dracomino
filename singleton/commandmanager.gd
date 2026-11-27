@@ -1,6 +1,7 @@
 extends Node
 
 signal command_error()
+signal commands_changed()
 
 class Command:
 	signal command_activated()
@@ -99,6 +100,7 @@ func addCommand(id:StringName, fnWithOptionalArgument: Callable, invisible:bool 
 			return COMMANDS[id]
 	COMMANDS[id] = Command.new(fnWithOptionalArgument, invisible)
 	COMMANDS[id].bound_node_tree_exiting.connect(removeCommand.bind(id, COMMANDS[id]))
+	commands_changed.emit()
 	return COMMANDS[id]
 
 func addSignalCommand(id:String, invisible:bool = false, force:bool = false) -> Command:
@@ -108,6 +110,7 @@ func removeCommand(id:StringName, command:Command) -> void:
 	if COMMANDS.get(id) == command:
 		COMMANDS.erase(id)
 		command.disconnectSignals()
+		commands_changed.emit()
 	else:
 		if COMMANDS.has(id):
 			printerr("CommandManager.removeCommand error: command {id} is different from provided command.".format({id=id}))
