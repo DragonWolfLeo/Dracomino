@@ -312,7 +312,7 @@ class TouchState:
 		moveDown = Vector2.DOWN,
 		moveUp = Vector2.UP,
 	}
-	static var DRAG_DEFAULT_ACTION_DOT_THRESHOLD:int = 16
+	var DRAG_DEFAULT_ACTION_DOT_THRESHOLD:int = 16
 
 	func setWatchedActions(actions:Array[StringName]) -> TouchState:
 		watchedActions.append_array(actions)
@@ -358,21 +358,26 @@ class TouchState:
 	func isDragged() -> bool: ## Did this get dragged?
 		return hasDragged
 
+	func getDragTime() -> float: ## Amount of time since dragging in seconds
+		return float(Time.get_ticks_msec() - dragStart) / 1000.0
+
 	func accumulateDrag(amount:Vector2) -> void: ## Add to current drag and emit drag actions
 		if isPressed():
-			var threshold:float = FlagManager.getIntFlagValue("current_zoom") * DRAG_DEFAULT_ACTION_DOT_THRESHOLD
 			drag += amount
-			for action:StringName in watchedActions:
-				if DRAG_ACTION_DIRECTION.has(action):
-					while drag.dot(DRAG_ACTION_DIRECTION[action]) > threshold:
-						drag -= DRAG_ACTION_DIRECTION[action] * threshold
-						drag *= DRAG_ACTION_DIRECTION[action] # Make drag straighter
-						drag_action_activated.emit(action, action == _lastDragAction)
-						_lastDragAction = action
-						hasDragged = true
+			if watchedActions.size():
+				var threshold:float = FlagManager.getIntFlagValue("current_zoom") * DRAG_DEFAULT_ACTION_DOT_THRESHOLD
+				var breakFromActionLoop:bool = false
+				for action:StringName in watchedActions:
+					if DRAG_ACTION_DIRECTION.has(action):
+						if drag.dot(DRAG_ACTION_DIRECTION[action]) > threshold:
+							drag -= DRAG_ACTION_DIRECTION[action] * threshold
+							drag *= abs(DRAG_ACTION_DIRECTION[action]) # Make drag straighter
+							drag_action_activated.emit(action, action == _lastDragAction)
+							_lastDragAction = action
+							hasDragged = true
+							break
 
 	func getDragVelocity() -> Vector2: ## Get velocity in pixels a second
 		if dragStart:
-			var pressTime:int = Time.get_ticks_msec() - dragStart
-			return drag * 1000 / float(pressTime)
+			return drag / getDragTime()
 		return Vector2.ZERO
