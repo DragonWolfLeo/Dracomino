@@ -38,6 +38,14 @@ func _setUpSingletonSignals() -> void: # Set up signals to singleton objects
 	SignalBus.getSignal("stateflag_set", "emulate_touch").connect(Input.set.bind("emulate_touch_from_mouse", true))
 	SignalBus.getSignal("stateflag_cleared", "emulate_touch").connect(Input.set.bind("emulate_touch_from_mouse", false))
 
+	# Updating dialogue lowers trap duration
+	DialogueManager.dialogue_updated.connect(SignalBus.getSignal("effect_duration_down").emit.unbind(2))
+
+	# Sync nonlocal item send setting with GodotAP
+	SignalBus.getSignal("setting_changed", "showNonlocalItemSends").connect(
+		func(): Archipelago.AP_HIDE_NONLOCAL_ITEMSENDS = not Config.getSetting("showNonlocalItemSends", false)
+	)
+
 func loadMainScene():
 	get_tree().change_scene_to_file("res://singleton/main.tscn") # Overwrite the previous version's scene
 	changeMode(load("res://mode/titlescreen.tscn"))

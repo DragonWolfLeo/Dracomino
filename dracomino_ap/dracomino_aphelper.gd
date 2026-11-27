@@ -48,9 +48,6 @@ func _ready() -> void:
 
 	# Nonlocal item sends option
 	Archipelago.AP_HIDE_NONLOCAL_ITEMSENDS = not Config.getSetting("showNonlocalItemSends", false)
-	SignalBus.getSignal("setting_changed", "showNonlocalItemSends").connect(
-		func(): Archipelago.AP_HIDE_NONLOCAL_ITEMSENDS = not Config.getSetting("showNonlocalItemSends", false)
-	)
 	# Set up option controls
 	btn_deathLink = get_parent().find_child("Btn_DeathLink")
 	# Death link toggle

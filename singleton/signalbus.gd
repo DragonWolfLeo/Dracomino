@@ -25,14 +25,16 @@ class SignalDistributor:
 		if registeredSignals.has(flag):
 			registeredSignals[flag].triggered.emit()
 
-### Functions
-func registerSignalDistributor(masterSignal:Signal, key:Variant):
+# === Functions ===
+## Split a signal that emits a value into a distributor that can make individual signals for specific values
+func registerSignalDistributor(masterSignal:Signal, key:Variant) -> void:
 	if SIGNALS.get(key):
 		printerr("SignalBus.registerSignalDistributor: Already have key "+key)
 		return
 	
 	SIGNALS[key] = SignalDistributor.new(masterSignal)
 
+## Get or create a custom signal. Avoid connecting to singleton objects from a non-singleton.
 func getSignal(key:StringName = "", flag:Variant = null) -> Signal:
 	if key:
 		if flag:
