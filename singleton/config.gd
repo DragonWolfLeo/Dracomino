@@ -12,6 +12,7 @@ var debugMode:bool:
 var showHints := true
 @onready var isWeb:bool = OS.get_name() == "Web"
 @onready var isMobile:bool = OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios")
+@onready var isEditor:bool = OS.has_feature("editor")
 var SAVEFILEPATH = "user://auto.save"
 var CONFIGPATH = "user://config.json"
 @onready var DEFAULT_SETTINGS:Dictionary[StringName, Variant] = {

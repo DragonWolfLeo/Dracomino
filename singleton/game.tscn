@@ -3,9 +3,22 @@
 [ext_resource type="Script" uid="uid://cy3xck6xmloc5" path="res://singleton/game.gd" id="1_hgjld"]
 
 [node name="Game" type="MarginContainer"]
+process_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_hgjld")
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="."]
+layout_mode = 2
+stretch = true
+
+[node name="GameViewport" type="SubViewport" parent="SubViewportContainer"]
+unique_name_in_owner = true
+handle_input_locally = false
+snap_2d_transforms_to_pixel = true
+canvas_item_default_texture_filter = 3
+size = Vector2i(960, 540)
+render_target_update_mode = 4

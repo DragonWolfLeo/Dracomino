@@ -7,6 +7,10 @@ var isLoaded:bool = false # TODO: Move this to mode
 var targetSaveFileNum:int = 0
 var targetSaveSlotName:String = "File 0"
 
+@onready var gameViewport:SubViewport = %GameViewport
+
+var _virtualKeyboardHeight:int = 0
+
 signal game_loaded()
 signal game_data_loaded(data:Dictionary)
 
@@ -19,11 +23,19 @@ func changeMode(packedScene:PackedScene):
 		mode = null
 		isLoaded = false
 	mode = packedScene.instantiate()
-	add_child(mode)
+	gameViewport.add_child(mode)
 
 func _ready():
 	_setUpSingletonSignals.call_deferred()
 	loadMainScene.call_deferred()
+
+func _process(_delta: float) -> void:
+	if Config.isMobile and not Config.isEditor:
+		# Offset the virtual
+		var current:int = DisplayServer.virtual_keyboard_get_height()
+		if _virtualKeyboardHeight != current:
+			_virtualKeyboardHeight = current
+			add_theme_constant_override("margin_bottom", _virtualKeyboardHeight)
 
 func _setUpSingletonSignals() -> void: # Set up signals to singleton objects
 	# Set up trap link signal
