@@ -9,6 +9,8 @@ var targetSaveSlotName:String = "File 0"
 
 @onready var gameViewport:SubViewport = %GameViewport
 
+var NATIVE_VIEWPORT_SIZE:Vector2i = Vector2i(960, 540)
+
 var _virtualKeyboardHeight:int = 0
 
 signal game_loaded()
@@ -26,6 +28,7 @@ func changeMode(packedScene:PackedScene):
 	gameViewport.add_child(mode)
 
 func _ready():
+	gameViewport.size_changed.connect(_on_gameViewport_size_changed)
 	_setUpSingletonSignals.call_deferred()
 	loadMainScene.call_deferred()
 
@@ -57,6 +60,13 @@ func _setUpSingletonSignals() -> void: # Set up signals to singleton objects
 	SignalBus.getSignal("setting_changed", "showNonlocalItemSends").connect(
 		func(): Archipelago.AP_HIDE_NONLOCAL_ITEMSENDS = not Config.getSetting("showNonlocalItemSends", false)
 	)
+
+func _on_gameViewport_size_changed() -> void:
+	# Zoom in viewport based on screen size
+	var targetXScale:int = floori(gameViewport.size.x/NATIVE_VIEWPORT_SIZE.x)
+	var targetYScale:int = ceili(gameViewport.size.y/NATIVE_VIEWPORT_SIZE.y)
+	var zoomMult = max(1, min(targetXScale, targetYScale))
+	gameViewport.size_2d_override = gameViewport.size / zoomMult
 
 func loadMainScene():
 	get_tree().change_scene_to_file("res://singleton/main.tscn") # Overwrite the previous version's scene
