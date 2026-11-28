@@ -9,7 +9,7 @@ var targetSaveSlotName:String = "File 0"
 
 @onready var gameViewport:SubViewport = %GameViewport
 
-var NATIVE_VIEWPORT_SIZE:Vector2i = Vector2i(960, 540)
+var NATIVE_VIEWPORT_SIZE:Vector2i = Vector2i(540, 540)
 
 var _virtualKeyboardHeight:int = 0
 
