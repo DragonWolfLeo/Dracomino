@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://c5lm3ikyfckvp"]
+[gd_scene load_steps=20 format=3 uid="uid://c5lm3ikyfckvp"]
 
 [ext_resource type="Script" uid="uid://c5jgcsxvnygnn" path="res://mode/main.gd" id="1_gx2q7"]
 [ext_resource type="PackedScene" uid="uid://txbrdml6vs6n" path="res://screen/ui.tscn" id="2_yivgv"]
@@ -16,6 +16,7 @@
 [ext_resource type="PackedScene" uid="uid://eb7omf02s6oc" path="res://ui/hud_container.tscn" id="9_m1ejn"]
 [ext_resource type="PackedScene" uid="uid://rd6em7cjqrum" path="res://level/fishingboard.tscn" id="10_jc8m0"]
 [ext_resource type="Script" uid="uid://uaf4h6orb4o4" path="res://mode/mode.gd" id="10_jjnvi"]
+[ext_resource type="Script" uid="uid://dt8wq5uf01d4s" path="res://ui/piecepreview_scrollcontainer.gd" id="11_3joyb"]
 [ext_resource type="Script" uid="uid://3hyxsaj4myy1" path="res://module/play_sound_on_visible.gd" id="14_m1ejn"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_gpyk6"]
@@ -107,6 +108,7 @@ theme_override_constants/margin_bottom = 16
 layout_mode = 2
 size_flags_horizontal = 0
 horizontal_scroll_mode = 0
+script = ExtResource("11_3joyb")
 
 [node name="HoldBar" type="VBoxContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/HoldContainer/ScrollContainer"]
 layout_mode = 2
@@ -133,6 +135,7 @@ theme_override_constants/margin_bottom = 16
 layout_mode = 2
 size_flags_horizontal = 8
 horizontal_scroll_mode = 0
+script = ExtResource("11_3joyb")
 
 [node name="PreviewBar" type="VBoxContainer" parent="Main/SubViewport/PuzzleMode/PuzzleHUD/PreviewContainer/ScrollContainer"]
 clip_contents = true
