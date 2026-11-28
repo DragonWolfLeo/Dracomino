@@ -32,13 +32,24 @@ func _ready():
 	_setUpSingletonSignals.call_deferred()
 	loadMainScene.call_deferred()
 
+	if Config.isMobile and not Config.isEditor:
+		updateMobileMargin()
+
 func _process(_delta: float) -> void:
 	if Config.isMobile and not Config.isEditor:
-		# Offset the virtual
 		var current:int = DisplayServer.virtual_keyboard_get_height()
 		if _virtualKeyboardHeight != current:
 			_virtualKeyboardHeight = current
-			add_theme_constant_override("margin_bottom", _virtualKeyboardHeight)
+			updateMobileMargin()
+
+func updateMobileMargin() -> void:
+	# Set margins to display safe area
+	var rect:Rect2i = DisplayServer.get_display_safe_area()
+	var screenSize:Vector2i = DisplayServer.window_get_size()
+	add_theme_constant_override("margin_top", rect.position.y)
+	add_theme_constant_override("margin_left", rect.position.x)
+	add_theme_constant_override("margin_right", screenSize.x - rect.end.x)
+	add_theme_constant_override("margin_bottom", screenSize.y - rect.end.y)
 
 func _setUpSingletonSignals() -> void: # Set up signals to singleton objects
 	# Set up trap link signal
