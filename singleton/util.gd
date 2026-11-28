@@ -365,7 +365,7 @@ class TouchState:
 		if isPressed():
 			drag += amount
 			if watchedActions.size():
-				var threshold:float = FlagManager.getIntFlagValue("current_zoom") * DRAG_DEFAULT_ACTION_DOT_THRESHOLD
+				var threshold:float = FlagManager.getIntFlagValue("current_zoom") * DRAG_DEFAULT_ACTION_DOT_THRESHOLD * Game.globalZoom
 				var breakFromActionLoop:bool = false
 				for action:StringName in watchedActions:
 					if DRAG_ACTION_DIRECTION.has(action):

@@ -6,6 +6,7 @@ var isLoaded:bool = false # TODO: Move this to mode
 
 var targetSaveFileNum:int = 0
 var targetSaveSlotName:String = "File 0"
+var globalZoom:int = 1
 
 @onready var gameViewport:SubViewport = %GameViewport
 
@@ -76,8 +77,8 @@ func _on_gameViewport_size_changed() -> void:
 	# Zoom in viewport based on screen size
 	var targetXScale:int = floori(gameViewport.size.x/NATIVE_VIEWPORT_SIZE.x)
 	var targetYScale:int = ceili(gameViewport.size.y/NATIVE_VIEWPORT_SIZE.y)
-	var zoomMult = max(1, min(targetXScale, targetYScale))
-	gameViewport.size_2d_override = gameViewport.size / zoomMult
+	globalZoom = max(1, min(targetXScale, targetYScale))
+	gameViewport.size_2d_override = gameViewport.size / globalZoom
 
 func loadMainScene():
 	get_tree().change_scene_to_file("res://singleton/main.tscn") # Overwrite the previous version's scene
