@@ -119,33 +119,28 @@ focus_mode = 1
 script = ExtResource("1_ps0hi")
 metadata/_edit_lock_ = true
 
-[node name="BackgroundAspectRatioContainer" type="AspectRatioContainer" parent="TitleScreen"]
+[node name="BackgroundContainer" type="SubViewportContainer" parent="TitleScreen"]
+z_index = -999
+texture_filter = 1
+material = ExtResource("2_ikb7m")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-ratio = 1.7778
-
-[node name="BackgroundContainer" type="SubViewportContainer" parent="TitleScreen/BackgroundAspectRatioContainer"]
-z_index = -999
-material = ExtResource("2_ikb7m")
-layout_mode = 2
 focus_mode = 0
 mouse_filter = 2
 stretch = true
 
-[node name="SubViewport" type="SubViewport" parent="TitleScreen/BackgroundAspectRatioContainer/BackgroundContainer"]
+[node name="SubViewport" type="SubViewport" parent="TitleScreen/BackgroundContainer"]
 handle_input_locally = false
 snap_2d_transforms_to_pixel = true
 canvas_item_default_texture_filter = 3
-size = Vector2i(960, 539)
-size_2d_override = Vector2i(960, 540)
-size_2d_override_stretch = true
+size = Vector2i(960, 540)
 render_target_update_mode = 4
 
-[node name="TitleBackground" type="TextureRect" parent="TitleScreen/BackgroundAspectRatioContainer/BackgroundContainer/SubViewport"]
+[node name="TitleBackground" type="TextureRect" parent="TitleScreen/BackgroundContainer/SubViewport"]
 z_index = -999
 texture_filter = 4
 anchors_preset = 15
@@ -158,8 +153,7 @@ texture = ExtResource("2_pfup4")
 expand_mode = 2
 stretch_mode = 5
 
-[node name="TitleAspectRatioContainer" type="AspectRatioContainer" parent="TitleScreen"]
-layout_mode = 1
+[node name="TitleAspectRatioContainer" type="AspectRatioContainer" parent="TitleScreen/BackgroundContainer/SubViewport"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -167,25 +161,23 @@ grow_horizontal = 2
 grow_vertical = 2
 alignment_vertical = 0
 
-[node name="TitleContainer" type="SubViewportContainer" parent="TitleScreen/TitleAspectRatioContainer"]
+[node name="TitleContainer" type="SubViewportContainer" parent="TitleScreen/BackgroundContainer/SubViewport/TitleAspectRatioContainer"]
 z_index = -999
-material = ExtResource("2_ikb7m")
 layout_mode = 2
 focus_mode = 0
 mouse_filter = 2
 stretch = true
 
-[node name="SubViewport" type="SubViewport" parent="TitleScreen/TitleAspectRatioContainer/TitleContainer"]
+[node name="SubViewport" type="SubViewport" parent="TitleScreen/BackgroundContainer/SubViewport/TitleAspectRatioContainer/TitleContainer"]
 transparent_bg = true
 handle_input_locally = false
 snap_2d_transforms_to_pixel = true
-canvas_item_default_texture_filter = 3
 size = Vector2i(540, 540)
 size_2d_override = Vector2i(540, 540)
 size_2d_override_stretch = true
 render_target_update_mode = 4
 
-[node name="Title" parent="TitleScreen/TitleAspectRatioContainer/TitleContainer/SubViewport" instance=ExtResource("4_ikb7m")]
+[node name="Title" parent="TitleScreen/BackgroundContainer/SubViewport/TitleAspectRatioContainer/TitleContainer/SubViewport" instance=ExtResource("4_ikb7m")]
 anchors_preset = -1
 anchor_left = 0.5
 anchor_top = 0.335807
