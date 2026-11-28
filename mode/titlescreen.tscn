@@ -150,7 +150,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 texture = ExtResource("2_pfup4")
-expand_mode = 2
+expand_mode = 5
 stretch_mode = 5
 
 [node name="TitleAspectRatioContainer" type="AspectRatioContainer" parent="TitleScreen/BackgroundContainer/SubViewport"]
@@ -207,7 +207,7 @@ mouse_filter = 2
 theme_override_constants/separation = 0
 
 [node name="Menus" type="Control" parent="TitleScreen/MenuLimitHeight/MenuBottomAnchor"]
-custom_minimum_size = Vector2(0, 540)
+custom_minimum_size = Vector2(0, 700)
 layout_mode = 2
 size_flags_vertical = 10
 mouse_filter = 2
