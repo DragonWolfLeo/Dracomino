@@ -118,6 +118,13 @@ text = "Energy Link
 script = ExtResource("1_08t7n")
 flag = "energy_link"
 
+[node name="Btn_MouseControls" type="CheckButton" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+tooltip_text = "Enable using the mouse or screen touch to move pieces."
+text = "Mouse and Touch Controls"
+script = ExtResource("3_fprr2")
+optionKey = "mouseControls"
+
 [node name="Btn_FishResisting" type="CheckButton" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 tooltip_text = "Fish resist being reeled during fishing"
