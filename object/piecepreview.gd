@@ -16,18 +16,27 @@ var piece:Piece:
 		renderPiece()
 		piece.makeLimbo()
 		piece.tree_exiting.connect(queue_free)
+var isPressed:bool = false
 
 #===== Virtuals ======
 func _ready() -> void:
 	setLabel()
 	pieceTiles = find_child("PieceTiles")
 
+	mouse_exited.connect(set.bind("isPressed", false))
+
 func _gui_input(event: InputEvent) -> void:
+	## Trigger if mouse is pressed and released on it
 	if event is InputEventMouseButton:
-		if event.pressed and Config.getSetting("mouseControls", false):
-			if event.button_index == MOUSE_BUTTON_LEFT:
-				triggered.emit()
-				accept_event()
+		if Config.getSetting("mouseControls", false):
+			if event.pressed:
+				if event.button_index == MOUSE_BUTTON_LEFT:
+					isPressed = true
+			else:
+				if isPressed:
+					triggered.emit()
+					accept_event()
+					isPressed = false
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if shortcut.is_empty(): return
